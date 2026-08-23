@@ -1,4 +1,4 @@
-version: 0.1.0-dev.9
+version: 0.1.0-dev.10
 tests:
   - {id: T-001, area: Flask routes and tabs, status: passed}
   - {id: T-002, area: Ingress prefix navigation, status: passed}
@@ -51,3 +51,12 @@ release_0_1_0_dev_9:
   manual:
     - {id: M015, expectation: HA-OS-Upgrade von dev.8 erhält alle Daten und Seiten, status: pending}
     - {id: M016, expectation: Automatischer Lauf aktualisiert Scanner und Paarregeln vor Entscheidung, status: pending}
+release_0_1_0_dev_10:
+  automated:
+    - {id: T026, expectation: xStocks und hebelfähige Märkte werden korrekt kategorisiert, status: passed}
+    - {id: T027, expectation: Aktivierte Kategorie stellt alle zugehörigen EUR-Märkte bereit, status: passed}
+    - {id: T028, expectation: Keine Einzelprodukt-Allowlist ist erforderlich, status: passed}
+    - {id: T029, expectation: Deutsche Umlaute bleiben korrekt in UTF-8 erhalten, status: passed}
+  manual:
+    - {id: M017, expectation: Umlaute werden in HA-Ingress korrekt angezeigt, status: pending}
+    - {id: M018, expectation: Kategorien speichern und Marktbestand dynamisch aktualisieren, status: pending}

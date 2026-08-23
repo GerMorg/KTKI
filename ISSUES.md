@@ -35,3 +35,9 @@ Instrumentabhängige Mindestmenge, Mindestwert, Paarstatus und Mengenpräzision 
 
 ## 2026-08-23 I008 — gelöst in 0.1.0-dev.9
 Scanner und Paper-Entscheidung sind kontrolliert gekoppelt; fehlende Scanner-Daten blockieren standardmäßig fail-closed.
+
+## 2026-08-23 I009 — gelöst in 0.1.0-dev.10
+Umlaute und Sonderzeichen waren teilweise als Mojibake dargestellt. Textquellen, Dokumentation und GUI wurden konsistent als UTF-8 normalisiert.
+
+## 2026-08-23 I010 — gelöst in 0.1.0-dev.10
+Einzelproduktfreigaben wurden durch dynamische Produktgruppen und ein vollständiges Kraken-Marktinventar ersetzt.

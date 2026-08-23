@@ -1,12 +1,12 @@
-# Kraken Trader 0.1.0-dev.9
+# Kraken Trader 0.1.0-dev.10
 
-## Neuer Entscheidungsweg
-Jeder automatische Paper-Lauf führt nacheinander aus:
-1. Livepreise aktualisieren.
-2. Kraken-AssetPairs-Regeln synchronisieren.
-3. Scanner für freigegebene Produkte aktualisieren.
-4. Nur valide Scanner-Ergebnisse bewerten.
-5. Paarstatus, Mindestmenge, Mindestwert, Präzision, Gebühren und Positionslimit prüfen.
-6. Entscheidung und gegebenenfalls simulierten Trade vollständig protokollieren.
+## Produktgruppen
+In **Einstellungen** werden ausschließlich Produktgruppen aktiviert:
+- Kryptowährungen (Spot)
+- xStocks / tokenisierte Aktien und ETFs
+- Devisen (Forex)
+- hebelfähige Spot-Produkte
 
-Unter **Einstellungen** ist „Scanner-Signal zwingend verwenden“ standardmäßig aktiv. Ohne valides Scanner-Ergebnis wird keine Paper-Order ausgeführt. Realhandel bleibt ausgeschlossen.
+Nach dem Speichern liest die App das vollständige aktuelle Marktinventar dieser Klassen von Kraken ein. Einzelne Symbole werden nicht manuell freigegeben. Nur von Kraken als online gemeldete Märkte gelangen in das aktive Universum. Der derzeitige Scanner- und Paper-Pfad verwendet sichere EUR-Quotierungen.
+
+Alle Oberflächentexte und Dokumente sind UTF-8-kodiert. Realhandel bleibt ausgeschlossen.

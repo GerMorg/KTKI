@@ -40,3 +40,6 @@ Neu ist `scanner.py` mit persistenten Tabellen `ohlc_cache`, `scanner_results` u
 
 ## Stand 0.1.0-dev.9
 Dev.9 wurde unmittelbar aus dem bereitgestellten vollständigen dev.8-Snapshot rekonstruiert. `run_paper_cycle()` aktualisiert Livepreise, AssetPairs-Regeln und Scanner, bevor die PaperEngine entscheidet. Standardmäßig ist `scanner_required=true`: Nur ein valides Scanner-Ergebnis darf eine automatische Paper-Order auslösen. Die Engine prüft zusätzlich Paarstatus, Mindestmenge, Mindestwert und Mengenpräzision und verwendet die öffentliche Taker-Gebühr aus AssetPairs. Alle dev.8-Funktionen bleiben erhalten; Realhandel ist weiterhin nicht implementiert.
+
+## Stand 0.1.0-dev.10
+Die Einstellungen enthalten keine Einzelprodukte mehr. `market_universe.py` synchronisiert die vollständigen Kraken-Märkte für die Klassen `currency`, `tokenized_asset` und Forex und ordnet sie über eine überlappende Mitgliedschaft Kategorien zu. Der aktuell sichere Analyse- und Paper-Pfad verwendet daraus Online-Märkte mit EUR als Quotierungswährung. Texte und Dokumente wurden als UTF-8 normalisiert.

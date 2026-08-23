@@ -12,7 +12,7 @@ non_negotiable_rules:
   - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
   - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.9
+  version: 0.1.0-dev.10
   status: read-only Kraken-Integration mit oeffentlichem und privatem WebSocket v2; HA-OS-Praxistest fuer dev.5 ausstehend
 implemented:
   - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
@@ -177,3 +177,24 @@ release_0_1_0_dev_9:
       - Valides Scanner-BUY nutzt Paargebuehr
       - Kraken-Mindestorder blockiert zu kleine Simulation
       - AVOID verkauft eine bestehende Paper-Position
+
+release_0_1_0_dev_10:
+  date: 2026-08-23
+  purpose: Produktgruppen statt Einzelproduktfreigaben und konsistente UTF-8-Darstellung.
+  preserved:
+    - Alle Funktionen und Sicherheitsgrenzen aus dev.9
+    - Scanner-Paper-Kopplung, AssetPairs-Regeln, read-only Streams und Portfoliohistorie
+    - Realhandel weiterhin nicht implementiert
+  added:
+    - Einstellungen steuern nur noch Produktgruppen
+    - Vollständiges dynamisches Kraken-Marktinventar für aktivierte Kategorien
+    - Kategorien Kryptowährungen Spot, xStocks, Forex und hebelfähige Spot-Produkte
+    - Überlappende Kategorisierung: hebelfähige Kryptomärkte bleiben auch im Spot-Kryptomarkt enthalten
+    - Persistente Marktmetadaten, Kategorienmitgliedschaften und Synchronisationsläufe
+    - UTF-8-Bereinigung für GUI, Dokumentation und Quelltexte
+  safety:
+    - Nur online gemeldete Märkte werden verwendet
+    - Der aktuelle Ausführungspfad bleibt auf EUR-Quotierungen begrenzt
+    - Keine Einzelproduktfreigaben und keine echte Orderübertragung
+  tests:
+    automated_passed: 28

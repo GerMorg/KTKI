@@ -20,3 +20,6 @@ Statistischer Markt-Scanner mit OHLC-Cache, Momentum, SMA-Trend, VolatilitÃ¤t,
 
 ## 0.1.0-dev.9 — 2026-08-23
 Kontrollierte Scanner-Paper-Kopplung mit fail-closed Daten-Gate sowie persistente Kraken-AssetPairs-Regeln für Paarstatus, Mindestmenge, Mindestwert, Präzision und öffentliche Taker-Gebühr.
+
+## 0.1.0-dev.10 — 2026-08-23
+UTF-8-Bereinigung und dynamisches, kategoriebasiertes Kraken-Marktinventar ohne Einzelproduktfreigaben.

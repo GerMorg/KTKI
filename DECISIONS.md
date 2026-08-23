@@ -47,3 +47,9 @@ Ab dev.9 ist das valide Scanner-Ergebnis standardmäßig ein zwingendes Gate fü
 
 ## 2026-08-23 D016
 Der Paper-Broker synchronisiert öffentliche AssetPairs-Metadaten und prüft Paarstatus, Mindestmenge, Mindestwert und Mengenpräzision. Die öffentliche erste Taker-Gebührenstufe wird verwendet, solange keine kontospezifische TradeVolume-Auswertung aktiviert ist.
+
+## 2026-08-23 D017
+Produktfreigaben erfolgen ab dev.10 ausschließlich über Kategorien. Innerhalb aktivierter Kategorien wird das vollständige von Kraken gemeldete Online-Marktuniversum dynamisch bereitgestellt; Einzelprodukt-Allowlisten sind kein Benutzerkonzept mehr.
+
+## 2026-08-23 D018
+Produktkategorien dürfen sich überschneiden. Ein hebelfähiger Kryptomarkt gehört sowohl zu Kryptowährungen (Spot) als auch zu hebelfähigen Spot-Produkten.
