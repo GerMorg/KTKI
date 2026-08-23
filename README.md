@@ -1,12 +1,5 @@
-# HA Kraken Trader
+# HA Kraken Trader 0.1.0-dev.2
 
-Home-Assistant-App fuer Kraken-Portfolioanalyse und lokales Paper-Trading. **Version 0.1 ist read-only gegenueber Kraken; Realhandel ist technisch gesperrt.**
+Read-only Kraken-Portfolio und lokales Paper-Trading als Home-Assistant-App. Realhandel ist hart deaktiviert.
 
-## Installation
-1. Dieses Repository zu GitHub pushen.
-2. In Home Assistant: Einstellungen > Apps > App-Store > Repositories und die Repository-URL hinzufuegen.
-3. `Kraken Trader` installieren und starten.
-4. Web-UI oeffnen. Ohne API-Daten arbeitet die App im Demo-/Paper-Modus.
-5. Fuer echte Portfolioanzeige einen Kraken-Schluessel nur mit Leserechten eintragen.
-
-Siehe `kraken_trader/DOCS.md` und `PROJECT_HANDOVER.md`.
+Nach dem Upgrade App neu starten, den API-Tab öffnen und **Verbindung testen und Portfolio laden** wählen. Der Private Key wird nicht angezeigt oder exportiert.

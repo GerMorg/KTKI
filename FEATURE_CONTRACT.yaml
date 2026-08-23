@@ -1,13 +1,16 @@
-version: 0.1.0-dev.1
+version: 0.1.0-dev.2
 features:
   ingress_gui: {required: true, status: implemented}
-  persistent_database: {required: true, status: implemented}
+  ingress_prefix_navigation: {required: true, status: implemented}
+  all_gui_tabs: {required: true, status: implemented}
+  api_diagnostics: {required: true, status: implemented}
   kraken_read_only_balance: {required: true, status: implemented}
   kraken_ledger_import: {required: true, status: implemented}
+  persistent_database: {required: true, status: implemented}
   paper_wallet: {required: true, status: implemented}
   audit_log: {required: true, status: implemented}
   automation_kill_switch: {required: true, status: implemented}
   product_allowlist: {required: true, status: implemented}
   real_trading: {required: false, status: hard_disabled}
-  manual_orders: {required: false, status: prohibited_by_product_goal}
-compatibility_rule: Aenderungen duerfen implementierte Features nur nach ausdruecklicher Entscheidung und Migration entfernen.
+  manual_orders: {required: false, status: prohibited}
+compatibility_rule: Implementierte Funktionen dürfen nur nach ausdrücklicher Entscheidung mit dokumentierter Migration entfernt werden.

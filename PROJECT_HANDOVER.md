@@ -1,15 +1,13 @@
 # Project Handover
 
-## Ziel
-Eine eigenstaendige Home-Assistant-App, die Kraken-Instrumente vollautomatisch analysiert, ein Musterdepot fuehrt, ein reales Portfolio auswertet und spaeter unter strengen Grenzen automatisiert handeln kann. Entscheidungen muessen erklaerbar, exportierbar und reproduzierbar sein.
+## Zielbild
+Home-Assistant-App für Kraken-Realportfolio, lokales Paper-Trading, automatische daten- und nachrichtenbasierte Bewertung, kontrollierten Realhandel und österreichische Steuerdaten. Keine manuellen Orders.
 
-## Aktueller Stand
-`0.1.0-dev.1` ist bewusst ein sicherer vertikaler Schnitt: installierbare App, GUI, Persistenz, Kraken read-only, Paper-Startbestand, Audit und Konfiguration. Die Oberflaeche erlaubt keine manuellen Orders. Realhandel ist im Backend hart ausgeschaltet.
+## Stand 0.1.0-dev.2
+Die ursprünglichen Funktionen bleiben erhalten. Neu ist eine Ingress-präfixfähige Navigation; alle Tabs funktionieren über `url_for`. Der neue API-Tab testet öffentliche und private Kraken-Aufrufe, zeigt Diagnoseinformationen und lädt Balance sowie Ledger in SQLite. Realhandel ist weiterhin technisch nicht vorhanden.
+
+## Betrieb
+App-Optionen werden beim Prozessstart aus `/data/options.json` gelesen. Nach Änderung von API-Key oder Private Key App neu starten. Danach im API-Tab `Verbindung testen und Portfolio laden` wählen.
 
 ## Weiterentwicklung
-Vor jeder Aenderung `PROJECT_MEMORY.yaml`, `FEATURE_CONTRACT.yaml`, `TEST_MATRIX.yaml` und die append-only Ledgers lesen. Bestehende Features beibehalten. Nach der Aenderung Tests ausfuehren und Dokumentation fortschreiben.
-
-## Testbefehl
-```bash
-cd kraken_trader && python -m unittest discover -s tests -v
-```
+Zuerst alle Memory-/Contract-/Test-/Ledger-Dateien lesen. Keine Funktion entfernen. Version in `config.yaml`, `/health`, Dokumentation und Release-Ledger gleichzeitig erhöhen.

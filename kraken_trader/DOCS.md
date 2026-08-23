@@ -1,16 +1,8 @@
-# Kraken Trader 0.1
+# Bedienung
 
-## Sicherer Start
-Die App funktioniert ohne Zugangsdaten. Fuer das echte Portfolio einen separaten Kraken-Schluessel mit ausschliesslich benoetigten Leserechten verwenden. Keine Rechte fuer Orders, Einzahlungen oder Auszahlungen vergeben.
+1. API-Key und Private Key in den App-Optionen speichern.
+2. App neu starten, damit `/data/options.json` erneut eingelesen wird.
+3. Web-UI öffnen und im Tab **API** synchronisieren.
+4. API-Status prüfen und anschließend **Portfolio** öffnen.
 
-## Optionen
-- `kraken_api_key`: optionaler Read-only-Key
-- `kraken_api_secret`: optionales Secret
-- `paper_start_eur`: einmaliger Startwert des Musterdepots
-- `refresh_minutes`: fuer kuenftigen Scheduler vorbereitet
-
-## Bedienung
-`Synchronisieren` liest Systemstatus, Instrumente, Balance und aktuelle Ledger-Eintraege. Einstellungen verwalten globalen Automatikstopp und die erlaubte Produktliste. Diese Version erzeugt keine Orders.
-
-## Datenschutz
-Secret-Werte werden nicht in HTML, Auditdaten oder Exporte geschrieben. Sie liegen in den geschuetzten App-Optionen von Home Assistant.
+Für diesen Stand nur Kraken-Leserechte vergeben. Keine Order-, Einzahlungs- oder Auszahlungsrechte. Realhandel ist nicht implementiert.

@@ -1,32 +1,11 @@
-version: 0.1.0-dev.1
-tests:
-  - id: T001
-    area: database
-    expectation: Schema initialisiert und Paper-EUR-Saldo angelegt
-    automated: true
-  - id: T002
-    area: security
-    expectation: API-Antwort enthaelt niemals Kraken-Secret
-    automated: true
-  - id: T003
-    area: trading
-    expectation: Realhandel bleibt unabhaengig von Konfiguration hart deaktiviert
-    automated: true
-  - id: T004
-    area: web
-    expectation: Dashboard und Konfiguration antworten erfolgreich
-    automated: true
-  - id: T005
-    area: kraken
-    expectation: Private REST-Signatur entspricht fest berechnetem Testvektor
-    automated: true
+version: 0.1.0-dev.2
+automated:
+  - {id: T001, area: GUI, expectation: Alle sieben Tabs antworten mit HTTP 200}
+  - {id: T002, area: Ingress, expectation: Links enthalten den dynamischen X-Ingress-Path}
+  - {id: T003, area: Security, expectation: Realhandel meldet immer false}
+  - {id: T004, area: Syntax, expectation: Alle Python-Dateien kompilieren}
 manual:
-  - id: M001
-    expectation: Installation auf HA OS erfolgreich
-    status: pending
-  - id: M002
-    expectation: Ingress-GUI laedt korrekt
-    status: pending
-  - id: M003
-    expectation: Read-only-Kraken-Balance wird angezeigt
-    status: pending
+  - {id: M001, expectation: Upgrade auf HA OS erfolgreich, status: pending}
+  - {id: M002, expectation: Jeder Tab bleibt innerhalb des HA-Ingress, status: pending}
+  - {id: M003, expectation: API-Tab erkennt Key und zeigt connected, status: pending}
+  - {id: M004, expectation: Portfolio zeigt echte Kraken-Rohbestände, status: pending}
