@@ -1,14 +1,9 @@
-# Kraken Trader 0.1.0-dev.7
+# Kraken Trader 0.1.0-dev.8
 
-## Konfiguration
-Im Tab **Einstellungen** befinden sich jetzt:
-- Analyse-/Paper-Automatik
-- Ausführungsintervall in Minuten
-- Paper-Orderwert in EUR
-- maximale Positionsgröße in Prozent
-- simulierte Gebühr und Slippage in Basispunkten
-- Produktfreigaben
+## Markt-Scanner
+1. Unter **Einstellungen** Produkte freigeben.
+2. Den Tab **Scanner** öffnen.
+3. **Freigegebene Produkte jetzt scannen** wählen.
+4. Score, Signal, Momentum, Trend, Volatilität, Spread, Datenpunkte, Qualität und Gründe prüfen.
 
-Mindestens ein Produkt anhaken, Automatik aktivieren und speichern. Danach holt jeder Lauf zunächst öffentliche Preise. Entscheidungen entstehen automatisch im gewählten Intervall und können zusätzlich über **Musterdepot → Paper-Strategie jetzt ausführen** sofort ausgelöst werden.
-
-Ein simulierter Kauf findet nur statt, wenn das Produkt freigegeben ist, ein aktueller Preis vorliegt, die Automatik aktiv ist, das Positionslimit frei ist und die 24-Stunden-Veränderung mindestens +1 % beträgt. Das Ausbleiben eines Kaufs kann daher eine korrekte HOLD-Entscheidung sein. Realhandel ist nicht implementiert.
+Der Scanner nutzt 1-Stunden-OHLC-Daten. Die aktuelle unfertige Kerze wird nicht ausgewertet. Mindestens 30 abgeschlossene Kerzen sind erforderlich. Die Signale sind noch nicht direkt mit dem Paper-Broker gekoppelt; Realhandel bleibt ausgeschlossen.

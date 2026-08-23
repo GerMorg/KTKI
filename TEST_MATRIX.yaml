@@ -34,3 +34,11 @@ release_0_1_0_dev_7:
     - {id: M010, expectation: Ausgewählte Produkte erscheinen nach Speichern weiterhin angehakt, status: pending}
     - {id: M011, expectation: Paper-Entscheidungen entstehen automatisch im gewählten Intervall, status: pending}
     - {id: M012, expectation: Bei erfülltem BUY-Signal entsteht ein kostenbehafteter Paper-Trade, status: pending}
+release_0_1_0_dev_8:
+  automated:
+    - {id: T019, expectation: 49 abgeschlossene Kerzen erzeugen VALID-Analyse, status: passed}
+    - {id: T020, expectation: Zu wenige Kerzen erzeugen INSUFFICIENT und AVOID, status: passed}
+    - {id: T021, expectation: Scanner-Ergebnis und Scanner-Lauf werden persistent gespeichert, status: passed}
+  manual:
+    - {id: M013, expectation: Scanner-Seite lädt innerhalb HA-Ingress, status: pending}
+    - {id: M014, expectation: Freigegebene Produkte liefern plausible Kennzahlen und Gründe, status: pending}

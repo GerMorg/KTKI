@@ -14,3 +14,6 @@ Erster persistenter Paper-Broker mit Positionen, Trades, Snapshots, Gebühren, S
 
 ## 0.1.0-dev.7 — 2026-08-23
 Sichtbare Paper-Konfiguration, persistente Laufparameter, Allowlist-WebSocket-Abonnement, REST-Preis-Fallback und periodischer Paper-Scheduler. Kein erzwungener Kauf; Signalgates und alle Sicherheitsgrenzen bleiben erhalten.
+
+## 0.1.0-dev.8 — 2026-08-23
+Statistischer Markt-Scanner mit OHLC-Cache, Momentum, SMA-Trend, Volatilität, Spread, Volumen, reproduzierbarem Score, Datenqualität und begründeten BUY/HOLD/AVOID-Signalen.

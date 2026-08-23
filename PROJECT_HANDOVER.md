@@ -34,3 +34,6 @@ Dev.6 baut unmittelbar auf dev.5 auf. Neu ist `paper_engine.py`. Die Engine häl
 
 ## Stand 0.1.0-dev.7
 Die fehlende praktische Automatisierung aus dev.6 wurde geschlossen. Einstellungen sind vollständig in der Ingress-GUI sichtbar und werden in `settings` gespeichert. Allowlist-Symbole werden an den öffentlichen WebSocket übergeben. `refresh_allowed_prices()` aktualisiert sie vor jedem Lauf zusätzlich über REST. `paper_scheduler()` führt `run_paper_cycle()` im konfigurierten Intervall aus. Der manuelle Knopf verwendet exakt dieselbe Pipeline. BUY wird weiterhin nur bei erfülltem Signal ausgeführt.
+
+## Stand 0.1.0-dev.8
+Neu ist `scanner.py` mit persistenten Tabellen `ohlc_cache`, `scanner_results` und `scanner_runs`. Die Seite **Scanner** analysiert die freigegebenen Produkte auf abgeschlossenen 1-Stunden-Kerzen. Der Scanner ist absichtlich noch nicht direkt mit Paper-Trades gekoppelt; die Ergebnisse sollen zuerst praktisch geprüft und später gebenchmarkt werden.

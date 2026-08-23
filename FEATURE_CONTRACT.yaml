@@ -38,3 +38,13 @@ release_0_1_0_dev_7:
   rest_ticker_fallback: {required: true, status: implemented}
   paper_scheduler: {required: true, status: implemented}
   forced_trade_without_signal: {required: false, status: prohibited}
+release_0_1_0_dev_8:
+  scanner_gui: {required: true, status: implemented}
+  ohlc_cache: {required: true, status: implemented}
+  committed_candles_only: {required: true, status: implemented}
+  momentum_metric: {required: true, status: implemented}
+  trend_metric: {required: true, status: implemented}
+  volatility_metric: {required: true, status: implemented}
+  spread_metric: {required: true, status: implemented}
+  scanner_quality_gates: {required: true, status: implemented}
+  scanner_paper_coupling: {required: false, status: intentionally_deferred}

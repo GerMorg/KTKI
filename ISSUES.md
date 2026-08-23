@@ -23,3 +23,6 @@ Allowlist-Produkte erhielten nicht zuverlässig Livepreise, da primär Echtportf
 
 ## 2026-08-23 I007 — gelöst in 0.1.0-dev.7
 Paper-Strategie lief nicht periodisch. Gelöst durch konfigurierbaren Hintergrund-Scheduler.
+
+## 2026-08-23 I008 — offen
+Scanner und Paper-Orderentscheidung sind bewusst noch nicht gekoppelt; zunächst ist die statistische Baseline praktisch zu validieren.

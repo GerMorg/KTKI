@@ -12,7 +12,7 @@ non_negotiable_rules:
   - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
   - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.7
+  version: 0.1.0-dev.8
   status: read-only Kraken-Integration mit oeffentlichem und privatem WebSocket v2; HA-OS-Praxistest fuer dev.5 ausstehend
 implemented:
   - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
@@ -121,3 +121,31 @@ release_0_1_0_dev_7:
       - Konfigurationsfelder sichtbar und persistent
       - Allowlist-Speicherung
       - REST-Preis-Fallback für BTC/EUR
+
+release_0_1_0_dev_8:
+  date: 2026-08-23
+  purpose: Statistischer Markt-Scanner als Grundlage für fundiertere automatische Entscheidungen.
+  preserved:
+    - Alle Funktionen und Sicherheitsgrenzen aus dev.7
+    - Persistenter Paper-Broker und Scheduler
+    - Öffentliche/private read-only WebSockets, Portfoliohistorie und Ledger-Pagination
+    - Realhandel weiterhin nicht implementiert
+  added:
+    - Neue GUI-Seite Scanner
+    - Abruf und persistenter Cache von Kraken-OHLC-Daten
+    - Ausschließliche Nutzung abgeschlossener Kerzen; laufende Kerze wird verworfen
+    - Statistische Kennzahlen für 24h-Momentum, SMA10/SMA30-Trend, Volatilität, Spread und Quotevolumen
+    - Reproduzierbarer Score von 0 bis 100 und Signale BUY, HOLD, AVOID
+    - Datenqualitätsstatus VALID, INSUFFICIENT oder ERROR
+    - Persistente Scanner-Läufe und Ergebnisse mit vollständigen Gründen
+  model_baseline:
+    interval_minutes: 60
+    minimum_committed_candles: 30
+    buy_gate: Score mindestens 65, positives Momentum, positiver Trend und Spread höchstens 0.8 Prozent
+    avoid_gate: Score unter 35 oder Spread über 1.5 Prozent
+    note: Baseline ist transparent und noch nicht direkt mit der Paper-Ausführung gekoppelt.
+  next_steps:
+    - Praktischen Scanner-Lauf auf HA OS prüfen
+    - Scanner-Score kontrolliert mit Paper-Entscheidungen verbinden
+    - Kraken AssetPairs Mindestgrößen und Gebührenstaffeln integrieren
+    - Backtest und Benchmark für die Baseline erstellen
