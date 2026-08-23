@@ -12,7 +12,7 @@ non_negotiable_rules:
   - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
   - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.8
+  version: 0.1.0-dev.9
   status: read-only Kraken-Integration mit oeffentlichem und privatem WebSocket v2; HA-OS-Praxistest fuer dev.5 ausstehend
 implemented:
   - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
@@ -58,23 +58,23 @@ next_steps:
 
 release_0_1_0_dev_6:
   date: 2026-08-23
-  purpose: Erster funktionsfähiger Paper-Broker und nachvollziehbare regelbasierte Baseline.
+  purpose: Erster funktionsfÃ¤higer Paper-Broker und nachvollziehbare regelbasierte Baseline.
   preserved:
-    - Vollständige Portfoliohistorie und Ledger-Pagination
-    - Öffentlicher und privater read-only WebSocket v2
-    - Sequenzkontrolle, Reconnect und Datenqualitätszustände
+    - VollstÃ¤ndige Portfoliohistorie und Ledger-Pagination
+    - Ã–ffentlicher und privater read-only WebSocket v2
+    - Sequenzkontrolle, Reconnect und DatenqualitÃ¤tszustÃ¤nde
     - Ingress-GUI, Echtportfolio, Audit, Allowlist und Exporte
     - Realhandel weiterhin technisch nicht implementiert
   added:
-    - Eigenständiges Paper-Konto mit persistentem EUR-Cash
+    - EigenstÃ¤ndiges Paper-Konto mit persistentem EUR-Cash
     - Persistente Paper-Positionen, Trades, Entscheidungen und Snapshots
-    - Gebühren- und Slippage-Simulation mit separaten Ausweisen je Trade
+    - GebÃ¼hren- und Slippage-Simulation mit separaten Ausweisen je Trade
     - Positionslimit bezogen auf den aktuellen Paper-Gesamtwert
-    - Deterministische Momentum-Baseline für ausschließlich freigegebene Produkte
+    - Deterministische Momentum-Baseline fÃ¼r ausschlieÃŸlich freigegebene Produkte
     - BUY ab plus 1 Prozent 24h, SELL ab minus 1.5 Prozent 24h
-    - Ausführung nur bei aktivierter Analyse-/Paper-Automatik und LIVE-Daten
+    - AusfÃ¼hrung nur bei aktivierter Analyse-/Paper-Automatik und LIVE-Daten
     - GUI-Seiten Musterdepot und Paper-Entscheidungen
-    - Jede Entscheidung enthält Aktion, Score, Datenqualität, Ausführungsstatus und Begründung
+    - Jede Entscheidung enthÃ¤lt Aktion, Score, DatenqualitÃ¤t, AusfÃ¼hrungsstatus und BegrÃ¼ndung
   configuration:
     paper_fee_bps: Standard 40 Basispunkte; transparent konfigurierbar
     paper_slippage_bps: Standard 10 Basispunkte; transparent konfigurierbar
@@ -82,33 +82,33 @@ release_0_1_0_dev_6:
     paper_trade_eur: Standard 25 EUR
   known_limits:
     - Baseline ist kein trainiertes Modell und keine Gewinnzusage.
-    - Die Gebühreneinstellung ist eine konservative Simulation und noch nicht kontospezifisch aus GetTradeVolume bezogen.
-    - Strategie wird in dieser Version bewusst über die GUI ausgelöst, nicht zeitgesteuert.
-    - Kraken-Mindestordergrößen werden im Paper-Broker noch nicht je Instrument angewendet.
+    - Die GebÃ¼hreneinstellung ist eine konservative Simulation und noch nicht kontospezifisch aus GetTradeVolume bezogen.
+    - Strategie wird in dieser Version bewusst Ã¼ber die GUI ausgelÃ¶st, nicht zeitgesteuert.
+    - Kraken-MindestordergrÃ¶ÃŸen werden im Paper-Broker noch nicht je Instrument angewendet.
   next_steps:
-    - Praktischen HA-Test des Paper-Brokers durchführen
-    - AssetPairs-Mindestgrößen und kontospezifische Gebühren einbinden
+    - Praktischen HA-Test des Paper-Brokers durchfÃ¼hren
+    - AssetPairs-MindestgrÃ¶ÃŸen und kontospezifische GebÃ¼hren einbinden
     - Backtest-Datenspeicher und Benchmark entwickeln
-    - Scanner um Liquidität, Spread, Volatilität und Trend erweitern
+    - Scanner um LiquiditÃ¤t, Spread, VolatilitÃ¤t und Trend erweitern
 
 release_0_1_0_dev_7:
   date: 2026-08-23
-  purpose: Paper-Konfiguration sichtbar machen und den Automatismus tatsächlich periodisch ausführen.
+  purpose: Paper-Konfiguration sichtbar machen und den Automatismus tatsÃ¤chlich periodisch ausfÃ¼hren.
   user_observations:
     - Musterdepot und Entscheidungsseite waren vorhanden.
     - Paper-Konfiguration war in der App-GUI nicht auffindbar.
-    - Es wurde kein simulierter Kauf ausgeführt.
+    - Es wurde kein simulierter Kauf ausgefÃ¼hrt.
   root_causes:
-    - Paper-Parameter waren primär Home-Assistant-App-Optionen und nicht vollständig in der Ingress-GUI dargestellt.
-    - Der öffentliche WebSocket beobachtete zuvor hauptsächlich real gehaltene Assets, nicht zuverlässig alle Paper-Allowlist-Produkte.
+    - Paper-Parameter waren primÃ¤r Home-Assistant-App-Optionen und nicht vollstÃ¤ndig in der Ingress-GUI dargestellt.
+    - Der Ã¶ffentliche WebSocket beobachtete zuvor hauptsÃ¤chlich real gehaltene Assets, nicht zuverlÃ¤ssig alle Paper-Allowlist-Produkte.
     - Die Paper-Strategie lief nur nach manuellem Klick und nicht periodisch.
-    - BUY bleibt korrekt signalabhängig; ohne +1 Prozent 24h-Signal soll kein Kauf erzwungen werden.
+    - BUY bleibt korrekt signalabhÃ¤ngig; ohne +1 Prozent 24h-Signal soll kein Kauf erzwungen werden.
   fixes:
-    - Vollständige Paper-Konfiguration im Tab Einstellungen: Aktivierung, Intervall, Orderwert, Positionslimit, Gebühr und Slippage.
-    - Produkt-Checkboxen für BTC/EUR, ETH/EUR, SOL/EUR, ADA/EUR und XRP/EUR; gespeicherte Produkte werden abonniert.
-    - Allowlist-Produkte werden nach dem Speichern an den öffentlichen WebSocket übergeben.
-    - Vor jedem Paper-Lauf werden Preise zusätzlich per öffentlichem REST-Ticker aktualisiert.
-    - Hintergrund-Scheduler führt den Paper-Lauf im konfigurierten Intervall aus.
+    - VollstÃ¤ndige Paper-Konfiguration im Tab Einstellungen: Aktivierung, Intervall, Orderwert, Positionslimit, GebÃ¼hr und Slippage.
+    - Produkt-Checkboxen fÃ¼r BTC/EUR, ETH/EUR, SOL/EUR, ADA/EUR und XRP/EUR; gespeicherte Produkte werden abonniert.
+    - Allowlist-Produkte werden nach dem Speichern an den Ã¶ffentlichen WebSocket Ã¼bergeben.
+    - Vor jedem Paper-Lauf werden Preise zusÃ¤tzlich per Ã¶ffentlichem REST-Ticker aktualisiert.
+    - Hintergrund-Scheduler fÃ¼hrt den Paper-Lauf im konfigurierten Intervall aus.
     - Manueller Lauf nutzt dieselbe Preisaktualisierung und dieselbe Engine wie der Scheduler.
     - Konfiguration wird persistent in SQLite gespeichert und ohne App-Neustart angewendet.
   safety:
@@ -120,32 +120,60 @@ release_0_1_0_dev_7:
     coverage_added:
       - Konfigurationsfelder sichtbar und persistent
       - Allowlist-Speicherung
-      - REST-Preis-Fallback für BTC/EUR
+      - REST-Preis-Fallback fÃ¼r BTC/EUR
 
 release_0_1_0_dev_8:
   date: 2026-08-23
-  purpose: Statistischer Markt-Scanner als Grundlage für fundiertere automatische Entscheidungen.
+  purpose: Statistischer Markt-Scanner als Grundlage fÃ¼r fundiertere automatische Entscheidungen.
   preserved:
     - Alle Funktionen und Sicherheitsgrenzen aus dev.7
     - Persistenter Paper-Broker und Scheduler
-    - Öffentliche/private read-only WebSockets, Portfoliohistorie und Ledger-Pagination
+    - Ã–ffentliche/private read-only WebSockets, Portfoliohistorie und Ledger-Pagination
     - Realhandel weiterhin nicht implementiert
   added:
     - Neue GUI-Seite Scanner
     - Abruf und persistenter Cache von Kraken-OHLC-Daten
-    - Ausschließliche Nutzung abgeschlossener Kerzen; laufende Kerze wird verworfen
-    - Statistische Kennzahlen für 24h-Momentum, SMA10/SMA30-Trend, Volatilität, Spread und Quotevolumen
+    - AusschlieÃŸliche Nutzung abgeschlossener Kerzen; laufende Kerze wird verworfen
+    - Statistische Kennzahlen fÃ¼r 24h-Momentum, SMA10/SMA30-Trend, VolatilitÃ¤t, Spread und Quotevolumen
     - Reproduzierbarer Score von 0 bis 100 und Signale BUY, HOLD, AVOID
-    - Datenqualitätsstatus VALID, INSUFFICIENT oder ERROR
-    - Persistente Scanner-Läufe und Ergebnisse mit vollständigen Gründen
+    - DatenqualitÃ¤tsstatus VALID, INSUFFICIENT oder ERROR
+    - Persistente Scanner-LÃ¤ufe und Ergebnisse mit vollstÃ¤ndigen GrÃ¼nden
   model_baseline:
     interval_minutes: 60
     minimum_committed_candles: 30
-    buy_gate: Score mindestens 65, positives Momentum, positiver Trend und Spread höchstens 0.8 Prozent
-    avoid_gate: Score unter 35 oder Spread über 1.5 Prozent
-    note: Baseline ist transparent und noch nicht direkt mit der Paper-Ausführung gekoppelt.
+    buy_gate: Score mindestens 65, positives Momentum, positiver Trend und Spread hÃ¶chstens 0.8 Prozent
+    avoid_gate: Score unter 35 oder Spread Ã¼ber 1.5 Prozent
+    note: Baseline ist transparent und noch nicht direkt mit der Paper-AusfÃ¼hrung gekoppelt.
   next_steps:
-    - Praktischen Scanner-Lauf auf HA OS prüfen
+    - Praktischen Scanner-Lauf auf HA OS prÃ¼fen
     - Scanner-Score kontrolliert mit Paper-Entscheidungen verbinden
-    - Kraken AssetPairs Mindestgrößen und Gebührenstaffeln integrieren
-    - Backtest und Benchmark für die Baseline erstellen
+    - Kraken AssetPairs MindestgrÃ¶ÃŸen und GebÃ¼hrenstaffeln integrieren
+    - Backtest und Benchmark fÃ¼r die Baseline erstellen
+
+release_0_1_0_dev_9:
+  date: 2026-08-23
+  purpose: Scanner kontrolliert mit dem Paper-Broker koppeln und Kraken-Instrumentregeln anwenden.
+  source_baseline: Vollstaendiger vom Benutzer bereitgestellter Repository-Snapshot 0.1.0-dev.8.
+  preserved:
+    - Alle GUI-Seiten, REST-Portfolio, Ledger-Pagination und historische Nullpositionen
+    - Oeffentlicher und privater read-only WebSocket v2 mit Sequenzkontrolle
+    - Persistenter Paper-Broker, Scheduler, Konfiguration und Scanner
+    - Realhandel und Ordertransport weiterhin nicht implementiert
+  added:
+    - Scanner wird vor jedem automatischen Paper-Lauf aktualisiert
+    - Scanner-Signal ist standardmaessig zwingendes fail-closed Gate
+    - BUY nur bei validem Scanner-BUY; AVOID kann bestehende Paper-Position reduzieren
+    - Kraken AssetPairs-Regeln werden vor jedem Lauf synchronisiert und persistent gespeichert
+    - Paper-Kaeufe pruefen Paarstatus, Mindestmenge, Mindestwert und Mengenpraezision
+    - Oeffentliche Kraken-Taker-Gebuehr der ersten Volumenstufe ersetzt bei vorhandenen Paarmetadaten den pauschalen Gebuehrenwert
+    - Entscheidung speichert verwendete Scanner- und Paarregeln
+  limits:
+    - Kontospezifische Gebuehren ueber privaten TradeVolume-Endpunkt sind noch nicht aktiviert
+    - Scanner-Strategie ist eine transparente Baseline und keine Gewinnzusage
+  tests:
+    automated_passed: 24
+    added:
+      - Fehlendes Scanner-Ergebnis blockiert fail-closed
+      - Valides Scanner-BUY nutzt Paargebuehr
+      - Kraken-Mindestorder blockiert zu kleine Simulation
+      - AVOID verkauft eine bestehende Paper-Position

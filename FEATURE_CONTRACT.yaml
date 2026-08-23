@@ -1,4 +1,4 @@
-version: 0.1.0-dev.5
+version: 0.1.0-dev.9
 compatibility_rule: Implementierte Funktionen duerfen nur nach ausdruecklicher Entscheidung mit dokumentierter Migration entfernt werden.
 features:
   ingress_gui: {required: true, status: implemented}
@@ -48,3 +48,14 @@ release_0_1_0_dev_8:
   spread_metric: {required: true, status: implemented}
   scanner_quality_gates: {required: true, status: implemented}
   scanner_paper_coupling: {required: false, status: intentionally_deferred}
+release_0_1_0_dev_9:
+  scanner_paper_coupling: {required: true, status: implemented_fail_closed}
+  scanner_refresh_before_paper_cycle: {required: true, status: implemented}
+  assetpairs_rule_cache: {required: true, status: implemented}
+  pair_status_gate: {required: true, status: implemented}
+  minimum_order_quantity_gate: {required: true, status: implemented}
+  minimum_order_cost_gate: {required: true, status: implemented}
+  lot_precision: {required: true, status: implemented}
+  public_pair_taker_fee: {required: true, status: implemented}
+  account_specific_trade_volume_fee: {required: false, status: deferred}
+  real_order_transport: {required: false, status: prohibited}

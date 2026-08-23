@@ -19,7 +19,7 @@ class MarketScanner:
   volume_quote=sum(v*p for v,p in zip(volumes[-24:],closes[-24:]))
   score=50+max(-25,min(25,momentum*5))+max(-15,min(15,trend*8))-max(0,min(20,volatility*1.5))-max(0,min(20,spread*25))
   score=max(0,min(100,score));signal='BUY' if score>=65 and momentum>0 and trend>0 and spread<=0.8 else ('AVOID' if score<35 or spread>1.5 else 'HOLD')
-  reasons += [f'24h-Momentum {momentum:.2f} %',f'Trend SMA10/SMA30 {trend:.2f} %',f'Volatilität {volatility:.2f} %',f'Spread {spread:.3f} %',f'24h-Quotevolumen ca. {volume_quote:.2f} EUR']
+  reasons += [f'24h-Momentum {momentum:.2f} %',f'Trend SMA10/SMA30 {trend:.2f} %',f'VolatilitÃ¤t {volatility:.2f} %',f'Spread {spread:.3f} %',f'24h-Quotevolumen ca. {volume_quote:.2f} EUR']
   return {'symbol':symbol,'score':round(score,4),'signal':signal,'momentum_pct':round(momentum,6),'volatility_pct':round(volatility,6),'trend_pct':round(trend,6),'spread_pct':round(spread,6),'volume_quote':round(volume_quote,4),'data_points':len(closes),'quality':'VALID','reasons':reasons}
  def run(self,symbols,interval=60):
   stamp=now();valid=buy=hold=avoid=0

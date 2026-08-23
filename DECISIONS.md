@@ -1,4 +1,4 @@
-# Decisions — append-only
+# Decisions â€” append-only
 
 ## 2026-08-23 D001
 Version 0.1 startet read-only; Realhandel ist serverseitig nicht vorhanden.
@@ -19,25 +19,31 @@ Alle internen URLs werden mit Flask `url_for` erzeugt. `X-Ingress-Path` wird als
 - 2026-08-23 Sequenzluecken fuehren zu DEGRADED, Audit und Reconnect mit frischem Snapshot.
 
 ## 2026-08-23 D007
-Der erste Paper-Broker verwendet ausschließlich freigegebene Produkte und Live-Marktdaten. Eine Entscheidung darf nur simuliert ausgeführt werden, wenn die Analyse-/Paper-Automatik aktiv ist.
+Der erste Paper-Broker verwendet ausschlieÃŸlich freigegebene Produkte und Live-Marktdaten. Eine Entscheidung darf nur simuliert ausgefÃ¼hrt werden, wenn die Analyse-/Paper-Automatik aktiv ist.
 
 ## 2026-08-23 D008
-Gebühren und Slippage werden getrennt berechnet, gespeichert und in der GUI gezeigt. Standardwerte sind konservative, konfigurierbare Simulationen und keine Behauptung über die individuelle Kraken-Gebührenstufe.
+GebÃ¼hren und Slippage werden getrennt berechnet, gespeichert und in der GUI gezeigt. Standardwerte sind konservative, konfigurierbare Simulationen und keine Behauptung Ã¼ber die individuelle Kraken-GebÃ¼hrenstufe.
 
 ## 2026-08-23 D009
-Die Baseline ist absichtlich deterministisch und einfach, damit jede Entscheidung reproduzierbar bleibt. Sie ist Ausgangspunkt für spätere Benchmarks und kein KI-Modell.
+Die Baseline ist absichtlich deterministisch und einfach, damit jede Entscheidung reproduzierbar bleibt. Sie ist Ausgangspunkt fÃ¼r spÃ¤tere Benchmarks und kein KI-Modell.
 
 ## 2026-08-23 D010
-Paper-Parameter werden zusätzlich direkt in der Ingress-GUI verwaltet und in SQLite gespeichert. Änderungen gelten ohne App-Neustart.
+Paper-Parameter werden zusÃ¤tzlich direkt in der Ingress-GUI verwaltet und in SQLite gespeichert. Ã„nderungen gelten ohne App-Neustart.
 
 ## 2026-08-23 D011
-Alle Paper-Allowlist-Produkte werden WebSocket-seitig beobachtet. Vor jedem Strategielauf dient der öffentliche REST-Ticker als zusätzlicher Preis-Fallback.
+Alle Paper-Allowlist-Produkte werden WebSocket-seitig beobachtet. Vor jedem Strategielauf dient der Ã¶ffentliche REST-Ticker als zusÃ¤tzlicher Preis-Fallback.
 
 ## 2026-08-23 D012
-Ein Hintergrund-Scheduler führt dieselbe Paper-Pipeline wie der manuelle Knopf aus. Es wird dennoch kein Kauf erzwungen, wenn das reproduzierbare Signal die Schwelle nicht erreicht.
+Ein Hintergrund-Scheduler fÃ¼hrt dieselbe Paper-Pipeline wie der manuelle Knopf aus. Es wird dennoch kein Kauf erzwungen, wenn das reproduzierbare Signal die Schwelle nicht erreicht.
 
 ## 2026-08-23 D013
-Der Scanner verwendet ausschließlich abgeschlossene OHLC-Kerzen. Die laut Kraken stets enthaltene aktuelle, noch nicht abgeschlossene Kerze wird aus der Berechnung entfernt.
+Der Scanner verwendet ausschlieÃŸlich abgeschlossene OHLC-Kerzen. Die laut Kraken stets enthaltene aktuelle, noch nicht abgeschlossene Kerze wird aus der Berechnung entfernt.
 
 ## 2026-08-23 D014
-Scanner-Ergebnisse werden zunächst getrennt von der Paper-Ausführung geführt. Eine Kopplung erfolgt erst nach praktischer Prüfung und Backtest, um keine ungeprüfte Strategie automatisch handeln zu lassen.
+Scanner-Ergebnisse werden zunÃ¤chst getrennt von der Paper-AusfÃ¼hrung gefÃ¼hrt. Eine Kopplung erfolgt erst nach praktischer PrÃ¼fung und Backtest, um keine ungeprÃ¼fte Strategie automatisch handeln zu lassen.
+
+## 2026-08-23 D015
+Ab dev.9 ist das valide Scanner-Ergebnis standardmäßig ein zwingendes Gate für automatische Paper-Orders. Fehlende oder ungültige Scanner-Daten blockieren fail-closed.
+
+## 2026-08-23 D016
+Der Paper-Broker synchronisiert öffentliche AssetPairs-Metadaten und prüft Paarstatus, Mindestmenge, Mindestwert und Mengenpräzision. Die öffentliche erste Taker-Gebührenstufe wird verwendet, solange keine kontospezifische TradeVolume-Auswertung aktiviert ist.

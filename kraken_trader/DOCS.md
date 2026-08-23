@@ -1,9 +1,12 @@
-# Kraken Trader 0.1.0-dev.8
+# Kraken Trader 0.1.0-dev.9
 
-## Markt-Scanner
-1. Unter **Einstellungen** Produkte freigeben.
-2. Den Tab **Scanner** öffnen.
-3. **Freigegebene Produkte jetzt scannen** wählen.
-4. Score, Signal, Momentum, Trend, Volatilität, Spread, Datenpunkte, Qualität und Gründe prüfen.
+## Neuer Entscheidungsweg
+Jeder automatische Paper-Lauf führt nacheinander aus:
+1. Livepreise aktualisieren.
+2. Kraken-AssetPairs-Regeln synchronisieren.
+3. Scanner für freigegebene Produkte aktualisieren.
+4. Nur valide Scanner-Ergebnisse bewerten.
+5. Paarstatus, Mindestmenge, Mindestwert, Präzision, Gebühren und Positionslimit prüfen.
+6. Entscheidung und gegebenenfalls simulierten Trade vollständig protokollieren.
 
-Der Scanner nutzt 1-Stunden-OHLC-Daten. Die aktuelle unfertige Kerze wird nicht ausgewertet. Mindestens 30 abgeschlossene Kerzen sind erforderlich. Die Signale sind noch nicht direkt mit dem Paper-Broker gekoppelt; Realhandel bleibt ausgeschlossen.
+Unter **Einstellungen** ist „Scanner-Signal zwingend verwenden“ standardmäßig aktiv. Ohne valides Scanner-Ergebnis wird keine Paper-Order ausgeführt. Realhandel bleibt ausgeschlossen.

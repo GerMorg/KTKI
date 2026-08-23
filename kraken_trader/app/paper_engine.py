@@ -7,12 +7,17 @@ class PaperEngine:
   self.db=db;self.start=D(start_eur);self.fee=D(fee_bps)/10000;self.slip=D(slippage_bps)/10000;self.maxpct=D(max_position_pct)/100;self.trade_eur=D(trade_eur);self.ensure()
  def ensure(self):
   with self.db.con() as c:
-   c.executescript("""CREATE TABLE IF NOT EXISTS paper_accounts(id INTEGER PRIMARY KEY CHECK(id=1),cash_eur TEXT NOT NULL,initial_eur TEXT NOT NULL,updated_at TEXT NOT NULL);CREATE TABLE IF NOT EXISTS paper_positions(symbol TEXT PRIMARY KEY,quantity TEXT NOT NULL,avg_cost_eur TEXT NOT NULL,updated_at TEXT NOT NULL);CREATE TABLE IF NOT EXISTS paper_trades(id INTEGER PRIMARY KEY AUTOINCREMENT,created_at TEXT NOT NULL,symbol TEXT NOT NULL,side TEXT NOT NULL,quantity TEXT NOT NULL,market_price TEXT NOT NULL,execution_price TEXT NOT NULL,gross_eur TEXT NOT NULL,fee_eur TEXT NOT NULL,slippage_eur TEXT NOT NULL,net_eur TEXT NOT NULL,reason TEXT NOT NULL,decision_json TEXT NOT NULL);CREATE TABLE IF NOT EXISTS paper_decisions(id INTEGER PRIMARY KEY AUTOINCREMENT,created_at TEXT NOT NULL,symbol TEXT NOT NULL,action TEXT NOT NULL,score TEXT NOT NULL,reason TEXT NOT NULL,data_quality TEXT NOT NULL,executed INTEGER NOT NULL,trade_id INTEGER);CREATE TABLE IF NOT EXISTS paper_snapshots(id INTEGER PRIMARY KEY AUTOINCREMENT,created_at TEXT NOT NULL,cash_eur TEXT NOT NULL,positions_eur TEXT NOT NULL,total_eur TEXT NOT NULL,realized_fees_eur TEXT NOT NULL,quality TEXT NOT NULL);""")
+   c.executescript("""CREATE TABLE IF NOT EXISTS paper_accounts(id INTEGER PRIMARY KEY CHECK(id=1),cash_eur TEXT NOT NULL,initial_eur TEXT NOT NULL,updated_at TEXT NOT NULL);CREATE TABLE IF NOT EXISTS paper_positions(symbol TEXT PRIMARY KEY,quantity TEXT NOT NULL,avg_cost_eur TEXT NOT NULL,updated_at TEXT NOT NULL);CREATE TABLE IF NOT EXISTS paper_trades(id INTEGER PRIMARY KEY AUTOINCREMENT,created_at TEXT NOT NULL,symbol TEXT NOT NULL,side TEXT NOT NULL,quantity TEXT NOT NULL,market_price TEXT NOT NULL,execution_price TEXT NOT NULL,gross_eur TEXT NOT NULL,fee_eur TEXT NOT NULL,slippage_eur TEXT NOT NULL,net_eur TEXT NOT NULL,reason TEXT NOT NULL,decision_json TEXT NOT NULL);CREATE TABLE IF NOT EXISTS paper_decisions(id INTEGER PRIMARY KEY AUTOINCREMENT,created_at TEXT NOT NULL,symbol TEXT NOT NULL,action TEXT NOT NULL,score TEXT NOT NULL,reason TEXT NOT NULL,data_quality TEXT NOT NULL,executed INTEGER NOT NULL,trade_id INTEGER);CREATE TABLE IF NOT EXISTS paper_snapshots(id INTEGER PRIMARY KEY AUTOINCREMENT,created_at TEXT NOT NULL,cash_eur TEXT NOT NULL,positions_eur TEXT NOT NULL,total_eur TEXT NOT NULL,realized_fees_eur TEXT NOT NULL,quality TEXT NOT NULL);CREATE TABLE IF NOT EXISTS scanner_results(symbol TEXT PRIMARY KEY,scanned_at TEXT NOT NULL,score TEXT NOT NULL,signal TEXT NOT NULL,momentum_pct TEXT,volatility_pct TEXT,trend_pct TEXT,spread_pct TEXT,volume_quote TEXT,data_points INTEGER NOT NULL,quality TEXT NOT NULL,reasons_json TEXT NOT NULL);CREATE TABLE IF NOT EXISTS pair_rules(symbol TEXT PRIMARY KEY,ordermin TEXT,costmin TEXT,lot_decimals INTEGER,pair_decimals INTEGER,taker_fee_pct TEXT,status TEXT,updated_at TEXT NOT NULL);""")
    c.execute('INSERT OR IGNORE INTO paper_accounts VALUES(1,?,?,?)',(str(self.start),str(self.start),now()))
  def account(self):return self.db.rows('SELECT * FROM paper_accounts WHERE id=1')[0]
  def positions(self):return self.db.rows('SELECT * FROM paper_positions ORDER BY symbol')
  def price(self,symbol):
   r=self.db.rows('SELECT last,change_pct,received_at FROM live_prices WHERE symbol=?',(symbol,));return r[0] if r else None
+ def rule(self,symbol):
+  r=self.db.rows('SELECT * FROM pair_rules WHERE symbol=?',(symbol,));return r[0] if r else None
+ def scanner(self,symbol):
+  try:r=self.db.rows('SELECT * FROM scanner_results WHERE symbol=?',(symbol,));return r[0] if r else None
+  except Exception:return None
  def equity(self):
   cash=D(self.account()['cash_eur']);pv=D(0);missing=[]
   for p in self.positions():
@@ -26,15 +31,21 @@ class PaperEngine:
  def execute(self,symbol,side,gross,reason,decision):
   x=self.price(symbol)
   if not x:raise ValueError('Kein Livepreis')
-  market=D(x['last']);gross=D(gross);cash,pv,total,_=self.equity();pos=next((p for p in self.positions() if p['symbol']==symbol),None);oldqty=D(pos['quantity']) if pos else D(0);oldcost=D(pos['avg_cost_eur']) if pos else D(0)
+  rule=self.rule(symbol);market=D(x['last']);gross=D(gross);cash,pv,total,_=self.equity();pos=next((p for p in self.positions() if p['symbol']==symbol),None);oldqty=D(pos['quantity']) if pos else D(0);oldcost=D(pos['avg_cost_eur']) if pos else D(0)
+  fee_rate=D(rule['taker_fee_pct'])/100 if rule and rule.get('taker_fee_pct') else self.fee
+  if rule and rule.get('status') not in (None,'online'):raise ValueError('Kraken-Paarstatus nicht online')
   if side=='BUY':
-   gross=min(gross,cash/(1+self.fee));execp=market*(1+self.slip);qty=(gross/execp).quantize(Decimal('0.00000001'),rounding=ROUND_DOWN);gross=qty*execp;fee=gross*self.fee;net=gross+fee
+   gross=min(gross,cash/(1+fee_rate));execp=market*(1+self.slip);decimals=int(rule['lot_decimals']) if rule and rule.get('lot_decimals') is not None else 8;quant=Decimal(1).scaleb(-decimals);qty=(gross/execp).quantize(quant,rounding=ROUND_DOWN);gross=qty*execp;fee=gross*fee_rate;net=gross+fee
+   if rule and qty<D(rule.get('ordermin')):raise ValueError('Unter Kraken-Mindestmenge')
+   if rule and gross<D(rule.get('costmin')):raise ValueError('Unter Kraken-Mindestwert')
    if qty<=0 or net>cash:raise ValueError('Nicht genügend Paper-Cash')
    newqty=oldqty+qty;avg=((oldqty*oldcost)+gross)/newqty;newcash=cash-net
   else:
-   qty=min(oldqty,(gross/(market*(1-self.slip))).quantize(Decimal('0.00000001'),rounding=ROUND_DOWN));execp=market*(1-self.slip);gross=qty*execp;fee=gross*self.fee;net=gross-fee
-   if qty<=0:raise ValueError('Keine Paper-Position');newqty=oldqty-qty;avg=oldcost;newcash=cash+net
+   execp=market*(1-self.slip);qty=min(oldqty,(gross/execp).quantize(Decimal('0.00000001'),rounding=ROUND_DOWN));gross=qty*execp;fee=gross*fee_rate;net=gross-fee
+   if qty<=0:raise ValueError('Keine Paper-Position')
+   newqty=oldqty-qty;avg=oldcost;newcash=cash+net
   slip=abs(execp-market)*qty
+  decision=dict(decision,fee_rate_pct=str(fee_rate*100),pair_rule=rule)
   with self.db.con() as c:
    c.execute('UPDATE paper_accounts SET cash_eur=?,updated_at=? WHERE id=1',(str(newcash),now()))
    if newqty>0:c.execute('INSERT OR REPLACE INTO paper_positions VALUES(?,?,?,?)',(symbol,str(newqty),str(avg),now()))
@@ -42,28 +53,26 @@ class PaperEngine:
    cur=c.execute('INSERT INTO paper_trades(created_at,symbol,side,quantity,market_price,execution_price,gross_eur,fee_eur,slippage_eur,net_eur,reason,decision_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',(now(),symbol,side,str(qty),str(market),str(execp),str(gross),str(fee),str(slip),str(net),reason,json.dumps(decision,sort_keys=True)));tid=cur.lastrowid
   self.snapshot();return tid
  def run(self):
-  enabled=self.db.rows("SELECT value FROM settings WHERE key='automation_enabled'");active=bool(enabled and enabled[0]['value']=='true');allowed=[x['symbol'] for x in self.db.rows('SELECT symbol FROM allowlist WHERE enabled=1')];results=[];cash,pv,total,missing=self.equity()
+  active=self.db.value('automation_enabled','false')=='true';scanner_required=self.db.value('scanner_required','false')=='true';allowed=[x['symbol'] for x in self.db.rows('SELECT symbol FROM allowlist WHERE enabled=1')];results=[];cash,pv,total,missing=self.equity()
   for symbol in allowed:
-   x=self.price(symbol);action='HOLD';executed=0;tid=None;quality='LIVE' if x else 'MISSING';score=D(x['change_pct']) if x and x.get('change_pct') is not None else D(0);reason='Kein aktueller Livepreis'
-   if x:
-    pos=next((p for p in self.positions() if p['symbol']==symbol),None);value=D(pos['quantity'])*D(x['last']) if pos else D(0);cap=total*self.maxpct
-    if score>=D('1.0') and value<cap:action='BUY';reason='24h-Momentum >= 1 %, Positionslimit frei'
-    elif score<=D('-1.5') and value>0:action='SELL';reason='24h-Momentum <= -1,5 %, Paper-Risikoreduktion'
-    else:reason='Signal unter Schwelle oder Positionslimit erreicht'
-   decision={'symbol':symbol,'score_pct':str(score),'action':action,'quality':quality,'automation_enabled':active}
+   x=self.price(symbol);scan=self.scanner(symbol);action='HOLD';executed=0;tid=None;quality='LIVE' if x else 'MISSING';score=D(scan['score']) if scan else D(0);reason='Kein aktueller Livepreis'
+   pos=next((p for p in self.positions() if p['symbol']==symbol),None);value=D(pos['quantity'])*D(x['last']) if pos and x else D(0);cap=total*self.maxpct
+   if x and scanner_required and (not scan or scan['quality']!='VALID'):
+    quality='SCANNER_MISSING';reason='Kein valides Scanner-Ergebnis; fail-closed'
+   elif x and scanner_required:
+    action=scan['signal'] if scan['signal'] in ('BUY','HOLD') else ('SELL' if scan['signal']=='AVOID' and value>0 else 'HOLD');reason='Scanner '+scan['signal']+' mit Score '+scan['score']
+   elif x:
+    momentum=D(x.get('change_pct'));score=momentum
+    if momentum>=D('1.0') and value<cap:action='BUY';reason='Fallback-Momentum >= 1 %'
+    elif momentum<=D('-1.5') and value>0:action='SELL';reason='Fallback-Momentum <= -1,5 %'
+    else:reason='Fallback-Signal unter Schwelle'
+   decision={'symbol':symbol,'score':str(score),'action':action,'quality':quality,'automation_enabled':active,'scanner_required':scanner_required,'scanner_signal':scan['signal'] if scan else None}
    if active and quality=='LIVE' and action in ('BUY','SELL'):
     try:tid=self.execute(symbol,action,min(self.trade_eur,max(D(0),cap-value) if action=='BUY' else value),reason,decision);executed=1
     except ValueError as e:reason+='; nicht ausgeführt: '+str(e)
    with self.db.con() as c:c.execute('INSERT INTO paper_decisions(created_at,symbol,action,score,reason,data_quality,executed,trade_id) VALUES(?,?,?,?,?,?,?,?)',(now(),symbol,action,str(score),reason,quality,executed,tid))
    results.append(decision|{'executed':bool(executed),'reason':reason})
-  self.snapshot();self.db.audit('PAPER_STRATEGY_RUN',json.dumps({'allowed':len(allowed),'executed':sum(1 for x in results if x['executed']),'automation_enabled':active}))
-  return results
-
+  self.snapshot();self.db.audit('PAPER_STRATEGY_RUN',json.dumps({'allowed':len(allowed),'executed':sum(1 for x in results if x['executed']),'automation_enabled':active,'scanner_required':scanner_required}));return results
 def configure_engine(engine):
- def value(key,default):
-  rows=engine.db.rows('SELECT value FROM settings WHERE key=?',(key,));return rows[0]['value'] if rows else default
- engine.fee=D(value('paper_fee_bps',40))/10000
- engine.slip=D(value('paper_slippage_bps',10))/10000
- engine.maxpct=D(value('paper_max_position_pct',10))/100
- engine.trade_eur=D(value('paper_trade_eur',25))
- return engine
+ def value(key,default):return engine.db.value(key,default)
+ engine.fee=D(value('paper_fee_bps',40))/10000;engine.slip=D(value('paper_slippage_bps',10))/10000;engine.maxpct=D(value('paper_max_position_pct',10))/100;engine.trade_eur=D(value('paper_trade_eur',25));return engine
