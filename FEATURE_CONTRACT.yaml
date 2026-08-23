@@ -31,3 +31,10 @@ release_0_1_0_dev_6:
   deterministic_baseline: {required: true, status: implemented}
   live_data_gate: {required: true, status: implemented}
   real_order_transport: {required: false, status: absent}
+release_0_1_0_dev_7:
+  paper_gui_configuration: {required: true, status: implemented}
+  persistent_runtime_configuration: {required: true, status: implemented}
+  allowlist_market_subscription: {required: true, status: implemented}
+  rest_ticker_fallback: {required: true, status: implemented}
+  paper_scheduler: {required: true, status: implemented}
+  forced_trade_without_signal: {required: false, status: prohibited}

@@ -11,3 +11,6 @@ Ingress-Navigation repariert; API-Diagnoseseite ergänzt; alle GUI-Tabs und prä
 
 ## 0.1.0-dev.6 — 2026-08-23
 Erster persistenter Paper-Broker mit Positionen, Trades, Snapshots, Gebühren, Slippage, Positionslimit und begründeter Momentum-Baseline. Alle read-only Kraken- und WebSocket-Funktionen aus dev.5 bleiben erhalten; Realhandel bleibt ausgeschlossen.
+
+## 0.1.0-dev.7 — 2026-08-23
+Sichtbare Paper-Konfiguration, persistente Laufparameter, Allowlist-WebSocket-Abonnement, REST-Preis-Fallback und periodischer Paper-Scheduler. Kein erzwungener Kauf; Signalgates und alle Sicherheitsgrenzen bleiben erhalten.

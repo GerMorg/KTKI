@@ -24,3 +24,13 @@ release_0_1_0_dev_6:
     - {id: M006, expectation: Musterdepot-Seite funktioniert nach HA-Upgrade, status: pending}
     - {id: M007, expectation: Freigegebenes Live-Produkt erzeugt nachvollziehbare Paper-Entscheidung, status: pending}
     - {id: M008, expectation: Bei aktivierter Paper-Automatik erscheint gegebenenfalls ein kostenbehafteter simulierter Trade, status: pending}
+release_0_1_0_dev_7:
+  automated:
+    - {id: T016, expectation: Paper-Konfigurationsfelder sind in der GUI sichtbar, status: passed}
+    - {id: T017, expectation: Einstellungen und Allowlist werden persistent gespeichert, status: passed}
+    - {id: T018, expectation: REST-Fallback speichert BTC/EUR-Livepreis, status: passed}
+  manual:
+    - {id: M009, expectation: Konfigurationskarten erscheinen im Tab Einstellungen, status: pending}
+    - {id: M010, expectation: Ausgewählte Produkte erscheinen nach Speichern weiterhin angehakt, status: pending}
+    - {id: M011, expectation: Paper-Entscheidungen entstehen automatisch im gewählten Intervall, status: pending}
+    - {id: M012, expectation: Bei erfülltem BUY-Signal entsteht ein kostenbehafteter Paper-Trade, status: pending}

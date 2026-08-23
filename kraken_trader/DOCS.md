@@ -1,10 +1,14 @@
-# Kraken Trader 0.1.0-dev.6
+# Kraken Trader 0.1.0-dev.7
 
-## Paper-Broker testen
-1. App aktualisieren und neu starten.
-2. Kraken-Verbindung und WebSocket-Status prüfen.
-3. Unter **Einstellungen** mindestens ein Produkt freigeben und die Analyse-/Paper-Automatik aktivieren.
-4. **Musterdepot** öffnen und **Paper-Strategie jetzt ausführen** wählen.
-5. Unter **Paper-Entscheidungen** Signal, Score, Datenqualität, Ausführungsstatus und Begründung kontrollieren.
+## Konfiguration
+Im Tab **Einstellungen** befinden sich jetzt:
+- Analyse-/Paper-Automatik
+- Ausführungsintervall in Minuten
+- Paper-Orderwert in EUR
+- maximale Positionsgröße in Prozent
+- simulierte Gebühr und Slippage in Basispunkten
+- Produktfreigaben
 
-BUY wird in dieser Baseline ab +1 % 24h-Veränderung erwogen, SELL ab -1,5 %. Das ist eine transparente Teststrategie, kein Gewinnversprechen. Ohne LIVE-Daten oder Freigabe erfolgt kein Trade. Realhandel ist nicht implementiert.
+Mindestens ein Produkt anhaken, Automatik aktivieren und speichern. Danach holt jeder Lauf zunächst öffentliche Preise. Entscheidungen entstehen automatisch im gewählten Intervall und können zusätzlich über **Musterdepot → Paper-Strategie jetzt ausführen** sofort ausgelöst werden.
+
+Ein simulierter Kauf findet nur statt, wenn das Produkt freigegeben ist, ein aktueller Preis vorliegt, die Automatik aktiv ist, das Positionslimit frei ist und die 24-Stunden-Veränderung mindestens +1 % beträgt. Das Ausbleiben eines Kaufs kann daher eine korrekte HOLD-Entscheidung sein. Realhandel ist nicht implementiert.

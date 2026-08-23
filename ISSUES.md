@@ -14,3 +14,12 @@ Paper-Gebühren sind noch konfigurierbare Basispunkte und nicht die kontospezifi
 
 ## 2026-08-23 I004 — offen
 Instrumentabhängige Mindestordergröße und Mindestkosten aus AssetPairs werden noch nicht im Paper-Broker validiert.
+
+## 2026-08-23 I005 — gelöst in 0.1.0-dev.7
+Paper-Konfiguration war in der Ingress-GUI nicht vollständig sichtbar. Gelöst durch eigene Konfigurationskarten im Tab Einstellungen.
+
+## 2026-08-23 I006 — gelöst in 0.1.0-dev.7
+Allowlist-Produkte erhielten nicht zuverlässig Livepreise, da primär Echtportfolio-Symbole abonniert wurden. Gelöst durch Allowlist-Abonnement plus REST-Ticker-Fallback.
+
+## 2026-08-23 I007 — gelöst in 0.1.0-dev.7
+Paper-Strategie lief nicht periodisch. Gelöst durch konfigurierbaren Hintergrund-Scheduler.

@@ -12,7 +12,7 @@ non_negotiable_rules:
   - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
   - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.6
+  version: 0.1.0-dev.7
   status: read-only Kraken-Integration mit oeffentlichem und privatem WebSocket v2; HA-OS-Praxistest fuer dev.5 ausstehend
 implemented:
   - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
@@ -90,3 +90,34 @@ release_0_1_0_dev_6:
     - AssetPairs-Mindestgrößen und kontospezifische Gebühren einbinden
     - Backtest-Datenspeicher und Benchmark entwickeln
     - Scanner um Liquidität, Spread, Volatilität und Trend erweitern
+
+release_0_1_0_dev_7:
+  date: 2026-08-23
+  purpose: Paper-Konfiguration sichtbar machen und den Automatismus tatsächlich periodisch ausführen.
+  user_observations:
+    - Musterdepot und Entscheidungsseite waren vorhanden.
+    - Paper-Konfiguration war in der App-GUI nicht auffindbar.
+    - Es wurde kein simulierter Kauf ausgeführt.
+  root_causes:
+    - Paper-Parameter waren primär Home-Assistant-App-Optionen und nicht vollständig in der Ingress-GUI dargestellt.
+    - Der öffentliche WebSocket beobachtete zuvor hauptsächlich real gehaltene Assets, nicht zuverlässig alle Paper-Allowlist-Produkte.
+    - Die Paper-Strategie lief nur nach manuellem Klick und nicht periodisch.
+    - BUY bleibt korrekt signalabhängig; ohne +1 Prozent 24h-Signal soll kein Kauf erzwungen werden.
+  fixes:
+    - Vollständige Paper-Konfiguration im Tab Einstellungen: Aktivierung, Intervall, Orderwert, Positionslimit, Gebühr und Slippage.
+    - Produkt-Checkboxen für BTC/EUR, ETH/EUR, SOL/EUR, ADA/EUR und XRP/EUR; gespeicherte Produkte werden abonniert.
+    - Allowlist-Produkte werden nach dem Speichern an den öffentlichen WebSocket übergeben.
+    - Vor jedem Paper-Lauf werden Preise zusätzlich per öffentlichem REST-Ticker aktualisiert.
+    - Hintergrund-Scheduler führt den Paper-Lauf im konfigurierten Intervall aus.
+    - Manueller Lauf nutzt dieselbe Preisaktualisierung und dieselbe Engine wie der Scheduler.
+    - Konfiguration wird persistent in SQLite gespeichert und ohne App-Neustart angewendet.
+  safety:
+    - Ein BUY wird weiterhin nicht erzwungen; Schwelle bleibt +1 Prozent 24h.
+    - Ohne aktivierte Paper-Automatik, Allowlist oder aktuelle Preise gibt es keinen simulierten Trade.
+    - Realhandel bleibt technisch nicht implementiert.
+  tests:
+    automated_passed: 17
+    coverage_added:
+      - Konfigurationsfelder sichtbar und persistent
+      - Allowlist-Speicherung
+      - REST-Preis-Fallback für BTC/EUR

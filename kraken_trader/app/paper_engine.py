@@ -58,3 +58,12 @@ class PaperEngine:
    results.append(decision|{'executed':bool(executed),'reason':reason})
   self.snapshot();self.db.audit('PAPER_STRATEGY_RUN',json.dumps({'allowed':len(allowed),'executed':sum(1 for x in results if x['executed']),'automation_enabled':active}))
   return results
+
+def configure_engine(engine):
+ def value(key,default):
+  rows=engine.db.rows('SELECT value FROM settings WHERE key=?',(key,));return rows[0]['value'] if rows else default
+ engine.fee=D(value('paper_fee_bps',40))/10000
+ engine.slip=D(value('paper_slippage_bps',10))/10000
+ engine.maxpct=D(value('paper_max_position_pct',10))/100
+ engine.trade_eur=D(value('paper_trade_eur',25))
+ return engine
