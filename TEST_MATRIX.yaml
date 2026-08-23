@@ -1,20 +1,16 @@
-version: 0.1.0-dev.2
-automated:
-  - {id: T001, area: GUI, expectation: Alle sieben Tabs antworten mit HTTP 200}
-  - {id: T002, area: Ingress, expectation: Links enthalten den dynamischen X-Ingress-Path}
-  - {id: T003, area: Security, expectation: Realhandel meldet immer false}
-  - {id: T004, area: Syntax, expectation: Alle Python-Dateien kompilieren}
-manual:
-  - {id: M001, expectation: Upgrade auf HA OS erfolgreich, status: pending}
-  - {id: M002, expectation: Jeder Tab bleibt innerhalb des HA-Ingress, status: pending}
-  - {id: M003, expectation: API-Tab erkennt Key und zeigt connected, status: pending}
-  - {id: M004, expectation: Portfolio zeigt echte Kraken-Rohbestände, status: pending}
-  - id: T-PORT-003
-    status: passed
-    area: Held/HISTORICAL_ZERO classification and EUR valuation
-  - id: T-PORT-004
-    status: passed
-    area: Portfolio snapshot persistence
-  - id: T-HA-003
-    status: pending_user_test
-    area: HA OS portfolio and WebSocket permission test
+version: 0.1.0-dev.4
+tests:
+  - {id: T-001, area: Flask routes and tabs, status: passed}
+  - {id: T-002, area: Ingress prefix navigation, status: passed}
+  - {id: T-003, area: Real trading hard disabled, status: passed}
+  - {id: T-004, area: Held and historical-zero classification, status: passed}
+  - {id: T-005, area: EUR valuation, status: passed}
+  - {id: T-006, area: Portfolio snapshot persistence, status: passed}
+  - {id: T-007, area: WebSocket status parsing, status: passed}
+  - {id: T-008, area: WebSocket ticker persistence, status: passed}
+  - {id: T-009, area: WebSocket subscription error visibility, status: passed}
+  - {id: T-010, area: WebSocket symbol deduplication and EUR restriction, status: passed}
+  - {id: T-011, area: Stale stream detection, status: passed}
+  - {id: T-HA-001, area: HA OS REST and portfolio sync, status: passed_by_user}
+  - {id: T-HA-002, area: HA OS private WebSocket permission, status: passed_by_user}
+  - {id: T-HA-003, area: HA OS public WebSocket v2 live prices and reconnect, status: pending_user_test}

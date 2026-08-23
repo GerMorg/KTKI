@@ -1,25 +1,23 @@
-version: 0.1.0-dev.2
+version: 0.1.0-dev.4
+compatibility_rule: Implementierte Funktionen duerfen nur nach ausdruecklicher Entscheidung mit dokumentierter Migration entfernt werden.
 features:
   ingress_gui: {required: true, status: implemented}
   ingress_prefix_navigation: {required: true, status: implemented}
   all_gui_tabs: {required: true, status: implemented}
   api_diagnostics: {required: true, status: implemented}
   kraken_read_only_balance: {required: true, status: implemented}
-  kraken_ledger_import: {required: true, status: implemented}
+  kraken_ledger_import_paginated: {required: true, status: implemented}
   persistent_database: {required: true, status: implemented}
+  historical_zero_positions: {required: true, status: implemented}
+  portfolio_snapshots: {required: true, status: implemented}
+  public_websocket_v2_ticker: {required: true, status: implemented}
+  websocket_heartbeat_freshness: {required: true, status: implemented}
+  websocket_reconnect_backoff: {required: true, status: implemented}
+  rest_reconciliation_boundary: {required: true, status: implemented}
   paper_wallet: {required: true, status: implemented}
   audit_log: {required: true, status: implemented}
   automation_kill_switch: {required: true, status: implemented}
   product_allowlist: {required: true, status: implemented}
+  private_websocket_stream: {required: false, status: not_implemented}
   real_trading: {required: false, status: hard_disabled}
   manual_orders: {required: false, status: prohibited}
-compatibility_rule: Implementierte Funktionen dürfen nur nach ausdrücklicher Entscheidung mit dokumentierter Migration entfernt werden.
-  - id: F-PORT-003
-    status: implemented
-    contract: Historische Nullpositionen bleiben aus dem Kraken-Ledger sichtbar.
-  - id: F-PORT-004
-    status: implemented
-    contract: Jeder Realportfolio-Sync erzeugt einen persistenten Snapshot mit Qualitaetsstatus.
-  - id: F-API-003
-    status: implemented
-    contract: Private WebSocket-Berechtigung wird ohne Speicherung oder Anzeige des Tokens getestet.

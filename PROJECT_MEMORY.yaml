@@ -12,8 +12,8 @@ non_negotiable_rules:
   - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
   - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.3
-  status: read-only Kraken-Integration; HA-OS-Praxistest ausstehend
+  version: 0.1.0-dev.4
+  status: read-only Kraken-Integration mit oeffentlichem Live-Marktstream; HA-OS-Praxistest fuer dev.4 ausstehend
 implemented:
   - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
   - Kraken-REST-Signierung und sichere Secret-Konfiguration unter /data/options.json
@@ -23,15 +23,19 @@ implemented:
   - Historische Nullpositionen aus der Ledger-Historie
   - Fail-closed Qualitaetsstatus INCOMPLETE bei nicht bewertbaren gehaltenen Assets
   - WebSocket-Berechtigungstest ueber REST GetWebSocketsToken ohne Speicherung oder Anzeige des Tokens
+  - Oeffentlicher Kraken Spot WebSocket v2 Tickerstream fuer aktuell gehaltene EUR-Assets
+  - Persistente Live-Preise mit Bid Ask Last und Empfangszeit
+  - Statuskanal, Heartbeat-Frische, Stale-Erkennung und exponentieller Reconnect bis 30 Sekunden
+  - REST bleibt kanonisch fuer Portfolio-Snapshots und Reconciliation
   - Paper-Wallet, Kill-Switch, Allowlist, Audit und CSV-Exporte
   - Realhandel serverseitig nicht implementiert
 websocket_decision:
   public_market_data: keine API-Berechtigung erforderlich; spaeter WebSocket v2
   private_account_data: Kraken-Berechtigung Access WebSockets API erforderlich
-  current_usage: nur Berechtigungstest; noch kein dauerhafter Stream
+  current_usage: oeffentlicher v2 Tickerstream aktiv; privater Stream weiterhin nur Berechtigungstest
   architecture: REST bleibt fuer Snapshots, Historie, Reconciliation und Tokenbezug erhalten
 known_limits:
-  - Noch kein dauerhafter WebSocket-Client und keine Live-Aktualisierung
+  - Noch kein privater WebSocket-Stream fuer Kontostand und Ausfuehrungen
   - Kein automatischer Scheduler
   - Keine simulierten Trades in diesem Kraken-Projektstand
   - Keine echten Orders
@@ -44,6 +48,6 @@ problems_and_solutions:
   - problem: Fehlender EUR-Markt koennte falschen Gesamtwert erzeugen
     solution: Kein Schaetzwert; Snapshot wird INCOMPLETE und unbewertete Anzahl gespeichert
 next_steps:
-  - HA-OS-Test von REST, WebSocket-Berechtigung, Portfolio-Sync, Nullpositionen und CSV
-  - Public WebSocket v2 mit Reconnect, Heartbeat, Sequenz-/Stale-Pruefung und REST-Reconciliation
+  - HA-OS-Test des oeffentlichen WebSocket-v2-Streams, Live-Preise, Stale-Status und Reconnect
+  - Privater read-only WebSocket-v2-Stream fuer Balances und Executions mit REST-Reconciliation
   - Realisierte/unrealisierte Ergebnisse und steuerliche Kostenbasis
