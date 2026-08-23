@@ -14,3 +14,12 @@ features:
   real_trading: {required: false, status: hard_disabled}
   manual_orders: {required: false, status: prohibited}
 compatibility_rule: Implementierte Funktionen dürfen nur nach ausdrücklicher Entscheidung mit dokumentierter Migration entfernt werden.
+  - id: F-PORT-003
+    status: implemented
+    contract: Historische Nullpositionen bleiben aus dem Kraken-Ledger sichtbar.
+  - id: F-PORT-004
+    status: implemented
+    contract: Jeder Realportfolio-Sync erzeugt einen persistenten Snapshot mit Qualitaetsstatus.
+  - id: F-API-003
+    status: implemented
+    contract: Private WebSocket-Berechtigung wird ohne Speicherung oder Anzeige des Tokens getestet.

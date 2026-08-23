@@ -2,6 +2,7 @@ import csv,io,json,os
 from flask import Flask,Response,redirect,render_template_string,request,url_for
 from db import DB
 from kraken import KrakenClient,KrakenError
+from portfolio_sync import build_rows,normalize_asset
 class IngressPrefix:
  def __init__(self,app):self.app=app
  def __call__(self,environ,start_response):
@@ -14,41 +15,61 @@ try:
 except Exception:opts={}
 db=DB(os.path.join(DATA,'kraken_trader.db'));db.init(opts.get('paper_start_eur',1000));client=KrakenClient(opts.get('kraken_api_key',''),opts.get('kraken_api_secret',''))
 app=Flask(__name__);app.wsgi_app=IngressPrefix(app.wsgi_app)
-BASE='''<!doctype html><html lang=de><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:dark;--b:#09111f;--c:#142238;--a:#55c6ff;--m:#a9b8cb;--g:#5ee090;--r:#ff7272}*{box-sizing:border-box}body{margin:0;background:var(--b);color:#eef6ff;font:15px system-ui}nav{display:flex;gap:18px;flex-wrap:wrap;padding:16px;background:#101b2d;position:sticky;top:0}a{color:var(--a);text-decoration:none}main{padding:20px;max-width:1200px;margin:auto}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.card{background:var(--c);padding:18px;border-radius:14px}.muted{color:var(--m)}.good{color:var(--g)}.bad{color:var(--r)}table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:9px;border-bottom:1px solid #29405f}button{background:var(--a);border:0;border-radius:8px;padding:10px 14px;font-weight:700}</style></head><body><nav><b>Kraken Trader</b><a href="{{url_for('dashboard')}}">Übersicht</a><a href="{{url_for('api_status')}}">API</a><a href="{{url_for('portfolio')}}">Portfolio</a><a href="{{url_for('paper')}}">Musterdepot</a><a href="{{url_for('audit')}}">Audit</a><a href="{{url_for('settings')}}">Einstellungen</a><a href="{{url_for('exports')}}">Export</a></nav><main>{{body|safe}}</main></body></html>'''
-def page(body):return render_template_string(BASE,body=body)
-def sync_all():
- try:
-  s=client.status();pairs=client.pairs();db.set('kraken_status',s.get('status','unknown'));db.set('product_count',len(pairs));db.set('last_public_sync',__import__('datetime').datetime.now(__import__('datetime').timezone.utc).isoformat())
-  if client.key:
-   b=client.balance();db.replace_balances(b);led=client.ledgers().get('ledger',{});db.import_ledger(led);db.set('private_api','connected');db.audit('kraken_sync',f'assets={len(b)}; ledger={len(led)}')
-  else:db.set('private_api','not_configured')
- except KrakenError as e:db.set('private_api','error');db.set('last_error',str(e));db.audit('sync_failed',str(e),'error')
+BASE='''<!doctype html><html lang=de><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:dark;--b:#09111f;--c:#142238;--a:#55c6ff;--m:#a9b8cb;--g:#5ee090;--r:#ff7272}*{box-sizing:border-box}body{margin:0;background:var(--b);color:#eef6ff;font:15px system-ui}nav{display:flex;gap:18px;flex-wrap:wrap;padding:16px;background:#101b2d;position:sticky;top:0}a{color:var(--a);text-decoration:none}main{padding:20px;max-width:1200px;margin:auto}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.card{background:var(--c);padding:18px;border-radius:14px;margin-bottom:14px}.muted{color:var(--m)}.good{color:var(--g)}.bad{color:var(--r)}table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:9px;border-bottom:1px solid #29405f}button{background:var(--a);border:0;border-radius:8px;padding:10px 14px;font-weight:700}.tag{padding:3px 7px;border-radius:9px;background:#243956}</style></head><body><nav><b>Kraken Trader dev.3</b><a href="{{url_for('dashboard')}}">Übersicht</a><a href="{{url_for('api_status')}}">API</a><a href="{{url_for('portfolio')}}">Portfolio</a><a href="{{url_for('paper')}}">Musterdepot</a><a href="{{url_for('audit')}}">Audit</a><a href="{{url_for('settings')}}">Einstellungen</a><a href="{{url_for('exports')}}">Export</a></nav><main>{{body|safe}}</main></body></html>'''
+def page(body,**ctx):return render_template_string(BASE,body=render_template_string(body,**ctx))
 @app.get('/')
 def dashboard():
- return page(render_template_string('''<h1>Übersicht</h1><div class=grid><div class=card><h3>Kraken API</h3><b>{{pub}}</b><p class=muted>Privat: {{priv}}</p></div><div class=card><h3>Realportfolio</h3><b>{{n}} Assets</b></div><div class=card><h3>Musterdepot</h3><b>{{pn}} Assets</b></div><div class=card><h3>Realhandel</h3><b class=bad>HART DEAKTIVIERT</b></div></div><form method=post action="{{url_for('sync')}}"><p><button>Kraken jetzt synchronisieren</button></p></form>''',pub=db.value('kraken_status'),priv=db.value('private_api','not_checked'),n=len(db.rows('SELECT * FROM balances')),pn=len(db.rows('SELECT * FROM paper_balances'))))
-@app.post('/sync')
-def sync():sync_all();return redirect(url_for('api_status'))
-@app.get('/api')
+ latest=db.rows('SELECT * FROM portfolio_snapshots ORDER BY id DESC LIMIT 1');return page('<h1>HA Kraken Trader</h1><div class=grid><div class=card><h2>Realportfolio</h2><p>{{latest.total_eur if latest else "Noch nicht synchronisiert"}} EUR</p><span class="{{"good" if latest and latest.quality=="VALID" else "bad"}}">{{latest.quality if latest else "UNKNOWN"}}</span></div><div class=card><h2>Sicherheit</h2><p>Echte Orders sind serverseitig nicht implementiert.</p><b>REAL TRADING: AUS</b></div></div>',latest=latest[0] if latest else None)
+@app.get('/health')
+def health():return {'status':'ok','version':'0.1.0-dev.3','real_trading':False,'websocket_status':db.value('websocket_status','not_checked')}
+@app.route('/api',methods=['GET','POST'])
 def api_status():
- return page(render_template_string('''<h1>Kraken API</h1><div class=grid><div class=card><h3>Öffentliche API</h3><b>{{s}}</b><p>{{count}} Instrumente erkannt</p></div><div class=card><h3>Private Read-only API</h3><b>{{p}}</b><p class=muted>Key erkannt: {{key}}</p></div><div class=card><h3>Letzte Synchronisierung</h3><p>{{last}}</p></div></div>{% if err %}<div class=card><h3 class=bad>Letzter Fehler</h3><code>{{err}}</code></div>{% endif %}<form method=post action="{{url_for('sync')}}"><p><button>Verbindung testen und Portfolio laden</button></p></form>''',s=db.value('kraken_status'),count=db.value('product_count','0'),p=db.value('private_api','not_checked'),key='ja' if client.key else 'nein',last=db.value('last_public_sync','noch nie'),err=db.value('last_error')))
-@app.get('/portfolio')
+ msg=''
+ if request.method=='POST':
+  action=request.form.get('action')
+  try:
+   if action=='rest':
+    st=client.status();db.set('kraken_status','ok');db.audit('KRAKEN_REST_TEST','success');msg='REST erfolgreich: '+str(st.get('status','online'))
+   elif action=='websocket':
+    token=client.websocket_token();db.set('websocket_status','ok');db.audit('KRAKEN_WEBSOCKET_TOKEN_TEST','success');msg='Privater WebSocket-Zugriff erfolgreich. Token wurde nicht gespeichert.' if token.get('token') else 'Keine Token-Antwort.'
+  except KrakenError as e:
+   if action=='websocket':db.set('websocket_status','error')
+   else:db.set('kraken_status','error')
+   db.audit('KRAKEN_API_TEST',str(e),'error');msg=str(e)
+ return page('<h1>API</h1><div class=card><p>REST: <b>{{rest}}</b> · privater WebSocket: <b>{{ws}}</b></p><form method=post><button name=action value=rest>REST prüfen</button> <button name=action value=websocket>WebSocket-Berechtigung prüfen</button></form><p>{{msg}}</p><p class=muted>Öffentliche WebSocket-Marktdaten benötigen keinen API-Schlüssel. Für private Kontokanäle wird die Kraken-Berechtigung „Access WebSockets API“ benötigt.</p></div>',rest=db.value('kraken_status'),ws=db.value('websocket_status'),msg=msg)
+def sync_portfolio():
+ balances=client.balance();ledger_assets=set();offset=0
+ while True:
+  result=client.ledgers(offset);entries=result.get('ledger',{});db.import_ledger(entries);ledger_assets.update(x.get('asset') for x in entries.values() if x.get('asset'))
+  count=int(result.get('count',len(entries)))
+  if not entries or offset+len(entries)>=count:break
+  offset+=len(entries)
+ assets=client.assets();pairs=client.pairs();relevant=[]
+ names={normalize_asset(x,assets) for x in set(balances)|ledger_assets}
+ for pair_id,pair in pairs.items():
+  if normalize_asset(pair.get('base',''),assets) in names and normalize_asset(pair.get('quote',''),assets)=='EUR':relevant.append(pair.get('altname',pair_id))
+ tickers=client.ticker(relevant);rows,total,quality=build_rows(balances,ledger_assets,assets,pairs,tickers);db.replace_balances(balances);sid=db.store_portfolio(rows,total,quality);db.audit('REAL_PORTFOLIO_SYNC',json.dumps({'snapshot_id':sid,'assets':len(rows),'quality':quality}));return sid
+@app.route('/portfolio',methods=['GET','POST'])
 def portfolio():
- r=db.rows('SELECT * FROM balances ORDER BY asset');return page(render_template_string('''<h1>Reales Kraken-Portfolio</h1><p class=muted>Read-only Rohbestände. EUR-Bewertung folgt im nächsten Schritt.</p><table><tr><th>Asset</th><th>Menge</th><th>Stand</th></tr>{% for x in r %}<tr><td>{{x.asset}}</td><td>{{x.amount}}</td><td>{{x.updated_at}}</td></tr>{% else %}<tr><td colspan=3>Noch keine Bestände geladen. Im API-Tab synchronisieren.</td></tr>{% endfor %}</table>''',r=r))
+ msg=''
+ if request.method=='POST':
+  try:msg='Snapshot '+str(sync_portfolio())+' gespeichert.'
+  except KrakenError as e:db.audit('REAL_PORTFOLIO_SYNC_FAILED',str(e),'error');msg=str(e)
+ rows=db.rows('SELECT * FROM portfolio_assets ORDER BY classification,display_name');history=db.rows('SELECT * FROM portfolio_snapshots ORDER BY id DESC LIMIT 50')
+ return page('''<h1>Realportfolio</h1><div class=card><form method=post><button>Kraken vollständig synchronisieren</button></form><p>{{msg}}</p><p class=muted>Nullpositionen bleiben als HISTORICAL_ZERO erhalten, wenn das Asset in der Ledger-Historie vorkam.</p><table><tr><th>Asset</th><th>Menge</th><th>EUR-Kurs</th><th>EUR-Wert</th><th>Status</th></tr>{% for x in rows %}<tr><td>{{x.display_name}} <small>{{x.asset}}</small></td><td>{{x.amount}}</td><td>{{x.eur_price or "—"}}</td><td>{{x.eur_value or "—"}}</td><td><span class=tag>{{x.classification}}</span></td></tr>{% endfor %}</table></div><div class=card><h2>Historie</h2><table><tr><th>Zeit</th><th>Gesamt EUR</th><th>Qualität</th><th>Unbewertet</th></tr>{% for x in history %}<tr><td>{{x.created_at}}</td><td>{{x.total_eur}}</td><td>{{x.quality}}</td><td>{{x.unpriced_asset_count}}</td></tr>{% endfor %}</table></div>''',rows=rows,history=history,msg=msg)
 @app.get('/paper')
-def paper():return page(render_template_string('<h1>Musterdepot</h1><table><tr><th>Asset</th><th>Menge</th></tr>{% for x in r %}<tr><td>{{x.asset}}</td><td>{{x.amount}}</td></tr>{% endfor %}</table>',r=db.rows('SELECT * FROM paper_balances')))
+def paper():return page('<h1>Musterdepot</h1><div class=card><p>Bestehendes lokales Musterdepot bleibt erhalten.</p><table>{% for x in rows %}<tr><td>{{x.asset}}</td><td>{{x.amount}}</td></tr>{% endfor %}</table></div>',rows=db.rows('SELECT * FROM paper_balances ORDER BY asset'))
 @app.get('/audit')
-def audit():return page(render_template_string('<h1>Audit</h1><table><tr><th>Zeit</th><th>Ereignis</th><th>Stufe</th><th>Details</th></tr>{% for x in r %}<tr><td>{{x.created_at}}</td><td>{{x.event}}</td><td>{{x.level}}</td><td>{{x.details}}</td></tr>{% endfor %}</table>',r=db.rows('SELECT * FROM audit ORDER BY id DESC LIMIT 200')))
+def audit():return page('<h1>Audit</h1><div class=card><table>{% for x in rows %}<tr><td>{{x.created_at}}</td><td>{{x.event}}</td><td>{{x.level}}</td><td>{{x.details}}</td></tr>{% endfor %}</table></div>',rows=db.rows('SELECT * FROM audit ORDER BY id DESC LIMIT 200'))
 @app.route('/settings',methods=['GET','POST'])
 def settings():
- if request.method=='POST':db.set('automation_enabled','true' if request.form.get('automation') else 'false');db.allow(request.form.getlist('products'));db.audit('settings_changed');return redirect(url_for('settings'))
- chosen={x['symbol'] for x in db.rows('SELECT symbol FROM allowlist WHERE enabled=1')};products=['BTC/EUR','ETH/EUR','SOL/EUR','ADA/EUR','XRP/EUR'];return page(render_template_string('''<h1>Einstellungen</h1><div class=card><b class=bad>Realhandel bleibt technisch deaktiviert.</b></div><form method=post><p><label><input type=checkbox name=automation {{'checked' if enabled}}> Analyse-/Paper-Automatik</label></p>{% for p in products %}<p><label><input type=checkbox name=products value="{{p}}" {{'checked' if p in chosen}}> {{p}}</label></p>{% endfor %}<button>Speichern</button></form>''',enabled=db.value('automation_enabled')=='true',products=products,chosen=chosen))
+ if request.method=='POST':db.set('automation_enabled','true' if request.form.get('automation_enabled') else 'false');db.allow(request.form.getlist('allow'));db.audit('SETTINGS_CHANGED');return redirect(url_for('settings'))
+ return page('<h1>Einstellungen</h1><div class=card><form method=post><label><input type=checkbox name=automation_enabled {% if enabled=="true" %}checked{% endif %}> Analyse- und Paper-Automatik freigeben</label><p>Realhandel bleibt unabhängig davon deaktiviert.</p><button>Speichern</button></form></div>',enabled=db.value('automation_enabled'))
 @app.get('/exports')
-def exports():return page(render_template_string('<h1>Exporte</h1><div class=grid><div class=card><a href="{{url_for(\'export_csv\',kind=\'audit\')}}">Audit CSV</a></div><div class=card><a href="{{url_for(\'export_csv\',kind=\'ledger\')}}">Ledger CSV</a></div></div>'))
-@app.get('/export/<kind>.csv')
-def export_csv(kind):
- if kind=='audit':r=db.rows('SELECT * FROM audit ORDER BY id');f=['id','created_at','event','level','details']
- elif kind=='ledger':r=db.rows('SELECT * FROM ledger ORDER BY occurred_at');f=['id','payload','occurred_at','imported_at']
- else:return 'Nicht gefunden',404
- o=io.StringIO();w=csv.DictWriter(o,fieldnames=f);w.writeheader();w.writerows(r);return Response(o.getvalue(),mimetype='text/csv',headers={'Content-Disposition':f'attachment; filename={kind}.csv'})
-@app.get('/health')
-def health():return {'status':'ok','version':'0.1.0-dev.2','real_trading':False}
+def exports():return page('<h1>Export</h1><div class=card><a href="{{url_for("ledger_csv")}}">Ledger CSV</a> · <a href="{{url_for("portfolio_csv")}}">Portfolio-Historie CSV</a></div>')
+@app.get('/exports/ledger.csv')
+def ledger_csv():
+ out=io.StringIO();w=csv.writer(out);w.writerow(['id','occurred_at','payload']);[w.writerow([x['id'],x['occurred_at'],x['payload']]) for x in db.rows('SELECT * FROM ledger ORDER BY occurred_at')];return Response(out.getvalue(),mimetype='text/csv',headers={'Content-Disposition':'attachment; filename=kraken-ledger.csv'})
+@app.get('/exports/portfolio-history.csv')
+def portfolio_csv():
+ out=io.StringIO();w=csv.writer(out);w.writerow(['created_at','total_eur','priced_asset_count','unpriced_asset_count','quality']);[w.writerow(x.values()) for x in db.rows('SELECT created_at,total_eur,priced_asset_count,unpriced_asset_count,quality FROM portfolio_snapshots ORDER BY id')];return Response(out.getvalue(),mimetype='text/csv',headers={'Content-Disposition':'attachment; filename=kraken-portfolio-history.csv'})

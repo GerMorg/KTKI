@@ -5,3 +5,4 @@ Erster installierbarer Read-only-Stand.
 
 ## 0.1.0-dev.2 — 2026-08-23
 Ingress-Navigation repariert; API-Diagnoseseite ergänzt; alle GUI-Tabs und präfixfähige Exporte implementiert; bestehende Funktionen erhalten.
+- 2026-08-23 0.1.0-dev.3 Portfoliohistorie, Nullpositionen, Ledger-Pagination und WebSocket-Berechtigungstest.

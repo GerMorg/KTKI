@@ -1,49 +1,49 @@
+schema_version: 2
 project:
   name: HA Kraken Trader
   platform: Home Assistant OS auf Laptop
-  target: Vollautomatische auditierbare Kraken-Analyse mit Realportfolio, Paper-Trading, später kontrolliertem Realhandel und österreichischer Steueraufbereitung.
-  delivery: Jede Version als vollständiges GitHub-Repository inklusive vollständigem Project Memory.
+  target: Vollautomatische auditierbare Kraken-Analyse mit Realportfolio, Paper-Trading, spaeter kontrolliertem Realhandel und oesterreichischer Steueraufbereitung.
+  delivery: Jede Version als vollstaendiges GitHub-Repository mit vollstaendigem Project Memory.
 non_negotiable_rules:
-  - Keine bestehende Funktion ungefragt entfernen oder einschränken.
-  - Änderungen testen und Memory, Feature Contract, Test Matrix, Handover und append-only Ledgers aktualisieren.
-  - Keine Secrets in Repository, GUI, Audit oder Export.
-  - KI darf niemals unmittelbar handeln; Risiko- und Freigaberegeln bleiben deterministisch.
-  - Bei fehlenden, veralteten oder widersprüchlichen Daten keine reale Order.
-  - Realhandel und Margin bleiben getrennt, mehrstufig und standardmäßig deaktiviert.
+  - Bestehende Funktionen nie ungefragt entfernen oder einschraenken.
+  - Aenderungen testen; Feature Contract, Test Matrix, Handover und append-only Ledgers aktualisieren.
+  - Keine Secrets, WebSocket-Tokens oder Rohschluessel in GUI, Audit oder Export.
+  - KI darf niemals unmittelbar handeln.
+  - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
+  - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.2
-  status: testbarer Read-only-Entwicklungsstand
-  implemented:
-    - Home-Assistant-Ingress-kompatible Navigation über X-Ingress-Path
-    - funktionierende Tabs Übersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
-    - öffentliche Kraken-System- und Instrumentenabfrage
-    - private read-only Balance- und Ledger-Abfrage
-    - API-Status, letzter Fehler und Synchronisierungszeitpunkt in der GUI
-    - persistente SQLite-Datenbank unter /data
-    - Paper-EUR-Startsaldo
-    - Produktfreigaben und Analyse-/Paper-Kill-Switch
-    - Audit- und Ledger-CSV
-    - Realhandel serverseitig nicht implementiert und hart deaktiviert
-  preserved_from_dev_1:
-    - Ingress-GUI
-    - Kraken-REST-Signierung
-    - SQLite-Persistenz
-    - Paper-Wallet
-    - Audit
-    - Einstellungen
-    - CSV-Exporte
+  version: 0.1.0-dev.3
+  status: read-only Kraken-Integration; HA-OS-Praxistest ausstehend
+implemented:
+  - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
+  - Kraken-REST-Signierung und sichere Secret-Konfiguration unter /data/options.json
+  - Read-only Balance und vollstaendig paginierter Ledgerimport
+  - Asset- und Paar-Metadaten sowie EUR-Tickerbewertung
+  - Persistente Portfolio-Assets und unveraenderliche Snapshots
+  - Historische Nullpositionen aus der Ledger-Historie
+  - Fail-closed Qualitaetsstatus INCOMPLETE bei nicht bewertbaren gehaltenen Assets
+  - WebSocket-Berechtigungstest ueber REST GetWebSocketsToken ohne Speicherung oder Anzeige des Tokens
+  - Paper-Wallet, Kill-Switch, Allowlist, Audit und CSV-Exporte
+  - Realhandel serverseitig nicht implementiert
+websocket_decision:
+  public_market_data: keine API-Berechtigung erforderlich; spaeter WebSocket v2
+  private_account_data: Kraken-Berechtigung Access WebSockets API erforderlich
+  current_usage: nur Berechtigungstest; noch kein dauerhafter Stream
+  architecture: REST bleibt fuer Snapshots, Historie, Reconciliation und Tokenbezug erhalten
 known_limits:
-  - Portfolio zeigt Rohmengen ohne EUR-Bewertung.
-  - Ledger importiert derzeit die erste von Kraken gelieferte Seite; Pagination folgt.
-  - Kein automatischer Scheduler; Synchronisierung wird in der GUI ausgelöst.
-  - Keine Orderausführung und keine simulierten Trades.
+  - Noch kein dauerhafter WebSocket-Client und keine Live-Aktualisierung
+  - Kein automatischer Scheduler
+  - Keine simulierten Trades in diesem Kraken-Projektstand
+  - Keine echten Orders
+  - Direkte EUR-Bewertung; Cross-Rates folgen spaeter
 problems_and_solutions:
-  - problem: Absolute Flask-Links verließen den HA-Ingress; Tabs ergaben 404 und Dashboard führte zum HA-Dashboard.
-    cause: url_for erzeugte Root-Pfade ohne den dynamischen Ingress-Präfix.
-    solution: WSGI-Middleware übernimmt X-Ingress-Path als SCRIPT_NAME; alle Navigationen und Redirects verwenden url_for.
+  - problem: Ehemals gehaltene Assets fehlen im aktuellen Balance-Endpunkt
+    solution: Vereinigung aus aktuellem Balancebestand und allen Ledger-Assets; Menge 0 wird HISTORICAL_ZERO
+  - problem: Teilhistorie durch erste Ledger-Seite
+    solution: Pagination ueber ofs bis Kraken count erreicht ist
+  - problem: Fehlender EUR-Markt koennte falschen Gesamtwert erzeugen
+    solution: Kein Schaetzwert; Snapshot wird INCOMPLETE und unbewertete Anzahl gespeichert
 next_steps:
-  - Installation von dev.2 auf HA OS bestätigen
-  - Private API-Verbindung und Rohportfolio praktisch testen
-  - Kraken-Symbole normalisieren und Portfolio in EUR bewerten
-  - Ledger-Pagination und vollständige Historie ergänzen
-  - Paper-Broker mit Gebühren, Spread und Slippage entwickeln
+  - HA-OS-Test von REST, WebSocket-Berechtigung, Portfolio-Sync, Nullpositionen und CSV
+  - Public WebSocket v2 mit Reconnect, Heartbeat, Sequenz-/Stale-Pruefung und REST-Reconciliation
+  - Realisierte/unrealisierte Ergebnisse und steuerliche Kostenbasis

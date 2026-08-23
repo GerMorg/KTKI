@@ -9,3 +9,12 @@ manual:
   - {id: M002, expectation: Jeder Tab bleibt innerhalb des HA-Ingress, status: pending}
   - {id: M003, expectation: API-Tab erkennt Key und zeigt connected, status: pending}
   - {id: M004, expectation: Portfolio zeigt echte Kraken-Rohbestände, status: pending}
+  - id: T-PORT-003
+    status: passed
+    area: Held/HISTORICAL_ZERO classification and EUR valuation
+  - id: T-PORT-004
+    status: passed
+    area: Portfolio snapshot persistence
+  - id: T-HA-003
+    status: pending_user_test
+    area: HA OS portfolio and WebSocket permission test
