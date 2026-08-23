@@ -1,8 +1,10 @@
-# Bedienung
+# Kraken Trader 0.1.0-dev.6
 
-1. API-Key und Private Key in den App-Optionen speichern.
-2. App neu starten, damit `/data/options.json` erneut eingelesen wird.
-3. Web-UI öffnen und im Tab **API** synchronisieren.
-4. API-Status prüfen und anschließend **Portfolio** öffnen.
+## Paper-Broker testen
+1. App aktualisieren und neu starten.
+2. Kraken-Verbindung und WebSocket-Status prüfen.
+3. Unter **Einstellungen** mindestens ein Produkt freigeben und die Analyse-/Paper-Automatik aktivieren.
+4. **Musterdepot** öffnen und **Paper-Strategie jetzt ausführen** wählen.
+5. Unter **Paper-Entscheidungen** Signal, Score, Datenqualität, Ausführungsstatus und Begründung kontrollieren.
 
-Für diesen Stand nur Kraken-Leserechte vergeben. Keine Order-, Einzahlungs- oder Auszahlungsrechte. Realhandel ist nicht implementiert.
+BUY wird in dieser Baseline ab +1 % 24h-Veränderung erwogen, SELL ab -1,5 %. Das ist eine transparente Teststrategie, kein Gewinnversprechen. Ohne LIVE-Daten oder Freigabe erfolgt kein Trade. Realhandel ist nicht implementiert.

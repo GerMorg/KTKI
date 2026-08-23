@@ -20,3 +20,14 @@ features:
   product_allowlist: {required: true, status: implemented}
   real_trading: {required: false, status: hard_disabled}
   manual_orders: {required: false, status: prohibited}
+release_0_1_0_dev_6:
+  paper_account: {required: true, status: implemented}
+  paper_positions: {required: true, status: implemented}
+  paper_trades: {required: true, status: implemented}
+  paper_decision_log: {required: true, status: implemented}
+  fee_simulation: {required: true, status: implemented_configurable}
+  slippage_simulation: {required: true, status: implemented_configurable}
+  paper_position_limit: {required: true, status: implemented}
+  deterministic_baseline: {required: true, status: implemented}
+  live_data_gate: {required: true, status: implemented}
+  real_order_transport: {required: false, status: absent}

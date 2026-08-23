@@ -15,3 +15,12 @@ tests:
   - {id: T-HA-001, area: HA OS REST portfolio and permission tests, status: passed_by_user}
   - {id: T-HA-002, area: HA OS public WebSocket live prices and restart, status: passed_by_user}
   - {id: T-HA-003, area: HA OS private balance and execution streams, status: pending_user_test}
+release_0_1_0_dev_6:
+  automated:
+    - {id: T013, expectation: Deaktivierte Paper-Automatik protokolliert Signal, erzeugt aber keinen Trade, status: passed}
+    - {id: T014, expectation: Paper-Kauf berücksichtigt positive Gebühr und Slippage, status: passed}
+    - {id: T015, expectation: Paper-Positionswert überschreitet das konfigurierte Limit nicht, status: passed}
+  manual:
+    - {id: M006, expectation: Musterdepot-Seite funktioniert nach HA-Upgrade, status: pending}
+    - {id: M007, expectation: Freigegebenes Live-Produkt erzeugt nachvollziehbare Paper-Entscheidung, status: pending}
+    - {id: M008, expectation: Bei aktivierter Paper-Automatik erscheint gegebenenfalls ein kostenbehafteter simulierter Trade, status: pending}

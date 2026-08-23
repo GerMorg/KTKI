@@ -66,3 +66,6 @@ class DB:
    for x in items:
     key=x.get('exec_id') or (str(x.get('order_id',''))+':'+str(x.get('exec_type',''))+':'+str(x.get('timestamp','')));
     if key:c.execute('INSERT OR IGNORE INTO private_execution_events VALUES(?,?,?,?,?,?,?,?)',(key,x.get('exec_type'),x.get('order_id'),x.get('exec_id'),x.get('symbol'),json.dumps(x,sort_keys=True,separators=(',',':')),sequence,received_at))
+
+ def set_setting(self,key,value):
+  with self.con() as c:c.execute('INSERT OR REPLACE INTO settings VALUES(?,?)',(key,str(value)))

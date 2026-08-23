@@ -28,3 +28,6 @@ Der sichtbare Ticker-Zeitstempel aendert sich nur bei einem gespeicherten Ticker
 
 ## Naechster Schritt
 Nachvollziehbare Kostenbasis sowie realisierte/unrealisierte Ergebnisse aus Kraken-Ledger und Execution-Daten; weiterhin ohne echte Orders.
+
+## Stand 0.1.0-dev.6
+Dev.6 baut unmittelbar auf dev.5 auf. Neu ist `paper_engine.py`. Die Engine hält ein eigenes persistentes Paper-Konto, Positionen, Trades, Entscheidungen und Snapshots. Sie verwendet nur Allowlist-Symbole und `live_prices`. Ohne aktiven Analyse-/Paper-Schalter oder ohne Livepreis wird kein simulierter Trade ausgeführt. Gebühren, Slippage und Positionslimit sind App-Optionen. Der reale Kraken-Transport enthält weiterhin keine Ordermethode.

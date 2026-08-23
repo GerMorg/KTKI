@@ -12,7 +12,7 @@ non_negotiable_rules:
   - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
   - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.5
+  version: 0.1.0-dev.6
   status: read-only Kraken-Integration mit oeffentlichem und privatem WebSocket v2; HA-OS-Praxistest fuer dev.5 ausstehend
 implemented:
   - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
@@ -55,3 +55,38 @@ next_steps:
   - HA-OS-Test der privaten Balance- und Execution-Streams sowie Sequenzen nach Neustart
   - Kostenbasis, realisierte und unrealisierte Ergebnisse aus Ledger und Executions
   - Realisierte/unrealisierte Ergebnisse und steuerliche Kostenbasis
+
+release_0_1_0_dev_6:
+  date: 2026-08-23
+  purpose: Erster funktionsfähiger Paper-Broker und nachvollziehbare regelbasierte Baseline.
+  preserved:
+    - Vollständige Portfoliohistorie und Ledger-Pagination
+    - Öffentlicher und privater read-only WebSocket v2
+    - Sequenzkontrolle, Reconnect und Datenqualitätszustände
+    - Ingress-GUI, Echtportfolio, Audit, Allowlist und Exporte
+    - Realhandel weiterhin technisch nicht implementiert
+  added:
+    - Eigenständiges Paper-Konto mit persistentem EUR-Cash
+    - Persistente Paper-Positionen, Trades, Entscheidungen und Snapshots
+    - Gebühren- und Slippage-Simulation mit separaten Ausweisen je Trade
+    - Positionslimit bezogen auf den aktuellen Paper-Gesamtwert
+    - Deterministische Momentum-Baseline für ausschließlich freigegebene Produkte
+    - BUY ab plus 1 Prozent 24h, SELL ab minus 1.5 Prozent 24h
+    - Ausführung nur bei aktivierter Analyse-/Paper-Automatik und LIVE-Daten
+    - GUI-Seiten Musterdepot und Paper-Entscheidungen
+    - Jede Entscheidung enthält Aktion, Score, Datenqualität, Ausführungsstatus und Begründung
+  configuration:
+    paper_fee_bps: Standard 40 Basispunkte; transparent konfigurierbar
+    paper_slippage_bps: Standard 10 Basispunkte; transparent konfigurierbar
+    paper_max_position_pct: Standard 10 Prozent
+    paper_trade_eur: Standard 25 EUR
+  known_limits:
+    - Baseline ist kein trainiertes Modell und keine Gewinnzusage.
+    - Die Gebühreneinstellung ist eine konservative Simulation und noch nicht kontospezifisch aus GetTradeVolume bezogen.
+    - Strategie wird in dieser Version bewusst über die GUI ausgelöst, nicht zeitgesteuert.
+    - Kraken-Mindestordergrößen werden im Paper-Broker noch nicht je Instrument angewendet.
+  next_steps:
+    - Praktischen HA-Test des Paper-Brokers durchführen
+    - AssetPairs-Mindestgrößen und kontospezifische Gebühren einbinden
+    - Backtest-Datenspeicher und Benchmark entwickeln
+    - Scanner um Liquidität, Spread, Volatilität und Trend erweitern
