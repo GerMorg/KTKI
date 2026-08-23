@@ -12,8 +12,8 @@ non_negotiable_rules:
   - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
   - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.4
-  status: read-only Kraken-Integration mit oeffentlichem Live-Marktstream; HA-OS-Praxistest fuer dev.4 ausstehend
+  version: 0.1.0-dev.5
+  status: read-only Kraken-Integration mit oeffentlichem und privatem WebSocket v2; HA-OS-Praxistest fuer dev.5 ausstehend
 implemented:
   - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
   - Kraken-REST-Signierung und sichere Secret-Konfiguration unter /data/options.json
@@ -27,15 +27,19 @@ implemented:
   - Persistente Live-Preise mit Bid Ask Last und Empfangszeit
   - Statuskanal, Heartbeat-Frische, Stale-Erkennung und exponentieller Reconnect bis 30 Sekunden
   - REST bleibt kanonisch fuer Portfolio-Snapshots und Reconciliation
+  - Privater read-only WebSocket v2 fuer Balances und Executions
+  - Frischer kurzlebiger Authentifizierungstoken pro Verbindung; keine Tokenpersistenz
+  - Kanalgetrennte Sequenzkontrolle, Gap-Audit, DEGRADED-Zustand und Reconnect mit neuem Snapshot
+  - Execution-Ereignisse werden idempotent anhand eindeutiger Ausfuehrungs- oder Ereignisschluessel gespeichert
   - Paper-Wallet, Kill-Switch, Allowlist, Audit und CSV-Exporte
   - Realhandel serverseitig nicht implementiert
 websocket_decision:
   public_market_data: keine API-Berechtigung erforderlich; spaeter WebSocket v2
   private_account_data: Kraken-Berechtigung Access WebSockets API erforderlich
-  current_usage: oeffentlicher v2 Tickerstream aktiv; privater Stream weiterhin nur Berechtigungstest
+  current_usage: oeffentlicher Ticker sowie private read-only Balances und Executions aktiv; keine Ordermethoden
   architecture: REST bleibt fuer Snapshots, Historie, Reconciliation und Tokenbezug erhalten
 known_limits:
-  - Noch kein privater WebSocket-Stream fuer Kontostand und Ausfuehrungen
+  - Private Ausfuehrungsereignisse sind read-only und keine Steuerberechnung
   - Kein automatischer Scheduler
   - Keine simulierten Trades in diesem Kraken-Projektstand
   - Keine echten Orders
@@ -48,6 +52,6 @@ problems_and_solutions:
   - problem: Fehlender EUR-Markt koennte falschen Gesamtwert erzeugen
     solution: Kein Schaetzwert; Snapshot wird INCOMPLETE und unbewertete Anzahl gespeichert
 next_steps:
-  - HA-OS-Test des oeffentlichen WebSocket-v2-Streams, Live-Preise, Stale-Status und Reconnect
-  - Privater read-only WebSocket-v2-Stream fuer Balances und Executions mit REST-Reconciliation
+  - HA-OS-Test der privaten Balance- und Execution-Streams sowie Sequenzen nach Neustart
+  - Kostenbasis, realisierte und unrealisierte Ergebnisse aus Ledger und Executions
   - Realisierte/unrealisierte Ergebnisse und steuerliche Kostenbasis

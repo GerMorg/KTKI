@@ -1,16 +1,17 @@
-version: 0.1.0-dev.4
+version: 0.1.0-dev.5
 tests:
   - {id: T-001, area: Flask routes and tabs, status: passed}
   - {id: T-002, area: Ingress prefix navigation, status: passed}
   - {id: T-003, area: Real trading hard disabled, status: passed}
-  - {id: T-004, area: Held and historical-zero classification, status: passed}
-  - {id: T-005, area: EUR valuation, status: passed}
-  - {id: T-006, area: Portfolio snapshot persistence, status: passed}
-  - {id: T-007, area: WebSocket status parsing, status: passed}
-  - {id: T-008, area: WebSocket ticker persistence, status: passed}
-  - {id: T-009, area: WebSocket subscription error visibility, status: passed}
-  - {id: T-010, area: WebSocket symbol deduplication and EUR restriction, status: passed}
-  - {id: T-011, area: Stale stream detection, status: passed}
-  - {id: T-HA-001, area: HA OS REST and portfolio sync, status: passed_by_user}
-  - {id: T-HA-002, area: HA OS private WebSocket permission, status: passed_by_user}
-  - {id: T-HA-003, area: HA OS public WebSocket v2 live prices and reconnect, status: pending_user_test}
+  - {id: T-004, area: Historical-zero classification and EUR valuation, status: passed}
+  - {id: T-005, area: Portfolio snapshot persistence, status: passed}
+  - {id: T-006, area: Public WebSocket parsing and persistence, status: passed}
+  - {id: T-007, area: Public stream stale and error visibility, status: passed}
+  - {id: T-008, area: Private balance snapshot and incremental update, status: passed}
+  - {id: T-009, area: Private execution idempotency, status: passed}
+  - {id: T-010, area: Per-channel sequence-gap detection, status: passed}
+  - {id: T-011, area: Sequence-gap audit and DEGRADED status, status: passed}
+  - {id: T-012, area: Token never persisted, status: passed}
+  - {id: T-HA-001, area: HA OS REST portfolio and permission tests, status: passed_by_user}
+  - {id: T-HA-002, area: HA OS public WebSocket live prices and restart, status: passed_by_user}
+  - {id: T-HA-003, area: HA OS private balance and execution streams, status: pending_user_test}

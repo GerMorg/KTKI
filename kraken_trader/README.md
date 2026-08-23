@@ -1,4 +1,4 @@
-# HA Kraken Trader 0.1.0-dev.4
+# HA Kraken Trader 0.1.0-dev.5
 
 Read-only Kraken-Portfolio und lokales Paper-Trading als Home-Assistant-App. Realhandel ist hart deaktiviert.
 

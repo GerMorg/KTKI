@@ -1,29 +1,30 @@
 # HA Kraken Trader Projektuebergabe
 
-Stand: 0.1.0-dev.4
+Stand: 0.1.0-dev.5
 
-## Zielbild
-Home-Assistant-App fuer Kraken-Realportfolio, lokales Paper-Trading, nachvollziehbare automatische Bewertung, spaeter streng kontrollierten Realhandel und oesterreichische Steueraufbereitung.
+## Erhalten
+Alle Funktionen aus dev.4 bleiben erhalten: komplette Ingress-GUI, REST-Portfolio, Ledger-Pagination, Nullpositionen, Snapshots, Paper-Wallet, Audit, Exporte, Einstellungen, Kill-Switch, Allowlist und oeffentlicher WebSocket-v2-Ticker. Realhandel und manuelle Orders sind weiterhin nicht implementiert.
 
-## Erhaltene Funktionen
-Ingress-Navigation, alle GUI-Tabs, signierte Kraken-REST-Abfragen, vollstaendige Ledger-Pagination, Portfoliohistorie samt Nullpositionen, Paper-Wallet, Einstellungen, Kill-Switch, Allowlist, Audit und CSV-Exporte. Realhandel ist nicht implementiert.
+## Neu
+- Privater authentifizierter Kraken WebSocket v2 auf dem read-only Endpoint.
+- Subscription auf balances mit initialem Snapshot und nachfolgenden Ledger-/Balance-Aenderungen.
+- Subscription auf executions mit offenen Orders, letzten Ausfuehrungen und Statusaenderungen.
+- Frischer Token bei jeder neuen Verbindung; Token wird nicht gespeichert, angezeigt oder protokolliert.
+- Getrennte Sequenznummern fuer balances und executions.
+- Eine Sequenzluecke erzeugt Audit, DEGRADED-Status, Verbindungsabbruch und Reconnect; der neue Snapshot baut den Zustand neu auf.
+- Ereignisse werden idempotent gespeichert.
+- Keine WebSocket-Ordermethoden im Code.
 
-## Neue Entwicklungsstufe
-- Oeffentlicher Kraken Spot WebSocket v2 zum Streamen von Tickerpreisen aktuell gehaltener Assets mit direktem EUR-Markt.
-- Persistenz von Last, Bid, Ask, Prozentveraenderung und Empfangszeit.
-- Automatischer Statuskanal und Heartbeat-Auswertung.
-- STALE-Zustand, wenn 30 Sekunden keine Nachricht eintrifft; konfigurierbar von 10 bis 300 Sekunden.
-- Reconnect mit wachsender Wartezeit bis maximal 30 Sekunden und erneuter Subscription.
-- Streamsymbole werden nach jedem REST-Portfoliosync abgeglichen.
-- REST bleibt kanonisch fuer Portfolio-Snapshots, Vollstaendigkeit und Wiederabgleich.
-- Privater WebSocket-Zugriff wird weiterhin nur als Berechtigung getestet; keine privaten Streams und keine Ordertransporte.
+## Hinweis zu dev.4
+Der sichtbare Ticker-Zeitstempel aendert sich nur bei einem gespeicherten Tickerereignis. Heartbeats aktualisieren intern die Verbindungsfrische, erzeugen aber keine sichtbare neue Preiszeile.
 
-## HA-OS-Test
+## HA-OS-Test dev.5
 1. App aktualisieren und starten.
-2. Portfolio vollstaendig synchronisieren.
-3. API-Seite oeffnen: Stream muss fuer gehaltene EUR-Assets CONNECTED und spaeter nicht STALE zeigen.
-4. Last/Bid/Ask und Empfangszeit beobachten.
-5. App neu starten und pruefen, ob Subscription anhand persistierter Positionen wieder aufgebaut wird.
+2. API-Seite oeffnen.
+3. Privater Stream soll CONNECTED zeigen.
+4. Live-Balances sollen erscheinen; Execution-Liste kann bei fehlender aktueller Aktivitaet leer sein.
+5. App neu starten und pruefen, ob Balances erneut als Snapshot geladen werden.
+6. Im Audit darf kein Token erscheinen.
 
 ## Naechster Schritt
-Privater read-only WebSocket-v2-Stream fuer Balances und Executions mit Sequenzkontrolle und REST-Reconciliation. Noch keine Orders.
+Nachvollziehbare Kostenbasis sowie realisierte/unrealisierte Ergebnisse aus Kraken-Ledger und Execution-Daten; weiterhin ohne echte Orders.

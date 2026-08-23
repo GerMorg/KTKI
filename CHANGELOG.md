@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-dev.5
+- Privater read-only Kraken WebSocket v2 fuer Balances und Executions.
+- Frischer Token je Verbindung ohne Speicherung oder Anzeige.
+- Sequenzkontrolle, Gap-Audit, DEGRADED-Zustand und automatischer Snapshot-Neuaufbau.
+- Keine WebSocket-Ordermethoden und keine echten Orders.
+
+
 ## 0.1.0-dev.4
 - Oeffentlicher Kraken Spot WebSocket v2 fuer Live-Ticker aktuell gehaltener EUR-Assets.
 - Persistente Live-Preise, Verbindungs- und Kraken-Systemstatus.

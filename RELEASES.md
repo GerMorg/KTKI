@@ -7,3 +7,4 @@ Erster installierbarer Read-only-Stand.
 Ingress-Navigation repariert; API-Diagnoseseite ergänzt; alle GUI-Tabs und präfixfähige Exporte implementiert; bestehende Funktionen erhalten.
 - 2026-08-23 0.1.0-dev.3 Portfoliohistorie, Nullpositionen, Ledger-Pagination und WebSocket-Berechtigungstest.
 - 2026-08-23 0.1.0-dev.4 oeffentlicher WebSocket-v2-Ticker, persistente Live-Preise, Heartbeat/Stale-Erkennung und Reconnect.
+- 2026-08-23 0.1.0-dev.5 private read-only WebSocket-v2-Balances und Executions mit Sequenzkontrolle.
