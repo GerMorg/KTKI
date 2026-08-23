@@ -1,4 +1,4 @@
-version: 0.1.0-dev.10
+version: 0.1.0-dev.11
 tests:
   - {id: T-001, area: Flask routes and tabs, status: passed}
   - {id: T-002, area: Ingress prefix navigation, status: passed}
@@ -18,8 +18,8 @@ tests:
 release_0_1_0_dev_6:
   automated:
     - {id: T013, expectation: Deaktivierte Paper-Automatik protokolliert Signal, erzeugt aber keinen Trade, status: passed}
-    - {id: T014, expectation: Paper-Kauf berÃ¼cksichtigt positive GebÃ¼hr und Slippage, status: passed}
-    - {id: T015, expectation: Paper-Positionswert Ã¼berschreitet das konfigurierte Limit nicht, status: passed}
+    - {id: T014, expectation: Paper-Kauf berücksichtigt positive Gebühr und Slippage, status: passed}
+    - {id: T015, expectation: Paper-Positionswert überschreitet das konfigurierte Limit nicht, status: passed}
   manual:
     - {id: M006, expectation: Musterdepot-Seite funktioniert nach HA-Upgrade, status: pending}
     - {id: M007, expectation: Freigegebenes Live-Produkt erzeugt nachvollziehbare Paper-Entscheidung, status: pending}
@@ -31,17 +31,17 @@ release_0_1_0_dev_7:
     - {id: T018, expectation: REST-Fallback speichert BTC/EUR-Livepreis, status: passed}
   manual:
     - {id: M009, expectation: Konfigurationskarten erscheinen im Tab Einstellungen, status: pending}
-    - {id: M010, expectation: AusgewÃ¤hlte Produkte erscheinen nach Speichern weiterhin angehakt, status: pending}
-    - {id: M011, expectation: Paper-Entscheidungen entstehen automatisch im gewÃ¤hlten Intervall, status: pending}
-    - {id: M012, expectation: Bei erfÃ¼lltem BUY-Signal entsteht ein kostenbehafteter Paper-Trade, status: pending}
+    - {id: M010, expectation: Ausgewählte Produkte erscheinen nach Speichern weiterhin angehakt, status: pending}
+    - {id: M011, expectation: Paper-Entscheidungen entstehen automatisch im gewählten Intervall, status: pending}
+    - {id: M012, expectation: Bei erfülltem BUY-Signal entsteht ein kostenbehafteter Paper-Trade, status: pending}
 release_0_1_0_dev_8:
   automated:
     - {id: T019, expectation: 49 abgeschlossene Kerzen erzeugen VALID-Analyse, status: passed}
     - {id: T020, expectation: Zu wenige Kerzen erzeugen INSUFFICIENT und AVOID, status: passed}
     - {id: T021, expectation: Scanner-Ergebnis und Scanner-Lauf werden persistent gespeichert, status: passed}
   manual:
-    - {id: M013, expectation: Scanner-Seite lÃ¤dt innerhalb HA-Ingress, status: pending}
-    - {id: M014, expectation: Freigegebene Produkte liefern plausible Kennzahlen und GrÃ¼nde, status: pending}
+    - {id: M013, expectation: Scanner-Seite lädt innerhalb HA-Ingress, status: pending}
+    - {id: M014, expectation: Freigegebene Produkte liefern plausible Kennzahlen und Gründe, status: pending}
 release_0_1_0_dev_9:
   automated:
     - {id: T022, expectation: Fehlendes Scanner-Ergebnis blockiert Paper-Trade fail-closed, status: passed}
@@ -60,3 +60,12 @@ release_0_1_0_dev_10:
   manual:
     - {id: M017, expectation: Umlaute werden in HA-Ingress korrekt angezeigt, status: pending}
     - {id: M018, expectation: Kategorien speichern und Marktbestand dynamisch aktualisieren, status: pending}
+release_0_1_0_dev_11:
+  automated:
+    - {id: T030, expectation: 25 Märkte werden in rotierenden Zehnerpaketen verarbeitet, status: passed}
+    - {id: T031, expectation: Überlappender Scannerlauf wird mit BUSY abgewiesen, status: passed}
+    - {id: T032, expectation: GUI-Quelltext enthält Übersicht ohne Mojibake, status: passed}
+    - {id: T033, expectation: HTML-Antwort deklariert UTF-8 und dekodiert Übersicht korrekt, status: passed}
+  manual:
+    - {id: M019, expectation: Übersicht wird nach HA-Upgrade korrekt angezeigt, status: pending}
+    - {id: M020, expectation: Teil-Lauf startet ohne Absturz und Fortschritt rotiert, status: pending}

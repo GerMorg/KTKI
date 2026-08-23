@@ -1,15 +1,17 @@
 # Changelog
 
+## 0.1.0-dev.11
+- Mojibake in GUI-Texten gezielt entfernt
+- Explizite UTF-8-Responseheader
+- Rotierende Scanner-Teil-Läufe
+- Persistenter Cursor und Überlappungsschutz
+- Asynchroner manueller Scannerstart
+- Konfigurierbare Paketgröße und OHLC-Pause
+- Preis- und Streamlast auf aktuellen Teil-Lauf begrenzt
+- 32 automatisierte Regressionstests
+
 ## 0.1.0-dev.10
-- UTF-8-Bereinigung für Umlaute und Sonderzeichen
-- Produktgruppen statt Einzelproduktfreigaben
-- Dynamisches vollständiges Kraken-Marktinventar
-- Kryptowährungen, xStocks, Forex und hebelfähige Spot-Produkte
-- Überlappende Kategorien und Online-Markt-Gate
-- 28 automatisierte Regressionstests
+- Produktgruppen und vollständiges dynamisches Kraken-Marktinventar
 
 ## 0.1.0-dev.9
 - Scanner-Paper-Kopplung und AssetPairs-Regeln
-
-## 0.1.0-dev.8
-- Statistischer Markt-Scanner

@@ -30,16 +30,19 @@ Der sichtbare Ticker-Zeitstempel aendert sich nur bei einem gespeicherten Ticker
 Nachvollziehbare Kostenbasis sowie realisierte/unrealisierte Ergebnisse aus Kraken-Ledger und Execution-Daten; weiterhin ohne echte Orders.
 
 ## Stand 0.1.0-dev.6
-Dev.6 baut unmittelbar auf dev.5 auf. Neu ist `paper_engine.py`. Die Engine hÃ¤lt ein eigenes persistentes Paper-Konto, Positionen, Trades, Entscheidungen und Snapshots. Sie verwendet nur Allowlist-Symbole und `live_prices`. Ohne aktiven Analyse-/Paper-Schalter oder ohne Livepreis wird kein simulierter Trade ausgefÃ¼hrt. GebÃ¼hren, Slippage und Positionslimit sind App-Optionen. Der reale Kraken-Transport enthÃ¤lt weiterhin keine Ordermethode.
+Dev.6 baut unmittelbar auf dev.5 auf. Neu ist `paper_engine.py`. Die Engine hält ein eigenes persistentes Paper-Konto, Positionen, Trades, Entscheidungen und Snapshots. Sie verwendet nur Allowlist-Symbole und `live_prices`. Ohne aktiven Analyse-/Paper-Schalter oder ohne Livepreis wird kein simulierter Trade ausgeführt. Gebühren, Slippage und Positionslimit sind App-Optionen. Der reale Kraken-Transport enthält weiterhin keine Ordermethode.
 
 ## Stand 0.1.0-dev.7
-Die fehlende praktische Automatisierung aus dev.6 wurde geschlossen. Einstellungen sind vollstÃ¤ndig in der Ingress-GUI sichtbar und werden in `settings` gespeichert. Allowlist-Symbole werden an den Ã¶ffentlichen WebSocket Ã¼bergeben. `refresh_allowed_prices()` aktualisiert sie vor jedem Lauf zusÃ¤tzlich Ã¼ber REST. `paper_scheduler()` fÃ¼hrt `run_paper_cycle()` im konfigurierten Intervall aus. Der manuelle Knopf verwendet exakt dieselbe Pipeline. BUY wird weiterhin nur bei erfÃ¼lltem Signal ausgefÃ¼hrt.
+Die fehlende praktische Automatisierung aus dev.6 wurde geschlossen. Einstellungen sind vollständig in der Ingress-GUI sichtbar und werden in `settings` gespeichert. Allowlist-Symbole werden an den öffentlichen WebSocket übergeben. `refresh_allowed_prices()` aktualisiert sie vor jedem Lauf zusätzlich über REST. `paper_scheduler()` führt `run_paper_cycle()` im konfigurierten Intervall aus. Der manuelle Knopf verwendet exakt dieselbe Pipeline. BUY wird weiterhin nur bei erfülltem Signal ausgeführt.
 
 ## Stand 0.1.0-dev.8
-Neu ist `scanner.py` mit persistenten Tabellen `ohlc_cache`, `scanner_results` und `scanner_runs`. Die Seite **Scanner** analysiert die freigegebenen Produkte auf abgeschlossenen 1-Stunden-Kerzen. Der Scanner ist absichtlich noch nicht direkt mit Paper-Trades gekoppelt; die Ergebnisse sollen zuerst praktisch geprÃ¼ft und spÃ¤ter gebenchmarkt werden.
+Neu ist `scanner.py` mit persistenten Tabellen `ohlc_cache`, `scanner_results` und `scanner_runs`. Die Seite **Scanner** analysiert die freigegebenen Produkte auf abgeschlossenen 1-Stunden-Kerzen. Der Scanner ist absichtlich noch nicht direkt mit Paper-Trades gekoppelt; die Ergebnisse sollen zuerst praktisch geprüft und später gebenchmarkt werden.
 
 ## Stand 0.1.0-dev.9
 Dev.9 wurde unmittelbar aus dem bereitgestellten vollständigen dev.8-Snapshot rekonstruiert. `run_paper_cycle()` aktualisiert Livepreise, AssetPairs-Regeln und Scanner, bevor die PaperEngine entscheidet. Standardmäßig ist `scanner_required=true`: Nur ein valides Scanner-Ergebnis darf eine automatische Paper-Order auslösen. Die Engine prüft zusätzlich Paarstatus, Mindestmenge, Mindestwert und Mengenpräzision und verwendet die öffentliche Taker-Gebühr aus AssetPairs. Alle dev.8-Funktionen bleiben erhalten; Realhandel ist weiterhin nicht implementiert.
 
 ## Stand 0.1.0-dev.10
 Die Einstellungen enthalten keine Einzelprodukte mehr. `market_universe.py` synchronisiert die vollständigen Kraken-Märkte für die Klassen `currency`, `tokenized_asset` und Forex und ordnet sie über eine überlappende Mitgliedschaft Kategorien zu. Der aktuell sichere Analyse- und Paper-Pfad verwendet daraus Online-Märkte mit EUR als Quotierungswährung. Texte und Dokumente wurden als UTF-8 normalisiert.
+
+## Stand 0.1.0-dev.11
+Umlaute wurden nicht nur dateiseitig, sondern zusätzlich über explizite UTF-8-Responseheader abgesichert. Der Scanner verarbeitet das vollständige kategoriebasierte Marktuniversum nicht mehr in einem synchronen Lauf. Ein persistenter Cursor wählt standardmäßig zehn Märkte, OHLC-Aufrufe werden verzögert, manuelle Läufe starten im Hintergrund und ein Lock verhindert Überlappungen. Preisabruf und öffentlicher Stream werden auf den aktuellen Teil-Lauf begrenzt.

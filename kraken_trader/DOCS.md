@@ -1,12 +1,9 @@
-# Kraken Trader 0.1.0-dev.10
+# Kraken Trader 0.1.0-dev.11
 
-## Produktgruppen
-In **Einstellungen** werden ausschließlich Produktgruppen aktiviert:
-- Kryptowährungen (Spot)
-- xStocks / tokenisierte Aktien und ETFs
-- Devisen (Forex)
-- hebelfähige Spot-Produkte
+## Scanner bei großem Marktumfang
+Das vollständige Marktuniversum aktivierter Kategorien bleibt verfügbar. Der Scanner verarbeitet es rotierend in Teil-Läufen, standardmäßig zehn Märkte pro Lauf. Der Fortschritt wird als Cursor gespeichert; der nächste Lauf setzt beim folgenden Markt fort.
 
-Nach dem Speichern liest die App das vollständige aktuelle Marktinventar dieser Klassen von Kraken ein. Einzelne Symbole werden nicht manuell freigegeben. Nur von Kraken als online gemeldete Märkte gelangen in das aktive Universum. Der derzeitige Scanner- und Paper-Pfad verwendet sichere EUR-Quotierungen.
+Unter **Einstellungen** können Paketgröße und Pause zwischen OHLC-Aufrufen angepasst werden. Der manuelle Start läuft im Hintergrund. Ein zweiter gleichzeitiger Lauf wird nicht gestartet.
 
-Alle Oberflächentexte und Dokumente sind UTF-8-kodiert. Realhandel bleibt ausgeschlossen.
+## Zeichenkodierung
+Quelltexte sind UTF-8-kodiert. HTML-, Text-, CSV- und JSON-Antworten deklarieren zusätzlich ausdrücklich `charset=utf-8`.

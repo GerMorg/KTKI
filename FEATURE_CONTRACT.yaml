@@ -1,4 +1,4 @@
-version: 0.1.0-dev.10
+version: 0.1.0-dev.11
 compatibility_rule: Implementierte Funktionen duerfen nur nach ausdruecklicher Entscheidung mit dokumentierter Migration entfernt werden.
 features:
   ingress_gui: {required: true, status: implemented}
@@ -67,3 +67,12 @@ release_0_1_0_dev_10:
   overlapping_market_categories: {required: true, status: implemented}
   xstocks_asset_class: {required: true, status: implemented}
   online_market_gate: {required: true, status: implemented}
+release_0_1_0_dev_11:
+  explicit_utf8_http_charset: {required: true, status: implemented}
+  mojibake_regression_gate: {required: true, status: implemented}
+  bounded_scanner_batches: {required: true, status: implemented}
+  persistent_scanner_cursor: {required: true, status: implemented}
+  scanner_overlap_lock: {required: true, status: implemented}
+  asynchronous_manual_scan: {required: true, status: implemented}
+  rate_aware_ohlc_delay: {required: true, status: implemented}
+  complete_market_inventory_preserved: {required: true, status: implemented}
