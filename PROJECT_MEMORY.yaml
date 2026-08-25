@@ -251,3 +251,20 @@ release_0_1_0_dev_20:
     - external AI news analysis configuration
     - dynamic paper allocation and leverage safety
     - real execution hard disabled
+release_0_1_0_dev_21:
+  date: 2026-08-25
+  base: 0.1.0-dev.20
+  purpose: Umlaut- und Mojibake-Fehler dauerhaft an Quelle, Transport und bestehender Datenhaltung verhindern.
+  added:
+    - conservative text repair helper
+    - idempotent SQLite display-text migration
+    - UTF-8 Git and editor policy
+    - HTTP charset and nosniff header
+    - regression examples for umlauts, euro sign and dash
+  next_steps:
+    - validate dev.21 on Home Assistant OS with the existing database
+    - establish reproducible backtest and benchmark storage
+    - calibrate forecast confidence without automatic live weight changes
+    - integrate instrument minimums and account-specific fee data
+    - add Austrian tax-lot and evidence export
+    - create staged real-execution approval workflow while keeping transport disabled by default

@@ -40,3 +40,6 @@ Hotfix für Prognose-Inserts bei Mehrklassen-Scans und vollständige UTF-8-Berei
 
 ## 0.1.0-dev.20 — 2026-08-25
 Vorfilter-Deduplizierung für Mehrfachkategorien, konfliktfeste Persistenz und vollständige UTF-8-Reparatur auf Basis des vom Benutzer übergebenen dev.19-Letztstands.
+
+## 0.1.0-dev.21 — 2026-08-25
+Endgültige UTF-8-Absicherung mit Quelltextprüfung, Git-/Editor-Regeln, HTTP-Charset und einmaliger Migration bestehender SQLite-Anzeigetexte.

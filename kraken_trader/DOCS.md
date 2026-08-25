@@ -1,10 +1,10 @@
-# Kraken Trader 0.1.0-dev.20
+# Kraken Trader 0.1.0-dev.21
 
-## Vorfilter
-Ein Markt kann mehreren Produktgruppen angehören. Für `prefilter_results` wird er dennoch genau einmal je Lauf und Symbol gespeichert. Bei einem hebelfähigen xStock hat die Kategorie `xstocks` Vorrang vor der zusätzlichen Gruppenzuordnung `leveraged_spot`; die Hebelmetadaten bleiben erhalten.
+## Dauerhafte UTF-8-Strategie
+1. Alle Repository-Texte sind UTF-8 mit LF.
+2. `.editorconfig` und `.gitattributes` verhindern abweichende neue Dateien.
+3. HTML, JSON, CSV und Text werden mit UTF-8-Charset ausgeliefert.
+4. Beim ersten Start repariert eine idempotente Migration bekannte Altfehler in gespeicherten Anzeigetexten.
+5. Automatische Tests prüfen typische Fehlerbilder und das gesamte Repository.
 
-## Aktien und xStocks
-EUR- und USD-Paare bleiben zugelassen. xStocks werden als `tokenized_asset` am internationalen Ausführungsplatz geladen. Fehlende Vorfilter-Ticker dürfen als `PENDING_TICKER` in die Detailprüfung gelangen, lösen ohne valide Detailanalyse aber keinen Paper-Trade aus.
-
-## Zeichenkodierung
-Alle Python-, Markdown-, YAML- und Textdateien sind UTF-8. Ein Repository-Test prüft typische Mojibake-Marker sowie sichtbare Wörter wie „Übersicht“ und „Gebühr“.
+Die Migration verändert einen Wert nur, wenn die Rückwandlung die Anzahl bekannter Beschädigungsmarker reduziert. Das Ergebnis wird im Audit als `UTF8_DATA_MIGRATION` protokolliert.

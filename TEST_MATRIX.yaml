@@ -106,3 +106,10 @@ release_0_1_0_dev_20:
   manual:
     - {id: M036, expectation: HA-Research-Lauf mit xStocks und Hebelprodukten endet ohne UNIQUE-Fehler, status: pending}
     - {id: M037, expectation: Alle GUI-Tabs zeigen Umlaute korrekt, status: pending}
+release_0_1_0_dev_21:
+  automated:
+    - {id: T069, expectation: Typische einfache und doppelte Mojibake-Folgen werden korrekt repariert, status: passed}
+    - {id: T070, expectation: Bestehende SQLite-Anzeigetexte werden einmalig und idempotent repariert, status: passed}
+    - {id: T071, expectation: Repository enthält keine bekannten Kodierungsmarker, status: passed}
+  manual:
+    - {id: M038, expectation: Bestehende HA-Datenbank zeigt nach dem ersten Start alle Umlaute korrekt, status: pending}

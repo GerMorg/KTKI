@@ -61,3 +61,6 @@ Der dev.19-Vorfilter verwendete `DISTINCT` über Symbol und Kategorie. Hebelfäh
 
 ## 2026-08-25 I028 — gelöst in 0.1.0-dev.20
 Der übergebene dev.19-Snapshot enthielt weiterhin sichtbare Mojibake-Folgen. Alle Repository-Texte wurden erneut als UTF-8 repariert und ein vollständiger Test über Quelltexte, Dokumentation und GUI-Texte ergänzt.
+
+## 2026-08-25 I029 — gelöst in 0.1.0-dev.21
+Eine reine Quelltextkorrektur reparierte keine bereits beschädigt in SQLite gespeicherten Texte. Dev.21 führt beim ersten Start eine konservative, idempotente Datenmigration aus und repariert nur Werte, deren bekannte Mojibake-Marker durch eine CP1252-zu-UTF-8-Rückwandlung tatsächlich abnehmen.

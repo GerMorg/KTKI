@@ -79,3 +79,6 @@ Alle ausgelieferten Textdateien und sichtbaren GUI-Texte sind echtes UTF-8. Typi
 
 ## 2026-08-25 D036
 Die angehängte Repository-Snapshot-Version ist ab sofort immer die alleinige Entwicklungsbasis. Ein Markt darf mehreren aktivierten Gruppen angehören, wird in `prefilter_results` wegen des Primärschlüssels `(run_id,symbol)` aber vor Bewertung kanonisch auf genau einen Datensatz reduziert.
+
+## 2026-08-25 D037
+UTF-8 wird ab dev.21 auf vier Ebenen abgesichert: UTF-8-Quelltexte, Git-/Editor-Regeln, explizite HTTP-Charsets und eine idempotente Startmigration für bereits beschädigte SQLite-Anzeigetexte.

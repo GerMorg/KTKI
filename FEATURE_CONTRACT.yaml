@@ -104,3 +104,9 @@ release_0_1_0_dev_20:
   prefilter_conflict_safe_persistence: {required: true, status: implemented}
   multicategory_xstock_regression: {required: true, status: passed}
   complete_utf8_repository_gate: {required: true, status: passed}
+release_0_1_0_dev_21:
+  utf8_source_gate: {required: true, status: enforced}
+  utf8_http_charset: {required: true, status: enforced}
+  utf8_git_editor_policy: {required: true, status: implemented}
+  persisted_mojibake_migration: {required: true, status: implemented_idempotent}
+  utf8_regression_examples: {required: true, status: passed}

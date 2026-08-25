@@ -60,3 +60,6 @@ Der Mehrklassenlauf scheiterte beim Prognose-Snapshot, weil `research_forecasts`
 
 ## Stand 0.1.0-dev.20
 Dev.20 basiert ausschließlich auf dem vom Benutzer gelieferten dev.19-Snapshot. Die konkrete UNIQUE-Ursache liegt in der bisherigen SQL-Abfrage: `DISTINCT` umfasste auch `m.category`; ein hebelfähiger xStock erschien daher einmal als `xstocks` und nochmals als `leveraged_spot`. Die Mehrfachmitgliedschaft bleibt im Universum erhalten, während der Vorfilter pro Symbol eine kanonische Kategorie auswählt. Zusätzlich schützen eine Schleifen-Deduplizierung und `ON CONFLICT(run_id,symbol) DO UPDATE` die Persistenz. Sämtliche ausgelieferten Texte und sichtbaren GUI-Strings wurden erneut auf echtes UTF-8 repariert.
+
+## Stand 0.1.0-dev.21
+Das Umlautproblem wird nicht mehr nur in den Dateien behandelt. `text_encoding.py` repariert beim ersten Start auch bereits persistierte Anzeigetexte in SQLite und markiert die Migration danach als abgeschlossen. `.editorconfig` und `.gitattributes` erzwingen UTF-8/LF für zukünftige Änderungen. HTTP-Antworten behalten ein explizites UTF-8-Charset und erhalten `X-Content-Type-Options: nosniff`.
