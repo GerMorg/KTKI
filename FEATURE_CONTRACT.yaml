@@ -72,3 +72,14 @@ release_0_1_0_dev_15:
   google_news_rss_fallbacks: {required: true, status: implemented}
   automatic_research_scheduler: {required: true, status: implemented_optional}
   research_overlap_protection: {required: true, status: preserved}
+release_0_1_0_dev_16:
+  xstocks_tokenized_asset: {required: true, status: implemented}
+  usd_market_stream: {required: true, status: implemented}
+  usd_to_eur_valuation: {required: true, status: implemented_via_eurusd}
+  gdelt_tls_cooldown: {required: true, status: implemented}
+  dynamic_paper_position_sizing: {required: true, status: implemented}
+  cost_aware_rebalancing: {required: true, status: implemented}
+  no_trade_band: {required: true, status: implemented}
+  dynamic_paper_leverage: {required: true, status: implemented}
+  leverage_from_kraken_metadata_only: {required: true, status: enforced}
+  real_execution_adapter: {required: false, status: prepared_hard_disabled}

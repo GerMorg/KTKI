@@ -1,5 +1,6 @@
 import hashlib,json,re,time,urllib.error,urllib.request,xml.etree.ElementTree as ET
 from db import now
+from datetime import datetime,timezone,timedelta
 SOURCES=[
  {'name':'GDELT Wirtschaft','url':'https://api.gdeltproject.org/api/v2/doc/doc?query=economy&mode=ArtList&maxrecords=50&format=json&timespan=24h','kind':'gdelt_json','class':'aggregator','weight':0.70},
  {'name':'GDELT Geopolitik','url':'https://api.gdeltproject.org/api/v2/doc/doc?query=geopolitics&mode=ArtList&maxrecords=50&format=json&timespan=24h','kind':'gdelt_json','class':'aggregator','weight':0.70},
@@ -40,7 +41,7 @@ class NewsPrefilter:
    item_cols={x['name'] for x in self.db.rows('PRAGMA table_info(news_items)')}
    for name,definition in [('topics_json',"TEXT NOT NULL DEFAULT '[\"general_market\"]'"),('event_types_json',"TEXT NOT NULL DEFAULT '[\"unspecified\"]'")]:
     if name not in item_cols:c.execute(f'ALTER TABLE news_items ADD COLUMN {name} {definition}')
-   for name,definition in [('last_error','TEXT'),('consecutive_failures','INTEGER NOT NULL DEFAULT 0'),('last_success_at','TEXT')]:
+   for name,definition in [('last_error','TEXT'),('consecutive_failures','INTEGER NOT NULL DEFAULT 0'),('last_success_at','TEXT'),('cooldown_until','TEXT')]:
     if name not in source_cols:c.execute(f'ALTER TABLE news_sources ADD COLUMN {name} {definition}')
    c.execute("UPDATE news_sources SET enabled=0,last_status='REPLACED' WHERE name='GDELT Global'")
    for item in SOURCES:
@@ -81,6 +82,12 @@ class NewsPrefilter:
  def collect(self):
   saved=0;errors=[]
   for src in self.sources():
+   cooldown=src.get('cooldown_until')
+   if cooldown:
+    try:
+     if datetime.now(timezone.utc)<datetime.fromisoformat(cooldown):
+      errors.append({'source':src['name'],'error':'COOLDOWN','detail':cooldown});continue
+    except ValueError:pass
    try:
     response=self._read(src['url']);data,http_status=response if isinstance(response,tuple) else (response,200);items=self._json(data) if src['kind']=='gdelt_json' else self._rss(data)
     with self.db.con() as c:
@@ -90,7 +97,8 @@ class NewsPrefilter:
      c.execute('UPDATE news_sources SET last_status=?,last_checked_at=?,last_error=NULL,consecutive_failures=0,last_success_at=? WHERE name=?',(f'OK HTTP {http_status}',now(),now(),src['name']))
    except Exception as exc:
     code=getattr(exc,'code',None);reason=str(getattr(exc,'reason',exc))[:240];label=f'HTTP {code}' if code else type(exc).__name__;errors.append({'source':src['name'],'error':label,'detail':reason})
-    with self.db.con() as c:c.execute('UPDATE news_sources SET last_status=?,last_checked_at=?,last_error=?,consecutive_failures=COALESCE(consecutive_failures,0)+1 WHERE name=?',(f'ERROR {label}',now(),reason,src['name']))
+    is_tls='handshake operation timed out' in reason.lower();cooldown=(datetime.now(timezone.utc)+timedelta(hours=6)).isoformat() if is_tls else None
+    with self.db.con() as c:c.execute('UPDATE news_sources SET last_status=?,last_checked_at=?,last_error=?,consecutive_failures=COALESCE(consecutive_failures,0)+1,cooldown_until=? WHERE name=?',(('DEGRADED TLS COOLDOWN' if is_tls else f'ERROR {label}'),now(),reason,cooldown,src['name']))
   self.db.audit('NEWS_COLLECT',json.dumps({'saved':saved,'errors':errors},ensure_ascii=False),'warning' if errors else 'info');return {'saved':saved,'errors':errors}
  def link_markets(self,markets,limit=500):
   items=self.db.rows('SELECT n.id,n.title,n.summary,s.weight FROM news_items n JOIN news_sources s ON s.name=n.source_name ORDER BY n.fetched_at DESC LIMIT ?',(limit,));links=[]

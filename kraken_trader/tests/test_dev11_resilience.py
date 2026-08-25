@@ -14,7 +14,7 @@ class Tests(unittest.TestCase):
   self.s.lock.acquire();r=self.s.run(['BTC/EUR'],60,1,0);self.s.lock.release();self.assertEqual(r['status'],'BUSY')
  def test_utf8_source_has_no_mojibake(self):
   from pathlib import Path
-  text=(Path(__file__).parents[1]/'app'/'main.py').read_text('utf-8');self.assertIn('Übersicht',text);self.assertNotIn('à',text)
+  text=(Path(__file__).parents[1]/'app'/'main.py').read_text('utf-8');self.assertIn('Ãœbersicht',text);self.assertNotIn('Ã ',text)
  def test_html_declares_utf8(self):
   os.environ['APP_DISABLE_PAPER_SCHEDULER']='1';import main
-  response=main.app.test_client().get('/');self.assertIn('charset=utf-8',response.headers['Content-Type'].lower());self.assertIn('Übersicht',response.data.decode('utf-8'))
+  response=main.app.test_client().get('/');self.assertIn('charset=utf-8',response.headers['Content-Type'].lower());self.assertIn('Ãœbersicht',response.data.decode('utf-8'))

@@ -21,7 +21,7 @@ class MarketStream:
  def __init__(self,db,enabled=True,stale_seconds=30):
   self.db,self.enabled,self.stale_seconds=db,enabled,max(10,int(stale_seconds));self.symbols=[];self.thread=None;self.stop=threading.Event();self.ws=None
  def set_symbols(self,symbols):
-  clean=sorted({str(x) for x in symbols if x and str(x).endswith('/EUR')});changed=clean!=self.symbols;self.symbols=clean
+  clean=sorted({str(x) for x in symbols if x and '/' in str(x)});changed=clean!=self.symbols;self.symbols=clean
   if changed and self.ws:
    try:self.ws.close()
    except Exception:pass

@@ -1,19 +1,16 @@
-# Kraken Trader 0.1.0-dev.15
+# Kraken Trader 0.1.0-dev.16
 
-## Nachrichtenquellen
+## Aktien und xStocks
+Aktien/xStocks werden als `tokenized_asset` geladen. EUR- und USD-Paare dürfen in Universum, Research und öffentlichem Tickerstream erscheinen. USD-Positionen benötigen einen aktuellen EUR/USD-Kurs für die EUR-Bewertung; fehlt dieser, handelt die Paper-Engine fail-closed.
 
-Die alte Quelle **GDELT Global** wird automatisch deaktiviert. Sie wurde ersetzt durch:
+## Dynamische Paper-Allokation
+Zielpositionen berücksichtigen Konfidenz, Volatilität, minimale und maximale Positionsquote sowie minimale und maximale Transfergröße. Kleine Abweichungen bleiben im No-Trade-Band. Eine schwächere Position wird nur zur Finanzierung verkauft, wenn der Konfidenzvorteil den eingestellten Mindestwert und die geschätzten Rundlaufkosten übersteigt.
 
-- GDELT Wirtschaft
-- GDELT Geopolitik
-- Google News Wirtschaft AT
-- Google News Geopolitik AT
-- EZB Presse
-- Federal Reserve
-- Kraken Blog
+## Dynamischer Paper-Hebel
+Der Hebel ist standardmäßig aus. Nach Aktivierung wählt die Engine ausschließlich Werte aus `leverage_buy` des konkreten Kraken-Marktes und begrenzt sie durch `paper_max_leverage`. Geliehener Paper-Betrag wird separat gespeichert und bei der Eigenkapitalberechnung abgezogen.
 
-GDELT-Abrufe verwenden kleinere Einzelabfragen, einen User-Agent und begrenzte Wiederholungen. Die Scannerseite zeigt HTTP-Status und konkrete Fehlerdetails. Der Ausfall einer Aggregatorquelle stoppt die übrigen Quellen nicht.
+## GDELT
+Ein TLS-Handshake-Timeout setzt die betroffene GDELT-Quelle für sechs Stunden auf `DEGRADED TLS COOLDOWN`. Andere Quellen laufen weiter.
 
-## Automatischer Research-Scanner
-
-Unter **Einstellungen → Research** kann die automatische Research-Pipeline aktiviert und ein Intervall von 5 bis 1.440 Minuten gesetzt werden. Paper-Automatik und Research-Scheduler bleiben getrennt. Ein bereits laufender Research-Auftrag verhindert einen zweiten parallelen Lauf.
+## Realausführung
+`real_execution_adapter.py` definiert nur eine zukünftige Validierungsgrenze. `execute()` ist absichtlich hart deaktiviert; es gibt weiterhin keinen Kraken-Ordertransport.

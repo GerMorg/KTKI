@@ -1,16 +1,15 @@
 # Changelog
 
+## 0.1.0-dev.16
+- Aktien/xStocks über `tokenized_asset`
+- EUR- und USD-Märkte in Universum und öffentlichem Stream
+- EUR-Bewertung von USD-Produkten über EUR/USD
+- GDELT-TLS-Cooldown
+- dynamische Paper-Zielgewichte und Transfergrößen
+- kostenbewusste Umschichtung mit No-Trade-Band
+- dynamischer Paper-Hebel aus Kraken-Metadaten
+- simulierte Finanzierungsschuld und Eigenkapitalberechnung
+- Realausführungsadapter vorbereitet, aber hart deaktiviert
+
 ## 0.1.0-dev.15
-- Fehleranfällige GDELT-Global-Abfrage ersetzt
-- Separate GDELT-Abfragen für Wirtschaft und Geopolitik
-- Google-News-RSS für Wirtschaft und Geopolitik in Österreich
-- User-Agent, begrenzte Retries und HTTP-Diagnose
-- Persistenter Fehlerzähler und letzter erfolgreicher Abruf
-- Optionaler automatischer Research-Scheduler
-- Research-Intervall in der GUI und im App-Schema
-
-## 0.1.0-dev.14
-- Idempotente Migration bestehender Nachrichtentabellen
-
-## 0.1.0-dev.13
-- Erweiterte Research-Taxonomie, Prognosen und Watchlist-Versionierung
+- Robuste Nachrichtenquellen und automatischer Research-Scheduler
