@@ -59,3 +59,8 @@ release_0_1_0_dev_13:
   forecast_outcome_evaluation: {required: true, status: implemented}
   automatic_weight_changes: {required: false, status: prohibited}
   news_direct_trading: {required: false, status: prohibited}
+
+release_0_1_0_dev_14:
+  dev12_news_schema_migration: {required: true, status: implemented_idempotent}
+  existing_news_data_preservation: {required: true, status: tested}
+  startup_service_construction_after_upgrade: {required: true, status: tested}

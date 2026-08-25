@@ -48,3 +48,7 @@ Für breite allgemeine Nachrichtenerkennung wird GDELT als offener Aggregator mi
 
 ## 2026-08-25 D024
 Watchlists und Prognosen sind unveränderlich versioniert. Auswertungen verändern Modellgewichte nicht automatisch; neue Gewichte benötigen eine eigene Version und kontrollierte Freigabe.
+
+
+## 2026-08-25 D025
+Datenbankschema-Erweiterungen werden ab dev.14 explizit und idempotent migriert. `CREATE TABLE IF NOT EXISTS` allein gilt nicht als Migration bestehender Tabellen.

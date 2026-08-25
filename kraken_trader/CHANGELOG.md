@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-dev.14
+- Start-Hotfix für bestehende Nachrichtendatenbanken
+- Idempotente SQLite-Migration
+- Explizite Spaltenlisten
+- Upgrade-Regressionstests
+
+
 ## 0.1.0-dev.13
 - Breiter GDELT-Nachrichtenindex plus EZB-, Federal-Reserve- und Kraken-Primärfeeds
 - Quellenklassen und nachvollziehbare Quellengewichte

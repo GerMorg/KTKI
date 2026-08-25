@@ -12,7 +12,7 @@ non_negotiable_rules:
   - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
   - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.13
+  version: 0.1.0-dev.14
   status: read-only Kraken-Integration mit oeffentlichem und privatem WebSocket v2; HA-OS-Praxistest fuer dev.5 ausstehend
 implemented:
   - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
@@ -165,3 +165,16 @@ release_0_1_0_dev_13:
     - Praxistest der Quellen auf Home Assistant OS
     - Taxonomie anhand realer Fehlzuordnungen verbessern
     - Kontrollierten Gewichts-Kandidatenworkflow entwickeln
+
+release_0_1_0_dev_14:
+  date: 2026-08-25
+  purpose: Start-Hotfix für Upgrade von dev.12/dev.13.
+  root_cause: Neue Spalten in news_sources und news_items wurden für bestehende SQLite-Tabellen nicht migriert; neue Inserts erwarteten mehr Spalten als vorhanden.
+  fixes:
+    - Idempotente ALTER-TABLE-Migration für source_class und weight
+    - Idempotente ALTER-TABLE-Migration für topics_json und event_types_json
+    - Explizite Spaltenlisten bei Quellen- und Nachrichten-Inserts
+    - Bestehende Nachrichtendaten bleiben erhalten
+  tests:
+    - Dev.12-Schema migriert ohne Datenverlust
+    - Scanner, Universum, News, Vorfilter, Forecasts und Pipeline konstruieren nach Migration erfolgreich

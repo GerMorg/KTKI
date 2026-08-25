@@ -21,3 +21,7 @@ Statistischer Markt-Scanner mit OHLC-Cache, Momentum, SMA-Trend, Volatilität, S
 
 ## 0.1.0-dev.13 — 2026-08-25
 Erweiterte Nachrichtenarchitektur, Themen- und Ereignistaxonomie, versionierte Watchlists sowie kontrollierte Prognoseauswertung.
+
+
+## 0.1.0-dev.14 — 2026-08-25
+Startreparatur für Upgrades: migrationssichere Nachrichtentabellen, explizite Inserts und Regressionstest mit simuliertem dev.12-Datenbestand.

@@ -33,3 +33,7 @@ Die Nachrichtenabdeckung war zu schmal und ohne allgemeine Ereignistaxonomie. De
 
 ## 2026-08-25 I017 — gelöst in 0.1.0-dev.13
 Watchlists und Prognosen waren nicht historisch vergleichbar. Versionen, Horizonte, Ausgangspreise und spätere Ergebnisbewertungen werden nun persistent gespeichert.
+
+
+## 2026-08-25 I018 — gelöst in 0.1.0-dev.14
+Dev.13 erweiterte `news_sources` und `news_items`, migrierte bestehende Tabellen aus dev.12 jedoch nicht. Beim Anwendungsstart trafen neue Inserts auf alte Spaltenzahlen; der Gunicorn-Worker konnte deshalb nicht booten. Dev.14 ergänzt fehlende Spalten idempotent, verwendet explizite Spaltenlisten und bewahrt bestehende Daten.

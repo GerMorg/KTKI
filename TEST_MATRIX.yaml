@@ -52,3 +52,10 @@ release_0_1_0_dev_13:
   manual:
     - {id: M023, expectation: Quellenstatus und Watchlist-Versionen erscheinen im HA-Ingress, status: pending}
     - {id: M024, expectation: GDELT und verfügbare Primärfeeds liefern aktuelle Metadaten, status: pending}
+
+release_0_1_0_dev_14:
+  automated:
+    - {id: T040, expectation: Dev.12-Nachrichtenschema wird ohne Datenverlust migriert, status: passed}
+    - {id: T041, expectation: Alle Startdienste lassen sich nach der Migration konstruieren, status: passed}
+  manual:
+    - {id: M026, expectation: App startet nach Upgrade mit bestehender Datenbank und Ingress antwortet, status: pending}

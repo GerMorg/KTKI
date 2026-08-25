@@ -30,8 +30,15 @@ class NewsPrefilter:
  def __init__(self,db,timeout=15):self.db,self.timeout=db,timeout;self.ensure()
  def ensure(self):
   with self.db.con() as c:
-   c.executescript("""CREATE TABLE IF NOT EXISTS news_sources(name TEXT PRIMARY KEY,url TEXT NOT NULL,kind TEXT NOT NULL,source_class TEXT NOT NULL,weight TEXT NOT NULL,enabled INTEGER NOT NULL,last_status TEXT,last_checked_at TEXT);CREATE TABLE IF NOT EXISTS news_items(id TEXT PRIMARY KEY,source_name TEXT NOT NULL,title TEXT NOT NULL,url TEXT,published_at TEXT,fetched_at TEXT NOT NULL,summary TEXT NOT NULL,topics_json TEXT NOT NULL,event_types_json TEXT NOT NULL,raw_json TEXT NOT NULL);CREATE TABLE IF NOT EXISTS news_market_links(news_id TEXT NOT NULL,symbol TEXT NOT NULL,relevance TEXT NOT NULL,reason TEXT NOT NULL,PRIMARY KEY(news_id,symbol));""")
-   for s in SOURCES:c.execute('INSERT OR IGNORE INTO news_sources VALUES(?,?,?,?,?,1,NULL,NULL)',(s['name'],s['url'],s['kind'],s['class'],str(s['weight'])))
+   c.executescript("""CREATE TABLE IF NOT EXISTS news_sources(name TEXT PRIMARY KEY,url TEXT NOT NULL,kind TEXT NOT NULL,source_class TEXT NOT NULL DEFAULT 'unknown',weight TEXT NOT NULL DEFAULT '0.5',enabled INTEGER NOT NULL DEFAULT 1,last_status TEXT,last_checked_at TEXT);CREATE TABLE IF NOT EXISTS news_items(id TEXT PRIMARY KEY,source_name TEXT NOT NULL,title TEXT NOT NULL,url TEXT,published_at TEXT,fetched_at TEXT NOT NULL,summary TEXT NOT NULL,topics_json TEXT NOT NULL DEFAULT '[\"general_market\"]',event_types_json TEXT NOT NULL DEFAULT '[\"unspecified\"]',raw_json TEXT NOT NULL DEFAULT '{}');CREATE TABLE IF NOT EXISTS news_market_links(news_id TEXT NOT NULL,symbol TEXT NOT NULL,relevance TEXT NOT NULL,reason TEXT NOT NULL,PRIMARY KEY(news_id,symbol));""")
+   source_cols={x['name'] for x in self.db.rows('PRAGMA table_info(news_sources)')}
+   for name,definition in [('source_class',"TEXT NOT NULL DEFAULT 'unknown'"),('weight',"TEXT NOT NULL DEFAULT '0.5'")]:
+    if name not in source_cols:c.execute(f'ALTER TABLE news_sources ADD COLUMN {name} {definition}')
+   item_cols={x['name'] for x in self.db.rows('PRAGMA table_info(news_items)')}
+   for name,definition in [('topics_json',"TEXT NOT NULL DEFAULT '[\"general_market\"]'"),('event_types_json',"TEXT NOT NULL DEFAULT '[\"unspecified\"]'")]:
+    if name not in item_cols:c.execute(f'ALTER TABLE news_items ADD COLUMN {name} {definition}')
+   for item in SOURCES:
+    c.execute("INSERT INTO news_sources(name,url,kind,source_class,weight,enabled,last_status,last_checked_at) VALUES(?,?,?,?,?,1,NULL,NULL) ON CONFLICT(name) DO UPDATE SET url=excluded.url,kind=excluded.kind,source_class=excluded.source_class,weight=excluded.weight",(item['name'],item['url'],item['kind'],item['class'],str(item['weight'])))
  def sources(self):return self.db.rows('SELECT * FROM news_sources WHERE enabled=1 ORDER BY source_class DESC,name')
  def _read(self,url):return urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'HA-Kraken-Trader/0.1 research@example.invalid'}),timeout=self.timeout).read()
  def _rss(self,data):
@@ -56,7 +63,7 @@ class NewsPrefilter:
     with self.db.con() as c:
      for x in items:
       key=hashlib.sha256((norm(x['title'])+'|'+(x['url'] or '')).encode()).hexdigest();topics,events=classify(x['title']+' '+x['summary']);before=c.total_changes
-      c.execute('INSERT OR IGNORE INTO news_items VALUES(?,?,?,?,?,?,?,?,?,?)',(key,src['name'],x['title'],x['url'],x['published_at'],now(),x['summary'],json.dumps(topics),json.dumps(events),json.dumps(x,ensure_ascii=False)));saved+=c.total_changes-before
+      c.execute('INSERT OR IGNORE INTO news_items(id,source_name,title,url,published_at,fetched_at,summary,topics_json,event_types_json,raw_json) VALUES(?,?,?,?,?,?,?,?,?,?)',(key,src['name'],x['title'],x['url'],x['published_at'],now(),x['summary'],json.dumps(topics),json.dumps(events),json.dumps(x,ensure_ascii=False)));saved+=c.total_changes-before
      c.execute('UPDATE news_sources SET last_status=?,last_checked_at=? WHERE name=?',('OK',now(),src['name']))
    except Exception as exc:
     errors.append({'source':src['name'],'error':type(exc).__name__});
