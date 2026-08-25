@@ -83,8 +83,18 @@ release_0_1_0_dev_16:
   dynamic_paper_leverage: {required: true, status: implemented}
   leverage_from_kraken_metadata_only: {required: true, status: enforced}
   real_execution_adapter: {required: false, status: prepared_hard_disabled}
-release_0_1_0_dev_17:
-  multi_category_market_deduplication: {required: true, status: implemented}
-  one_prefilter_result_per_run_symbol: {required: true, status: enforced}
-  usd_xstocks_prefilter: {required: true, status: implemented}
-  xstocks_scanner_asset_class_routing: {required: true, status: implemented}
+
+release_0_1_0_dev_18:
+  xstocks_execution_venue: {required: true, status: implemented_international}
+  asset_class_ticker_routing: {required: true, status: implemented}
+  individual_ticker_fallback: {required: true, status: implemented}
+  pending_ticker_candidates: {required: true, status: implemented}
+  no_trade_without_valid_detail_analysis: {required: true, status: preserved}
+
+release_0_1_0_dev_19:
+  forecast_named_column_insert: {required: true, status: implemented}
+  forecast_future_column_compatibility: {required: true, status: tested}
+  repository_utf8: {required: true, status: enforced}
+  mojibake_regression_gate: {required: true, status: passed}
+  dev18_candidate_fallback: {required: true, status: preserved}
+  dev17_external_news_ai: {required: true, status: preserved}

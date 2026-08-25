@@ -12,7 +12,8 @@ class ForecastTracker:
     p=self.db.rows('SELECT last FROM live_prices WHERE symbol=?',(symbol,));s=self.db.rows('SELECT score,signal,quality,reasons_json FROM scanner_results WHERE symbol=?',(symbol,))
     if not p or not s or s[0]['quality']!='VALID':continue
     direction='UP' if s[0]['signal']=='BUY' else ('DOWN' if s[0]['signal']=='AVOID' else 'FLAT');confidence=str(min(1,max(0,float(s[0]['score'])/100)))
-    for h in (24,168):c.execute('INSERT INTO research_forecasts VALUES(NULL,?,?,?,?,?,?,?,?,?,?)',(now(),symbol,vid,'rules-v1',h,direction,p[0]['last'],s[0]['score'],confidence,'OPEN',s[0]['reasons_json']));saved+=1
+    for h in (24,168):
+     c.execute('INSERT INTO research_forecasts(created_at,symbol,watchlist_version_id,model_version,horizon_hours,direction,baseline_price,scanner_score,confidence,status,features_json) VALUES(?,?,?,?,?,?,?,?,?,?,?)',(now(),symbol,vid,'rules-v1',h,direction,p[0]['last'],s[0]['score'],confidence,'OPEN',s[0]['reasons_json']));saved+=1
   return saved
  def evaluate_due(self):
   rows=self.db.rows("SELECT * FROM research_forecasts WHERE status='OPEN'");done=0;current=datetime.now(timezone.utc)

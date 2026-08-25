@@ -99,7 +99,7 @@ class NewsPrefilter:
     code=getattr(exc,'code',None);reason=str(getattr(exc,'reason',exc))[:240];label=f'HTTP {code}' if code else type(exc).__name__;errors.append({'source':src['name'],'error':label,'detail':reason})
     is_tls='handshake operation timed out' in reason.lower();cooldown=(datetime.now(timezone.utc)+timedelta(hours=6)).isoformat() if is_tls else None
     with self.db.con() as c:c.execute('UPDATE news_sources SET last_status=?,last_checked_at=?,last_error=?,consecutive_failures=COALESCE(consecutive_failures,0)+1,cooldown_until=? WHERE name=?',(('DEGRADED TLS COOLDOWN' if is_tls else f'ERROR {label}'),now(),reason,cooldown,src['name']))
-  self.db.audit('NEWS_COLLECT',json.dumps({'saved':saved,'errors':errors},ensure_ascii=False),'warning' if errors else 'info');return {'saved':saved,'errors':errors}
+  ai=self.external_ai.analyze_pending() if getattr(self,'external_ai',None) else {'status':'DISABLED'};self.db.audit('NEWS_COLLECT',json.dumps({'saved':saved,'errors':errors,'ai':ai},ensure_ascii=False),'warning' if errors else 'info');return {'saved':saved,'errors':errors,'ai':ai}
  def link_markets(self,markets,limit=500):
   items=self.db.rows('SELECT n.id,n.title,n.summary,s.weight FROM news_items n JOIN news_sources s ON s.name=n.source_name ORDER BY n.fetched_at DESC LIMIT ?',(limit,));links=[]
   for m in markets:

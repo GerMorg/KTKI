@@ -18,8 +18,8 @@ tests:
 release_0_1_0_dev_6:
   automated:
     - {id: T013, expectation: Deaktivierte Paper-Automatik protokolliert Signal, erzeugt aber keinen Trade, status: passed}
-    - {id: T014, expectation: Paper-Kauf berÃƒÂ¼cksichtigt positive GebÃƒÂ¼hr und Slippage, status: passed}
-    - {id: T015, expectation: Paper-Positionswert ÃƒÂ¼berschreitet das konfigurierte Limit nicht, status: passed}
+    - {id: T014, expectation: Paper-Kauf berücksichtigt positive Gebühr und Slippage, status: passed}
+    - {id: T015, expectation: Paper-Positionswert überschreitet das konfigurierte Limit nicht, status: passed}
   manual:
     - {id: M006, expectation: Musterdepot-Seite funktioniert nach HA-Upgrade, status: pending}
     - {id: M007, expectation: Freigegebenes Live-Produkt erzeugt nachvollziehbare Paper-Entscheidung, status: pending}
@@ -31,27 +31,27 @@ release_0_1_0_dev_7:
     - {id: T018, expectation: REST-Fallback speichert BTC/EUR-Livepreis, status: passed}
   manual:
     - {id: M009, expectation: Konfigurationskarten erscheinen im Tab Einstellungen, status: pending}
-    - {id: M010, expectation: AusgewÃƒÂ¤hlte Produkte erscheinen nach Speichern weiterhin angehakt, status: pending}
-    - {id: M011, expectation: Paper-Entscheidungen entstehen automatisch im gewÃƒÂ¤hlten Intervall, status: pending}
-    - {id: M012, expectation: Bei erfÃƒÂ¼lltem BUY-Signal entsteht ein kostenbehafteter Paper-Trade, status: pending}
+    - {id: M010, expectation: Ausgewählte Produkte erscheinen nach Speichern weiterhin angehakt, status: pending}
+    - {id: M011, expectation: Paper-Entscheidungen entstehen automatisch im gewählten Intervall, status: pending}
+    - {id: M012, expectation: Bei erfülltem BUY-Signal entsteht ein kostenbehafteter Paper-Trade, status: pending}
 release_0_1_0_dev_8:
   automated:
     - {id: T019, expectation: 49 abgeschlossene Kerzen erzeugen VALID-Analyse, status: passed}
     - {id: T020, expectation: Zu wenige Kerzen erzeugen INSUFFICIENT und AVOID, status: passed}
     - {id: T021, expectation: Scanner-Ergebnis und Scanner-Lauf werden persistent gespeichert, status: passed}
   manual:
-    - {id: M013, expectation: Scanner-Seite lÃƒÂ¤dt innerhalb HA-Ingress, status: pending}
-    - {id: M014, expectation: Freigegebene Produkte liefern plausible Kennzahlen und GrÃƒÂ¼nde, status: pending}
+    - {id: M013, expectation: Scanner-Seite lädt innerhalb HA-Ingress, status: pending}
+    - {id: M014, expectation: Freigegebene Produkte liefern plausible Kennzahlen und Gründe, status: pending}
 
 release_0_1_0_dev_13:
   automated:
     - {id: T037, expectation: Geldpolitische Meldung wird taxonomiert, status: passed}
-    - {id: T038, expectation: Vorfilter erzeugt unverÃƒÂ¤nderliche Watchlist-Version, status: passed}
-    - {id: T039, expectation: Research-Pipeline wird vollstÃƒÂ¤ndig abgeschlossen, status: passed}
+    - {id: T038, expectation: Vorfilter erzeugt unveränderliche Watchlist-Version, status: passed}
+    - {id: T039, expectation: Research-Pipeline wird vollständig abgeschlossen, status: passed}
     - {id: T040, expectation: Ausgangsgewichte bleiben kontrolliert versioniert, status: passed}
   manual:
     - {id: M023, expectation: Quellenstatus und Watchlist-Versionen erscheinen im HA-Ingress, status: pending}
-    - {id: M024, expectation: GDELT und verfÃƒÂ¼gbare PrimÃƒÂ¤rfeeds liefern aktuelle Metadaten, status: pending}
+    - {id: M024, expectation: GDELT und verfügbare Primärfeeds liefern aktuelle Metadaten, status: pending}
 
 release_0_1_0_dev_14:
   automated:
@@ -62,8 +62,8 @@ release_0_1_0_dev_14:
 release_0_1_0_dev_15:
   automated:
     - {id: T042, expectation: Alte GDELT-Global-Quelle wird deaktiviert und neue Quellen aktiviert, status: passed}
-    - {id: T043, expectation: TemporÃƒÂ¤rer URL-Fehler wird begrenzt wiederholt und kann sich erholen, status: passed}
-    - {id: T044, expectation: HTTP-429-Fehler wird mit Status und ZÃƒÂ¤hler gespeichert, status: passed}
+    - {id: T043, expectation: Temporärer URL-Fehler wird begrenzt wiederholt und kann sich erholen, status: passed}
+    - {id: T044, expectation: HTTP-429-Fehler wird mit Status und Zähler gespeichert, status: passed}
     - {id: T045, expectation: Watchlist-Versionierung und Prognosen bleiben erhalten, status: passed}
   manual:
     - {id: M027, expectation: Mindestens eine GDELT- oder Google-News-Quelle liefert Nachrichten, status: pending}
@@ -77,10 +77,23 @@ release_0_1_0_dev_16:
   manual:
     - {id: M029, expectation: Kraken-xStocks erscheinen nach Universe-Sync im HA-Ingress, status: pending}
     - {id: M030, expectation: USD-xStocks erhalten Stream- oder REST-Preise und EUR-Bewertung, status: pending}
-release_0_1_0_dev_17:
+
+release_0_1_0_dev_18:
   automated:
-    - {id: T050, expectation: Hebelfähiger xStock erzeugt trotz zweier aktiver Kategorien nur eine Vorfilterzeile, status: passed}
-    - {id: T051, expectation: USD-notierter xStock wird Vorfilterkandidat, status: passed}
+    - {id: T056, expectation: xStocks-Batchfehler fällt auf Einzelabrufe zurück, status: passed}
+    - {id: T057, expectation: Gemeldete xStocks bleiben trotz eines fehlenden Tickers Kandidaten, status: passed}
+    - {id: T058, expectation: Detail-Scanner verwendet tokenized_asset, status: passed}
+    - {id: T059, expectation: Echtes leeres Universum bleibt als 0 Märkte unterscheidbar, status: passed}
   manual:
-    - {id: M031, expectation: Research-Pipeline läuft mit gleichzeitig aktivierten xStocks und Hebelprodukten ohne IntegrityError, status: pending}
-    - {id: M032, expectation: USD-xStocks erscheinen anschließend in Watchlist und Detailanalyse, status: pending}
+    - {id: M033, expectation: Nur xStocks aktiviert erzeugt auf HA OS eine nichtleere Kandidatenliste, status: pending}
+
+release_0_1_0_dev_19:
+  automated:
+    - {id: T060, expectation: Prognosen werden in das bestehende 12-Spalten-Schema geschrieben, status: passed}
+    - {id: T061, expectation: Zusätzliche zukünftige Tabellenspalte bricht den Insert nicht, status: passed}
+    - {id: T062, expectation: Repository enthält keine typischen Mojibake-Marker, status: passed}
+    - {id: T063, expectation: Sichtbare Texte enthalten korrekte deutsche Umlaute, status: passed}
+    - {id: T064, expectation: dev.18 xStocks-Kandidatenfallback bleibt funktionsfähig, status: passed}
+  manual:
+    - {id: M034, expectation: Mehrere aktivierte Produktklassen schließen den HA-Research-Lauf ohne OperationalError ab, status: pending}
+    - {id: M035, expectation: GUI zeigt Umlaute nach Upgrade korrekt, status: pending}

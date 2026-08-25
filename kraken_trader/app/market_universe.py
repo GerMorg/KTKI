@@ -1,6 +1,6 @@
 import json
 from db import now
-CATEGORIES={'crypto_spot':('KryptowÃƒÂ¤hrungen (Spot)','currency'),'xstocks':('xStocks / tokenisierte Aktien und ETFs','tokenized_asset'),'forex':('Devisen (Forex)','forex'),'leveraged_spot':('HebelfÃƒÂ¤hige Spot-Produkte','derived')}
+CATEGORIES={'crypto_spot':('Kryptowährungen (Spot)','currency'),'xstocks':('xStocks / tokenisierte Aktien und ETFs','tokenized_asset'),'forex':('Devisen (Forex)','forex'),'leveraged_spot':('Hebelfähige Spot-Produkte','derived')}
 def classify(pair,ac):
  if ac=='tokenized_asset':return 'xstocks'
  if ac=='forex':return 'forex'
@@ -37,5 +37,5 @@ class MarketUniverse:
  def symbols(self,quote='EUR'):
   enabled=self.enabled()
   if not enabled:return []
-  marks=','.join('?'*len(enabled));rows=self.db.rows(f"SELECT DISTINCT u.symbol FROM market_universe u JOIN market_category_members m ON m.symbol=u.symbol AND m.asset_class=u.asset_class WHERE m.category IN ({marks}) AND u.status='online'",list(enabled));symbols=[x['symbol'] for x in rows]
+  marks=','.join('?'*len(enabled));rows=self.db.rows(f"SELECT DISTINCT u.symbol FROM market_universe u JOIN market_category_members m ON m.symbol=u.symbol AND m.asset_class=u.asset_class WHERE m.category IN ({marks}) AND LOWER(COALESCE(u.status,'online')) IN ('online','post_only','limit_only')",list(enabled));symbols=[x['symbol'] for x in rows]
   return sorted(x for x in set(symbols) if not quote or x.rsplit('/',1)[-1]==quote)
