@@ -25,3 +25,6 @@ Erweiterte Nachrichtenarchitektur, Themen- und Ereignistaxonomie, versionierte W
 
 ## 0.1.0-dev.14 — 2026-08-25
 Startreparatur für Upgrades: migrationssichere Nachrichtentabellen, explizite Inserts und Regressionstest mit simuliertem dev.12-Datenbestand.
+
+## 0.1.0-dev.15 — 2026-08-25
+Robuste Nachrichtenbeschaffung mit kleineren GDELT-Abfragen, Google-News-RSS-Fallbacks, Quellendiagnose und optional automatischer Research-Pipeline.

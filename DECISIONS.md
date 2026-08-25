@@ -52,3 +52,9 @@ Watchlists und Prognosen sind unveränderlich versioniert. Auswertungen verände
 
 ## 2026-08-25 D025
 Datenbankschema-Erweiterungen werden ab dev.14 explizit und idempotent migriert. `CREATE TABLE IF NOT EXISTS` allein gilt nicht als Migration bestehender Tabellen.
+
+## 2026-08-25 D026
+Die einzelne breite GDELT-Abfrage wird durch kleine unabhängige Abfragen für Wirtschaft und Geopolitik ersetzt. Google-News-RSS dient als ergänzender Fallback, nicht als alleinige Quelle.
+
+## 2026-08-25 D027
+Research erhält einen eigenen optionalen Scheduler. Laufende Aufträge werden weiterhin durch den Pipeline-Lock vor Überlappung geschützt; Paper-Automatik und Research-Zeitplan bleiben getrennt.

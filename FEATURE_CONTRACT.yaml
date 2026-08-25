@@ -64,3 +64,11 @@ release_0_1_0_dev_14:
   dev12_news_schema_migration: {required: true, status: implemented_idempotent}
   existing_news_data_preservation: {required: true, status: tested}
   startup_service_construction_after_upgrade: {required: true, status: tested}
+release_0_1_0_dev_15:
+  obsolete_gdelt_global_disabled: {required: true, status: implemented}
+  split_gdelt_queries: {required: true, status: implemented}
+  bounded_news_retries: {required: true, status: implemented}
+  precise_source_health: {required: true, status: implemented}
+  google_news_rss_fallbacks: {required: true, status: implemented}
+  automatic_research_scheduler: {required: true, status: implemented_optional}
+  research_overlap_protection: {required: true, status: preserved}

@@ -1,7 +1,10 @@
-import hashlib,json,re,urllib.request,xml.etree.ElementTree as ET
+import hashlib,json,re,time,urllib.error,urllib.request,xml.etree.ElementTree as ET
 from db import now
 SOURCES=[
- {'name':'GDELT Global','url':'https://api.gdeltproject.org/api/v2/doc/doc?query=(markets%20OR%20economy%20OR%20inflation%20OR%20crypto%20OR%20stocks%20OR%20forex%20OR%20commodities)&mode=ArtList&maxrecords=100&format=json&timespan=24h','kind':'gdelt_json','class':'aggregator','weight':0.70},
+ {'name':'GDELT Wirtschaft','url':'https://api.gdeltproject.org/api/v2/doc/doc?query=economy&mode=ArtList&maxrecords=50&format=json&timespan=24h','kind':'gdelt_json','class':'aggregator','weight':0.70},
+ {'name':'GDELT Geopolitik','url':'https://api.gdeltproject.org/api/v2/doc/doc?query=geopolitics&mode=ArtList&maxrecords=50&format=json&timespan=24h','kind':'gdelt_json','class':'aggregator','weight':0.70},
+ {'name':'Google News Wirtschaft AT','url':'https://news.google.com/rss/search?q=Wirtschaft%20OR%20Inflation%20OR%20Zinsen%20when%3A1d&hl=de&gl=AT&ceid=AT%3Ade','kind':'rss','class':'aggregator','weight':0.55},
+ {'name':'Google News Geopolitik AT','url':'https://news.google.com/rss/search?q=Krieg%20OR%20Sanktionen%20OR%20Zoelle%20OR%20Trump%20when%3A1d&hl=de&gl=AT&ceid=AT%3Ade','kind':'rss','class':'aggregator','weight':0.55},
  {'name':'EZB Presse','url':'https://www.ecb.europa.eu/rss/press.html','kind':'rss','class':'primary','weight':1.00},
  {'name':'Federal Reserve','url':'https://www.federalreserve.gov/feeds/press_all.xml','kind':'rss','class':'primary','weight':1.00},
  {'name':'Kraken Blog','url':'https://blog.kraken.com/feed','kind':'rss','class':'issuer','weight':0.85},
@@ -14,7 +17,7 @@ TAXONOMY={
  'growth':['gdp','economic growth','recession','business activity'],
  'labor':['employment','unemployment','jobs','wages'],
  'regulation':['regulation','regulator','sec','law','ban','approval'],
- 'geopolitics':['war','sanction','tariff','geopolitical','election'],
+ 'geopolitics':['war','krieg','sanction','sanktion','tariff','zoll','geopolitical','geopolitik','election','wahl','trump'],
  'earnings':['earnings','revenue','profit','guidance','forecast'],
  'product_event':['launch','listing','delisting','acquisition','merger'],
  'security':['hack','exploit','breach','fraud','outage'],
@@ -37,10 +40,30 @@ class NewsPrefilter:
    item_cols={x['name'] for x in self.db.rows('PRAGMA table_info(news_items)')}
    for name,definition in [('topics_json',"TEXT NOT NULL DEFAULT '[\"general_market\"]'"),('event_types_json',"TEXT NOT NULL DEFAULT '[\"unspecified\"]'")]:
     if name not in item_cols:c.execute(f'ALTER TABLE news_items ADD COLUMN {name} {definition}')
+   for name,definition in [('last_error','TEXT'),('consecutive_failures','INTEGER NOT NULL DEFAULT 0'),('last_success_at','TEXT')]:
+    if name not in source_cols:c.execute(f'ALTER TABLE news_sources ADD COLUMN {name} {definition}')
+   c.execute("UPDATE news_sources SET enabled=0,last_status='REPLACED' WHERE name='GDELT Global'")
    for item in SOURCES:
-    c.execute("INSERT INTO news_sources(name,url,kind,source_class,weight,enabled,last_status,last_checked_at) VALUES(?,?,?,?,?,1,NULL,NULL) ON CONFLICT(name) DO UPDATE SET url=excluded.url,kind=excluded.kind,source_class=excluded.source_class,weight=excluded.weight",(item['name'],item['url'],item['kind'],item['class'],str(item['weight'])))
+    c.execute("INSERT INTO news_sources(name,url,kind,source_class,weight,enabled,last_status,last_checked_at) VALUES(?,?,?,?,?,1,NULL,NULL) ON CONFLICT(name) DO UPDATE SET url=excluded.url,kind=excluded.kind,source_class=excluded.source_class,weight=excluded.weight,enabled=1",(item['name'],item['url'],item['kind'],item['class'],str(item['weight'])))
  def sources(self):return self.db.rows('SELECT * FROM news_sources WHERE enabled=1 ORDER BY source_class DESC,name')
- def _read(self,url):return urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'HA-Kraken-Trader/0.1 research@example.invalid'}),timeout=self.timeout).read()
+ def _read(self,url,attempts=3):
+  headers={'User-Agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 HA-Kraken-Trader/0.1.0-dev.15','Accept':'application/rss+xml,application/xml,application/json,text/xml;q=0.9,*/*;q=0.5'};last=None
+  for attempt in range(attempts):
+   try:
+    req=urllib.request.Request(url,headers=headers)
+    with urllib.request.urlopen(req,timeout=self.timeout) as response:return response.read(),int(getattr(response,'status',200) or 200)
+   except urllib.error.HTTPError as exc:
+    last=exc
+    if exc.code not in (429,500,502,503,504) or attempt==attempts-1:raise
+    retry=exc.headers.get('Retry-After') if exc.headers else None
+    try:delay=max(1,min(float(retry),30)) if retry else 2**attempt
+    except ValueError:delay=2**attempt
+    time.sleep(delay)
+   except urllib.error.URLError as exc:
+    last=exc
+    if attempt==attempts-1:raise
+    time.sleep(2**attempt)
+  raise last
  def _rss(self,data):
   root=ET.fromstring(data);nodes=root.findall('.//item') or root.findall('.//{http://www.w3.org/2005/Atom}entry');out=[]
   for n in nodes[:150]:
@@ -59,15 +82,15 @@ class NewsPrefilter:
   saved=0;errors=[]
   for src in self.sources():
    try:
-    data=self._read(src['url']);items=self._json(data) if src['kind']=='gdelt_json' else self._rss(data)
+    response=self._read(src['url']);data,http_status=response if isinstance(response,tuple) else (response,200);items=self._json(data) if src['kind']=='gdelt_json' else self._rss(data)
     with self.db.con() as c:
      for x in items:
       key=hashlib.sha256((norm(x['title'])+'|'+(x['url'] or '')).encode()).hexdigest();topics,events=classify(x['title']+' '+x['summary']);before=c.total_changes
       c.execute('INSERT OR IGNORE INTO news_items(id,source_name,title,url,published_at,fetched_at,summary,topics_json,event_types_json,raw_json) VALUES(?,?,?,?,?,?,?,?,?,?)',(key,src['name'],x['title'],x['url'],x['published_at'],now(),x['summary'],json.dumps(topics),json.dumps(events),json.dumps(x,ensure_ascii=False)));saved+=c.total_changes-before
-     c.execute('UPDATE news_sources SET last_status=?,last_checked_at=? WHERE name=?',('OK',now(),src['name']))
+     c.execute('UPDATE news_sources SET last_status=?,last_checked_at=?,last_error=NULL,consecutive_failures=0,last_success_at=? WHERE name=?',(f'OK HTTP {http_status}',now(),now(),src['name']))
    except Exception as exc:
-    errors.append({'source':src['name'],'error':type(exc).__name__});
-    with self.db.con() as c:c.execute('UPDATE news_sources SET last_status=?,last_checked_at=? WHERE name=?',('ERROR:'+type(exc).__name__,now(),src['name']))
+    code=getattr(exc,'code',None);reason=str(getattr(exc,'reason',exc))[:240];label=f'HTTP {code}' if code else type(exc).__name__;errors.append({'source':src['name'],'error':label,'detail':reason})
+    with self.db.con() as c:c.execute('UPDATE news_sources SET last_status=?,last_checked_at=?,last_error=?,consecutive_failures=COALESCE(consecutive_failures,0)+1 WHERE name=?',(f'ERROR {label}',now(),reason,src['name']))
   self.db.audit('NEWS_COLLECT',json.dumps({'saved':saved,'errors':errors},ensure_ascii=False),'warning' if errors else 'info');return {'saved':saved,'errors':errors}
  def link_markets(self,markets,limit=500):
   items=self.db.rows('SELECT n.id,n.title,n.summary,s.weight FROM news_items n JOIN news_sources s ON s.name=n.source_name ORDER BY n.fetched_at DESC LIMIT ?',(limit,));links=[]

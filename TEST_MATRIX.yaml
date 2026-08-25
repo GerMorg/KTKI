@@ -59,3 +59,12 @@ release_0_1_0_dev_14:
     - {id: T041, expectation: Alle Startdienste lassen sich nach der Migration konstruieren, status: passed}
   manual:
     - {id: M026, expectation: App startet nach Upgrade mit bestehender Datenbank und Ingress antwortet, status: pending}
+release_0_1_0_dev_15:
+  automated:
+    - {id: T042, expectation: Alte GDELT-Global-Quelle wird deaktiviert und neue Quellen aktiviert, status: passed}
+    - {id: T043, expectation: Temporärer URL-Fehler wird begrenzt wiederholt und kann sich erholen, status: passed}
+    - {id: T044, expectation: HTTP-429-Fehler wird mit Status und Zähler gespeichert, status: passed}
+    - {id: T045, expectation: Watchlist-Versionierung und Prognosen bleiben erhalten, status: passed}
+  manual:
+    - {id: M027, expectation: Mindestens eine GDELT- oder Google-News-Quelle liefert Nachrichten, status: pending}
+    - {id: M028, expectation: Automatischer Research-Lauf startet im konfigurierten Intervall, status: pending}

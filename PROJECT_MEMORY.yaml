@@ -12,7 +12,7 @@ non_negotiable_rules:
   - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
   - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.14
+  version: 0.1.0-dev.15
   status: read-only Kraken-Integration mit oeffentlichem und privatem WebSocket v2; HA-OS-Praxistest fuer dev.5 ausstehend
 implemented:
   - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
@@ -178,3 +178,22 @@ release_0_1_0_dev_14:
   tests:
     - Dev.12-Schema migriert ohne Datenverlust
     - Scanner, Universum, News, Vorfilter, Forecasts und Pipeline konstruieren nach Migration erfolgreich
+
+release_0_1_0_dev_15:
+  date: 2026-08-25
+  purpose: GDELT-Fehler robust behandeln und Research automatisch ausführbar machen.
+  preserved:
+    - Gesamte Pipeline, Prognoseverfolgung, Paper-Broker, Portfolio und read-only Kraken-Integration
+    - Nachrichten bleiben Research-Filter und kein Handelssignal
+  fixes:
+    - GDELT Global deaktiviert
+    - Kleine getrennte GDELT-Abfragen für Wirtschaft und Geopolitik
+    - User-Agent und begrenzte Wiederholungsversuche
+    - Persistente HTTP- und Fehlerdiagnose
+  added:
+    - Google News Wirtschaft AT und Geopolitik AT als ergänzende RSS-Quellen
+    - Optionaler Research-Scheduler mit konfigurierbarem Intervall
+  safety:
+    - Keine parallelen Research-Aufträge
+    - Quellenausfälle bleiben voneinander isoliert
+    - Paper-Ausführung nutzt weiterhin nur abgeschlossene Analysen
