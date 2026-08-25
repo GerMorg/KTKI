@@ -12,7 +12,7 @@ non_negotiable_rules:
   - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
   - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.17
+  version: 0.1.0-dev.18
   status: read-only Kraken-Integration mit oeffentlichem und privatem WebSocket v2; HA-OS-Praxistest fuer dev.5 ausstehend
 implemented:
   - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
@@ -58,23 +58,23 @@ next_steps:
 
 release_0_1_0_dev_6:
   date: 2026-08-23
-  purpose: Erster funktionsfÃ¤higer Paper-Broker und nachvollziehbare regelbasierte Baseline.
+  purpose: Erster funktionsfÃƒÂ¤higer Paper-Broker und nachvollziehbare regelbasierte Baseline.
   preserved:
-    - VollstÃ¤ndige Portfoliohistorie und Ledger-Pagination
-    - Ã–ffentlicher und privater read-only WebSocket v2
-    - Sequenzkontrolle, Reconnect und DatenqualitÃ¤tszustÃ¤nde
+    - VollstÃƒÂ¤ndige Portfoliohistorie und Ledger-Pagination
+    - Ãƒâ€“ffentlicher und privater read-only WebSocket v2
+    - Sequenzkontrolle, Reconnect und DatenqualitÃƒÂ¤tszustÃƒÂ¤nde
     - Ingress-GUI, Echtportfolio, Audit, Allowlist und Exporte
     - Realhandel weiterhin technisch nicht implementiert
   added:
-    - EigenstÃ¤ndiges Paper-Konto mit persistentem EUR-Cash
+    - EigenstÃƒÂ¤ndiges Paper-Konto mit persistentem EUR-Cash
     - Persistente Paper-Positionen, Trades, Entscheidungen und Snapshots
-    - GebÃ¼hren- und Slippage-Simulation mit separaten Ausweisen je Trade
+    - GebÃƒÂ¼hren- und Slippage-Simulation mit separaten Ausweisen je Trade
     - Positionslimit bezogen auf den aktuellen Paper-Gesamtwert
-    - Deterministische Momentum-Baseline fÃ¼r ausschlieÃŸlich freigegebene Produkte
+    - Deterministische Momentum-Baseline fÃƒÂ¼r ausschlieÃƒÅ¸lich freigegebene Produkte
     - BUY ab plus 1 Prozent 24h, SELL ab minus 1.5 Prozent 24h
-    - AusfÃ¼hrung nur bei aktivierter Analyse-/Paper-Automatik und LIVE-Daten
+    - AusfÃƒÂ¼hrung nur bei aktivierter Analyse-/Paper-Automatik und LIVE-Daten
     - GUI-Seiten Musterdepot und Paper-Entscheidungen
-    - Jede Entscheidung enthÃ¤lt Aktion, Score, DatenqualitÃ¤t, AusfÃ¼hrungsstatus und BegrÃ¼ndung
+    - Jede Entscheidung enthÃƒÂ¤lt Aktion, Score, DatenqualitÃƒÂ¤t, AusfÃƒÂ¼hrungsstatus und BegrÃƒÂ¼ndung
   configuration:
     paper_fee_bps: Standard 40 Basispunkte; transparent konfigurierbar
     paper_slippage_bps: Standard 10 Basispunkte; transparent konfigurierbar
@@ -82,33 +82,33 @@ release_0_1_0_dev_6:
     paper_trade_eur: Standard 25 EUR
   known_limits:
     - Baseline ist kein trainiertes Modell und keine Gewinnzusage.
-    - Die GebÃ¼hreneinstellung ist eine konservative Simulation und noch nicht kontospezifisch aus GetTradeVolume bezogen.
-    - Strategie wird in dieser Version bewusst Ã¼ber die GUI ausgelÃ¶st, nicht zeitgesteuert.
-    - Kraken-MindestordergrÃ¶ÃŸen werden im Paper-Broker noch nicht je Instrument angewendet.
+    - Die GebÃƒÂ¼hreneinstellung ist eine konservative Simulation und noch nicht kontospezifisch aus GetTradeVolume bezogen.
+    - Strategie wird in dieser Version bewusst ÃƒÂ¼ber die GUI ausgelÃƒÂ¶st, nicht zeitgesteuert.
+    - Kraken-MindestordergrÃƒÂ¶ÃƒÅ¸en werden im Paper-Broker noch nicht je Instrument angewendet.
   next_steps:
-    - Praktischen HA-Test des Paper-Brokers durchfÃ¼hren
-    - AssetPairs-MindestgrÃ¶ÃŸen und kontospezifische GebÃ¼hren einbinden
+    - Praktischen HA-Test des Paper-Brokers durchfÃƒÂ¼hren
+    - AssetPairs-MindestgrÃƒÂ¶ÃƒÅ¸en und kontospezifische GebÃƒÂ¼hren einbinden
     - Backtest-Datenspeicher und Benchmark entwickeln
-    - Scanner um LiquiditÃ¤t, Spread, VolatilitÃ¤t und Trend erweitern
+    - Scanner um LiquiditÃƒÂ¤t, Spread, VolatilitÃƒÂ¤t und Trend erweitern
 
 release_0_1_0_dev_7:
   date: 2026-08-23
-  purpose: Paper-Konfiguration sichtbar machen und den Automatismus tatsÃ¤chlich periodisch ausfÃ¼hren.
+  purpose: Paper-Konfiguration sichtbar machen und den Automatismus tatsÃƒÂ¤chlich periodisch ausfÃƒÂ¼hren.
   user_observations:
     - Musterdepot und Entscheidungsseite waren vorhanden.
     - Paper-Konfiguration war in der App-GUI nicht auffindbar.
-    - Es wurde kein simulierter Kauf ausgefÃ¼hrt.
+    - Es wurde kein simulierter Kauf ausgefÃƒÂ¼hrt.
   root_causes:
-    - Paper-Parameter waren primÃ¤r Home-Assistant-App-Optionen und nicht vollstÃ¤ndig in der Ingress-GUI dargestellt.
-    - Der Ã¶ffentliche WebSocket beobachtete zuvor hauptsÃ¤chlich real gehaltene Assets, nicht zuverlÃ¤ssig alle Paper-Allowlist-Produkte.
+    - Paper-Parameter waren primÃƒÂ¤r Home-Assistant-App-Optionen und nicht vollstÃƒÂ¤ndig in der Ingress-GUI dargestellt.
+    - Der ÃƒÂ¶ffentliche WebSocket beobachtete zuvor hauptsÃƒÂ¤chlich real gehaltene Assets, nicht zuverlÃƒÂ¤ssig alle Paper-Allowlist-Produkte.
     - Die Paper-Strategie lief nur nach manuellem Klick und nicht periodisch.
-    - BUY bleibt korrekt signalabhÃ¤ngig; ohne +1 Prozent 24h-Signal soll kein Kauf erzwungen werden.
+    - BUY bleibt korrekt signalabhÃƒÂ¤ngig; ohne +1 Prozent 24h-Signal soll kein Kauf erzwungen werden.
   fixes:
-    - VollstÃ¤ndige Paper-Konfiguration im Tab Einstellungen: Aktivierung, Intervall, Orderwert, Positionslimit, GebÃ¼hr und Slippage.
-    - Produkt-Checkboxen fÃ¼r BTC/EUR, ETH/EUR, SOL/EUR, ADA/EUR und XRP/EUR; gespeicherte Produkte werden abonniert.
-    - Allowlist-Produkte werden nach dem Speichern an den Ã¶ffentlichen WebSocket Ã¼bergeben.
-    - Vor jedem Paper-Lauf werden Preise zusÃ¤tzlich per Ã¶ffentlichem REST-Ticker aktualisiert.
-    - Hintergrund-Scheduler fÃ¼hrt den Paper-Lauf im konfigurierten Intervall aus.
+    - VollstÃƒÂ¤ndige Paper-Konfiguration im Tab Einstellungen: Aktivierung, Intervall, Orderwert, Positionslimit, GebÃƒÂ¼hr und Slippage.
+    - Produkt-Checkboxen fÃƒÂ¼r BTC/EUR, ETH/EUR, SOL/EUR, ADA/EUR und XRP/EUR; gespeicherte Produkte werden abonniert.
+    - Allowlist-Produkte werden nach dem Speichern an den ÃƒÂ¶ffentlichen WebSocket ÃƒÂ¼bergeben.
+    - Vor jedem Paper-Lauf werden Preise zusÃƒÂ¤tzlich per ÃƒÂ¶ffentlichem REST-Ticker aktualisiert.
+    - Hintergrund-Scheduler fÃƒÂ¼hrt den Paper-Lauf im konfigurierten Intervall aus.
     - Manueller Lauf nutzt dieselbe Preisaktualisierung und dieselbe Engine wie der Scheduler.
     - Konfiguration wird persistent in SQLite gespeichert und ohne App-Neustart angewendet.
   safety:
@@ -120,46 +120,46 @@ release_0_1_0_dev_7:
     coverage_added:
       - Konfigurationsfelder sichtbar und persistent
       - Allowlist-Speicherung
-      - REST-Preis-Fallback fÃ¼r BTC/EUR
+      - REST-Preis-Fallback fÃƒÂ¼r BTC/EUR
 
 release_0_1_0_dev_8:
   date: 2026-08-23
-  purpose: Statistischer Markt-Scanner als Grundlage fÃ¼r fundiertere automatische Entscheidungen.
+  purpose: Statistischer Markt-Scanner als Grundlage fÃƒÂ¼r fundiertere automatische Entscheidungen.
   preserved:
     - Alle Funktionen und Sicherheitsgrenzen aus dev.7
     - Persistenter Paper-Broker und Scheduler
-    - Ã–ffentliche/private read-only WebSockets, Portfoliohistorie und Ledger-Pagination
+    - Ãƒâ€“ffentliche/private read-only WebSockets, Portfoliohistorie und Ledger-Pagination
     - Realhandel weiterhin nicht implementiert
   added:
     - Neue GUI-Seite Scanner
     - Abruf und persistenter Cache von Kraken-OHLC-Daten
-    - AusschlieÃŸliche Nutzung abgeschlossener Kerzen; laufende Kerze wird verworfen
-    - Statistische Kennzahlen fÃ¼r 24h-Momentum, SMA10/SMA30-Trend, VolatilitÃ¤t, Spread und Quotevolumen
+    - AusschlieÃƒÅ¸liche Nutzung abgeschlossener Kerzen; laufende Kerze wird verworfen
+    - Statistische Kennzahlen fÃƒÂ¼r 24h-Momentum, SMA10/SMA30-Trend, VolatilitÃƒÂ¤t, Spread und Quotevolumen
     - Reproduzierbarer Score von 0 bis 100 und Signale BUY, HOLD, AVOID
-    - DatenqualitÃ¤tsstatus VALID, INSUFFICIENT oder ERROR
-    - Persistente Scanner-LÃ¤ufe und Ergebnisse mit vollstÃ¤ndigen GrÃ¼nden
+    - DatenqualitÃƒÂ¤tsstatus VALID, INSUFFICIENT oder ERROR
+    - Persistente Scanner-LÃƒÂ¤ufe und Ergebnisse mit vollstÃƒÂ¤ndigen GrÃƒÂ¼nden
   model_baseline:
     interval_minutes: 60
     minimum_committed_candles: 30
-    buy_gate: Score mindestens 65, positives Momentum, positiver Trend und Spread hÃ¶chstens 0.8 Prozent
-    avoid_gate: Score unter 35 oder Spread Ã¼ber 1.5 Prozent
-    note: Baseline ist transparent und noch nicht direkt mit der Paper-AusfÃ¼hrung gekoppelt.
+    buy_gate: Score mindestens 65, positives Momentum, positiver Trend und Spread hÃƒÂ¶chstens 0.8 Prozent
+    avoid_gate: Score unter 35 oder Spread ÃƒÂ¼ber 1.5 Prozent
+    note: Baseline ist transparent und noch nicht direkt mit der Paper-AusfÃƒÂ¼hrung gekoppelt.
   next_steps:
-    - Praktischen Scanner-Lauf auf HA OS prÃ¼fen
+    - Praktischen Scanner-Lauf auf HA OS prÃƒÂ¼fen
     - Scanner-Score kontrolliert mit Paper-Entscheidungen verbinden
-    - Kraken AssetPairs MindestgrÃ¶ÃŸen und GebÃ¼hrenstaffeln integrieren
-    - Backtest und Benchmark fÃ¼r die Baseline erstellen
+    - Kraken AssetPairs MindestgrÃƒÂ¶ÃƒÅ¸en und GebÃƒÂ¼hrenstaffeln integrieren
+    - Backtest und Benchmark fÃƒÂ¼r die Baseline erstellen
 
 release_0_1_0_dev_13:
   date: 2026-08-25
   purpose: Breite News-Erkennung, Taxonomie, Watchlist-Versionierung und Prognosevergleich.
   sources:
     - GDELT Global als breit abdeckender Aggregator
-    - EZB und Federal Reserve als geldpolitische PrimÃ¤rquellen
-    - Kraken als bÃ¶rsen- und produktspezifische Emittentenquelle
+    - EZB und Federal Reserve als geldpolitische PrimÃƒÂ¤rquellen
+    - Kraken als bÃƒÂ¶rsen- und produktspezifische Emittentenquelle
   safety:
     - Nachrichten wirken nur als Research-Priorisierung
-    - Prognosen handeln nicht und verÃ¤ndern Gewichte nicht automatisch
+    - Prognosen handeln nicht und verÃƒÂ¤ndern Gewichte nicht automatisch
     - Realhandel bleibt technisch ausgeschlossen
   next_steps:
     - Praxistest der Quellen auf Home Assistant OS
@@ -168,11 +168,11 @@ release_0_1_0_dev_13:
 
 release_0_1_0_dev_14:
   date: 2026-08-25
-  purpose: Start-Hotfix fÃ¼r Upgrade von dev.12/dev.13.
-  root_cause: Neue Spalten in news_sources und news_items wurden fÃ¼r bestehende SQLite-Tabellen nicht migriert; neue Inserts erwarteten mehr Spalten als vorhanden.
+  purpose: Start-Hotfix fÃƒÂ¼r Upgrade von dev.12/dev.13.
+  root_cause: Neue Spalten in news_sources und news_items wurden fÃƒÂ¼r bestehende SQLite-Tabellen nicht migriert; neue Inserts erwarteten mehr Spalten als vorhanden.
   fixes:
-    - Idempotente ALTER-TABLE-Migration fÃ¼r source_class und weight
-    - Idempotente ALTER-TABLE-Migration fÃ¼r topics_json und event_types_json
+    - Idempotente ALTER-TABLE-Migration fÃƒÂ¼r source_class und weight
+    - Idempotente ALTER-TABLE-Migration fÃƒÂ¼r topics_json und event_types_json
     - Explizite Spaltenlisten bei Quellen- und Nachrichten-Inserts
     - Bestehende Nachrichtendaten bleiben erhalten
   tests:
@@ -181,47 +181,52 @@ release_0_1_0_dev_14:
 
 release_0_1_0_dev_15:
   date: 2026-08-25
-  purpose: GDELT-Fehler robust behandeln und Research automatisch ausfÃ¼hrbar machen.
+  purpose: GDELT-Fehler robust behandeln und Research automatisch ausfÃƒÂ¼hrbar machen.
   preserved:
     - Gesamte Pipeline, Prognoseverfolgung, Paper-Broker, Portfolio und read-only Kraken-Integration
     - Nachrichten bleiben Research-Filter und kein Handelssignal
   fixes:
     - GDELT Global deaktiviert
-    - Kleine getrennte GDELT-Abfragen fÃ¼r Wirtschaft und Geopolitik
+    - Kleine getrennte GDELT-Abfragen fÃƒÂ¼r Wirtschaft und Geopolitik
     - User-Agent und begrenzte Wiederholungsversuche
     - Persistente HTTP- und Fehlerdiagnose
   added:
-    - Google News Wirtschaft AT und Geopolitik AT als ergÃ¤nzende RSS-Quellen
+    - Google News Wirtschaft AT und Geopolitik AT als ergÃƒÂ¤nzende RSS-Quellen
     - Optionaler Research-Scheduler mit konfigurierbarem Intervall
   safety:
-    - Keine parallelen Research-AuftrÃ¤ge
-    - QuellenausfÃ¤lle bleiben voneinander isoliert
-    - Paper-AusfÃ¼hrung nutzt weiterhin nur abgeschlossene Analysen
+    - Keine parallelen Research-AuftrÃƒÂ¤ge
+    - QuellenausfÃƒÂ¤lle bleiben voneinander isoliert
+    - Paper-AusfÃƒÂ¼hrung nutzt weiterhin nur abgeschlossene Analysen
 
 release_0_1_0_dev_16:
   date: 2026-08-25
-  purpose: Aktien/xStocks vollständig erfassen und dynamische kostenbewusste Paper-Allokation vorbereiten.
+  purpose: Aktien/xStocks vollstÃ¤ndig erfassen und dynamische kostenbewusste Paper-Allokation vorbereiten.
   added:
     - tokenized_asset sowie EUR- und USD-Paare
-    - USD-EUR-Bewertung über EUR/USD
+    - USD-EUR-Bewertung Ã¼ber EUR/USD
     - dynamische Zielgewichte, Transfergrenzen und No-Trade-Band
-    - kostenbewusste Finanzierung besserer Chancen durch schwächere Positionen
+    - kostenbewusste Finanzierung besserer Chancen durch schwÃ¤chere Positionen
     - dynamischer Paper-Hebel aus Kraken leverage_buy
     - simulierte Finanzierungsschuld
-    - hart deaktivierte Realausführungsgrenze
+    - hart deaktivierte RealausfÃ¼hrungsgrenze
   safety:
-    - Hebel standardmäßig deaktiviert
-    - keine Hebelstufe außerhalb Kraken-Metadaten
+    - Hebel standardmÃ¤ÃŸig deaktiviert
+    - keine Hebelstufe auÃŸerhalb Kraken-Metadaten
     - keine USD-Bewertung ohne EUR/USD
     - keine reale Ordermethode
     - GDELT-TLS-Fehler isoliert durch Cooldown
 
 release_0_1_0_dev_17:
   date: 2026-08-25
-  base: 0.1.0-dev.16
-  fixes: [PortfolioAllocator wiederhergestellt, RealExecutionAdapter hart deaktiviert wiederhergestellt]
-  external_news_ai:
-    default: disabled
-    providers: [openai, azure_openai]
-    influence: maximal 25 Prozent und mit Konfidenz gewichtet
-  safety: [keine KI-Order, keine automatische Gewichtsänderung, ungültige Antworten werden nicht verwendet, Schlüssel nur in App-Optionen]
+  purpose: UNIQUE-Fehler des Vorfilters beheben und USD-xStocks zuverlässig durch die gesamte Research-Pipeline führen.
+  root_cause: Hebelfähige xStocks gehörten gleichzeitig zu xstocks und leveraged_spot und wurden durch den Kategorie-Join zweimal bewertet.
+  fixes:
+    - kanonische Deduplizierung auf genau eine Zeile je Symbol
+    - zusätzliche Deduplizierung direkt vor Persistenz
+    - INSERT OR REPLACE als defensive Idempotenz
+    - assetklassengetrennte Tickerabrufe im Detailscanner
+  preserved:
+    - Mehrfachmitgliedschaft in Produktgruppen
+    - USD-Märkte und EUR/USD-Bewertung
+    - dynamische Paper-Allokation und Hebelgrenzen
+    - hart deaktivierte Realausführung

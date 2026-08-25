@@ -19,12 +19,17 @@ class MarketScanner:
   volume_quote=sum(v*p for v,p in zip(volumes[-24:],closes[-24:]))
   score=50+max(-25,min(25,momentum*5))+max(-15,min(15,trend*8))-max(0,min(20,volatility*1.5))-max(0,min(20,spread*25))
   score=max(0,min(100,score));signal='BUY' if score>=65 and momentum>0 and trend>0 and spread<=0.8 else ('AVOID' if score<35 or spread>1.5 else 'HOLD')
-  reasons += [f'24h-Momentum {momentum:.2f} %',f'Trend SMA10/SMA30 {trend:.2f} %',f'Volatilität {volatility:.2f} %',f'Spread {spread:.3f} %',f'24h-Quotevolumen ca. {volume_quote:.2f} EUR']
+  reasons += [f'24h-Momentum {momentum:.2f} %',f'Trend SMA10/SMA30 {trend:.2f} %',f'VolatilitÃƒÂ¤t {volatility:.2f} %',f'Spread {spread:.3f} %',f'24h-Quotevolumen ca. {volume_quote:.2f} EUR']
   return {'symbol':symbol,'score':round(score,4),'signal':signal,'momentum_pct':round(momentum,6),'volatility_pct':round(volatility,6),'trend_pct':round(trend,6),'spread_pct':round(spread,6),'volume_quote':round(volume_quote,4),'data_points':len(closes),'quality':'VALID','reasons':reasons}
  def run(self,symbols,interval=60,limit=None,delay_seconds=None):
   symbols=list(symbols)[:int(limit or len(symbols))];delay=float(delay_seconds if delay_seconds is not None else self.db.value('scanner_delay_seconds','1.05'));stamp=now();valid=buy=hold=avoid=0
-  try:tickers=self.client.ticker(symbols)
-  except Exception:tickers={}
+  tickers={}
+  groups={}
+  for symbol in symbols:
+   row=self.db.rows('SELECT asset_class FROM market_universe WHERE symbol=? LIMIT 1',(symbol,));groups.setdefault(row[0]['asset_class'] if row else 'currency',[]).append(symbol)
+  for asset_class,batch in groups.items():
+   try:tickers.update(self.client.ticker(batch,asset_class))
+   except Exception as exc:self.db.audit('SCANNER_TICKER_GROUP_FAILED',asset_class+': '+type(exc).__name__,'warning')
   for symbol in symbols:
    try:
     ac=self.db.rows('SELECT asset_class FROM market_universe WHERE symbol=? LIMIT 1',(symbol,));payload=self.client.ohlc(symbol,interval,ac[0]['asset_class'] if ac else 'currency');key=next((k for k in payload if k!='last'),None);candles=payload.get(key,[]) if key else []

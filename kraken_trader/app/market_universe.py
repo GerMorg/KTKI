@@ -1,6 +1,6 @@
 import json
 from db import now
-CATEGORIES={'crypto_spot':('Kryptowährungen (Spot)','currency'),'xstocks':('xStocks / tokenisierte Aktien und ETFs','tokenized_asset'),'forex':('Devisen (Forex)','forex'),'leveraged_spot':('Hebelfähige Spot-Produkte','derived')}
+CATEGORIES={'crypto_spot':('KryptowÃƒÂ¤hrungen (Spot)','currency'),'xstocks':('xStocks / tokenisierte Aktien und ETFs','tokenized_asset'),'forex':('Devisen (Forex)','forex'),'leveraged_spot':('HebelfÃƒÂ¤hige Spot-Produkte','derived')}
 def classify(pair,ac):
  if ac=='tokenized_asset':return 'xstocks'
  if ac=='forex':return 'forex'

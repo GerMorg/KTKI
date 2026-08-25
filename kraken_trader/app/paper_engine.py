@@ -43,7 +43,7 @@ class PaperEngine:
   market=D(x['last']);gross=D(gross);cash,pv,total,_=self.equity();pos=next((p for p in self.positions() if p['symbol']==symbol),None);oldqty=D(pos['quantity']) if pos else D(0);oldcost=D(pos['avg_cost_eur']) if pos else D(0);risk=self.db.rows('SELECT * FROM paper_position_risk WHERE symbol=?',(symbol,));olddebt=D(risk[0]['borrowed_eur']) if risk else D(0)
   if side=='BUY':
    lev=max(1,int(decision.get('leverage',1)));collateral=min(gross,cash/(1+self.fee*lev));notional=collateral*lev;execp=market*(1+self.slip);qty=(notional/execp).quantize(Decimal('0.00000001'),rounding=ROUND_DOWN);notional=qty*execp;fee=notional*self.fee;net=collateral+fee
-   if qty<=0 or net>cash:raise ValueError('Nicht genügend Paper-Cash')
+   if qty<=0 or net>cash:raise ValueError('Nicht genÃ¼gend Paper-Cash')
    newqty=oldqty+qty;avg=((oldqty*oldcost)+notional)/newqty;newcash=cash-net;newdebt=olddebt+max(D(0),notional-collateral)
   else:
    lev=int(risk[0]['leverage']) if risk else 1;qty=min(oldqty,(gross/(market*(1-self.slip))).quantize(Decimal('0.00000001'),rounding=ROUND_DOWN));execp=market*(1-self.slip);notional=qty*execp;fee=notional*self.fee
@@ -67,14 +67,14 @@ class PaperEngine:
    if active and value>=min_trade and gap>=edge_min:
     costs=value*(self.fee+self.slip)*2
     if value*gap>costs:
-     decision={'symbol':symbol,'confidence':str(conf),'better_confidence':str(best),'edge':str(gap),'estimated_roundtrip_cost_eur':str(costs),'leverage':1,'action':'SELL'};reason='Kostenbewusste Umschichtung: erwarteter Konfidenzvorteil über Transferkosten'
+     decision={'symbol':symbol,'confidence':str(conf),'better_confidence':str(best),'edge':str(gap),'estimated_roundtrip_cost_eur':str(costs),'leverage':1,'action':'SELL'};reason='Kostenbewusste Umschichtung: erwarteter Konfidenzvorteil Ã¼ber Transferkosten'
      try:tid=self.execute(symbol,'SELL',value,reason,decision);executed=1
      except ValueError as exc:tid=None;executed=0;reason+='; '+str(exc)
      with self.db.con() as c:c.execute('INSERT INTO paper_decisions VALUES(NULL,?,?,?,?,?,?,?,?)',(now(),symbol,'SELL',str(conf*100),reason,'LIVE',executed,tid))
      results.append(decision|{'executed':bool(executed),'reason':reason})
   cash,pv,total,missing=self.equity()
   for plan in plans:
-   symbol=plan['symbol'];target=D(plan['target_exposure_eur']);value=current.get(symbol,D(0));gap=max(D(0),target-value);lev=int(plan['leverage']);collateral=gap/lev if lev else gap;action='BUY' if gap>=min_trade else 'HOLD';reason='Dynamisches Zielgewicht aus kalibrierbarem Score, Volatilität und Portfoliolimit' if action=='BUY' else 'No-Trade-Band oder Zielgewicht erreicht';tid=None;executed=0
+   symbol=plan['symbol'];target=D(plan['target_exposure_eur']);value=current.get(symbol,D(0));gap=max(D(0),target-value);lev=int(plan['leverage']);collateral=gap/lev if lev else gap;action='BUY' if gap>=min_trade else 'HOLD';reason='Dynamisches Zielgewicht aus kalibrierbarem Score, VolatilitÃ¤t und Portfoliolimit' if action=='BUY' else 'No-Trade-Band oder Zielgewicht erreicht';tid=None;executed=0
    with self.db.con() as c:c.execute('INSERT INTO allocation_plans VALUES(NULL,?,?,?,?,?,?,?,?,?)',(now(),symbol,plan['confidence'],plan['target_pct'],plan['target_exposure_eur'],lev,str(value),action,reason))
    if active and action=='BUY' and D(plan['confidence'])>0:
     try:tid=self.execute(symbol,'BUY',min(collateral,D(self.db.value('paper_max_transfer_eur','250'))),reason,plan|{'action':'BUY'});executed=1
