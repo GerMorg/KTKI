@@ -113,3 +113,17 @@ release_0_1_0_dev_21:
     - {id: T071, expectation: Repository enthält keine bekannten Kodierungsmarker, status: passed}
   manual:
     - {id: M038, expectation: Bestehende HA-Datenbank zeigt nach dem ersten Start alle Umlaute korrekt, status: pending}
+release_0_1_0_dev_22:
+  automated:
+    - {id: T072, expectation: Repository und sichtbare GUI-Quellen enthalten keine Mojibake-Marker, status: passed}
+    - {id: T073, expectation: Migration v2 repariert Bestandsdaten auch nach abgeschlossener Migration v1, status: passed}
+    - {id: T074, expectation: Wiederholte Mehrfachkategorien-Vorfilterläufe bleiben eindeutig und fehlerfrei, status: passed}
+  manual:
+    - {id: M039, expectation: HA-Upgrade zeigt alle Umlaute korrekt und protokolliert UTF8_DATA_MIGRATION_V2, status: pending}
+release_0_1_0_dev_23:
+  automated:
+    - {id: T075, expectation: xStock-OHLC wird über tokenized_asset abgerufen und erzeugt einen validen Aktien-Score, status: passed}
+    - {id: T076, expectation: Valider xStock-BUY-Score fließt über EUR/USD in einen kostenbehafteten Paper-Trade, status: passed}
+    - {id: T077, expectation: Unterschrittene xStock-Mindestmenge verhindert den Paper-Trade fail-closed, status: passed}
+  manual:
+    - {id: M040, expectation: Nur xStocks aktiviert erzeugt in HA OS valide Scores und nachvollziehbare Paper-Entscheidungen, status: pending}

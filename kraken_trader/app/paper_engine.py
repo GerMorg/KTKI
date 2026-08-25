@@ -49,6 +49,11 @@ class PaperEngine:
    lev=int(risk[0]['leverage']) if risk else 1;qty=min(oldqty,(gross/(market*(1-self.slip))).quantize(Decimal('0.00000001'),rounding=ROUND_DOWN));execp=market*(1-self.slip);notional=qty*execp;fee=notional*self.fee
    if qty<=0:raise ValueError('Keine Paper-Position')
    share=qty/oldqty if oldqty else D(1);repay=olddebt*share;net=notional-fee-repay;newqty=oldqty-qty;avg=oldcost;newcash=cash+net;newdebt=max(D(0),olddebt-repay);gross=notional
+  rules=self.db.rows('SELECT ordermin,costmin,lot_decimals,pair_decimals,asset_class,category FROM market_universe WHERE symbol=? LIMIT 1',(symbol,))
+  rule=rules[0] if rules else {};ordermin=D(rule.get('ordermin'));costmin=D(rule.get('costmin'))
+  if side=='BUY' and ordermin>0 and qty<ordermin:raise ValueError(f'Mindestmenge {ordermin} unterschritten')
+  if side=='BUY' and costmin>0 and notional<costmin:raise ValueError(f'Mindestkosten {costmin} unterschritten')
+  decision=dict(decision,asset_class=rule.get('asset_class'),category=rule.get('category'),ordermin=str(ordermin),costmin=str(costmin),quote_currency=('USD' if symbol.endswith('/USD') else 'EUR'))
   slip=abs(execp-market)*qty
   decision=dict(decision,leverage=lev,borrowed_before_eur=str(olddebt),borrowed_after_eur=str(newdebt))
   with self.db.con() as c:

@@ -41,5 +41,11 @@ Hotfix für Prognose-Inserts bei Mehrklassen-Scans und vollständige UTF-8-Berei
 ## 0.1.0-dev.20 — 2026-08-25
 Vorfilter-Deduplizierung für Mehrfachkategorien, konfliktfeste Persistenz und vollständige UTF-8-Reparatur auf Basis des vom Benutzer übergebenen dev.19-Letztstands.
 
-## 0.1.0-dev.21 — 2026-08-25
+## 0.1.0-dev.23 — 2026-08-25
 Endgültige UTF-8-Absicherung mit Quelltextprüfung, Git-/Editor-Regeln, HTTP-Charset und einmaliger Migration bestehender SQLite-Anzeigetexte.
+
+## 0.1.0-dev.23 — 2026-08-25
+Direkte UTF-8-Reparatur sämtlicher ausgelieferter Quellen und Dokumente, erneute idempotente Bestandsdatenmigration sowie kombinierter Regressionstest gegen Mojibake und den Vorfilter-UNIQUE-Fehler.
+
+## 0.1.0-dev.23 — 2026-08-25
+Durchgängiger xStocks-Pfad vom Kraken-Universum über Aktien-Detailscore und EUR-Umrechnung bis zur kostenbehafteten Paper-Ausführung, einschließlich fail-closed Mindestorderprüfung.

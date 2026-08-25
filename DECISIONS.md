@@ -82,3 +82,9 @@ Die angehängte Repository-Snapshot-Version ist ab sofort immer die alleinige En
 
 ## 2026-08-25 D037
 UTF-8 wird ab dev.21 auf vier Ebenen abgesichert: UTF-8-Quelltexte, Git-/Editor-Regeln, explizite HTTP-Charsets und eine idempotente Startmigration für bereits beschädigte SQLite-Anzeigetexte.
+
+## 2026-08-25 D038
+Dev.22 verwendet eine neue UTF-8-Datenmigrationskennung. Eine bereits gesetzte dev.21-Markierung darf die Reparatur noch beschädigter Bestandsdaten nicht überspringen. Repository-Quellen und sichtbare GUI-Texte müssen selbst korrektes UTF-8 enthalten; Laufzeitreparatur ist nur ein Upgrade-Sicherheitsnetz.
+
+## 2026-08-25 D039
+Aktien/xStocks erhalten ab dev.23 ein eigenes deterministisches Bewertungsprofil `xstocks-v1`. Nur ein valider Detailscan mit BUY-Signal darf eine Paper-Allokation erzeugen. USD-Preise werden vor der Paper-Ausführung über EUR/USD in EUR umgerechnet; Kraken-Mindestmenge und Mindestkosten werden fail-closed geprüft.

@@ -12,7 +12,7 @@ non_negotiable_rules:
   - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
   - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.20
+  version: 0.1.0-dev.23
   status: read-only Kraken-Integration mit oeffentlichem und privatem WebSocket v2; HA-OS-Praxistest fuer dev.5 ausstehend
 implemented:
   - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
@@ -268,3 +268,37 @@ release_0_1_0_dev_21:
     - integrate instrument minimums and account-specific fee data
     - add Austrian tax-lot and evidence export
     - create staged real-execution approval workflow while keeping transport disabled by default
+release_0_1_0_dev_22:
+  date: 2026-08-25
+  base: 0.1.0-dev.21 user-provided repository snapshot
+  fixes:
+    - direct removal of mojibake from source, GUI and documentation
+    - new idempotent utf8_data_migration_v2 for existing SQLite text
+    - restored required runtime modules present in imports
+    - preserved canonical per-symbol prefilter persistence and conflict-safe upsert
+  verification:
+    - repository-wide encoding scan
+    - legacy database migration test after v1 marker
+    - repeated multicategory prefilter regression
+  next_steps:
+    - validate dev.22 on Home Assistant OS with the existing database
+    - implement reproducible backtest and benchmark storage
+release_0_1_0_dev_23:
+  date: 2026-08-25
+  base: 0.1.0-dev.22 user-provided repository snapshot
+  purpose: Aktienbewertung und Paper-Trading über die vollständige Pipeline zuverlässig integrieren.
+  added:
+    - xstocks-v1 deterministic detail score
+    - tokenized_asset ticker and OHLC routing verification
+    - valid BUY-only allocation gate
+    - USD to EUR valuation in paper execution
+    - Kraken ordermin and costmin validation
+    - complete xStock end-to-end regression tests
+  safety:
+    - no trade for missing or invalid detail scan
+    - no trade below Kraken minimums
+    - no USD valuation without EUR/USD
+    - real execution remains hard disabled
+  next_steps:
+    - validate real Kraken xStock symbols and scores on Home Assistant OS
+    - persist category-specific backtest benchmarks

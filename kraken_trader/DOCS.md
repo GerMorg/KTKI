@@ -1,4 +1,4 @@
-# Kraken Trader 0.1.0-dev.21
+# Kraken Trader 0.1.0-dev.23
 
 ## Dauerhafte UTF-8-Strategie
 1. Alle Repository-Texte sind UTF-8 mit LF.

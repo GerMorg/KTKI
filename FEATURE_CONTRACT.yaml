@@ -110,3 +110,16 @@ release_0_1_0_dev_21:
   utf8_git_editor_policy: {required: true, status: implemented}
   persisted_mojibake_migration: {required: true, status: implemented_idempotent}
   utf8_regression_examples: {required: true, status: passed}
+release_0_1_0_dev_22:
+  source_text_real_utf8: {required: true, status: enforced}
+  visible_gui_real_utf8: {required: true, status: enforced}
+  persisted_text_migration_v2: {required: true, status: implemented_idempotent}
+  prefilter_unique_regression_preserved: {required: true, status: passed}
+  missing_runtime_modules_restored: {required: true, status: implemented}
+release_0_1_0_dev_23:
+  xstocks_tokenized_asset_ohlc: {required: true, status: implemented_and_tested}
+  xstocks_dedicated_score_profile: {required: true, status: implemented_xstocks_v1}
+  xstocks_valid_buy_allocation_gate: {required: true, status: enforced}
+  xstocks_usd_eur_paper_valuation: {required: true, status: implemented_and_tested}
+  xstocks_ordermin_costmin_gate: {required: true, status: enforced_fail_closed}
+  real_order_transport: {required: false, status: hard_disabled}
