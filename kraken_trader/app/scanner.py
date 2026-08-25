@@ -31,7 +31,7 @@ class MarketScanner:
    except Exception:tickers={}
    for index,symbol in enumerate(batch):
     try:
-     payload=self.client.ohlc(symbol,interval);key=next((k for k in payload if k!='last'),None);candles=payload.get(key,[]) if key else []
+     acrows=self.db.rows('SELECT asset_class FROM market_universe WHERE symbol=? ORDER BY asset_class LIMIT 1',(symbol,));asset_class=acrows[0]['asset_class'] if acrows else 'currency';payload=self.client.ohlc(symbol,interval,asset_class);key=next((k for k in payload if k!='last'),None);candles=payload.get(key,[]) if key else []
      with self.db.con() as c:
       for x in candles:c.execute('INSERT OR REPLACE INTO ohlc_cache VALUES(?,?,?,?,?,?,?,?,?,?,?)',(symbol,interval,int(x[0]),str(x[1]),str(x[2]),str(x[3]),str(x[4]),str(x[5]),str(x[6]),int(x[7]),stamp))
      ticker=None

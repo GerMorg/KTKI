@@ -1,9 +1,14 @@
-# Kraken Trader 0.1.0-dev.11
+# Kraken Trader 0.1.0-dev.12
 
-## Scanner bei großem Marktumfang
-Das vollständige Marktuniversum aktivierter Kategorien bleibt verfügbar. Der Scanner verarbeitet es rotierend in Teil-Läufen, standardmäßig zehn Märkte pro Lauf. Der Fortschritt wird als Cursor gespeichert; der nächste Lauf setzt beim folgenden Markt fort.
+## Mehrstufige Research-Pipeline
 
-Unter **Einstellungen** können Paketgröße und Pause zwischen OHLC-Aufrufen angepasst werden. Der manuelle Start läuft im Hintergrund. Ein zweiter gleichzeitiger Lauf wird nicht gestartet.
+1. Das aktivierte Kraken-Marktuniversum wird synchronisiert.
+2. Nachrichten werden gesammelt, dedupliziert und Märkten beziehungsweise Kategorien zugeordnet.
+3. Ein günstiger Vorfilter bewertet Liquidität, Spread, 24-Stunden-Veränderung und Nachrichtenrelevanz.
+4. Nur die besten Kandidaten jeder Kategorie gelangen auf die Research-Watchlist.
+5. Nur diese Watchlist erhält die aufwändige OHLC-Detailanalyse.
+6. Die Paper-Strategie verwendet ausschließlich vollständig analysierte Watchlist-Einträge.
 
-## Zeichenkodierung
-Quelltexte sind UTF-8-kodiert. HTML-, Text-, CSV- und JSON-Antworten deklarieren zusätzlich ausdrücklich `charset=utf-8`.
+Nachrichten dienen nur der Research-Priorisierung. Sie können keine Paper- oder Realorder auslösen. Wenn Nachrichtenquellen ausfallen, bleibt der Nachrichtenscore neutral und der Fehler wird sichtbar gespeichert.
+
+Der Scanner zeigt Auftragsstatus, Stufe, Fortschritt, Quellenstatus, Vorfilter und Watchlist. Ein neuer Lauf wird im Hintergrund ausgeführt.

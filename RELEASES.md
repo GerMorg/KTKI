@@ -26,3 +26,7 @@ UTF-8-Bereinigung und dynamisches, kategoriebasiertes Kraken-Marktinventar ohne 
 
 ## 0.1.0-dev.11 — 2026-08-23
 Explizite UTF-8-Ausgabe sowie asynchroner, rotierender und API-schonender Scanner für große Marktuniversen.
+
+
+## 0.1.0-dev.12 — 2026-08-25
+Mehrstufige Research-Pipeline mit Nachrichten- und Marktvorfilter, begrenzter Watchlist, persistenter Jobanzeige und entkoppelter Paper-Automatik.

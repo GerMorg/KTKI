@@ -1,4 +1,4 @@
-version: 0.1.0-dev.11
+version: 0.1.0-dev.12
 tests:
   - {id: T-001, area: Flask routes and tabs, status: passed}
   - {id: T-002, area: Ingress prefix navigation, status: passed}
@@ -69,3 +69,12 @@ release_0_1_0_dev_11:
   manual:
     - {id: M019, expectation: Übersicht wird nach HA-Upgrade korrekt angezeigt, status: pending}
     - {id: M020, expectation: Teil-Lauf startet ohne Absturz und Fortschritt rotiert, status: pending}
+
+release_0_1_0_dev_12:
+  automated:
+    - {id: T034, expectation: Nachrichten wirken auf den Vorfilter und erzeugen keinen Trade, status: passed}
+    - {id: T035, expectation: Research-Auftrag speichert Fortschritt und erzeugt analysierte Watchlist, status: passed}
+    - {id: T036, expectation: Leere Watchlist lässt PaperEngine ohne Fehler durchlaufen, status: passed}
+  manual:
+    - {id: M021, expectation: Research-Auftrag zeigt im HA-Ingress Status und Fortschritt, status: pending}
+    - {id: M022, expectation: Paper-Strategie bleibt während Research-Lauf bedienbar, status: pending}

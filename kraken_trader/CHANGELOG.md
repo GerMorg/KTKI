@@ -1,17 +1,19 @@
 # Changelog
 
+## 0.1.0-dev.12
+- Persistente mehrstufige Research-Pipeline
+- Nachrichten bereits in der günstigen Marktvorfilterung
+- Deduplizierte Nachrichten mit Markt- und Kategoriezuordnung
+- Vorfilter aus Liquidität, Spread, Momentum und Nachrichtenrelevanz
+- Begrenzte Research-Watchlist je Produktkategorie
+- OHLC-Detailanalyse nur für Watchlist-Kandidaten
+- Paper-Automatik von laufenden Scans entkoppelt
+- Paper-Ausführung nur auf abgeschlossenen Analysen
+- Sichtbarer Job-, Quellen- und Watchliststatus
+- Korrigierte Kraken-Asset-Class-Parameter
+
 ## 0.1.0-dev.11
-- Mojibake in GUI-Texten gezielt entfernt
-- Explizite UTF-8-Responseheader
-- Rotierende Scanner-Teil-Läufe
-- Persistenter Cursor und Überlappungsschutz
-- Asynchroner manueller Scannerstart
-- Konfigurierbare Paketgröße und OHLC-Pause
-- Preis- und Streamlast auf aktuellen Teil-Lauf begrenzt
-- 32 automatisierte Regressionstests
+- Lastbegrenzte Scanner-Teil-Läufe und UTF-8-Responseheader
 
 ## 0.1.0-dev.10
-- Produktgruppen und vollständiges dynamisches Kraken-Marktinventar
-
-## 0.1.0-dev.9
-- Scanner-Paper-Kopplung und AssetPairs-Regeln
+- Produktgruppen und dynamisches Kraken-Marktinventar

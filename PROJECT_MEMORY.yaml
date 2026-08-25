@@ -12,7 +12,7 @@ non_negotiable_rules:
   - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
   - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.11
+  version: 0.1.0-dev.12
   status: read-only Kraken-Integration mit oeffentlichem und privatem WebSocket v2; HA-OS-Praxistest fuer dev.5 ausstehend
 implemented:
   - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
@@ -219,3 +219,29 @@ release_0_1_0_dev_11:
     scanner_delay_seconds: Standard 1.05
   tests:
     automated_passed: 32
+
+release_0_1_0_dev_12:
+  date: 2026-08-25
+  source_baseline: Vom Benutzer bereitgestellter vollständiger Repository-Snapshot 0.1.0-dev.11.
+  purpose: Erste stabile Stufe der neuen Gesamtmarkt-Screeningstrategie mit Nachrichten in der Vorfilterung.
+  preserved:
+    - Kategorienbasiertes vollständiges Kraken-Marktinventar
+    - Realportfolio, Paper-Broker, öffentliche und private read-only Streams
+    - Scannerstatistik, Audit, Exporte und Ingress-GUI
+    - Realhandel weiterhin nicht implementiert
+  added:
+    - Persistente Research-Aufträge mit Status, Stufe, Fortschritt und Fehler
+    - Nachrichtenquellen mit Provenienz, Deduplizierung und Abrufstatus
+    - Deterministische Nachrichten-Markt-Zuordnung
+    - Günstiger Vorfilter aus Liquidität, Spread, 24h-Veränderung und Nachrichtenrelevanz
+    - Begrenzte Watchlist je aktivierter Produktkategorie
+    - OHLC-Detailanalyse ausschließlich für Watchlist-Kandidaten
+    - Paper-Automatik verwendet nur vollständig analysierte Watchlist-Einträge
+  safety:
+    - Nachrichten sind nur Research-Filter und niemals Handelssignal
+    - Quellenausfall führt zu neutralem Nachrichtenscore und sichtbarem Fehler
+    - Unvollständige Analyse erzeugt keine Paper-Ausführung
+  next_steps:
+    - Weitere seriöse und lizenzgeeignete Nachrichten- und Primärquellen ergänzen
+    - Ereignis-, Branchen- und Themen-Taxonomie ausbauen
+    - Watchlist-Versionierung und Prognosevergleich implementieren

@@ -47,3 +47,13 @@ Mojibake wie „Ãœbersicht“ blieb in gemischten Quelltexten bestehen. Bekann
 
 ## 2026-08-23 I012 — gelöst in 0.1.0-dev.11
 Ein synchroner Scan des gesamten freigegebenen Marktes konnte Prozess und API überlasten. Der Scanner arbeitet nun asynchron, gesperrt, rate-aware und in rotierenden Teil-Läufen.
+
+
+## 2026-08-25 I013 — gelöst in 0.1.0-dev.12
+Automatik und manueller Paper-Lauf konnten durch vollständige Universums- und Scannerläufe blockiert werden. Der Paper-Pfad führt keine vollständige Research-Pipeline mehr synchron aus.
+
+## 2026-08-25 I014 — gelöst in 0.1.0-dev.12
+Der Scannerstart zeigte keinen belastbaren Fortschritt. Persistente Research-Aufträge speichern Status, Stufe, Fortschritt und Fehler.
+
+## 2026-08-25 I015 — gelöst in 0.1.0-dev.12
+Die Kraken-Client-Standardparameter behandelten normale Spot-Abfragen fälschlich als Forex. Asset-Class-Parameter werden nun nur für Forex und tokenisierte Assets gesendet.

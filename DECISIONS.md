@@ -59,3 +59,10 @@ Das vollständige Marktuniversum bleibt verfügbar, wird aber ressourcenschonend
 
 ## 2026-08-23 D020
 Öffentliche OHLC-Aufrufe werden standardmäßig auf höchstens ungefähr einen Aufruf pro Sekunde begrenzt; überlappende Scannerläufe werden verworfen und auditiert.
+
+
+## 2026-08-25 D021
+Die Marktvorfilterung kombiniert günstige Kraken-Tickerdaten mit deterministisch zugeordneten Nachrichten. Nachrichten beeinflussen ausschließlich die Research-Priorisierung und sind kein Handelssignal.
+
+## 2026-08-25 D022
+Die Paper-Automatik ist von laufenden Research-Aufträgen entkoppelt. Sie nutzt nur Watchlist-Einträge mit abgeschlossener valider Detailanalyse.

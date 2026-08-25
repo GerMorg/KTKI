@@ -46,3 +46,7 @@ Die Einstellungen enthalten keine Einzelprodukte mehr. `market_universe.py` sync
 
 ## Stand 0.1.0-dev.11
 Umlaute wurden nicht nur dateiseitig, sondern zusätzlich über explizite UTF-8-Responseheader abgesichert. Der Scanner verarbeitet das vollständige kategoriebasierte Marktuniversum nicht mehr in einem synchronen Lauf. Ein persistenter Cursor wählt standardmäßig zehn Märkte, OHLC-Aufrufe werden verzögert, manuelle Läufe starten im Hintergrund und ein Lock verhindert Überlappungen. Preisabruf und öffentlicher Stream werden auf den aktuellen Teil-Lauf begrenzt.
+
+
+## Stand 0.1.0-dev.12
+Dev.12 baut unmittelbar auf dem bereitgestellten dev.11-Snapshot auf. Die neue Pipeline synchronisiert zuerst das Universum, sammelt und dedupliziert Nachrichten, ordnet sie deterministisch Märkten und Kategorien zu und kombiniert sie mit günstigen Tickermerkmalen. Nur die besten Kandidaten je Kategorie gelangen in die persistente Research-Watchlist und werden anschließend per OHLC detailliert analysiert. Der Paper-Pfad startet keine vollständige Pipeline mehr und verwendet nur abgeschlossene Watchlist-Analysen. Nachrichten können keine Order auslösen.

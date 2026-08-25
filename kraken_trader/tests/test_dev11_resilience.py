@@ -3,8 +3,8 @@ sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','app'))
 from db import DB
 from scanner import MarketScanner
 class Fake:
- def ticker(self,s):return {x:{'b':['100'],'a':['100.1']} for x in s}
- def ohlc(self,s,i):return {s:[[x,'100','101','99',str(100+x/10),'100','1000',2] for x in range(32)],'last':0}
+ def ticker(self,s,*args):return {x:{'b':['100'],'a':['100.1']} for x in s}
+ def ohlc(self,s,i,*args):return {s:[[x,'100','101','99',str(100+x/10),'100','1000',2] for x in range(32)],'last':0}
 class Tests(unittest.TestCase):
  def setUp(self):self.db=DB(tempfile.mktemp());self.db.init();self.s=MarketScanner(self.db,Fake())
  def test_bounded_rotating_batches(self):

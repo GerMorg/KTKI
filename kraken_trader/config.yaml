@@ -1,5 +1,5 @@
 name: Kraken Trader
-version: "0.1.0-dev.11"
+version: "0.1.0-dev.12"
 slug: kraken_trader
 description: Read-only Kraken Portfolio und lokales Paper-Trading
 arch: [amd64]
@@ -10,7 +10,7 @@ ingress: true
 ingress_port: 8099
 panel_icon: mdi:chart-line
 panel_title: Kraken Trader
-options: {kraken_api_key: "", kraken_api_secret: "", paper_start_eur: 1000, refresh_minutes: 15, public_websocket_enabled: true, websocket_stale_seconds: 30, private_websocket_readonly_enabled: true, paper_fee_bps: 40, paper_slippage_bps: 10, paper_max_position_pct: 10, paper_trade_eur: 25, paper_interval_minutes: 15, scanner_required: true, scanner_batch_size: 10, scanner_delay_seconds: 1.05}
+options: {kraken_api_key: "", kraken_api_secret: "", paper_start_eur: 1000, refresh_minutes: 15, public_websocket_enabled: true, websocket_stale_seconds: 30, private_websocket_readonly_enabled: true, paper_fee_bps: 40, paper_slippage_bps: 10, paper_max_position_pct: 10, paper_trade_eur: 25, paper_interval_minutes: 15, scanner_required: true, scanner_batch_size: 10, scanner_delay_seconds: 1.05, prefilter_top_per_category: 8}
 schema:
   kraken_api_key: password?
   kraken_api_secret: password?
@@ -27,3 +27,4 @@ schema:
   scanner_required: bool
   scanner_batch_size: int(1,50)
   scanner_delay_seconds: float
+  prefilter_top_per_category: int(1,25)
