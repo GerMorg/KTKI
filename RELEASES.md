@@ -35,5 +35,8 @@ Aktien/xStocks mit USD-Streaming, GDELT-TLS-Cooldown, dynamische Paper-Allokatio
 ## 0.1.0-dev.18 — 2026-08-25
 xStocks-Scanner-Hotfix: robuste Assetklassenabfragen, Einzel-Fallback und nichtleere Research-Watchlist trotz vorübergehend fehlendem Ticker.
 
-## 0.1.0-dev.19 — 2026-08-25
+## 0.1.0-dev.20 — 2026-08-25
 Hotfix für Prognose-Inserts bei Mehrklassen-Scans und vollständige UTF-8-Bereinigung. Dev.18-Kandidatenkorrekturen und dev.17-KI-Analyse bleiben erhalten.
+
+## 0.1.0-dev.20 — 2026-08-25
+Vorfilter-Deduplizierung für Mehrfachkategorien, konfliktfeste Persistenz und vollständige UTF-8-Reparatur auf Basis des vom Benutzer übergebenen dev.19-Letztstands.

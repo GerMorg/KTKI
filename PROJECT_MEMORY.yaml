@@ -12,7 +12,7 @@ non_negotiable_rules:
   - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
   - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.19
+  version: 0.1.0-dev.20
   status: read-only Kraken-Integration mit oeffentlichem und privatem WebSocket v2; HA-OS-Praxistest fuer dev.5 ausstehend
 implemented:
   - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
@@ -234,3 +234,20 @@ release_0_1_0_dev_19:
     - explizite Nicht-ID-Spaltenliste beim Prognose-Insert
     - vollständige UTF-8-Normalisierung und Mojibake-Test
   preserved: [dev18 Kandidatenfallback, dev17 externe KI-Nachrichtenanalyse, alle Sicherheitsgrenzen]
+release_0_1_0_dev_20:
+  date: 2026-08-25
+  base: 0.1.0-dev.19 user-provided repository snapshot
+  root_causes:
+    - DISTINCT included category, so multicategory markets remained duplicated by symbol
+    - user-provided text still contained mojibake sequences
+  fixes:
+    - canonical one-market row per symbol before scoring
+    - second in-loop symbol guard
+    - explicit conflict-safe prefilter result upsert
+    - complete UTF-8 repair and repository-wide regression gate
+  preserved:
+    - dev.19 forecast insert repair
+    - dev.18 xStocks ticker fallback and PENDING_TICKER candidates
+    - external AI news analysis configuration
+    - dynamic paper allocation and leverage safety
+    - real execution hard disabled

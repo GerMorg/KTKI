@@ -55,5 +55,8 @@ Dev.16 erweitert das Universum auf Kraken-Aktien/xStocks der Assetklasse `tokeni
 ## Stand 0.1.0-dev.18
 Ursache der leeren xStocks-Watchlist war die harte Bindung der Kandidatenauswahl an einen im gemeinsamen Vorfilterabruf erfolgreich zugeordneten Ticker. Dev.18 fragt xStocks explizit am internationalen Ausführungsplatz ab, routet Ticker nach Assetklasse, fällt bei Batchfehlern auf Einzelabrufe zurück und übernimmt weiterhin von Kraken gemeldete Märkte als `PENDING_TICKER`. Diese Kandidaten werden geprüft, dürfen ohne valide Detailanalyse aber nicht gehandelt werden.
 
-## Stand 0.1.0-dev.19
+## Stand 0.1.0-dev.20
 Der Mehrklassenlauf scheiterte beim Prognose-Snapshot, weil `research_forecasts` zwölf Spalten hatte, der positionsabhängige Insert aber nur elf Gesamtwerte lieferte. Der Insert benennt jetzt alle elf Nicht-ID-Spalten explizit. Zusätzlich wurde das gesamte Repository auf echtes UTF-8 normalisiert und mit Regressionstests gegen beschädigte Umlaute abgesichert.
+
+## Stand 0.1.0-dev.20
+Dev.20 basiert ausschließlich auf dem vom Benutzer gelieferten dev.19-Snapshot. Die konkrete UNIQUE-Ursache liegt in der bisherigen SQL-Abfrage: `DISTINCT` umfasste auch `m.category`; ein hebelfähiger xStock erschien daher einmal als `xstocks` und nochmals als `leveraged_spot`. Die Mehrfachmitgliedschaft bleibt im Universum erhalten, während der Vorfilter pro Symbol eine kanonische Kategorie auswählt. Zusätzlich schützen eine Schleifen-Deduplizierung und `ON CONFLICT(run_id,symbol) DO UPDATE` die Persistenz. Sämtliche ausgelieferten Texte und sichtbaren GUI-Strings wurden erneut auf echtes UTF-8 repariert.

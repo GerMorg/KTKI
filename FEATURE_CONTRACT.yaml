@@ -98,3 +98,9 @@ release_0_1_0_dev_19:
   mojibake_regression_gate: {required: true, status: passed}
   dev18_candidate_fallback: {required: true, status: preserved}
   dev17_external_news_ai: {required: true, status: preserved}
+release_0_1_0_dev_20:
+  latest_snapshot_as_base: {required: true, status: enforced}
+  prefilter_symbol_canonicalization: {required: true, status: implemented}
+  prefilter_conflict_safe_persistence: {required: true, status: implemented}
+  multicategory_xstock_regression: {required: true, status: passed}
+  complete_utf8_repository_gate: {required: true, status: passed}

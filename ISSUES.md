@@ -50,8 +50,14 @@ GDELT-TLS-Handshake-Timeouts erzeugten bei jedem Lauf neue Wartezeiten. Nach ein
 ## 2026-08-25 I024 — gelöst in 0.1.0-dev.18
 Bei ausschließlich aktivierten Aktien/xStocks konnte ein fehlgeschlagener gemeinsamer Tickerabruf alle Märkte als `NO_TICKER` markieren. Da nur `VALID` ausgewählt wurde, entstanden null Kandidaten. Dev.18 gruppiert korrekt nach Assetklasse, versucht fehlgeschlagene Batches einzeln und erhält gemeldete Märkte als `PENDING_TICKER` Kandidaten.
 
-## 2026-08-25 I025 — gelöst in 0.1.0-dev.19
+## 2026-08-25 I025 — gelöst in 0.1.0-dev.20
 `research_forecasts` besitzt einschließlich `id` zwölf Spalten. Der Snapshot-Insert verwendete jedoch eine positionsabhängige Werteliste mit nur elf Gesamtwerten. Dev.19 verwendet eine explizite Liste der elf befüllten Nicht-ID-Spalten und lässt SQLite die ID erzeugen.
 
-## 2026-08-25 I026 — gelöst in 0.1.0-dev.19
+## 2026-08-25 I026 — gelöst in 0.1.0-dev.20
 Mehrfach falsch dekodierte UTF-8-Texte verursachten beschädigte Umlaute. Alle Textdateien wurden als UTF-8 normalisiert; sichtbare deutsche Texte und typische Fehlerkennungen werden getestet.
+
+## 2026-08-25 I027 — gelöst in 0.1.0-dev.20
+Der dev.19-Vorfilter verwendete `DISTINCT` über Symbol und Kategorie. Hebelfähige xStocks blieben dadurch trotz `DISTINCT` doppelt vorhanden und verletzten `(run_id,symbol)`. Dev.20 dedupliziert vor Bewertung nach Symbol, verhindert doppelte Zeilen nochmals unmittelbar in der Schleife und verwendet einen konfliktfesten Insert mit expliziten Spalten.
+
+## 2026-08-25 I028 — gelöst in 0.1.0-dev.20
+Der übergebene dev.19-Snapshot enthielt weiterhin sichtbare Mojibake-Folgen. Alle Repository-Texte wurden erneut als UTF-8 repariert und ein vollständiger Test über Quelltexte, Dokumentation und GUI-Texte ergänzt.

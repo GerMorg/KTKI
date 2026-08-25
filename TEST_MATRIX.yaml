@@ -97,3 +97,12 @@ release_0_1_0_dev_19:
   manual:
     - {id: M034, expectation: Mehrere aktivierte Produktklassen schließen den HA-Research-Lauf ohne OperationalError ab, status: pending}
     - {id: M035, expectation: GUI zeigt Umlaute nach Upgrade korrekt, status: pending}
+release_0_1_0_dev_20:
+  automated:
+    - {id: T065, expectation: Hebelfähiger xStock mit zwei Kategorien wird einmal persistiert, status: passed}
+    - {id: T066, expectation: Zwei aufeinanderfolgende Vorfilterläufe bleiben ohne IntegrityError, status: passed}
+    - {id: T067, expectation: Alle ausgelieferten Texte sind UTF-8 und frei von Mojibake-Markern, status: passed}
+    - {id: T068, expectation: Sichtbare GUI-Quellen enthalten korrekte Umlaute, status: passed}
+  manual:
+    - {id: M036, expectation: HA-Research-Lauf mit xStocks und Hebelprodukten endet ohne UNIQUE-Fehler, status: pending}
+    - {id: M037, expectation: Alle GUI-Tabs zeigen Umlaute korrekt, status: pending}
