@@ -12,7 +12,7 @@ non_negotiable_rules:
   - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
   - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.12
+  version: 0.1.0-dev.13
   status: read-only Kraken-Integration mit oeffentlichem und privatem WebSocket v2; HA-OS-Praxistest fuer dev.5 ausstehend
 implemented:
   - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
@@ -150,98 +150,18 @@ release_0_1_0_dev_8:
     - Kraken AssetPairs Mindestgrößen und Gebührenstaffeln integrieren
     - Backtest und Benchmark für die Baseline erstellen
 
-release_0_1_0_dev_9:
-  date: 2026-08-23
-  purpose: Scanner kontrolliert mit dem Paper-Broker koppeln und Kraken-Instrumentregeln anwenden.
-  source_baseline: Vollstaendiger vom Benutzer bereitgestellter Repository-Snapshot 0.1.0-dev.8.
-  preserved:
-    - Alle GUI-Seiten, REST-Portfolio, Ledger-Pagination und historische Nullpositionen
-    - Oeffentlicher und privater read-only WebSocket v2 mit Sequenzkontrolle
-    - Persistenter Paper-Broker, Scheduler, Konfiguration und Scanner
-    - Realhandel und Ordertransport weiterhin nicht implementiert
-  added:
-    - Scanner wird vor jedem automatischen Paper-Lauf aktualisiert
-    - Scanner-Signal ist standardmaessig zwingendes fail-closed Gate
-    - BUY nur bei validem Scanner-BUY; AVOID kann bestehende Paper-Position reduzieren
-    - Kraken AssetPairs-Regeln werden vor jedem Lauf synchronisiert und persistent gespeichert
-    - Paper-Kaeufe pruefen Paarstatus, Mindestmenge, Mindestwert und Mengenpraezision
-    - Oeffentliche Kraken-Taker-Gebuehr der ersten Volumenstufe ersetzt bei vorhandenen Paarmetadaten den pauschalen Gebuehrenwert
-    - Entscheidung speichert verwendete Scanner- und Paarregeln
-  limits:
-    - Kontospezifische Gebuehren ueber privaten TradeVolume-Endpunkt sind noch nicht aktiviert
-    - Scanner-Strategie ist eine transparente Baseline und keine Gewinnzusage
-  tests:
-    automated_passed: 24
-    added:
-      - Fehlendes Scanner-Ergebnis blockiert fail-closed
-      - Valides Scanner-BUY nutzt Paargebuehr
-      - Kraken-Mindestorder blockiert zu kleine Simulation
-      - AVOID verkauft eine bestehende Paper-Position
-
-release_0_1_0_dev_10:
-  date: 2026-08-23
-  purpose: Produktgruppen statt Einzelproduktfreigaben und konsistente UTF-8-Darstellung.
-  preserved:
-    - Alle Funktionen und Sicherheitsgrenzen aus dev.9
-    - Scanner-Paper-Kopplung, AssetPairs-Regeln, read-only Streams und Portfoliohistorie
-    - Realhandel weiterhin nicht implementiert
-  added:
-    - Einstellungen steuern nur noch Produktgruppen
-    - Vollständiges dynamisches Kraken-Marktinventar für aktivierte Kategorien
-    - Kategorien Kryptowährungen Spot, xStocks, Forex und hebelfähige Spot-Produkte
-    - Überlappende Kategorisierung: hebelfähige Kryptomärkte bleiben auch im Spot-Kryptomarkt enthalten
-    - Persistente Marktmetadaten, Kategorienmitgliedschaften und Synchronisationsläufe
-    - UTF-8-Bereinigung für GUI, Dokumentation und Quelltexte
-  safety:
-    - Nur online gemeldete Märkte werden verwendet
-    - Der aktuelle Ausführungspfad bleibt auf EUR-Quotierungen begrenzt
-    - Keine Einzelproduktfreigaben und keine echte Orderübertragung
-  tests:
-    automated_passed: 28
-
-release_0_1_0_dev_11:
-  date: 2026-08-23
-  purpose: UTF-8-Ausgabe endgültig absichern und Scanner für große Marktuniversen stabilisieren.
-  preserved:
-    - Vollständiges kategoriebasiertes Kraken-Marktinventar aus dev.10
-    - Scanner-Paper-Kopplung, Paper-Broker, Portfolio, Streams, Audit und Exporte
-    - Realhandel weiterhin nicht implementiert
-  fixes:
-    - Mojibake-Sequenzen in GUI-Quelltexten gezielt ersetzt
-    - HTTP Content-Type enthält für Text, HTML, CSV und JSON explizit charset=utf-8
-    - Scanner arbeitet rotierend in persistenten begrenzten Teil-Läufen
-    - Manueller Scannerstart blockiert die Webanfrage nicht mehr
-    - Lauf-Lock verhindert überlappende Scannerläufe
-    - OHLC-Aufrufe werden standardmäßig mit 1.05 Sekunden Abstand ausgeführt
-    - REST-Preisabruf und WebSocket-Abonnement verwenden nur den aktuellen Markt-Teil-Lauf
-  configuration:
-    scanner_batch_size: Standard 10, Bereich 1 bis 50
-    scanner_delay_seconds: Standard 1.05
-  tests:
-    automated_passed: 32
-
-release_0_1_0_dev_12:
+release_0_1_0_dev_13:
   date: 2026-08-25
-  source_baseline: Vom Benutzer bereitgestellter vollständiger Repository-Snapshot 0.1.0-dev.11.
-  purpose: Erste stabile Stufe der neuen Gesamtmarkt-Screeningstrategie mit Nachrichten in der Vorfilterung.
-  preserved:
-    - Kategorienbasiertes vollständiges Kraken-Marktinventar
-    - Realportfolio, Paper-Broker, öffentliche und private read-only Streams
-    - Scannerstatistik, Audit, Exporte und Ingress-GUI
-    - Realhandel weiterhin nicht implementiert
-  added:
-    - Persistente Research-Aufträge mit Status, Stufe, Fortschritt und Fehler
-    - Nachrichtenquellen mit Provenienz, Deduplizierung und Abrufstatus
-    - Deterministische Nachrichten-Markt-Zuordnung
-    - Günstiger Vorfilter aus Liquidität, Spread, 24h-Veränderung und Nachrichtenrelevanz
-    - Begrenzte Watchlist je aktivierter Produktkategorie
-    - OHLC-Detailanalyse ausschließlich für Watchlist-Kandidaten
-    - Paper-Automatik verwendet nur vollständig analysierte Watchlist-Einträge
+  purpose: Breite News-Erkennung, Taxonomie, Watchlist-Versionierung und Prognosevergleich.
+  sources:
+    - GDELT Global als breit abdeckender Aggregator
+    - EZB und Federal Reserve als geldpolitische Primärquellen
+    - Kraken als börsen- und produktspezifische Emittentenquelle
   safety:
-    - Nachrichten sind nur Research-Filter und niemals Handelssignal
-    - Quellenausfall führt zu neutralem Nachrichtenscore und sichtbarem Fehler
-    - Unvollständige Analyse erzeugt keine Paper-Ausführung
+    - Nachrichten wirken nur als Research-Priorisierung
+    - Prognosen handeln nicht und verändern Gewichte nicht automatisch
+    - Realhandel bleibt technisch ausgeschlossen
   next_steps:
-    - Weitere seriöse und lizenzgeeignete Nachrichten- und Primärquellen ergänzen
-    - Ereignis-, Branchen- und Themen-Taxonomie ausbauen
-    - Watchlist-Versionierung und Prognosevergleich implementieren
+    - Praxistest der Quellen auf Home Assistant OS
+    - Taxonomie anhand realer Fehlzuordnungen verbessern
+    - Kontrollierten Gewichts-Kandidatenworkflow entwickeln

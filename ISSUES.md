@@ -27,33 +27,9 @@ Paper-Strategie lief nicht periodisch. Gelöst durch konfigurierbaren Hintergrun
 ## 2026-08-23 I008 — offen
 Scanner und Paper-Orderentscheidung sind bewusst noch nicht gekoppelt; zunächst ist die statistische Baseline praktisch zu validieren.
 
-## 2026-08-23 I003 — teilweise gelöst in 0.1.0-dev.9
-Pauschale Paper-Gebühren werden bei vorhandenen AssetPairs-Metadaten durch die öffentliche erste Taker-Gebührenstufe ersetzt. Die kontospezifische TradeVolume-Gebühr bleibt offen.
 
-## 2026-08-23 I004 — gelöst in 0.1.0-dev.9
-Instrumentabhängige Mindestmenge, Mindestwert, Paarstatus und Mengenpräzision werden vor Paper-Käufen geprüft.
+## 2026-08-25 I016 — gelöst in 0.1.0-dev.13
+Die Nachrichtenabdeckung war zu schmal und ohne allgemeine Ereignistaxonomie. Dev.13 kombiniert globale Abdeckung mit Primärfeeds und speichert Themen sowie Ereignistypen.
 
-## 2026-08-23 I008 — gelöst in 0.1.0-dev.9
-Scanner und Paper-Entscheidung sind kontrolliert gekoppelt; fehlende Scanner-Daten blockieren standardmäßig fail-closed.
-
-## 2026-08-23 I009 — gelöst in 0.1.0-dev.10
-Umlaute und Sonderzeichen waren teilweise als Mojibake dargestellt. Textquellen, Dokumentation und GUI wurden konsistent als UTF-8 normalisiert.
-
-## 2026-08-23 I010 — gelöst in 0.1.0-dev.10
-Einzelproduktfreigaben wurden durch dynamische Produktgruppen und ein vollständiges Kraken-Marktinventar ersetzt.
-
-## 2026-08-23 I011 — gelöst in 0.1.0-dev.11
-Mojibake wie „Ãœbersicht“ blieb in gemischten Quelltexten bestehen. Bekannte Fehlsequenzen wurden gezielt ersetzt und HTTP-Antworten deklarieren UTF-8 ausdrücklich.
-
-## 2026-08-23 I012 — gelöst in 0.1.0-dev.11
-Ein synchroner Scan des gesamten freigegebenen Marktes konnte Prozess und API überlasten. Der Scanner arbeitet nun asynchron, gesperrt, rate-aware und in rotierenden Teil-Läufen.
-
-
-## 2026-08-25 I013 — gelöst in 0.1.0-dev.12
-Automatik und manueller Paper-Lauf konnten durch vollständige Universums- und Scannerläufe blockiert werden. Der Paper-Pfad führt keine vollständige Research-Pipeline mehr synchron aus.
-
-## 2026-08-25 I014 — gelöst in 0.1.0-dev.12
-Der Scannerstart zeigte keinen belastbaren Fortschritt. Persistente Research-Aufträge speichern Status, Stufe, Fortschritt und Fehler.
-
-## 2026-08-25 I015 — gelöst in 0.1.0-dev.12
-Die Kraken-Client-Standardparameter behandelten normale Spot-Abfragen fälschlich als Forex. Asset-Class-Parameter werden nun nur für Forex und tokenisierte Assets gesendet.
+## 2026-08-25 I017 — gelöst in 0.1.0-dev.13
+Watchlists und Prognosen waren nicht historisch vergleichbar. Versionen, Horizonte, Ausgangspreise und spätere Ergebnisbewertungen werden nun persistent gespeichert.

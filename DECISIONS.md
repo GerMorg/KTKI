@@ -42,27 +42,9 @@ Der Scanner verwendet ausschließlich abgeschlossene OHLC-Kerzen. Die laut Krake
 ## 2026-08-23 D014
 Scanner-Ergebnisse werden zunächst getrennt von der Paper-Ausführung geführt. Eine Kopplung erfolgt erst nach praktischer Prüfung und Backtest, um keine ungeprüfte Strategie automatisch handeln zu lassen.
 
-## 2026-08-23 D015
-Ab dev.9 ist das valide Scanner-Ergebnis standardmäßig ein zwingendes Gate für automatische Paper-Orders. Fehlende oder ungültige Scanner-Daten blockieren fail-closed.
 
-## 2026-08-23 D016
-Der Paper-Broker synchronisiert öffentliche AssetPairs-Metadaten und prüft Paarstatus, Mindestmenge, Mindestwert und Mengenpräzision. Die öffentliche erste Taker-Gebührenstufe wird verwendet, solange keine kontospezifische TradeVolume-Auswertung aktiviert ist.
+## 2026-08-25 D023
+Für breite allgemeine Nachrichtenerkennung wird GDELT als offener Aggregator mit geringerem Quellengewicht eingesetzt und durch EZB, Federal Reserve und Kraken als Primär- beziehungsweise Emittentenquellen ergänzt. Reuters bleibt ein optionaler zukünftiger lizenzierter Adapter.
 
-## 2026-08-23 D017
-Produktfreigaben erfolgen ab dev.10 ausschließlich über Kategorien. Innerhalb aktivierter Kategorien wird das vollständige von Kraken gemeldete Online-Marktuniversum dynamisch bereitgestellt; Einzelprodukt-Allowlisten sind kein Benutzerkonzept mehr.
-
-## 2026-08-23 D018
-Produktkategorien dürfen sich überschneiden. Ein hebelfähiger Kryptomarkt gehört sowohl zu Kryptowährungen (Spot) als auch zu hebelfähigen Spot-Produkten.
-
-## 2026-08-23 D019
-Das vollständige Marktuniversum bleibt verfügbar, wird aber ressourcenschonend in persistent rotierenden Teil-Läufen verarbeitet. Marktverfügbarkeit und gleichzeitige Verarbeitung werden getrennt behandelt.
-
-## 2026-08-23 D020
-Öffentliche OHLC-Aufrufe werden standardmäßig auf höchstens ungefähr einen Aufruf pro Sekunde begrenzt; überlappende Scannerläufe werden verworfen und auditiert.
-
-
-## 2026-08-25 D021
-Die Marktvorfilterung kombiniert günstige Kraken-Tickerdaten mit deterministisch zugeordneten Nachrichten. Nachrichten beeinflussen ausschließlich die Research-Priorisierung und sind kein Handelssignal.
-
-## 2026-08-25 D022
-Die Paper-Automatik ist von laufenden Research-Aufträgen entkoppelt. Sie nutzt nur Watchlist-Einträge mit abgeschlossener valider Detailanalyse.
+## 2026-08-25 D024
+Watchlists und Prognosen sind unveränderlich versioniert. Auswertungen verändern Modellgewichte nicht automatisch; neue Gewichte benötigen eine eigene Version und kontrollierte Freigabe.

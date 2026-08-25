@@ -1,14 +1,9 @@
 import json
 from db import now
-CATEGORIES={
- 'crypto_spot':('Kryptowährungen (Spot)','currency'),
- 'xstocks':('xStocks / tokenisierte Aktien und ETFs','tokenized_asset'),
- 'forex':('Devisen (Forex)','forex'),
- 'leveraged_spot':('Hebelfähige Spot-Produkte','derived'),
-}
-def classify(pair,asset_class):
- if asset_class=='tokenized_asset':return 'xstocks'
- if asset_class=='forex':return 'forex'
+CATEGORIES={'crypto_spot':('Kryptowährungen (Spot)','currency'),'xstocks':('xStocks / tokenisierte Aktien und ETFs','tokenized_asset'),'forex':('Devisen (Forex)','forex'),'leveraged_spot':('Hebelfähige Spot-Produkte','derived')}
+def classify(pair,ac):
+ if ac=='tokenized_asset':return 'xstocks'
+ if ac=='forex':return 'forex'
  if pair.get('leverage_buy') or pair.get('leverage_sell'):return 'leveraged_spot'
  return 'crypto_spot'
 class MarketUniverse:
@@ -19,37 +14,28 @@ class MarketUniverse:
    for key,(label,_) in CATEGORIES.items():c.execute('INSERT OR IGNORE INTO product_categories VALUES(?,?,0,?)',(key,label,now()))
  def categories(self):return self.db.rows('SELECT * FROM product_categories ORDER BY category')
  def set_categories(self,enabled):
-  stamp=now()
   with self.db.con() as c:
-   for key,(label,_) in CATEGORIES.items():c.execute('INSERT OR REPLACE INTO product_categories VALUES(?,?,?,?)',(key,label,1 if key in enabled else 0,stamp))
-  self.db.audit('PRODUCT_CATEGORIES_CHANGED',json.dumps({'enabled':sorted(enabled)},ensure_ascii=False))
+   for key,(label,_) in CATEGORIES.items():c.execute('INSERT OR REPLACE INTO product_categories VALUES(?,?,?,?)',(key,label,1 if key in enabled else 0,now()))
  def enabled(self):return {x['category'] for x in self.categories() if x['enabled']}
  def sync(self):
-  stamp=now();all_rows=[];members=[];errors=[]
-  for asset_class in ('currency','tokenized_asset','forex'):
-   try:pairs=self.client.pairs(asset_class)
-   except Exception as exc:errors.append({'asset_class':asset_class,'error':type(exc).__name__});continue
-   for source_key,p in pairs.items():
+  rows=[];members=[];errors=[];stamp=now()
+  for ac in ('currency','tokenized_asset','forex'):
+   try:pairs=self.client.pairs(ac)
+   except Exception as exc:errors.append({'asset_class':ac,'error':type(exc).__name__});continue
+   for source,p in pairs.items():
     symbol=p.get('wsname') or p.get('altname')
     if not symbol:continue
-    category=classify(p,asset_class)
-    memberships=[category]
-    if asset_class=='currency' and category=='leveraged_spot':memberships.append('crypto_spot')
-    if asset_class=='tokenized_asset' and (p.get('leverage_buy') or p.get('leverage_sell')):memberships.append('leveraged_spot')
-    members.extend((symbol,asset_class,x) for x in memberships)
-    all_rows.append((symbol,asset_class,category,p.get('base'),p.get('quote'),p.get('status'),str(p.get('ordermin')) if p.get('ordermin') is not None else None,str(p.get('costmin')) if p.get('costmin') is not None else None,p.get('lot_decimals'),p.get('pair_decimals'),json.dumps(p.get('leverage_buy') or []),json.dumps(p.get('leverage_sell') or []),source_key,stamp))
-  if all_rows:
-   with self.db.con() as c:
-    c.executemany('INSERT OR REPLACE INTO market_universe VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)',all_rows);c.execute('DELETE FROM market_category_members');c.executemany('INSERT OR REPLACE INTO market_category_members VALUES(?,?,?)',members)
-  enabled=self.enabled();enabled_count=len({(s,a) for s,a,c in members if c in enabled});quality='VALID' if all_rows and not errors else ('INCOMPLETE' if all_rows else 'ERROR')
-  with self.db.con() as c:c.execute('INSERT INTO universe_sync_runs(created_at,total_markets,enabled_markets,quality,details_json) VALUES(?,?,?,?,?)',(stamp,len(all_rows),enabled_count,quality,json.dumps({'errors':errors},ensure_ascii=False)))
-  self.db.audit('MARKET_UNIVERSE_SYNC',json.dumps({'total':len(all_rows),'enabled':enabled_count,'quality':quality},ensure_ascii=False));return {'total':len(all_rows),'enabled':enabled_count,'quality':quality,'errors':errors}
+    cat=classify(p,ac);cats=[cat]
+    if ac=='currency' and cat=='leveraged_spot':cats.append('crypto_spot')
+    if ac=='tokenized_asset' and (p.get('leverage_buy') or p.get('leverage_sell')):cats.append('leveraged_spot')
+    members.extend((symbol,ac,x) for x in cats);rows.append((symbol,ac,cat,p.get('base'),p.get('quote'),p.get('status'),str(p.get('ordermin')) if p.get('ordermin') is not None else None,str(p.get('costmin')) if p.get('costmin') is not None else None,p.get('lot_decimals'),p.get('pair_decimals'),json.dumps(p.get('leverage_buy') or []),json.dumps(p.get('leverage_sell') or []),source,stamp))
+  if rows:
+   with self.db.con() as c:c.executemany('INSERT OR REPLACE INTO market_universe VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)',rows);c.execute('DELETE FROM market_category_members');c.executemany('INSERT OR REPLACE INTO market_category_members VALUES(?,?,?)',members)
+  enabled=self.enabled();count=len({(s,a) for s,a,c in members if c in enabled});quality='VALID' if rows and not errors else ('INCOMPLETE' if rows else 'ERROR')
+  with self.db.con() as c:c.execute('INSERT INTO universe_sync_runs VALUES(NULL,?,?,?,?,?)',(stamp,len(rows),count,quality,json.dumps({'errors':errors})))
+  return {'total':len(rows),'enabled':count,'quality':quality,'errors':errors}
  def symbols(self,quote='EUR'):
   enabled=self.enabled()
   if not enabled:return []
-  marks=','.join('?'*len(enabled));params=list(sorted(enabled))
-  q=f"SELECT DISTINCT u.symbol FROM market_universe u JOIN market_category_members m ON m.symbol=u.symbol AND m.asset_class=u.asset_class WHERE m.category IN ({marks}) AND u.status='online'"
-  rows=self.db.rows(q,params)
-  symbols=[x['symbol'] for x in rows]
-  if quote:symbols=[x for x in symbols if x.rsplit('/',1)[-1]==quote]
-  return sorted(set(symbols))
+  marks=','.join('?'*len(enabled));rows=self.db.rows(f"SELECT DISTINCT u.symbol FROM market_universe u JOIN market_category_members m ON m.symbol=u.symbol AND m.asset_class=u.asset_class WHERE m.category IN ({marks}) AND u.status='online'",list(enabled));symbols=[x['symbol'] for x in rows]
+  return sorted(x for x in set(symbols) if not quote or x.rsplit('/',1)[-1]==quote)

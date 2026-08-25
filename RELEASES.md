@@ -18,15 +18,6 @@ Sichtbare Paper-Konfiguration, persistente Laufparameter, Allowlist-WebSocket-Ab
 ## 0.1.0-dev.8 — 2026-08-23
 Statistischer Markt-Scanner mit OHLC-Cache, Momentum, SMA-Trend, Volatilität, Spread, Volumen, reproduzierbarem Score, Datenqualität und begründeten BUY/HOLD/AVOID-Signalen.
 
-## 0.1.0-dev.9 — 2026-08-23
-Kontrollierte Scanner-Paper-Kopplung mit fail-closed Daten-Gate sowie persistente Kraken-AssetPairs-Regeln für Paarstatus, Mindestmenge, Mindestwert, Präzision und öffentliche Taker-Gebühr.
 
-## 0.1.0-dev.10 — 2026-08-23
-UTF-8-Bereinigung und dynamisches, kategoriebasiertes Kraken-Marktinventar ohne Einzelproduktfreigaben.
-
-## 0.1.0-dev.11 — 2026-08-23
-Explizite UTF-8-Ausgabe sowie asynchroner, rotierender und API-schonender Scanner für große Marktuniversen.
-
-
-## 0.1.0-dev.12 — 2026-08-25
-Mehrstufige Research-Pipeline mit Nachrichten- und Marktvorfilter, begrenzter Watchlist, persistenter Jobanzeige und entkoppelter Paper-Automatik.
+## 0.1.0-dev.13 — 2026-08-25
+Erweiterte Nachrichtenarchitektur, Themen- und Ereignistaxonomie, versionierte Watchlists sowie kontrollierte Prognoseauswertung.

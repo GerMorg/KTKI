@@ -1,4 +1,4 @@
-version: 0.1.0-dev.12
+version: 0.1.0-dev.5
 compatibility_rule: Implementierte Funktionen duerfen nur nach ausdruecklicher Entscheidung mit dokumentierter Migration entfernt werden.
 features:
   ingress_gui: {required: true, status: implemented}
@@ -48,43 +48,14 @@ release_0_1_0_dev_8:
   spread_metric: {required: true, status: implemented}
   scanner_quality_gates: {required: true, status: implemented}
   scanner_paper_coupling: {required: false, status: intentionally_deferred}
-release_0_1_0_dev_9:
-  scanner_paper_coupling: {required: true, status: implemented_fail_closed}
-  scanner_refresh_before_paper_cycle: {required: true, status: implemented}
-  assetpairs_rule_cache: {required: true, status: implemented}
-  pair_status_gate: {required: true, status: implemented}
-  minimum_order_quantity_gate: {required: true, status: implemented}
-  minimum_order_cost_gate: {required: true, status: implemented}
-  lot_precision: {required: true, status: implemented}
-  public_pair_taker_fee: {required: true, status: implemented}
-  account_specific_trade_volume_fee: {required: false, status: deferred}
-  real_order_transport: {required: false, status: prohibited}
-release_0_1_0_dev_10:
-  utf8_gui_and_docs: {required: true, status: implemented}
-  individual_product_settings: {required: false, status: removed_from_user_concept}
-  product_group_settings: {required: true, status: implemented}
-  complete_enabled_category_market: {required: true, status: implemented_dynamic}
-  overlapping_market_categories: {required: true, status: implemented}
-  xstocks_asset_class: {required: true, status: implemented}
-  online_market_gate: {required: true, status: implemented}
-release_0_1_0_dev_11:
-  explicit_utf8_http_charset: {required: true, status: implemented}
-  mojibake_regression_gate: {required: true, status: implemented}
-  bounded_scanner_batches: {required: true, status: implemented}
-  persistent_scanner_cursor: {required: true, status: implemented}
-  scanner_overlap_lock: {required: true, status: implemented}
-  asynchronous_manual_scan: {required: true, status: implemented}
-  rate_aware_ohlc_delay: {required: true, status: implemented}
-  complete_market_inventory_preserved: {required: true, status: implemented}
 
-release_0_1_0_dev_12:
-  persistent_research_jobs: {required: true, status: implemented}
-  news_collection_and_deduplication: {required: true, status: implemented}
-  news_market_mapping: {required: true, status: implemented_deterministic}
-  news_as_prefilter_only: {required: true, status: implemented}
-  cheap_market_prefilter: {required: true, status: implemented}
-  bounded_watchlist_per_category: {required: true, status: implemented}
-  deep_scan_watchlist_only: {required: true, status: implemented}
-  paper_research_decoupling: {required: true, status: implemented}
-  completed_analysis_gate: {required: true, status: implemented}
-  real_order_transport: {required: false, status: prohibited}
+release_0_1_0_dev_13:
+  broad_news_aggregator: {required: true, status: implemented_gdelt}
+  primary_source_feeds: {required: true, status: implemented}
+  source_class_and_weight: {required: true, status: implemented}
+  deterministic_topic_taxonomy: {required: true, status: implemented}
+  immutable_watchlist_versions: {required: true, status: implemented}
+  forecast_snapshots: {required: true, status: implemented}
+  forecast_outcome_evaluation: {required: true, status: implemented}
+  automatic_weight_changes: {required: false, status: prohibited}
+  news_direct_trading: {required: false, status: prohibited}

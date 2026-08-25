@@ -38,15 +38,6 @@ Die fehlende praktische Automatisierung aus dev.6 wurde geschlossen. Einstellung
 ## Stand 0.1.0-dev.8
 Neu ist `scanner.py` mit persistenten Tabellen `ohlc_cache`, `scanner_results` und `scanner_runs`. Die Seite **Scanner** analysiert die freigegebenen Produkte auf abgeschlossenen 1-Stunden-Kerzen. Der Scanner ist absichtlich noch nicht direkt mit Paper-Trades gekoppelt; die Ergebnisse sollen zuerst praktisch geprüft und später gebenchmarkt werden.
 
-## Stand 0.1.0-dev.9
-Dev.9 wurde unmittelbar aus dem bereitgestellten vollständigen dev.8-Snapshot rekonstruiert. `run_paper_cycle()` aktualisiert Livepreise, AssetPairs-Regeln und Scanner, bevor die PaperEngine entscheidet. Standardmäßig ist `scanner_required=true`: Nur ein valides Scanner-Ergebnis darf eine automatische Paper-Order auslösen. Die Engine prüft zusätzlich Paarstatus, Mindestmenge, Mindestwert und Mengenpräzision und verwendet die öffentliche Taker-Gebühr aus AssetPairs. Alle dev.8-Funktionen bleiben erhalten; Realhandel ist weiterhin nicht implementiert.
 
-## Stand 0.1.0-dev.10
-Die Einstellungen enthalten keine Einzelprodukte mehr. `market_universe.py` synchronisiert die vollständigen Kraken-Märkte für die Klassen `currency`, `tokenized_asset` und Forex und ordnet sie über eine überlappende Mitgliedschaft Kategorien zu. Der aktuell sichere Analyse- und Paper-Pfad verwendet daraus Online-Märkte mit EUR als Quotierungswährung. Texte und Dokumente wurden als UTF-8 normalisiert.
-
-## Stand 0.1.0-dev.11
-Umlaute wurden nicht nur dateiseitig, sondern zusätzlich über explizite UTF-8-Responseheader abgesichert. Der Scanner verarbeitet das vollständige kategoriebasierte Marktuniversum nicht mehr in einem synchronen Lauf. Ein persistenter Cursor wählt standardmäßig zehn Märkte, OHLC-Aufrufe werden verzögert, manuelle Läufe starten im Hintergrund und ein Lock verhindert Überlappungen. Preisabruf und öffentlicher Stream werden auf den aktuellen Teil-Lauf begrenzt.
-
-
-## Stand 0.1.0-dev.12
-Dev.12 baut unmittelbar auf dem bereitgestellten dev.11-Snapshot auf. Die neue Pipeline synchronisiert zuerst das Universum, sammelt und dedupliziert Nachrichten, ordnet sie deterministisch Märkten und Kategorien zu und kombiniert sie mit günstigen Tickermerkmalen. Nur die besten Kandidaten je Kategorie gelangen in die persistente Research-Watchlist und werden anschließend per OHLC detailliert analysiert. Der Paper-Pfad startet keine vollständige Pipeline mehr und verwendet nur abgeschlossene Watchlist-Analysen. Nachrichten können keine Order auslösen.
+## Stand 0.1.0-dev.13
+Der globale Nachrichtenindex GDELT wird mit EZB-, Federal-Reserve- und Kraken-Feeds kombiniert. Quellenklassen und Gewichte bleiben nachvollziehbar. Nachrichten werden deterministisch taxonomiert und nur für die Vorfilterung verwendet. Jeder Vorfilterlauf erzeugt eine Watchlist-Version; valide Detailanalysen erzeugen 24h- und 168h-Prognosesnapshots, die später gegen reale Preise bewertet werden. Modellgewichte ändern sich nicht automatisch.

@@ -14,5 +14,5 @@ class ScannerTests(unittest.TestCase):
   r=self.s.analyze('BTC/EUR',self.candles(),{'b':['114.6'],'a':['114.8']});self.assertEqual(r['quality'],'VALID');self.assertGreater(r['score'],0);self.assertEqual(r['data_points'],49)
  def test_incomplete(self):self.assertEqual(self.s.analyze('X/EUR',self.candles()[:10],{})['quality'],'INSUFFICIENT')
  def test_persistence(self):
-  self.s.client.ohlc=lambda sym,interval,*args:{sym:self.candles(),'last':1};self.s.client.ticker=lambda syms:{'BTC/EUR':{'b':['114.6'],'a':['114.8']}}
+  self.s.client.ohlc=lambda sym,interval:{sym:self.candles(),'last':1};self.s.client.ticker=lambda syms:{'BTC/EUR':{'b':['114.6'],'a':['114.8']}}
   self.s.run(['BTC/EUR']);self.assertTrue(self.db.rows('SELECT * FROM scanner_results'));self.assertTrue(self.db.rows('SELECT * FROM scanner_runs'))

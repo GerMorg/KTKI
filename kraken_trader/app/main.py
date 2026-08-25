@@ -7,9 +7,10 @@ from ws_market import MarketStream
 from ws_private import PrivateStream
 from paper_engine import PaperEngine,configure_engine
 from scanner import MarketScanner
-from market_universe import MarketUniverse,CATEGORIES
+from market_universe import MarketUniverse
 from news_prefilter import NewsPrefilter
 from prefilter import MarketPrefilter
+from forecast_tracker import ForecastTracker
 from research_pipeline import ResearchPipeline
 class IngressPrefix:
  def __init__(self,app):self.app=app
@@ -22,14 +23,15 @@ try:
  with open(os.getenv('APP_OPTIONS','/data/options.json')) as f:opts=json.load(f)
 except Exception:opts={}
 db=DB(os.path.join(DATA,'kraken_trader.db'));db.init(opts.get('paper_start_eur',1000));paper_engine=PaperEngine(db,opts.get('paper_start_eur',1000),opts.get('paper_fee_bps',40),opts.get('paper_slippage_bps',10),opts.get('paper_max_position_pct',10),opts.get('paper_trade_eur',25));client=KrakenClient(opts.get('kraken_api_key',''),opts.get('kraken_api_secret',''))
-for key,value in {'paper_fee_bps':opts.get('paper_fee_bps',40),'paper_slippage_bps':opts.get('paper_slippage_bps',10),'paper_max_position_pct':opts.get('paper_max_position_pct',10),'paper_trade_eur':opts.get('paper_trade_eur',25),'paper_interval_minutes':opts.get('paper_interval_minutes',15),'scanner_required':opts.get('scanner_required',True),'scanner_batch_size':opts.get('scanner_batch_size',10),'scanner_delay_seconds':opts.get('scanner_delay_seconds',1.05),'prefilter_top_per_category':opts.get('prefilter_top_per_category',8)}.items():
+for key,value in {'paper_fee_bps':opts.get('paper_fee_bps',40),'paper_slippage_bps':opts.get('paper_slippage_bps',10),'paper_max_position_pct':opts.get('paper_max_position_pct',10),'paper_trade_eur':opts.get('paper_trade_eur',25),'paper_interval_minutes':opts.get('paper_interval_minutes',15),'scanner_required':opts.get('scanner_required',True),'scanner_delay_seconds':opts.get('scanner_delay_seconds',1.05),'prefilter_top_per_category':opts.get('prefilter_top_per_category',8)}.items():
  if not db.rows('SELECT value FROM settings WHERE key=?',(key,)):db.set_setting(key,value)
 configure_engine(paper_engine)
 scanner=MarketScanner(db,client)
 universe=MarketUniverse(db,client)
 news_prefilter=NewsPrefilter(db)
 prefilter=MarketPrefilter(db,client,news_prefilter)
-pipeline=ResearchPipeline(db,universe,prefilter,scanner)
+forecasts=ForecastTracker(db)
+pipeline=ResearchPipeline(db,universe,prefilter,scanner,forecasts)
 app=Flask(__name__);app.wsgi_app=IngressPrefix(app.wsgi_app)
 @app.after_request
 def force_utf8(response):
@@ -46,8 +48,7 @@ def restore_stream_symbols():
 restore_stream_symbols();private_stream.start()
 def allowed_symbols():return universe.symbols('EUR')
 def current_market_batch():
- symbols=prefilter.candidates()
- return symbols if symbols else allowed_symbols()[:max(1,min(int(float(db.value('scanner_batch_size','10'))),50))]
+ symbols=prefilter.candidates();return symbols if symbols else allowed_symbols()[:10]
 def refresh_allowed_prices():
  symbols=current_market_batch()
  if not symbols:return 0
@@ -67,30 +68,19 @@ def refresh_allowed_prices():
   stream.set_symbols(symbols);stream.start();return saved
  except Exception as exc:
   db.audit('PAPER_PRICE_REFRESH_FAILED',type(exc).__name__,'error');return 0
-def sync_pair_rules():
- pairs=client.pairs('currency');stamp=__import__('db').now();saved=0
- with db.con() as c:
-  for key,pair in pairs.items():
-   symbol=pair.get('wsname')
-   if not symbol:continue
-   fees=pair.get('fees') or [];taker=fees[0][1] if fees else None
-   c.execute('INSERT OR REPLACE INTO pair_rules VALUES(?,?,?,?,?,?,?,?)',(symbol,str(pair.get('ordermin')) if pair.get('ordermin') is not None else None,str(pair.get('costmin')) if pair.get('costmin') is not None else None,pair.get('lot_decimals'),pair.get('pair_decimals'),str(taker) if taker is not None else None,pair.get('status'),stamp));saved+=1
- db.audit('PAIR_RULES_SYNC',json.dumps({'saved':saved}));return saved
 def run_paper_cycle():
- configure_engine(paper_engine);symbols=current_market_batch();refresh_allowed_prices()
- if symbols:stream.set_symbols(symbols);stream.start()
- return paper_engine.run()
+ refresh_allowed_prices();configure_engine(paper_engine);forecasts.evaluate_due();return paper_engine.run()
 def paper_scheduler():
  while True:
   rows=db.rows("SELECT value FROM settings WHERE key='paper_interval_minutes'");minutes=max(1,int(float(rows[0]['value'] if rows else 15)));time.sleep(minutes*60);run_paper_cycle()
 if os.getenv('APP_DISABLE_PAPER_SCHEDULER')!='1':threading.Thread(target=paper_scheduler,daemon=True,name='paper-scheduler').start()
-BASE='''<!doctype html><html lang=de><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:dark;--b:#09111f;--c:#142238;--a:#55c6ff;--m:#a9b8cb;--g:#5ee090;--r:#ff7272}*{box-sizing:border-box}body{margin:0;background:var(--b);color:#eef6ff;font:15px system-ui}nav{display:flex;gap:18px;flex-wrap:wrap;padding:16px;background:#101b2d;position:sticky;top:0}a{color:var(--a);text-decoration:none}main{padding:20px;max-width:1200px;margin:auto}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.card{background:var(--c);padding:18px;border-radius:14px;margin-bottom:14px}.muted{color:var(--m)}.good{color:var(--g)}.bad{color:var(--r)}table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:9px;border-bottom:1px solid #29405f}button{background:var(--a);border:0;border-radius:8px;padding:10px 14px;font-weight:700}.tag{padding:3px 7px;border-radius:9px;background:#243956}</style></head><body><nav><b>Kraken Trader dev.12</b><a href="{{url_for('dashboard')}}">Übersicht</a><a href="{{url_for('api_status')}}">API</a><a href="{{url_for('portfolio')}}">Portfolio</a><a href="{{url_for('scanner_page')}}">Scanner</a><a href="{{url_for('paper')}}">Musterdepot</a><a href="{{url_for('paper_decisions')}}">Paper-Entscheidungen</a><a href="{{url_for('audit')}}">Audit</a><a href="{{url_for('settings')}}">Einstellungen</a><a href="{{url_for('exports')}}">Export</a></nav><main>{{body|safe}}</main></body></html>'''
+BASE='''<!doctype html><html lang=de><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:dark;--b:#09111f;--c:#142238;--a:#55c6ff;--m:#a9b8cb;--g:#5ee090;--r:#ff7272}*{box-sizing:border-box}body{margin:0;background:var(--b);color:#eef6ff;font:15px system-ui}nav{display:flex;gap:18px;flex-wrap:wrap;padding:16px;background:#101b2d;position:sticky;top:0}a{color:var(--a);text-decoration:none}main{padding:20px;max-width:1200px;margin:auto}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.card{background:var(--c);padding:18px;border-radius:14px;margin-bottom:14px}.muted{color:var(--m)}.good{color:var(--g)}.bad{color:var(--r)}table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:9px;border-bottom:1px solid #29405f}button{background:var(--a);border:0;border-radius:8px;padding:10px 14px;font-weight:700}.tag{padding:3px 7px;border-radius:9px;background:#243956}</style></head><body><nav><b>Kraken Trader dev.13</b><a href="{{url_for('dashboard')}}">Übersicht</a><a href="{{url_for('api_status')}}">API</a><a href="{{url_for('portfolio')}}">Portfolio</a><a href="{{url_for('scanner_page')}}">Scanner</a><a href="{{url_for('paper')}}">Musterdepot</a><a href="{{url_for('paper_decisions')}}">Paper-Entscheidungen</a><a href="{{url_for('audit')}}">Audit</a><a href="{{url_for('settings')}}">Einstellungen</a><a href="{{url_for('exports')}}">Export</a></nav><main>{{body|safe}}</main></body></html>'''
 def page(body,**ctx):return render_template_string(BASE,body=render_template_string(body,**ctx))
 @app.get('/')
 def dashboard():
  latest=db.rows('SELECT * FROM portfolio_snapshots ORDER BY id DESC LIMIT 1');return page('<h1>HA Kraken Trader</h1><div class=grid><div class=card><h2>Realportfolio</h2><p>{{latest.total_eur if latest else "Noch nicht synchronisiert"}} EUR</p><span class="{{"good" if latest and latest.quality=="VALID" else "bad"}}">{{latest.quality if latest else "UNKNOWN"}}</span></div><div class=card><h2>Sicherheit</h2><p>Echte Orders sind serverseitig nicht implementiert.</p><b>REAL TRADING: AUS</b></div></div>',latest=latest[0] if latest else None)
 @app.get('/health')
-def health():return {'status':'ok','version':'0.1.0-dev.12','real_trading':False,'websocket_status':db.value('websocket_status','not_checked'),'market_stream':stream.status(),'private_stream':private_stream.status()}
+def health():return {'status':'ok','version':'0.1.0-dev.13','real_trading':False,'websocket_status':db.value('websocket_status','not_checked'),'market_stream':stream.status(),'private_stream':private_stream.status()}
 @app.get('/api/private-stream')
 def private_stream_api():return {'status':private_stream.status(),'balances':db.rows('SELECT * FROM private_balances ORDER BY asset'),'executions':db.rows('SELECT event_type,order_id,exec_id,symbol,sequence,received_at FROM private_execution_events ORDER BY received_at DESC LIMIT 100'),'sequence_gaps':db.rows('SELECT * FROM private_sequence_gaps ORDER BY id DESC LIMIT 20')}
 @app.post('/api/private-stream/reconnect')
@@ -138,11 +128,10 @@ def portfolio():
  return page('''<h1>Realportfolio</h1><div class=card><form method=post><button>Kraken vollständig synchronisieren</button></form><p>{{msg}}</p><p class=muted>Nullpositionen bleiben als HISTORICAL_ZERO erhalten, wenn das Asset in der Ledger-Historie vorkam.</p><table><tr><th>Asset</th><th>Menge</th><th>EUR-Kurs</th><th>EUR-Wert</th><th>Status</th></tr>{% for x in rows %}<tr><td>{{x.display_name}} <small>{{x.asset}}</small></td><td>{{x.amount}}</td><td>{{x.eur_price or "—"}}</td><td>{{x.eur_value or "—"}}</td><td><span class=tag>{{x.classification}}</span></td></tr>{% endfor %}</table></div><div class=card><h2>Historie</h2><table><tr><th>Zeit</th><th>Gesamt EUR</th><th>Qualität</th><th>Unbewertet</th></tr>{% for x in history %}<tr><td>{{x.created_at}}</td><td>{{x.total_eur}}</td><td>{{x.quality}}</td><td>{{x.unpriced_asset_count}}</td></tr>{% endfor %}</table></div>''',rows=rows,history=history,msg=msg)
 @app.get('/scanner')
 def scanner_page():
- rows=db.rows("SELECT w.symbol,w.category,w.prefilter_score,w.status,s.score,s.signal,s.quality,s.scanned_at FROM research_watchlist w LEFT JOIN scanner_results s ON s.symbol=w.symbol ORDER BY CAST(w.prefilter_score AS REAL) DESC");job=pipeline.latest();pref=db.rows('SELECT * FROM prefilter_runs ORDER BY id DESC LIMIT 1');sources=news_prefilter.sources()
- return page(render_template_string("""<h1>Research-Scanner</h1><p class=muted>Gesamtmarkt → Nachrichten- und Marktvorfilter → begrenzte Watchlist → OHLC-Detailanalyse. Nachrichten priorisieren Research, lösen aber niemals Trades aus.</p><form method=post action="{{url_for('run_scanner')}}"><button>Neue Research-Pipeline starten</button></form>{% if job %}<div class=card><h3>Auftrag #{{job.id}}: {{job.status}}</h3><p>Stufe {{job.stage}} · Fortschritt {{job.progress_current}}/{{job.progress_total}}</p><p class=bad>{{job.error or ''}}</p></div>{% endif %}{% if pref %}<div class=card>Vorfilter: {{pref.market_count}} Märkte · {{pref.candidate_count}} Kandidaten · Status {{pref.status}}</div>{% endif %}<h2>Nachrichtenquellen</h2><table><tr><th>Quelle</th><th>Status</th><th>Letzte Prüfung</th></tr>{% for x in sources %}<tr><td>{{x.name}}</td><td>{{x.last_status or 'noch nicht geprüft'}}</td><td>{{x.last_checked_at or '—'}}</td></tr>{% endfor %}</table><h2>Research-Watchlist</h2><table><tr><th>Symbol</th><th>Kategorie</th><th>Vorfilter</th><th>Status</th><th>Detailscore</th><th>Signal</th><th>Qualität</th></tr>{% for x in rows %}<tr><td>{{x.symbol}}</td><td>{{x.category}}</td><td>{{x.prefilter_score}}</td><td>{{x.status}}</td><td>{{x.score or '—'}}</td><td>{{x.signal or '—'}}</td><td>{{x.quality or '—'}}</td></tr>{% endfor %}</table>""",rows=rows,job=job,pref=pref[0] if pref else None,sources=sources))
+ rows=db.rows("SELECT w.symbol,w.category,w.prefilter_score,w.status,s.score,s.signal,s.quality FROM research_watchlist w LEFT JOIN scanner_results s ON s.symbol=w.symbol ORDER BY CAST(w.prefilter_score AS REAL) DESC");job=pipeline.latest();sources=news_prefilter.sources();versions=db.rows('SELECT * FROM watchlist_versions ORDER BY id DESC LIMIT 10');stats=db.rows("SELECT COUNT(*) total,COALESCE(SUM(direction_correct),0) correct FROM forecast_evaluations")
+ return page(render_template_string("""<h1>Research-Scanner</h1><p class=muted>Globale Nachrichten und Primärquellen → Taxonomie → Vorfilter → versionierte Watchlist → Detailanalyse → Prognosevergleich. Nachrichten sind kein Handelssignal.</p><form method=post action="{{url_for('run_scanner')}}"><button>Research-Pipeline starten</button></form>{% if job %}<div class=card><b>Job #{{job.id}} {{job.status}}</b> · {{job.stage}} · {{job.progress_current}}/{{job.progress_total}}<p class=bad>{{job.error or ''}}</p></div>{% endif %}<h2>Quellen</h2><table>{% for x in sources %}<tr><td>{{x.name}}</td><td>{{x.source_class}}</td><td>{{x.last_status or 'offen'}}</td><td>{{x.last_checked_at or '—'}}</td></tr>{% endfor %}</table><h2>Watchlist</h2><table><tr><th>Symbol</th><th>Kategorie</th><th>Vorfilter</th><th>Status</th><th>Detailscore</th><th>Signal</th></tr>{% for x in rows %}<tr><td>{{x.symbol}}</td><td>{{x.category}}</td><td>{{x.prefilter_score}}</td><td>{{x.status}}</td><td>{{x.score or '—'}}</td><td>{{x.signal or '—'}}</td></tr>{% endfor %}</table><h2>Versionen und Prognosen</h2><p>Ausgewertet: {{stats.total if stats else 0}} · Richtung richtig: {{stats.correct if stats else 0}}</p><table>{% for x in versions %}<tr><td>#{{x.id}}</td><td>{{x.created_at}}</td><td>{{x.item_count}} Kandidaten</td><td>{{x.status}}</td></tr>{% endfor %}</table>""",rows=rows,job=job,sources=sources,versions=versions,stats=stats[0] if stats else None))
 @app.post('/scanner/run')
-def run_scanner():
- result=pipeline.start();db.audit('RESEARCH_PIPELINE_REQUEST',json.dumps(result));return redirect(url_for('scanner_page'))
+def run_scanner():db.audit('RESEARCH_PIPELINE_REQUEST',json.dumps(pipeline.start()));return redirect(url_for('scanner_page'))
 @app.get('/api/research-job')
 def research_job_api():return pipeline.latest() or {'status':'NONE'}
 @app.get('/paper')
@@ -155,25 +144,23 @@ def run_paper():
  except Exception as exc:db.audit('PAPER_MANUAL_RUN_FAILED',type(exc).__name__+': '+str(exc)[:300],'error')
  return redirect(url_for('paper_decisions'))
 @app.get('/paper/decisions')
-def paper_decisions():return page(render_template_string('''<h1>Paper-Entscheidungen</h1><p class=muted>Scanner-gekoppelte Baseline: Paper-Orders verwenden standardmäßig nur valide Scanner-Ergebnisse. Paarstatus, Mindestmenge, Mindestwert und Kraken-Gebührenstufe werden vor der Simulation geprüft.</p><table><tr><th>Zeit</th><th>Symbol</th><th>Aktion</th><th>Score</th><th>Qualität</th><th>Ausgeführt</th><th>Begründung</th></tr>{% for x in r %}<tr><td>{{x.created_at}}</td><td>{{x.symbol}}</td><td>{{x.action}}</td><td>{{x.score}} %</td><td>{{x.data_quality}}</td><td>{{'ja' if x.executed else 'nein'}}</td><td>{{x.reason}}</td></tr>{% endfor %}</table>''',r=db.rows('SELECT * FROM paper_decisions ORDER BY id DESC LIMIT 500')))
+def paper_decisions():return page(render_template_string('''<h1>Paper-Entscheidungen</h1><p class=muted>Deterministische Baseline: BUY ab +1 % 24h, SELL ab -1,5 % 24h; nur freigegebene Produkte, nur bei LIVE-Daten und aktivierter Analyse-/Paper-Automatik.</p><table><tr><th>Zeit</th><th>Symbol</th><th>Aktion</th><th>Score</th><th>Qualität</th><th>Ausgeführt</th><th>Begründung</th></tr>{% for x in r %}<tr><td>{{x.created_at}}</td><td>{{x.symbol}}</td><td>{{x.action}}</td><td>{{x.score}} %</td><td>{{x.data_quality}}</td><td>{{'ja' if x.executed else 'nein'}}</td><td>{{x.reason}}</td></tr>{% endfor %}</table>''',r=db.rows('SELECT * FROM paper_decisions ORDER BY id DESC LIMIT 500')))
 @app.get('/audit')
 def audit():return page('<h1>Audit</h1><div class=card><table>{% for x in rows %}<tr><td>{{x.created_at}}</td><td>{{x.event}}</td><td>{{x.level}}</td><td>{{x.details}}</td></tr>{% endfor %}</table></div>',rows=db.rows('SELECT * FROM audit ORDER BY id DESC LIMIT 200'))
 @app.route('/settings',methods=['GET','POST'])
 def settings():
- msg=''
  if request.method=='POST':
-  db.set_setting('automation_enabled','true' if request.form.get('automation') else 'false');db.set_setting('scanner_required','true' if request.form.get('scanner_required') else 'false')
-  universe.set_categories(set(request.form.getlist('categories')))
-  rules={'paper_fee_bps':(0,500,40),'paper_slippage_bps':(0,500,10),'paper_max_position_pct':(1,100,10),'paper_trade_eur':(1,100000,25),'paper_interval_minutes':(1,1440,15),'scanner_batch_size':(1,50,10),'scanner_delay_seconds':(0.5,10,1.05),'prefilter_top_per_category':(1,25,8)}
-  for key,(lo,hi,default) in rules.items():
-   try:value=max(lo,min(hi,float(request.form.get(key,default))))
-   except Exception:value=default
-   db.set_setting(key,value)
-  try:result=universe.sync();msg=f"Marktuniversum aktualisiert: {result['enabled']} freigegebene EUR-Märkte."
-  except Exception as exc:msg='Marktuniversum konnte nicht aktualisiert werden: '+type(exc).__name__
-  configure_engine(paper_engine);stream.set_symbols(current_market_batch());stream.start();db.audit('SETTINGS_CHANGED',json.dumps({'automation':request.form.get('automation') is not None,'categories':request.form.getlist('categories')},ensure_ascii=False));return redirect(url_for('settings'))
- vals={k:db.value(k,d) for k,d in {'paper_fee_bps':40,'paper_slippage_bps':10,'paper_max_position_pct':10,'paper_trade_eur':25,'paper_interval_minutes':15,'scanner_batch_size':10,'scanner_delay_seconds':1.05,'prefilter_top_per_category':8}.items()};cats=universe.categories();last=db.rows('SELECT * FROM universe_sync_runs ORDER BY id DESC LIMIT 1');count=len(allowed_symbols())
- return page(render_template_string("""<h1>Einstellungen</h1><div class=card><b class=bad>Realhandel bleibt technisch deaktiviert.</b><p>Freigaben gelten ausschließlich für Produktgruppen. Innerhalb aktivierter Gruppen steht der App automatisch der vollständige von Kraken gelieferte EUR-Markt zur Verfügung.</p></div><form method=post><div class=grid><div class=card><h3>Automatik</h3><label><input type=checkbox name=automation {{'checked' if enabled}}> Analyse-/Paper-Automatik aktivieren</label><p><label><input type=checkbox name=scanner_required {{'checked' if scanner_required}}> Scanner-Signal zwingend verwenden (fail-closed)</label></p><label>Intervall Minuten<br><input type=number name=paper_interval_minutes min=1 max=1440 value="{{v.paper_interval_minutes}}"></label></div><div class=card><h3>Order & Risiko</h3><label>Paper-Orderwert EUR<br><input type=number step=0.01 name=paper_trade_eur value="{{v.paper_trade_eur}}"></label><p><label>Max. Position %<br><input type=number step=0.1 name=paper_max_position_pct value="{{v.paper_max_position_pct}}"></label></p></div><div class=card><h3>Kostenmodell</h3><label>Gebühr Basispunkte (Fallback)<br><input type=number name=paper_fee_bps value="{{v.paper_fee_bps}}"></label><p><label>Slippage Basispunkte<br><input type=number name=paper_slippage_bps value="{{v.paper_slippage_bps}}"></label></p></div></div><div class=card><h3>Scanner-Laststeuerung</h3><label>Märkte pro Teil-Lauf<br><input type=number name=scanner_batch_size min=1 max=50 value="{{v.scanner_batch_size}}"></label><p><label>Pause je OHLC-Aufruf in Sekunden<br><input type=number step=0.05 name=scanner_delay_seconds min=0.5 max=10 value="{{v.scanner_delay_seconds}}"><br><br>Kandidaten je Kategorie<br><input type=number name=prefilter_top_per_category min=1 max=25 value="{{v.prefilter_top_per_category}}"></label></p><p class=muted>Der Scanner verarbeitet den Gesamtmarkt rotierend in begrenzten Teil-Läufen.</p></div><h2>Freigegebene Produktgruppen</h2>{% for c in cats %}<div class=card><label><input type=checkbox name=categories value="{{c.category}}" {{'checked' if c.enabled}}> <b>{{c.label}}</b></label></div>{% endfor %}<div class=card><b>Aktuell verfügbare freigegebene EUR-Märkte: {{count}}</b>{% if last %}<p>Letzte Synchronisierung: {{last.created_at}} · Qualität {{last.quality}} · Gesamtmärkte {{last.total_markets}}</p>{% endif %}</div><button>Alle Einstellungen speichern und Markt aktualisieren</button></form>""",enabled=db.value('automation_enabled','false')=='true',scanner_required=db.value('scanner_required','true')=='true',cats=cats,v=vals,last=last[0] if last else None,count=count,msg=msg))
+  db.set_setting('automation_enabled','true' if request.form.get('automation') else 'false');db.set_setting('scanner_required','true' if request.form.get('scanner_required') else 'false');universe.set_categories(set(request.form.getlist('categories')))
+  rules={'paper_fee_bps':(0,500,40),'paper_slippage_bps':(0,500,10),'paper_max_position_pct':(1,100,10),'paper_trade_eur':(1,100000,25),'paper_interval_minutes':(1,1440,15),'scanner_delay_seconds':(.5,10,1.05),'prefilter_top_per_category':(1,25,8)}
+  for key,(lo,hi,d) in rules.items():
+   try:v=max(lo,min(hi,float(request.form.get(key,d))))
+   except:v=d
+   db.set_setting(key,v)
+  try:universe.sync()
+  except Exception as exc:db.audit('UNIVERSE_SYNC_FAILED',type(exc).__name__,'error')
+  configure_engine(paper_engine);return redirect(url_for('settings'))
+ vals={k:db.value(k,d) for k,d in {'paper_fee_bps':40,'paper_slippage_bps':10,'paper_max_position_pct':10,'paper_trade_eur':25,'paper_interval_minutes':15,'scanner_delay_seconds':1.05,'prefilter_top_per_category':8}.items()};cats=universe.categories()
+ return page(render_template_string("""<h1>Einstellungen</h1><div class=card><b class=bad>Realhandel bleibt technisch deaktiviert.</b></div><form method=post><div class=grid><div class=card><h3>Automatik</h3><label><input type=checkbox name=automation {{'checked' if enabled}}> Paper-Automatik aktivieren</label><p><label><input type=checkbox name=scanner_required {{'checked' if required}}> Valide Detailanalyse zwingend</label></p><label>Intervall Minuten<br><input type=number name=paper_interval_minutes value="{{v.paper_interval_minutes}}"></label></div><div class=card><h3>Risiko</h3><label>Paper-Orderwert EUR<br><input type=number name=paper_trade_eur value="{{v.paper_trade_eur}}"></label><p><label>Max. Position %<br><input type=number name=paper_max_position_pct value="{{v.paper_max_position_pct}}"></label></p></div><div class=card><h3>Research</h3><label>Kandidaten je Kategorie<br><input type=number name=prefilter_top_per_category value="{{v.prefilter_top_per_category}}"></label><p><label>OHLC-Pause Sekunden<br><input type=number step=.05 name=scanner_delay_seconds value="{{v.scanner_delay_seconds}}"></label></p></div></div><h2>Produktgruppen</h2>{% for c in cats %}<div class=card><label><input type=checkbox name=categories value="{{c.category}}" {{'checked' if c.enabled}}> {{c.label}}</label></div>{% endfor %}<input type=hidden name=paper_fee_bps value="{{v.paper_fee_bps}}"><input type=hidden name=paper_slippage_bps value="{{v.paper_slippage_bps}}"><button>Speichern</button></form>""",enabled=db.value('automation_enabled','false')=='true',required=db.value('scanner_required','true')=='true',cats=cats,v=vals))
 @app.get('/exports')
 def exports():return page('<h1>Export</h1><div class=card><a href="{{url_for("ledger_csv")}}">Ledger CSV</a> · <a href="{{url_for("portfolio_csv")}}">Portfolio-Historie CSV</a></div>')
 @app.get('/exports/ledger.csv')

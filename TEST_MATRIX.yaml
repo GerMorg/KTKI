@@ -1,4 +1,4 @@
-version: 0.1.0-dev.12
+version: 0.1.0-dev.5
 tests:
   - {id: T-001, area: Flask routes and tabs, status: passed}
   - {id: T-002, area: Ingress prefix navigation, status: passed}
@@ -42,39 +42,13 @@ release_0_1_0_dev_8:
   manual:
     - {id: M013, expectation: Scanner-Seite lädt innerhalb HA-Ingress, status: pending}
     - {id: M014, expectation: Freigegebene Produkte liefern plausible Kennzahlen und Gründe, status: pending}
-release_0_1_0_dev_9:
-  automated:
-    - {id: T022, expectation: Fehlendes Scanner-Ergebnis blockiert Paper-Trade fail-closed, status: passed}
-    - {id: T023, expectation: Valides Scanner-BUY verwendet persistierte Paargebühr, status: passed}
-    - {id: T024, expectation: Kraken-Mindestorder blockiert zu kleine Paper-Order, status: passed}
-    - {id: T025, expectation: Scanner-AVOID verkauft vorhandene Paper-Position, status: passed}
-  manual:
-    - {id: M015, expectation: HA-OS-Upgrade von dev.8 erhält alle Daten und Seiten, status: pending}
-    - {id: M016, expectation: Automatischer Lauf aktualisiert Scanner und Paarregeln vor Entscheidung, status: pending}
-release_0_1_0_dev_10:
-  automated:
-    - {id: T026, expectation: xStocks und hebelfähige Märkte werden korrekt kategorisiert, status: passed}
-    - {id: T027, expectation: Aktivierte Kategorie stellt alle zugehörigen EUR-Märkte bereit, status: passed}
-    - {id: T028, expectation: Keine Einzelprodukt-Allowlist ist erforderlich, status: passed}
-    - {id: T029, expectation: Deutsche Umlaute bleiben korrekt in UTF-8 erhalten, status: passed}
-  manual:
-    - {id: M017, expectation: Umlaute werden in HA-Ingress korrekt angezeigt, status: pending}
-    - {id: M018, expectation: Kategorien speichern und Marktbestand dynamisch aktualisieren, status: pending}
-release_0_1_0_dev_11:
-  automated:
-    - {id: T030, expectation: 25 Märkte werden in rotierenden Zehnerpaketen verarbeitet, status: passed}
-    - {id: T031, expectation: Überlappender Scannerlauf wird mit BUSY abgewiesen, status: passed}
-    - {id: T032, expectation: GUI-Quelltext enthält Übersicht ohne Mojibake, status: passed}
-    - {id: T033, expectation: HTML-Antwort deklariert UTF-8 und dekodiert Übersicht korrekt, status: passed}
-  manual:
-    - {id: M019, expectation: Übersicht wird nach HA-Upgrade korrekt angezeigt, status: pending}
-    - {id: M020, expectation: Teil-Lauf startet ohne Absturz und Fortschritt rotiert, status: pending}
 
-release_0_1_0_dev_12:
+release_0_1_0_dev_13:
   automated:
-    - {id: T034, expectation: Nachrichten wirken auf den Vorfilter und erzeugen keinen Trade, status: passed}
-    - {id: T035, expectation: Research-Auftrag speichert Fortschritt und erzeugt analysierte Watchlist, status: passed}
-    - {id: T036, expectation: Leere Watchlist lässt PaperEngine ohne Fehler durchlaufen, status: passed}
+    - {id: T037, expectation: Geldpolitische Meldung wird taxonomiert, status: passed}
+    - {id: T038, expectation: Vorfilter erzeugt unveränderliche Watchlist-Version, status: passed}
+    - {id: T039, expectation: Research-Pipeline wird vollständig abgeschlossen, status: passed}
+    - {id: T040, expectation: Ausgangsgewichte bleiben kontrolliert versioniert, status: passed}
   manual:
-    - {id: M021, expectation: Research-Auftrag zeigt im HA-Ingress Status und Fortschritt, status: pending}
-    - {id: M022, expectation: Paper-Strategie bleibt während Research-Lauf bedienbar, status: pending}
+    - {id: M023, expectation: Quellenstatus und Watchlist-Versionen erscheinen im HA-Ingress, status: pending}
+    - {id: M024, expectation: GDELT und verfügbare Primärfeeds liefern aktuelle Metadaten, status: pending}

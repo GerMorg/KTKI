@@ -1,19 +1,15 @@
 # Changelog
 
+## 0.1.0-dev.13
+- Breiter GDELT-Nachrichtenindex plus EZB-, Federal-Reserve- und Kraken-Primärfeeds
+- Quellenklassen und nachvollziehbare Quellengewichte
+- Themen- und Ereignistaxonomie für allgemeine relevante Nachrichten
+- Versionierte Research-Watchlists
+- Prognosesnapshots für 24 Stunden und 7 Tage
+- Spätere deterministische Ergebnisbewertung gegen reale Preise
+- Versionierte, unveränderte Ausgangsgewichte `rules-v1`
+- Nachrichten bleiben ausschließlich Research-Filter
+- 19 Kern- und Regressionstests
+
 ## 0.1.0-dev.12
-- Persistente mehrstufige Research-Pipeline
-- Nachrichten bereits in der günstigen Marktvorfilterung
-- Deduplizierte Nachrichten mit Markt- und Kategoriezuordnung
-- Vorfilter aus Liquidität, Spread, Momentum und Nachrichtenrelevanz
-- Begrenzte Research-Watchlist je Produktkategorie
-- OHLC-Detailanalyse nur für Watchlist-Kandidaten
-- Paper-Automatik von laufenden Scans entkoppelt
-- Paper-Ausführung nur auf abgeschlossenen Analysen
-- Sichtbarer Job-, Quellen- und Watchliststatus
-- Korrigierte Kraken-Asset-Class-Parameter
-
-## 0.1.0-dev.11
-- Lastbegrenzte Scanner-Teil-Läufe und UTF-8-Responseheader
-
-## 0.1.0-dev.10
-- Produktgruppen und dynamisches Kraken-Marktinventar
+- Mehrstufige Research-Pipeline und entkoppelte Paper-Automatik

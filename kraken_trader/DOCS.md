@@ -1,14 +1,14 @@
-# Kraken Trader 0.1.0-dev.12
+# Kraken Trader 0.1.0-dev.13
 
-## Mehrstufige Research-Pipeline
+## Nachrichtenarchitektur
+GDELT sorgt für breite internationale Themenabdeckung. EZB und Federal Reserve liefern geldpolitische Primärmeldungen. Der Kraken-Feed ergänzt börsen- und produktspezifische Ereignisse. Gespeichert werden Überschrift, Kurzbeschreibung, URL, Quelle, Veröffentlichungs- und Abrufzeit sowie Taxonomie.
 
-1. Das aktivierte Kraken-Marktuniversum wird synchronisiert.
-2. Nachrichten werden gesammelt, dedupliziert und Märkten beziehungsweise Kategorien zugeordnet.
-3. Ein günstiger Vorfilter bewertet Liquidität, Spread, 24-Stunden-Veränderung und Nachrichtenrelevanz.
-4. Nur die besten Kandidaten jeder Kategorie gelangen auf die Research-Watchlist.
-5. Nur diese Watchlist erhält die aufwändige OHLC-Detailanalyse.
-6. Die Paper-Strategie verwendet ausschließlich vollständig analysierte Watchlist-Einträge.
+Reuters wurde nicht fest eingebaut, weil für den Repository-Stand kein lizenzierter Reuters-Zugang vorausgesetzt werden darf. Die Quellenarchitektur bleibt erweiterbar.
 
-Nachrichten dienen nur der Research-Priorisierung. Sie können keine Paper- oder Realorder auslösen. Wenn Nachrichtenquellen ausfallen, bleibt der Nachrichtenscore neutral und der Fehler wird sichtbar gespeichert.
+## Taxonomie
+Nachrichten werden deterministisch unter anderem Geldpolitik, Inflation, Wachstum, Arbeitsmarkt, Regulierung, Geopolitik, Unternehmenszahlen, Produkt-Ereignisse, Sicherheit und Kapitalflüssen zugeordnet. Ereignistypen unterscheiden politische, überraschende, geplante und strukturelle Meldungen.
 
-Der Scanner zeigt Auftragsstatus, Stufe, Fortschritt, Quellenstatus, Vorfilter und Watchlist. Ein neuer Lauf wird im Hintergrund ausgeführt.
+## Watchlist und Prognosen
+Jeder Vorfilterlauf erzeugt eine unveränderliche Watchlist-Version. Nach valider Detailanalyse werden Prognosesnapshots für 24 Stunden und 168 Stunden gespeichert. Nach Ablauf wird die Richtung mit dem dann vorhandenen realen Marktpreis verglichen. Modellgewichte sind versioniert; automatische Änderungen sind nicht aktiviert.
+
+Nachrichten erhöhen oder senken nur die Research-Priorität. Sie können keine Paper- oder Realorder auslösen.
