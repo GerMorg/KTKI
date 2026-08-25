@@ -1,8 +1,9 @@
+class RealExecutionDisabled(RuntimeError):pass
 class RealExecutionAdapter:
- """Validated boundary for a future execution transport. No Kraken order method exists here."""
  enabled=False
- def prepare(self,plan):
-  required=('symbol','action','confidence','leverage','target_exposure_eur')
-  missing=[x for x in required if x not in plan]
-  return {'status':'REJECTED' if missing else 'PREPARED_ONLY','missing':missing,'real_execution':False,'plan':plan}
- def execute(self,plan):raise RuntimeError('Real execution is hard disabled')
+ def validate(self,plan):
+  required={'symbol','action','amount'}
+  if not isinstance(plan,dict) or not required.issubset(plan):raise ValueError('Unvollständiger Ausführungsplan')
+  return {'valid':True,'real_execution_enabled':False}
+ def execute(self,plan):
+  raise RealExecutionDisabled('Realausführung ist hart deaktiviert')

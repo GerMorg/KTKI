@@ -51,3 +51,6 @@ Die fehleranfÃ¤llige breite GDELT-Global-Abfrage wurde stillgelegt. GDELT Wirt
 
 ## Stand 0.1.0-dev.16
 Dev.16 erweitert das Universum auf Kraken-Aktien/xStocks der Assetklasse `tokenized_asset` und akzeptiert EUR- sowie USD-Paare im öffentlichen Stream. USD-Produkte werden für das Paper-Portfolio über EUR/USD in EUR bewertet. Der neue PortfolioAllocator berechnet Zielgewichte aus Scanner-Score, Volatilität, Portfolioobergrenze und No-Trade-Band. Schwächere Positionen dürfen eine bessere Gelegenheit nur finanzieren, wenn der konfigurierte Konfidenzabstand die geschätzten Rundlaufkosten übersteigt. Dynamischer Paper-Hebel nutzt ausschließlich Kraken-Metadaten und das Benutzermaximum. Realausführung bleibt hart deaktiviert; ein separater Adapter validiert lediglich zukünftige Pläne.
+
+## Stand 0.1.0-dev.17
+Dev.17 basiert auf dev.16. Fehlende Module wurden ergänzt. Optional analysiert OpenAI oder Azure OpenAI Feed-Titel und Kurztexte. Ergebnisse sind schema-, prompt-, modell- und provider-versioniert. Fehler führen zum deterministischen Fallback. Der KI-Einfluss ist gedeckelt und auf Research beschränkt.

@@ -12,7 +12,7 @@ non_negotiable_rules:
   - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
   - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.16
+  version: 0.1.0-dev.17
   status: read-only Kraken-Integration mit oeffentlichem und privatem WebSocket v2; HA-OS-Praxistest fuer dev.5 ausstehend
 implemented:
   - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
@@ -215,3 +215,13 @@ release_0_1_0_dev_16:
     - keine USD-Bewertung ohne EUR/USD
     - keine reale Ordermethode
     - GDELT-TLS-Fehler isoliert durch Cooldown
+
+release_0_1_0_dev_17:
+  date: 2026-08-25
+  base: 0.1.0-dev.16
+  fixes: [PortfolioAllocator wiederhergestellt, RealExecutionAdapter hart deaktiviert wiederhergestellt]
+  external_news_ai:
+    default: disabled
+    providers: [openai, azure_openai]
+    influence: maximal 25 Prozent und mit Konfidenz gewichtet
+  safety: [keine KI-Order, keine automatische Gewichtsänderung, ungültige Antworten werden nicht verwendet, Schlüssel nur in App-Optionen]

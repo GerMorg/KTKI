@@ -83,3 +83,11 @@ release_0_1_0_dev_16:
   dynamic_paper_leverage: {required: true, status: implemented}
   leverage_from_kraken_metadata_only: {required: true, status: enforced}
   real_execution_adapter: {required: false, status: prepared_hard_disabled}
+
+release_0_1_0_dev_17:
+  dev16_allocator_restored: {required: true, status: implemented}
+  optional_external_news_ai: {required: true, status: implemented}
+  structured_ai_output: {required: true, status: strict_schema_validated}
+  ai_secret_persistence: {required: false, status: prohibited}
+  ai_direct_trading: {required: false, status: prohibited}
+  deterministic_fallback: {required: true, status: implemented}

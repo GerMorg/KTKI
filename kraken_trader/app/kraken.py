@@ -8,7 +8,7 @@ class KrakenClient:
   enc=urllib.parse.urlencode(data);digest=hashlib.sha256(str(data["nonce"]).encode()+enc.encode()).digest()
   return base64.b64encode(hmac.new(base64.b64decode(secret),path.encode()+digest,hashlib.sha512).digest()).decode()
  def call(self,path,data=None,private=False):
-  data=dict(data or {});headers={"User-Agent":"HA-Kraken-Trader/0.1.0-dev.16"}
+  data=dict(data or {});headers={"User-Agent":"HA-Kraken-Trader/0.1.0-dev.17"}
   if private:
    if not self.key or not self.secret:raise KrakenError("API-Key oder Private Key fehlt")
    data["nonce"]=str(time.time_ns());headers.update({"API-Key":self.key,"API-Sign":self.sign(path,data,self.secret)})
