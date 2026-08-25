@@ -62,11 +62,14 @@ Der dev.19-Vorfilter verwendete `DISTINCT` über Symbol und Kategorie. Hebelfäh
 ## 2026-08-25 I028 — gelöst in 0.1.0-dev.20
 Der übergebene dev.19-Snapshot enthielt weiterhin sichtbare Mojibake-Folgen. Alle Repository-Texte wurden erneut als UTF-8 repariert und ein vollständiger Test über Quelltexte, Dokumentation und GUI-Texte ergänzt.
 
-## 2026-08-25 I029 — gelöst in 0.1.0-dev.23
+## 2026-08-25 I029 — gelöst in 0.1.0-dev.24
 Eine reine Quelltextkorrektur reparierte keine bereits beschädigt in SQLite gespeicherten Texte. Dev.21 führt beim ersten Start eine konservative, idempotente Datenmigration aus und repariert nur Werte, deren bekannte Mojibake-Marker durch eine CP1252-zu-UTF-8-Rückwandlung tatsächlich abnehmen.
 
-## 2026-08-25 I030 — gelöst in 0.1.0-dev.23
+## 2026-08-25 I030 — gelöst in 0.1.0-dev.24
 Der übergebene dev.21-Snapshot enthielt weiterhin Mojibake direkt in Quelltexten und Dokumentation. Zudem konnte die bereits gesetzte Migrationsmarke `utf8_data_migration_v1` weitere Reparaturen verhindern. Dev.22 repariert alle ausgelieferten Texte direkt, verwendet `utf8_data_migration_v2` und testet Quelltexte, Bestandsdaten sowie den Mehrfachkategorien-Vorfilter gemeinsam.
 
-## 2026-08-25 I031 — gelöst in 0.1.0-dev.23
+## 2026-08-25 I031 — gelöst in 0.1.0-dev.24
 Aktien waren zwar im Universum und Vorfilter enthalten, aber der vollständige Pfad Assetklasse → OHLC → Aktien-Score → EUR-Bewertung → Paper-Trade war nicht gemeinsam abgesichert. Dev.23 routet Ticker und OHLC ausdrücklich über `tokenized_asset`, nutzt ein Aktienprofil, koppelt ausschließlich valide BUY-Ergebnisse an die Allokation und validiert `ordermin` sowie `costmin` vor einem simulierten Kauf.
+
+## 2026-08-25 I032 — gelöst in 0.1.0-dev.24
+Reale xStock-Scans ergaben Detailscore 0, weil Ticker und OHLC den falschen Parameter `aclass_base` statt `asset_class=tokenized_asset` sendeten. Zusätzlich wurde OHLC primär mit dem Anzeigesymbol statt dem Kraken-`source_key` angefragt. Dev.24 korrigiert beide API-Verträge und speichert konkrete Fehlertexte in den Scannergründen.

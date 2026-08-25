@@ -40,10 +40,13 @@ class MarketScanner:
   for symbol in symbols:
    p=profiles[symbol]
    try:
-    payload=self.client.ohlc(symbol,interval,p['asset_class']);key=next((k for k in payload if k!='last'),None);candles=payload.get(key,[]) if key else [];ticker=self.match(tickers.get(p['asset_class'],{}),symbol,p.get('source_key'));r=self.analyze(symbol,candles,ticker,p['category'],p.get('quote_asset') or 'EUR')
+    pair=p.get('source_key') or symbol
+    try:payload=self.client.ohlc(pair,interval,p['asset_class'])
+    except Exception:payload=self.client.ohlc(symbol,interval,p['asset_class']) if pair!=symbol else {}
+    key=next((k for k in payload if k!='last'),None);candles=payload.get(key,[]) if key else [];ticker=self.match(tickers.get(p['asset_class'],{}),symbol,p.get('source_key'));r=self.analyze(symbol,candles,ticker,p['category'],p.get('quote_asset') or 'EUR')
     with self.db.con() as c:
      for x in candles:c.execute('INSERT OR REPLACE INTO ohlc_cache VALUES(?,?,?,?,?,?,?,?,?,?,?)',(symbol,interval,int(x[0]),str(x[1]),str(x[2]),str(x[3]),str(x[4]),str(x[5]),str(x[6]),int(x[7]),stamp))
-   except Exception as exc:r={'symbol':symbol,'score':0,'signal':'AVOID','momentum_pct':None,'volatility_pct':None,'trend_pct':None,'spread_pct':None,'volume_quote':None,'data_points':0,'quality':'ERROR','reasons':[type(exc).__name__]}
+   except Exception as exc:r={'symbol':symbol,'score':0,'signal':'AVOID','momentum_pct':None,'volatility_pct':None,'trend_pct':None,'spread_pct':None,'volume_quote':None,'data_points':0,'quality':'ERROR','reasons':[type(exc).__name__+': '+str(exc)[:180]]}
    counts['valid']+=r['quality']=='VALID';counts[r['signal'].lower()]+=1
    with self.db.con() as c:c.execute('INSERT OR REPLACE INTO scanner_results VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',(symbol,stamp,str(r['score']),r['signal'],*(None if r[k] is None else str(r[k]) for k in ('momentum_pct','volatility_pct','trend_pct','spread_pct','volume_quote')),r['data_points'],r['quality'],json.dumps(r['reasons'],ensure_ascii=False)))
    if delay:time.sleep(delay)

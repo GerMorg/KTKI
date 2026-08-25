@@ -61,11 +61,14 @@ Der Mehrklassenlauf scheiterte beim Prognose-Snapshot, weil `research_forecasts`
 ## Stand 0.1.0-dev.20
 Dev.20 basiert ausschließlich auf dem vom Benutzer gelieferten dev.19-Snapshot. Die konkrete UNIQUE-Ursache liegt in der bisherigen SQL-Abfrage: `DISTINCT` umfasste auch `m.category`; ein hebelfähiger xStock erschien daher einmal als `xstocks` und nochmals als `leveraged_spot`. Die Mehrfachmitgliedschaft bleibt im Universum erhalten, während der Vorfilter pro Symbol eine kanonische Kategorie auswählt. Zusätzlich schützen eine Schleifen-Deduplizierung und `ON CONFLICT(run_id,symbol) DO UPDATE` die Persistenz. Sämtliche ausgelieferten Texte und sichtbaren GUI-Strings wurden erneut auf echtes UTF-8 repariert.
 
-## Stand 0.1.0-dev.23
+## Stand 0.1.0-dev.24
 Das Umlautproblem wird nicht mehr nur in den Dateien behandelt. `text_encoding.py` repariert beim ersten Start auch bereits persistierte Anzeigetexte in SQLite und markiert die Migration danach als abgeschlossen. `.editorconfig` und `.gitattributes` erzwingen UTF-8/LF für zukünftige Änderungen. HTTP-Antworten behalten ein explizites UTF-8-Charset und erhalten `X-Content-Type-Options: nosniff`.
 
-## Stand 0.1.0-dev.23
+## Stand 0.1.0-dev.24
 Dev.22 basiert ausschließlich auf dem übergebenen dev.21-Snapshot. Alle Mojibake-Folgen wurden direkt aus Quelltexten, Tests und Dokumentation entfernt. Die Datenbankmigration verwendet eine neue v2-Markierung und läuft deshalb auch dann einmalig, wenn dev.21 bereits `utf8_data_migration_v1=done` gespeichert hatte. Die UNIQUE-Absicherung des Vorfilters bleibt erhalten und wird zusammen mit der UTF-8-Reparatur getestet.
 
-## Stand 0.1.0-dev.23
+## Stand 0.1.0-dev.24
 Aktien/xStocks sind jetzt durchgängig integriert: `tokenized_asset`-Universum, Ticker, OHLC, eigenes Scoreprofil `xstocks-v1`, Watchliststatus ANALYZED, BUY-Gate, dynamische Zielallokation, USD/EUR-Umrechnung und simulierte Ausführung. Paper-Käufe werden abgelehnt, wenn Kraken-Metadaten zu `ordermin` oder `costmin` nicht erfüllt sind. Realhandel bleibt weiterhin technisch deaktiviert.
+
+## Stand 0.1.0-dev.24
+Der reale Detailscore-0-Fehler bei Aktien wurde auf einen API-Vertragsfehler zurückgeführt. Ticker und OHLC senden nun `asset_class=tokenized_asset`; OHLC verwendet primär den von Kraken gelieferten `source_key`. Ein Fehler wird mit Typ und gekürzter Meldung im Scannergrund gespeichert.

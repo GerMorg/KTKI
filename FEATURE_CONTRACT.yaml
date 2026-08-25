@@ -123,3 +123,8 @@ release_0_1_0_dev_23:
   xstocks_usd_eur_paper_valuation: {required: true, status: implemented_and_tested}
   xstocks_ordermin_costmin_gate: {required: true, status: enforced_fail_closed}
   real_order_transport: {required: false, status: hard_disabled}
+release_0_1_0_dev_24:
+  xstocks_documented_asset_class_parameter: {required: true, status: enforced}
+  xstocks_source_key_ohlc: {required: true, status: implemented}
+  xstocks_nonzero_score_contract_test: {required: true, status: passed}
+  scanner_error_diagnostics: {required: true, status: implemented}

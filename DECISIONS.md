@@ -88,3 +88,6 @@ Dev.22 verwendet eine neue UTF-8-Datenmigrationskennung. Eine bereits gesetzte d
 
 ## 2026-08-25 D039
 Aktien/xStocks erhalten ab dev.23 ein eigenes deterministisches Bewertungsprofil `xstocks-v1`. Nur ein valider Detailscan mit BUY-Signal darf eine Paper-Allokation erzeugen. USD-Preise werden vor der Paper-Ausführung über EUR/USD in EUR umgerechnet; Kraken-Mindestmenge und Mindestkosten werden fail-closed geprüft.
+
+## 2026-08-25 D040
+Nicht-kryptografische Marktdaten verwenden bei Kraken ausschließlich den dokumentierten Parameter `asset_class`; `aclass_base` ist dafür unzulässig. Für xStocks wird der originale `source_key` aus AssetPairs als primäre Pair-ID für OHLC verwendet, mit sichtbarer Fehlerdiagnose statt eines unbegründeten Scores 0.

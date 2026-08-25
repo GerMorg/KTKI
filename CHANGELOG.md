@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0-dev.23
+## 0.1.0-dev.24
 - Aktien/xStocks durchgängig über `tokenized_asset` geroutet
 - eigenes deterministisches Scoreprofil `xstocks-v1`
 - nur valide Aktien-BUY-Signale gelangen in die Paper-Allokation

@@ -8,7 +8,7 @@ class KrakenClient:
   enc=urllib.parse.urlencode(data);digest=hashlib.sha256(str(data["nonce"]).encode()+enc.encode()).digest()
   return base64.b64encode(hmac.new(base64.b64decode(secret),path.encode()+digest,hashlib.sha512).digest()).decode()
  def call(self,path,data=None,private=False):
-  data=dict(data or {});headers={"User-Agent":"HA-Kraken-Trader/0.1.0-dev.23"}
+  data=dict(data or {});headers={"User-Agent":"HA-Kraken-Trader/0.1.0-dev.24"}
   if private:
    if not self.key or not self.secret:raise KrakenError("API-Key oder Private Key fehlt")
    data["nonce"]=str(time.time_ns());headers.update({"API-Key":self.key,"API-Sign":self.sign(path,data,self.secret)})
@@ -24,10 +24,17 @@ class KrakenClient:
   if asset_class=="tokenized_asset":data["execution_venue"]="international"
   return self.call("/0/public/AssetPairs",data)
  def assets(self,asset_class="currency"):return self.call("/0/public/Assets",{"aclass":asset_class,"assetVersion":1})
- def ticker(self,pairs,asset_class="currency"):return self.call("/0/public/Ticker",{"pair":",".join(pairs),"aclass_base":asset_class}) if pairs else {}
+ def ticker(self,pairs,asset_class="currency"):
+  if not pairs:return {}
+  data={"pair":",".join(pairs),"assetVersion":1}
+  if asset_class in ("tokenized_asset","forex"):data["asset_class"]=asset_class
+  return self.call("/0/public/Ticker",data)
  def balance(self):return self.call("/0/private/Balance",private=True)
  def balance_ex(self):return self.call("/0/private/BalanceEx",private=True)
  def ledgers(self,offset=0):return self.call("/0/private/Ledgers",{"type":"all","ofs":offset},private=True)
  def websocket_token(self):return self.call("/0/private/GetWebSocketsToken",private=True)
 
- def ohlc(self,pair,interval=60,asset_class='currency'):return self.call('/0/public/OHLC',{'pair':pair,'interval':int(interval),'aclass_base':asset_class})
+ def ohlc(self,pair,interval=60,asset_class='currency'):
+  data={'pair':pair,'interval':int(interval),'assetVersion':1}
+  if asset_class in ('tokenized_asset','forex'):data['asset_class']=asset_class
+  return self.call('/0/public/OHLC',data)

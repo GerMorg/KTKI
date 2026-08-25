@@ -12,7 +12,7 @@ non_negotiable_rules:
   - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
   - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.23
+  version: 0.1.0-dev.24
   status: read-only Kraken-Integration mit oeffentlichem und privatem WebSocket v2; HA-OS-Praxistest fuer dev.5 ausstehend
 implemented:
   - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
@@ -302,3 +302,15 @@ release_0_1_0_dev_23:
   next_steps:
     - validate real Kraken xStock symbols and scores on Home Assistant OS
     - persist category-specific backtest benchmarks
+release_0_1_0_dev_24:
+  date: 2026-08-25
+  base: 0.1.0-dev.23 user-tested
+  observed_problem: Reale Aktien/xStocks hatten weiterhin Detailscore 0.
+  root_causes:
+    - ticker and OHLC used aclass_base instead of documented asset_class
+    - OHLC used display symbol instead of Kraken source_key as primary pair identifier
+  fixes:
+    - asset_class=tokenized_asset for xStock ticker and OHLC
+    - assetVersion=1 for stable display keys
+    - source_key-first OHLC request with symbol fallback
+    - persisted concrete scanner error reason

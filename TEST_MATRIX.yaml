@@ -127,3 +127,9 @@ release_0_1_0_dev_23:
     - {id: T077, expectation: Unterschrittene xStock-Mindestmenge verhindert den Paper-Trade fail-closed, status: passed}
   manual:
     - {id: M040, expectation: Nur xStocks aktiviert erzeugt in HA OS valide Scores und nachvollziehbare Paper-Entscheidungen, status: pending}
+release_0_1_0_dev_24:
+  automated:
+    - {id: T078, expectation: Ticker und OHLC senden asset_class=tokenized_asset und kein aclass_base, status: passed}
+    - {id: T079, expectation: xStock-Scan nutzt source_key und erzeugt VALID mit Score größer 0, status: passed}
+  manual:
+    - {id: M041, expectation: Reale Kraken-xStocks zeigen nach HA-Upgrade einen nicht-null Detailscore oder einen konkreten Fehlergrund, status: pending}
