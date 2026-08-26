@@ -19,6 +19,9 @@ from market_history import MarketHistory
 from backtest import BacktestEngine
 from fee_profile import FeeProfile
 from forex_shadow import ForexShadow
+from product_view import ProductView
+from decision_matrix import DecisionMatrix
+from controlled_learning import ControlledLearning
 class IngressPrefix:
  def __init__(self,app):self.app=app
  def __call__(self,environ,start_response):
@@ -40,7 +43,7 @@ news_prefilter=NewsPrefilter(db)
 news_prefilter.external_ai=external_news_ai
 prefilter=MarketPrefilter(db,client,news_prefilter)
 learning=LearningApproval(db)
-history=MarketHistory(db);backtests=BacktestEngine(db);fees=FeeProfile(db,client);forex_shadow=ForexShadow(db)
+history=MarketHistory(db);backtests=BacktestEngine(db);fees=FeeProfile(db,client);forex_shadow=ForexShadow(db);product_view=ProductView(db);decision_matrix=DecisionMatrix(db);controlled_learning=ControlledLearning(db)
 forecasts=ForecastTracker(db)
 pipeline=ResearchPipeline(db,universe,prefilter,scanner,forecasts)
 app=Flask(__name__);app.wsgi_app=IngressPrefix(app.wsgi_app)
@@ -92,13 +95,13 @@ def research_scheduler():
   if db.value('research_auto_enabled','false')=='true':
    result=pipeline.start();db.audit('RESEARCH_SCHEDULER_TICK',json.dumps(result))
 if os.getenv('APP_DISABLE_RESEARCH_SCHEDULER')!='1':threading.Thread(target=research_scheduler,daemon=True,name='research-scheduler').start()
-BASE='''<!doctype html><html lang=de><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:dark;--b:#09111f;--c:#142238;--a:#55c6ff;--m:#a9b8cb;--g:#5ee090;--r:#ff7272}*{box-sizing:border-box}body{margin:0;background:var(--b);color:#eef6ff;font:15px system-ui}nav{display:flex;gap:18px;flex-wrap:wrap;padding:16px;background:#101b2d;position:sticky;top:0}a{color:var(--a);text-decoration:none}main{padding:20px;max-width:1200px;margin:auto}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.card{background:var(--c);padding:18px;border-radius:14px;margin-bottom:14px}.muted{color:var(--m)}.good{color:var(--g)}.bad{color:var(--r)}table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:9px;border-bottom:1px solid #29405f}button{background:var(--a);border:0;border-radius:8px;padding:10px 14px;font-weight:700}.tag{padding:3px 7px;border-radius:9px;background:#243956}</style></head><body><nav><b>Kraken Trader dev.30</b><a href="{{url_for('dashboard')}}">Übersicht</a><a href="{{url_for('api_status')}}">API</a><a href="{{url_for('portfolio')}}">Portfolio</a><a href="{{url_for('scanner_page')}}">Scanner</a><a href="{{url_for('data_quality')}}">Datenqualität</a><a href="{{url_for('backtest_page')}}">Backtests</a><a href="{{url_for('fees_page')}}">Gebühren</a><a href="{{url_for('forex_shadow_page')}}">Forex v2</a><a href="{{url_for('paper')}}">Musterdepot</a><a href="{{url_for('paper_decisions')}}">Paper-Entscheidungen</a><a href="{{url_for('audit')}}">Audit</a><a href="{{url_for('learning_page')}}">Lernfreigaben</a><a href="{{url_for('settings')}}">Einstellungen</a><a href="{{url_for('exports')}}">Export</a></nav><main>{{body|safe}}</main></body></html>'''
+BASE='''<!doctype html><html lang=de><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:dark;--b:#09111f;--c:#142238;--a:#55c6ff;--m:#a9b8cb;--g:#5ee090;--r:#ff7272}*{box-sizing:border-box}body{margin:0;background:var(--b);color:#eef6ff;font:15px system-ui}nav{display:flex;gap:18px;flex-wrap:wrap;padding:16px;background:#101b2d;position:sticky;top:0}a{color:var(--a);text-decoration:none}main{padding:20px;max-width:1200px;margin:auto}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.card{background:var(--c);padding:18px;border-radius:14px;margin-bottom:14px}.muted{color:var(--m)}.good{color:var(--g)}.bad{color:var(--r)}table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:9px;border-bottom:1px solid #29405f}button{background:var(--a);border:0;border-radius:8px;padding:10px 14px;font-weight:700}.tag{padding:3px 7px;border-radius:9px;background:#243956}</style></head><body><nav><b>Kraken Trader dev.32</b><a href="{{url_for('dashboard')}}">Übersicht</a><a href="{{url_for('api_status')}}">API</a><a href="{{url_for('portfolio')}}">Portfolio</a><a href="{{url_for('scanner_page')}}">Scanner</a><a href="{{url_for('data_quality')}}">Datenqualität</a><a href="{{url_for('backtest_page')}}">Backtests</a><a href="{{url_for('fees_page')}}">Gebühren</a><a href="{{url_for('forex_shadow_page')}}">Forex v2</a><a href="{{url_for('products_page')}}">Produkte</a><a href="{{url_for('decision_matrix_page')}}">Regelmatrix</a><a href="{{url_for('paper')}}">Musterdepot</a><a href="{{url_for('paper_decisions')}}">Paper-Entscheidungen</a><a href="{{url_for('audit')}}">Audit</a><a href="{{url_for('learning_page')}}">Lernfreigaben</a><a href="{{url_for('controlled_learning_page')}}">Kontrolliertes Lernen</a><a href="{{url_for('settings')}}">Einstellungen</a><a href="{{url_for('exports')}}">Export</a></nav><main>{{body|safe}}</main></body></html>'''
 def page(body,**ctx):return render_template_string(BASE,body=render_template_string(body,**ctx))
 @app.get('/')
 def dashboard():
  latest=db.rows('SELECT * FROM portfolio_snapshots ORDER BY id DESC LIMIT 1');return page('<h1>HA Kraken Trader</h1><div class=grid><div class=card><h2>Realportfolio</h2><p>{{latest.total_eur if latest else "Noch nicht synchronisiert"}} EUR</p><span class="{{"good" if latest and latest.quality=="VALID" else "bad"}}">{{latest.quality if latest else "UNKNOWN"}}</span></div><div class=card><h2>Sicherheit</h2><p>Echte Orders sind serverseitig nicht implementiert.</p><b>REAL TRADING: AUS</b></div></div>',latest=latest[0] if latest else None)
 @app.get('/health')
-def health():return {'status':'ok','version':'0.1.0-dev.30','real_trading':False,'websocket_status':db.value('websocket_status','not_checked'),'market_stream':stream.status(),'private_stream':private_stream.status()}
+def health():return {'status':'ok','version':'0.1.0-dev.32','real_trading':False,'websocket_status':db.value('websocket_status','not_checked'),'market_stream':stream.status(),'private_stream':private_stream.status()}
 @app.get('/api/private-stream')
 def private_stream_api():return {'status':private_stream.status(),'balances':db.rows('SELECT * FROM private_balances ORDER BY asset'),'executions':db.rows('SELECT event_type,order_id,exec_id,symbol,sequence,received_at FROM private_execution_events ORDER BY received_at DESC LIMIT 100'),'sequence_gaps':db.rows('SELECT * FROM private_sequence_gaps ORDER BY id DESC LIMIT 20')}
 @app.post('/api/private-stream/reconnect')
@@ -172,6 +175,25 @@ def learning_page():
  return page(render_template_string('''<h1>Lernfreigaben</h1><div class=card><p>Die Strategie ändert keine Parameter automatisch. Ein Vorschlag wird zunächst angezeigt und erst mit deiner Freigabe als gemeinsame Version aktiviert.</p><form method=post><button name=action value=create>Neuen Vorschlag berechnen</button> {% if latest and latest.status=='PENDING' %}<button name=action value=approve>Alle neun Parameter mit einem Klick bestätigen</button>{% endif %}</form><p>{{msg}}</p>{% if latest %}<p>Status: <b>{{latest.status}}</b> · Stichprobe: {{latest.sample_count}} · Trefferquote: {{latest.accuracy or '—'}}</p>{% endif %}</div><table><tr><th>Parameter</th><th>Aktuell</th><th>Vorschlag</th><th>Zulässiger Bereich</th></tr>{% for x in rows %}<tr><td>{{x.label}}</td><td>{{x.current}}</td><td>{{x.proposed if x.proposed is not none else '—'}}</td><td>{{x.minimum}} bis {{x.maximum}}</td></tr>{% endfor %}</table>''',latest=latest,rows=rows,msg=msg))
 
 
+
+
+
+@app.route('/controlled-learning',methods=['GET','POST'])
+def controlled_learning_page():
+ result=None
+ if request.method=='POST':
+  action=request.form.get('action');family=request.form.get('family','forex')
+  if action=='propose':result=controlled_learning.propose(family)
+  elif action in ('approve','reject'):result=controlled_learning.decide(int(request.form.get('candidate_id')),action)
+  elif action=='rollback':result=controlled_learning.rollback(family,int(request.form.get('target_version')))
+ candidates=controlled_learning.candidates();versions=controlled_learning.versions();return page(render_template_string("""<h1>Kontrolliertes Lernen</h1><div class=card><p>Getrennte Parameterfamilien für Forex, xStocks und Krypto. Kandidaten laufen im Schattenmodus und benötigen Mindeststichprobe, Mindestverbesserung, Konfidenzintervall sowie ausdrückliche Freigabe. Keine KI-Aktivierung.</p><form method=post><select name=family><option value=forex>Forex</option><option value=xstocks>xStocks</option><option value=crypto_spot>Krypto</option></select> <button name=action value=propose>Kandidat berechnen</button></form><p>{{result or ''}}</p></div><h2>Kandidaten</h2><table><tr><th>ID</th><th>Familie</th><th>Status</th><th>Stichprobe</th><th>Aktiv</th><th>Kandidat</th><th>Verbesserung</th><th>95%-Intervall</th><th>Aktion</th></tr>{% for x in candidates %}<tr><td>{{x.id}}</td><td>{{x.family}}</td><td>{{x.status}}</td><td>{{x.sample_count}}</td><td>{{x.active_accuracy}}</td><td>{{x.candidate_accuracy}}</td><td>{{x.improvement}}</td><td>{{x.ci_low}} bis {{x.ci_high}}</td><td>{% if x.status=='PENDING' %}<form method=post><input type=hidden name=candidate_id value={{x.id}}><button name=action value=approve>Freigeben</button><button name=action value=reject>Ablehnen</button></form>{% endif %}</td></tr>{% endfor %}</table><h2>Versionen</h2><table><tr><th>Familie</th><th>Version</th><th>Status</th><th>Quelle</th><th>Parameter</th><th>Rollback</th></tr>{% for x in versions %}<tr><td>{{x.family}}</td><td>{{x.version}}</td><td>{{x.status}}</td><td>{{x.source}}</td><td><small>{{x.parameters_json}}</small></td><td><form method=post><input type=hidden name=family value={{x.family}}><input type=hidden name=target_version value={{x.version}}><button name=action value=rollback>Rollback</button></form></td></tr>{% endfor %}</table>""",result=result,candidates=candidates,versions=versions))
+
+@app.get('/products')
+def products_page():
+ rows=product_view.rows();return page(render_template_string("""<h1>Kanonische Produkte</h1><p class=muted>Eine Identität je Basiswert und Anlageklasse. Alternative Ausführungspaare bleiben sichtbar, während genau ein Paar ausgewählt wird.</p><table><tr><th>Identität</th><th>Klasse</th><th>Gewähltes Paar</th><th>Alternativen</th><th>EUR-Kosten</th><th>USD-Kosten</th><th>Letzte Wahl</th><th>Grund</th><th>Position</th></tr>{% for x in rows %}<tr><td>{{x.canonical_id}}</td><td>{{x.asset_class}}</td><td>{{x.selected_symbol or '—'}}</td><td>{{x.alternatives|join(', ')}}</td><td>{{x.eur_cost or '—'}}</td><td>{{x.usd_cost or '—'}}</td><td>{{x.updated_at}}</td><td>{{x.selection_reason}}</td><td>{% if x.position_symbol %}{{x.position_symbol}} / {{x.position_quantity}}{% else %}—{% endif %}</td></tr>{% endfor %}</table>""",rows=rows))
+@app.get('/decision-matrix')
+def decision_matrix_page():
+ rows=decision_matrix.recent();return page(render_template_string("""<h1>Umschichtungs-Regelmatrix</h1><p class=muted>Jede Regel wird einzeln gespeichert. Die erste nicht erfüllte Regel ist der sichtbare Blockierungsgrund.</p><table><tr><th>Zeit</th><th>Produkt</th><th>Aktion</th><th>Regel</th><th>Status</th><th>Begründung</th></tr>{% for x in rows %}<tr><td>{{x.created_at}}</td><td>{{x.canonical_id}}<br><small>{{x.symbol}}</small></td><td>{{x.action}}</td><td>{{x.rule_key}}</td><td class={{'good' if x.passed else 'bad'}}>{{'ERFÜLLT' if x.passed else 'BLOCKIERT'}}</td><td>{{x.reason}}</td></tr>{% endfor %}</table>""",rows=rows))
 
 @app.route('/forex-shadow',methods=['GET','POST'])
 def forex_shadow_page():

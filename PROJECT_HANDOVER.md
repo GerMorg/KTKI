@@ -89,3 +89,9 @@ Dev.29 ergänzt kontospezifische Gebühren über den read-only TradeVolume-Endpu
 
 ## Stand 0.1.0-dev.30
 Dev.30 führt forex-v2 ausschließlich im Schattenmodus ein. Relative Währungsstärke, Safe-Haven-Regime, paarbezogene Nachrichten sowie kurze und mittlere Horizonte werden versioniert gespeichert und gegen forex-v1 verglichen. Noch nicht angebundene Makrodaten bleiben ausdrücklich null. Scanner- und Paper-Ergebnisse werden nicht verändert.
+
+## Stand 0.1.0-dev.31
+Dev.31 macht kanonische Produkte vollständig sichtbar und ergänzt eine einheitliche Umschichtungsmatrix. Die GUI zeigt Identität, gewähltes Paar, Alternativen, EUR-/USD-Kosten, Wahlzeitpunkt, Auswahlgrund und zugeordnete Position. Jede Umschichtung speichert sieben Einzelregeln; die erste fehlgeschlagene Regel wird als konkreter Blockierungsgrund angezeigt.
+
+## Stand 0.1.0-dev.32
+Dev.32 vervollständigt den kontrollierten Lernprozess für Forex, xStocks und Krypto. Kandidaten werden nur im Schattenmodus bewertet, benötigen Mindeststichprobe sowie Mindestverbesserung und zeigen ein Wilson-Konfidenzintervall. Aktivierung, Ablehnung und vollständiger Rollback erfolgen ausdrücklich über die GUI. Es gibt keine automatische oder direkte KI-Aktivierung.

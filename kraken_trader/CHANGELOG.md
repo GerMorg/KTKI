@@ -1,4 +1,19 @@
 # Changelog
+## 0.1.0-dev.32
+- getrennte kontrollierte Parameterfamilien für Forex, xStocks und Krypto
+- Schattenvergleich jedes Kandidaten gegen die aktive Version
+- Mindeststichprobe und Mindestverbesserung als harte Freigabegates
+- Wilson-Konfidenzintervall statt bloßer Trefferquote
+- ausdrückliche Freigabe, Ablehnung und vollständiger versionierter Rollback
+- keine automatische Aktivierung und keine direkte KI-Aktivierung
+- neuer GUI-Tab Kontrolliertes Lernen
+## 0.1.0-dev.31
+- sichtbare kanonische Produktidentitäten mit gewähltem und alternativen Ausführungspaaren
+- direkter EUR-/USD-Kostenvergleich, Zeitpunkt und Auswahlgrund
+- Zuordnung bestehender Paper-Positionen zum kanonischen Produkt
+- einheitliche Umschichtungsmatrix mit sieben einzeln persistierten Regeln
+- exakter Blockierungsgrund für abgelehnte Entscheidungen
+- neue GUI-Tabs Produkte und Regelmatrix
 ## 0.1.0-dev.30
 - forex-v2 als strikt wirkungsloser Schattenmodus
 - relative Stärke beider Währungen und Risiko-/Safe-Haven-Regime

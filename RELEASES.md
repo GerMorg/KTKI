@@ -72,3 +72,9 @@ Kontospezifische Maker-/Taker-Gebühren mit Herkunft, Zeitpunkt und konservative
 
 ## 0.1.0-dev.30
 Versioniertes forex-v2 im strikt wirkungslosen Schattenmodus mit Vergleich gegen forex-v1.
+
+## 0.1.0-dev.31
+Kanonische Produktansicht und auditierbare Umschichtungsmatrix mit exaktem Blockierungsgrund.
+
+## 0.1.0-dev.32
+Kontrollierter Lernprozess für alle Anlageklassen mit Schattenmodus, Konfidenzintervall und Rollback.

@@ -3,6 +3,7 @@ from decimal import Decimal, ROUND_DOWN
 from db import now
 from portfolio_allocator import PortfolioAllocator
 from fee_profile import FeeProfile
+from decision_matrix import DecisionMatrix
 D=lambda x:Decimal(str(x or 0))
 class PaperEngine:
  def __init__(self,db,start_eur=1000,fee_bps=40,slippage_bps=10,max_position_pct=10,trade_eur=25):
@@ -111,17 +112,18 @@ class PaperEngine:
   r=self.db.rows('SELECT canonical_id FROM market_universe WHERE symbol=? LIMIT 1',(symbol,));return (r[0].get('canonical_id') if r else None) or symbol
  def stability_gate(self,symbol,action,improvement_after_costs=D(0)):
   from datetime import datetime,timezone,timedelta
-  cid=self.canonical_id(symbol);today=datetime.now(timezone.utc).date().isoformat();limit=int(float(self.db.value('paper_max_turnovers_per_day','2')));used=self.db.rows('SELECT turnovers FROM daily_turnover WHERE day=?',(today,));
-  if limit>0 and used and int(used[0]['turnovers'])>=limit:return False,'Tägliches Umschichtungslimit erreicht'
-  st=self.db.rows('SELECT * FROM product_trade_state WHERE canonical_id=?',(cid,));hold_h=float(self.db.value('paper_min_hold_hours','24'));cool_h=float(self.db.value('paper_cooldown_hours','12'));need=int(float(self.db.value('paper_confirmation_runs','2')))
+  cid=self.canonical_id(symbol);current=datetime.now(timezone.utc);today=current.date().isoformat();limit=int(float(self.db.value('paper_max_turnovers_per_day','2')));used=self.db.rows('SELECT turnovers FROM daily_turnover WHERE day=?',(today,));daily_ok=not(limit>0 and used and int(used[0]['turnovers'])>=limit)
+  st=self.db.rows('SELECT * FROM product_trade_state WHERE canonical_id=?',(cid,));hold_h=float(self.db.value('paper_min_hold_hours','24'));cool_h=float(self.db.value('paper_cooldown_hours','12'));need=int(float(self.db.value('paper_confirmation_runs','2')));hold_ok=True;cool_ok=True
   if st:
-   row=st[0];anchor=row.get('last_buy_at') if action=='SELL' else max([x for x in (row.get('last_buy_at'),row.get('last_sell_at')) if x],default=None);hours=hold_h if action=='SELL' else cool_h
-   if anchor and datetime.now(timezone.utc)-datetime.fromisoformat(anchor)<timedelta(hours=hours):return False,('Mindesthaltedauer aktiv' if action=='SELL' else 'Wiederkauf-Cooldown aktiv')
+   row=st[0]
+   if action=='SELL' and row.get('last_buy_at'):hold_ok=current-datetime.fromisoformat(row['last_buy_at'])>=timedelta(hours=hold_h)
+   if action=='BUY':
+    anchor=max([x for x in (row.get('last_buy_at'),row.get('last_sell_at')) if x],default=None)
+    if anchor:cool_ok=current-datetime.fromisoformat(anchor)>=timedelta(hours=cool_h)
   previous=st[0].get('confirm_action') if st else None;count=(int(st[0].get('confirm_count') or 0)+1) if previous==action else 1
   with self.db.con() as c:c.execute('INSERT INTO product_trade_state(canonical_id,confirm_action,confirm_count,updated_at) VALUES(?,?,?,?) ON CONFLICT(canonical_id) DO UPDATE SET confirm_action=excluded.confirm_action,confirm_count=excluded.confirm_count,updated_at=excluded.updated_at',(cid,action,count,now()))
-  if count<need:return False,f'Bestätigung {count}/{need}'
-  if improvement_after_costs<=0:return False,'Keine positive Mindestverbesserung nach vollständigen Kosten'
-  return True,'Stabilitätsregeln erfüllt'
+  matrix=DecisionMatrix(self.db).evaluate(symbol,action,{'canonical_id':cid,'confirmation_count':count,'confirmation_required':need,'minimum_hold_ok':hold_ok,'cooldown_ok':cool_ok,'daily_limit_ok':daily_ok,'improvement_after_costs':str(improvement_after_costs),'tax_loss_ok':True,'data_fresh':self.price(symbol) is not None})
+  return (matrix['allowed'],'Stabilitätsregeln erfüllt' if matrix['allowed'] else matrix['blocker'])
  def mark_turnover(self,symbol,action):
   from datetime import datetime,timezone
   cid=self.canonical_id(symbol);today=datetime.now(timezone.utc).date().isoformat();field='last_buy_at' if action=='BUY' else 'last_sell_at'

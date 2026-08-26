@@ -121,3 +121,11 @@ Kontospezifische Handelsgebühren werden ausschließlich read-only über TradeVo
 
 ## 2026-08-26 D051
 forex-v2 läuft ausschließlich im Schattenmodus und darf weder Scanner-Ergebnisse überschreiben noch Paper-Entscheidungen beeinflussen. Nicht verfügbare Makrofaktoren werden als null und fehlend gespeichert, niemals geschätzt.
+
+## 2026-08-26 D052
+Kanonische Produktidentität, Ausführungspaar, Alternativen, EUR-/USD-Kosten und Positionszuordnung werden gemeinsam sichtbar gemacht.
+## 2026-08-26 D053
+Umschichtungen werden über sieben einzeln auditierte Regeln bewertet. Die erste nicht erfüllte Regel ist der verbindliche sichtbare Blockierungsgrund.
+
+## 2026-08-26 D054
+Parameterfamilien für Forex, xStocks und Krypto werden getrennt versioniert. Kandidaten benötigen Schattenvergleich, Mindeststichprobe, Mindestverbesserung und Konfidenzintervall. Aktivierung und Rollback erfolgen ausschließlich nach Benutzeraktion.

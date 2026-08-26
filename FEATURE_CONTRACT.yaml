@@ -188,3 +188,20 @@ release_0_1_0_dev_30:
   versioned_forex_feature_snapshots: {required: true, status: implemented}
   missing_macro_features_explicit_null: {required: true, status: enforced}
   no_shadow_trading_effect: {required: true, status: enforced}
+
+release_0_1_0_dev_31:
+  canonical_product_gui: {required: true, status: implemented}
+  eur_usd_cost_comparison: {required: true, status: implemented}
+  position_to_canonical_product_mapping: {required: true, status: implemented}
+  seven_rule_rebalance_matrix: {required: true, status: implemented}
+  exact_blocking_rule_visible: {required: true, status: implemented}
+  real_trading: {required: false, status: hard_disabled}
+
+release_0_1_0_dev_32:
+  separate_parameter_families: {required: true, status: implemented}
+  candidate_shadow_mode: {required: true, status: implemented}
+  minimum_sample_and_improvement_gates: {required: true, status: enforced}
+  confidence_interval: {required: true, status: implemented_wilson}
+  explicit_approve_reject_rollback: {required: true, status: implemented}
+  automatic_activation: {required: false, status: prohibited}
+  direct_ai_activation: {required: false, status: prohibited}

@@ -12,7 +12,7 @@ non_negotiable_rules:
   - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
   - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.30
+  version: 0.1.0-dev.32
   status: read-only Kraken-Integration mit oeffentlichem und privatem WebSocket v2; HA-OS-Praxistest fuer dev.5 ausstehend
 implemented:
   - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
@@ -369,3 +369,15 @@ release_0_1_0_dev_30:
   base: 0.1.0-dev.29
   added: [forex-v2 shadow mode, relative currency strength, safe-haven regime, two horizons, versioned feature snapshots, active-candidate comparison]
   safety: [no scanner overwrite, no paper effect, missing macro data explicit null]
+
+release_0_1_0_dev_31:
+  date: 2026-08-26
+  base: 0.1.0-dev.30
+  added: [canonical product GUI, EUR/USD cost comparison, position mapping, seven-rule rebalance matrix, exact blocker display]
+  safety: [data freshness hard gate, rule-level audit, real trading hard disabled]
+
+release_0_1_0_dev_32:
+  date: 2026-08-26
+  base: 0.1.0-dev.31
+  added: [separate strategy families, shadow candidates, sample and improvement gates, Wilson confidence interval, approve reject rollback GUI]
+  safety: [no automatic activation, no direct AI activation, versioned rollback]

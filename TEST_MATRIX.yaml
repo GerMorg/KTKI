@@ -171,3 +171,16 @@ release_0_1_0_dev_30:
   - unavailable macro inputs remain explicit null
   - shadow run never changes active scanner result
   - active/candidate comparisons persist disagreement flag
+
+release_0_1_0_dev_31:
+  - product view exposes identity, alternatives, EUR/USD costs and position mapping
+  - decision matrix persists all seven rules
+  - first failed rule is returned as exact blocker
+  - stale or missing data is a hard gate
+
+release_0_1_0_dev_32:
+  - three parameter families initialize independently
+  - insufficient samples block candidate creation
+  - candidate persists shadow rows and Wilson interval
+  - proposal does not activate automatically
+  - explicit approval, rejection and rollback are versioned
