@@ -87,8 +87,17 @@ Kontrollierter Lernprozess für alle Anlageklassen mit Schattenmodus, Konfidenzi
 - Scanner-Resilienz und Legacy-Schemakompatibilität wiederhergestellt
 - getrennte aktive Produktklassenprofile beibehalten
 
-## 0.1.0-dev.35
+## 0.1.0-dev.36
 - kostenbewusster Offline-Schattenvergleich
 - getrennte 24h- und 168h-Metriken
 - Abdeckung, Nettorendite und maximaler Drawdown
 - 105 Tests erfolgreich
+
+
+
+
+## 0.1.0-dev.36 — 2026-08-26
+Konsistenz- und Vertrauensrelease mit zentraler Laufzeitversion, synchronisierten Metadaten, vollständig repariertem UTF-8 und korrigiertem Regressionstest. 109 automatisierte Tests erfolgreich. Strategie unverändert; Realhandel bleibt hart deaktiviert.
+
+## 0.1.0-dev.37 — 2026-08-26
+Robuste kontrollierte Lernfreigabe mit Horizontpflicht, Mindeststichprobe, Mindestabdeckung, positiver Nettorenditeverbesserung und Drawdown-Grenzen. Policy und Gate-Ergebnisse sind persistent und auditierbar; vor Aktivierung erfolgt eine erneute atomare Prüfung. 115 automatisierte Tests erfolgreich.

@@ -1,4 +1,4 @@
-version: 0.1.0-dev.5
+version: 0.1.0-dev.37
 tests:
   - {id: T-001, area: Flask routes and tabs, status: passed}
   - {id: T-002, area: Ingress prefix navigation, status: passed}
@@ -214,3 +214,26 @@ release_0_1_0_dev_35:
   controlled_learning_regression: {result: passed}
   full_unittest_discovery: {result: passed, tests: 105}
   source_compile: {result: passed}
+
+
+release_0_1_0_dev_36:
+  automated:
+    - {id: T-D36-001, expectation: Laufzeitversion ist zentral und stimmt mit Health sowie GUI überein, status: passed}
+    - {id: T-D36-002, expectation: Add-on-Metadaten stimmen mit der Laufzeitversion überein, status: passed}
+    - {id: T-D36-003, expectation: Repository enthält keine bekannten Mojibake-Marker, status: passed}
+    - {id: T-D36-004, expectation: Realhandel bleibt hart deaktiviert, status: passed}
+    - {id: T-D36-REG, expectation: Vollständige Regression, status: passed_109}
+  manual:
+    - {id: M-D36-001, expectation: Add-on-Update zeigt dev.36 und alle deutschen GUI-Texte korrekt, status: pending}
+
+release_0_1_0_dev_37:
+  automated:
+    - {id: T-D37-001, expectation: Beide Standardhorizonte sind verpflichtend, status: passed}
+    - {id: T-D37-002, expectation: Abdeckung Nettorendite und Drawdown blockieren einzeln, status: passed}
+    - {id: T-D37-003, expectation: Konfigurierbare Gate-Werte werden sicher begrenzt, status: passed}
+    - {id: T-D37-004, expectation: Unveränderte gültige Metriken erlauben explizite Freigabe, status: passed}
+    - {id: T-D37-005, expectation: Veränderte Metriken blockieren Freigabe ohne Versionswechsel, status: passed}
+    - {id: T-D37-006, expectation: Schemaerweiterung ist idempotent, status: passed}
+    - {id: T-D37-REG, expectation: Vollständige Regression, status: passed_115}
+  manual:
+    - {id: M-D37-001, expectation: GUI zeigt aktive Gate-Policy und blockierte Kandidaten nachvollziehbar, status: pending}

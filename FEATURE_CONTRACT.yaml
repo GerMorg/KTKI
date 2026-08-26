@@ -1,4 +1,4 @@
-version: 0.1.0-dev.5
+version: 0.1.0-dev.37
 compatibility_rule: Implementierte Funktionen duerfen nur nach ausdruecklicher Entscheidung mit dokumentierter Migration entfernt werden.
 features:
   ingress_gui: {required: true, status: implemented}
@@ -238,3 +238,25 @@ release_0_1_0_dev_35:
   no_decision_not_automatically_wrong: {required: true, status: enforced}
   automatic_activation: {required: false, status: prohibited}
   full_regression_suite: {required: true, status: passed_105}
+
+
+
+
+release_0_1_0_dev_36:
+  central_runtime_version: {required: true, status: implemented}
+  synchronized_release_metadata: {required: true, status: implemented}
+  repository_utf8_source_gate: {required: true, status: enforced}
+  unchanged_strategy_behavior: {required: true, status: tested}
+  real_trading: {required: false, status: hard_disabled}
+
+release_0_1_0_dev_37:
+  required_horizon_gates: {required: true, status: enforced_24h_168h}
+  minimum_horizon_sample: {required: true, status: configurable_enforced}
+  minimum_candidate_coverage: {required: true, status: configurable_enforced}
+  positive_net_return_improvement: {required: true, status: configurable_enforced}
+  absolute_drawdown_limit: {required: true, status: configurable_enforced}
+  drawdown_degradation_limit: {required: true, status: configurable_enforced}
+  persisted_gate_policy_and_results: {required: true, status: implemented}
+  approval_gate_recheck: {required: true, status: atomic_fail_closed}
+  automatic_activation: {required: false, status: prohibited}
+  real_trading: {required: false, status: hard_disabled}

@@ -1,4 +1,5 @@
 import base64,hashlib,hmac,json,time,urllib.parse,urllib.request
+from version import USER_AGENT
 class KrakenError(Exception):pass
 class KrakenClient:
  base="https://api.kraken.com"
@@ -8,7 +9,7 @@ class KrakenClient:
   enc=urllib.parse.urlencode(data);digest=hashlib.sha256(str(data["nonce"]).encode()+enc.encode()).digest()
   return base64.b64encode(hmac.new(base64.b64decode(secret),path.encode()+digest,hashlib.sha512).digest()).decode()
  def call(self,path,data=None,private=False):
-  data=dict(data or {});headers={"User-Agent":"HA-Kraken-Trader/0.1.0-dev.29"}
+  data=dict(data or {});headers={"User-Agent":USER_AGENT}
   if private:
    if not self.key or not self.secret:raise KrakenError("API-Key oder Private Key fehlt")
    data["nonce"]=str(time.time_ns());headers.update({"API-Key":self.key,"API-Sign":self.sign(path,data,self.secret)})
@@ -47,6 +48,9 @@ class KrakenClient:
   if since is not None:data['since']=int(since)
   if asset_class=='tokenized_asset':data['asset_class']=asset_class
   return self.call('/0/public/OHLC',data)
+
+
+
 
 
 

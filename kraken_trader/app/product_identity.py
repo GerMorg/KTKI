@@ -19,3 +19,6 @@ def is_traditional_stock(asset_class):return str(asset_class or '') in TRADITION
 
 
 
+
+
+

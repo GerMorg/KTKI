@@ -1,5 +1,5 @@
 name: Kraken Trader
-version: "0.1.0-dev.33"
+version: "0.1.0-dev.37"
 slug: kraken_trader
 description: Read-only Kraken Portfolio und lokales Paper-Trading
 arch: [amd64]
@@ -10,7 +10,7 @@ ingress: true
 ingress_port: 8099
 panel_icon: mdi:chart-line
 panel_title: Kraken Trader
-options: {kraken_api_key: "", kraken_api_secret: "", paper_start_eur: 1000, refresh_minutes: 15, public_websocket_enabled: true, websocket_stale_seconds: 30, private_websocket_readonly_enabled: true, paper_fee_bps: 40, paper_slippage_bps: 10, paper_max_position_pct: 10, paper_trade_eur: 25, paper_interval_minutes: 15, scanner_required: true, scanner_delay_seconds: 1.05, prefilter_top_per_category: 8, research_auto_enabled: false, research_interval_minutes: 60, paper_leverage_enabled: false, paper_max_leverage: 3, paper_min_position_pct: 2, paper_min_transfer_eur: 20, paper_max_transfer_eur: 250, paper_rebalance_edge_pct: 8, paper_fx_fee_bps: 10, paper_min_hold_hours: 24, paper_cooldown_hours: 12, paper_confirmation_runs: 2, paper_max_turnovers_per_day: 2, paper_sell_hysteresis_pct: 2, paper_buy_score_threshold: 62, paper_tax_rate_pct: 27.5, ai_news_enabled: false, ai_provider: "openai", ai_endpoint: "", ai_model: "gpt-4o-mini", ai_api_key: "", ai_max_items_per_run: 20, ai_timeout_seconds: 30}
+options: {kraken_api_key: "", kraken_api_secret: "", paper_start_eur: 1000, refresh_minutes: 15, public_websocket_enabled: true, websocket_stale_seconds: 30, private_websocket_readonly_enabled: true, paper_fee_bps: 40, paper_slippage_bps: 10, paper_max_position_pct: 10, paper_trade_eur: 25, paper_interval_minutes: 15, scanner_required: true, scanner_delay_seconds: 1.05, prefilter_top_per_category: 8, research_auto_enabled: false, research_interval_minutes: 60, paper_leverage_enabled: false, paper_max_leverage: 3, paper_min_position_pct: 2, paper_min_transfer_eur: 20, paper_max_transfer_eur: 250, paper_rebalance_edge_pct: 8, paper_fx_fee_bps: 10, paper_min_hold_hours: 24, paper_cooldown_hours: 12, paper_confirmation_runs: 2, paper_max_turnovers_per_day: 2, paper_sell_hysteresis_pct: 2, paper_buy_score_threshold: 62, paper_tax_rate_pct: 27.5, ai_news_enabled: false, ai_provider: "openai", ai_endpoint: "", ai_model: "gpt-4o-mini", ai_api_key: "", ai_max_items_per_run: 20, ai_timeout_seconds: 30, learning_required_horizons: "24,168", learning_min_horizon_samples: 5, learning_min_candidate_coverage: 0.5, learning_min_net_return_improvement: 0.01, learning_max_candidate_drawdown_pct: -25, learning_max_drawdown_degradation_pct: 2}
 schema:
   kraken_api_key: password?
   kraken_api_secret: password?
@@ -57,3 +57,12 @@ schema:
 
 
 
+
+
+
+  learning_required_horizons: str
+  learning_min_horizon_samples: int(1,10000)
+  learning_min_candidate_coverage: float
+  learning_min_net_return_improvement: float
+  learning_max_candidate_drawdown_pct: float
+  learning_max_drawdown_degradation_pct: float

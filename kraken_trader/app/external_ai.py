@@ -17,3 +17,6 @@ class ExternalNewsAI:
    except Exception as exc:result={};status='INVALID';error=type(exc).__name__+': '+str(exc)[:160];failed+=1
    with self.db.con() as c:c.execute('INSERT OR REPLACE INTO external_news_ai_results VALUES(?,?,?,?,?)',(row['id'],now(),status,json.dumps(result,sort_keys=True),error))
   return {'status':'COMPLETED','processed':len(rows),'succeeded':ok,'failed':failed}
+
+
+

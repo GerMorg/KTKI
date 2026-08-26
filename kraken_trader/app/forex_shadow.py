@@ -37,3 +37,6 @@ class ForexShadow:
  def comparisons(self):return self.db.rows('SELECT * FROM forex_shadow_comparisons ORDER BY id DESC LIMIT 200')
 
 
+
+
+

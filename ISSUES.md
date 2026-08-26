@@ -89,3 +89,12 @@ Der dev.33-Stand enthielt Testdrift, verbliebene Mojibake-Texte, fehlende Kompat
 
 ## 2026-08-26 I037 - gelöst in 0.1.0-dev.35
 Der frühere Schattenvergleich behandelte Nichtentscheidungen wie Fehler und verglich keine kostenbereinigten Renditen je Horizont. Dev.35 bewertet aktive und vorgeschlagene Parameter auf identischen Feature-Snapshots und speichert Abdeckung, Nettorendite sowie Drawdown getrennt für 24 und 168 Stunden.
+
+
+
+
+## 2026-08-26 I038 - gelöst in 0.1.0-dev.36
+Der übergebene dev.35-Snapshot enthielt widersprüchliche Versionsangaben und weiterhin Mojibake in Quelltexten, GUI und Dokumentation. Dev.36 zentralisiert die Laufzeitversion, synchronisiert statische Metadaten und repariert sämtliche ausgelieferten UTF-8-Texte.
+
+## 2026-08-26 I039 - gelöst in 0.1.0-dev.37
+Dev.35 zeigte Abdeckung, Nettorendite und Drawdown nur als Information; ein Kandidat konnte trotz riskanter Horizontmetriken PENDING werden und bei der Freigabe wurden diese Werte nicht erneut geprüft. Dev.37 macht alle Metriken zu konfigurierbaren harten Gates und wiederholt die Prüfung atomar vor jeder Aktivierung.

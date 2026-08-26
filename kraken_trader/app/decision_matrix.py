@@ -24,3 +24,6 @@ class DecisionMatrix:
  def recent(self):return self.db.rows('SELECT * FROM decision_rule_evaluations ORDER BY id DESC LIMIT 500')
 
 
+
+
+

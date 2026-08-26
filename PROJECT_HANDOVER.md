@@ -99,7 +99,7 @@ Dev.32 vervollständigt den kontrollierten Lernprozess für Forex, xStocks und K
 
 
 
-## Stand 0.1.0-dev.33
+## Stand 0.1.0-dev.36
 Das kontrollierte Lernen ist konsolidiert. Alle drei Produktfamilien besitzen neun versionierte Parameter und der Scanner liest ausschließlich die aktive Familienversion. Prognosen enthalten Familie, Parameterversion, vollständige Parameter und strukturierte Features. Ein Kandidat darf nur freigegeben werden, solange seine Basisversion noch aktiv ist. Der frühere xStock-Sonderweg bleibt nur migrationsbedingt im Repository und ist nicht mehr in der Hauptnavigation verlinkt.
 
 ### Nächste Schritte
@@ -111,7 +111,7 @@ Das kontrollierte Lernen ist konsolidiert. Alle drei Produktfamilien besitzen ne
 ## Stand 0.1.0-dev.34
 Die dev.33-Lernintegration bleibt vollständig erhalten. Zusätzlich ist die gesamte Testsuite wieder grün. Scanner-Batches sind begrenzt, rotierend und über einen nicht blockierenden Lock geschützt. Forecasts tolerieren ältere Scanner-Schemata. UTF-8 ist in Quellen, Dokumentation und GUI bereinigt. Nächster fachlicher Schritt bleibt dev.35: kosten- und abdeckungsbewusster Offline-Schattenvergleich mit getrennten Metriken je Familie und Horizont.
 
-## Stand 0.1.0-dev.35
+## Stand 0.1.0-dev.36
 Der Offline-Schattenvergleich wendet aktive und vorgeschlagene Familienparameter auf dieselben gespeicherten Features an. Für 24 und 168 Stunden werden Stichprobe, Entscheidungen, Abdeckung, Rendite nach geschätzten Kosten und maximaler Drawdown getrennt persistiert und in der GUI angezeigt. HOLD beziehungsweise keine Entscheidung gilt nicht automatisch als falsche Richtung. Die Aktivierung bleibt ausschließlich eine ausdrückliche Benutzeraktion. Die vollständige Suite umfasst 105 erfolgreiche Tests.
 
 ### Nächste Schritte
@@ -119,3 +119,32 @@ Der Offline-Schattenvergleich wendet aktive und vorgeschlagene Familienparameter
 2. Kosten-Snapshots um kontospezifische Gebührenquelle und tatsächliche FX-Spreads ergänzen.
 3. Kandidatenvergleich über mehrere aufeinanderfolgende Walk-forward-Fenster stabilisieren.
 4. Legacy-Lernmodul nach bestätigter Datenmigration entfernen.
+
+
+
+
+## Stand 0.1.0-dev.36
+Dev.36 übernimmt den vollständigen dev.35-Snapshot ohne Entfernung bestehender Funktionen. Der Release zentralisiert die Laufzeitversion in `app/version.py`, synchronisiert Health, GUI, HTTP-User-Agents, Add-on-Metadaten und Projektunterlagen und normalisiert alle ausgelieferten Texte auf echtes UTF-8. Die Handelsstrategie und Lernfreigabelogik bleiben unverändert. Realhandel bleibt hart deaktiviert.
+
+### Verifikation
+Die vollständige Testsuite wurde mit installierten Abhängigkeiten ausgeführt: 109 Tests erfolgreich. Zusätzlich prüfen vier dev.36-Tests Versionskonsistenz, Add-on-Metadaten, UTF-8 und die deaktivierte Real-Execution-Grenze.
+
+### Nächster empfohlener Schritt
+Dev.37 soll die Freigabe kontrollierter Lernkandidaten um konfigurierbare Mindestabdeckung, positive Nettorenditeverbesserung, Drawdown-Grenze und eine transaktionale erneute Gate-Prüfung bei der Benutzerfreigabe erweitern.
+
+## Stand 0.1.0-dev.37
+Dev.37 baut vollständig auf dev.36 auf und entfernt keine Funktionen. Kontrollierte Lernkandidaten müssen jetzt für jeden erforderlichen Horizont alle konfigurierten Risiko- und Qualitätsgates erfüllen. Policy und Einzelergebnisse werden am Kandidaten gespeichert und im Audit protokolliert. Eine ausdrückliche Benutzerfreigabe wiederholt die Prüfung direkt vor der atomaren Aktivierung; bei einem Fehler bleibt die aktive Version unverändert.
+
+### Standard-Gates
+- erforderliche Horizonte: 24 und 168 Stunden
+- mindestens 5 Beobachtungen je Horizont
+- mindestens 50 Prozent Kandidatenabdeckung
+- mindestens 0,01 Prozentpunkte Nettorenditeverbesserung je Horizont
+- Kandidaten-Drawdown nicht schlechter als -25 Prozent
+- Drawdown höchstens 2 Prozentpunkte schlechter als die aktive Version
+
+### Verifikation
+Die vollständige Testsuite wurde ausgeführt: 115 Tests erfolgreich. Realhandel und automatische Parameteraktivierung bleiben ausgeschlossen.
+
+### Nächster empfohlener Schritt
+Dev.38 soll Prognosen am exakten historischen Zielzeitpunkt auswerten und Ein-, Ausstiegs- sowie Roundtrip-Kosten eindeutig und quellenbezogen speichern.

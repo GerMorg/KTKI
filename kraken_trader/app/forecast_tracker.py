@@ -33,3 +33,6 @@ class ForecastTracker:
    base=float(f['baseline_price']);actual=float(p[0]['last']);ret=(actual/base-1)*100 if base else 0;correct=(f['direction']=='UP' and ret>0) or (f['direction']=='DOWN' and ret<0) or (f['direction']=='FLAT' and abs(ret)<1)
    with self.db.con() as c:c.execute('INSERT OR REPLACE INTO forecast_evaluations VALUES(?,?,?,?,?,?)',(f['id'],now(),str(actual),str(ret),1 if correct else 0,json.dumps({'direction':f['direction'],'family':f.get('family'),'parameter_version':f.get('parameter_version')})));c.execute("UPDATE research_forecasts SET status='EVALUATED' WHERE id=?",(f['id'],));done+=1
   return done
+
+
+

@@ -12,8 +12,8 @@ non_negotiable_rules:
   - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
   - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.32
-  status: read-only Kraken-Integration mit oeffentlichem und privatem WebSocket v2; HA-OS-Praxistest fuer dev.5 ausstehend
+  version: 0.1.0-dev.37
+  status: Robuste kontrollierte Lernfreigabe; 115 automatisierte Tests erfolgreich; Realhandel hart deaktiviert
 implemented:
   - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
   - Kraken-REST-Signierung und sichere Secret-Konfiguration unter /data/options.json
@@ -384,12 +384,41 @@ release_0_1_0_dev_32:
 
 
 
-- date: 2026-08-26
-  version: 0.1.0-dev.34
-  decision: Vollständige Regressionstestsuite ist Release-Gate; Produktklassenlernen bleibt getrennt und wirksam.
-  validation: 103 Tests erfolgreich.
+release_history:
+  - date: 2026-08-26
+    version: 0.1.0-dev.34
+    decision: Vollständige Regressionstestsuite ist Release-Gate; Produktklassenlernen bleibt getrennt und wirksam.
+    validation: 103 Tests erfolgreich.
 
-- date: 2026-08-26
-  version: 0.1.0-dev.35
-  decision: Lernkandidaten werden je Produktklasse und Horizont auf identischen Feature-Snapshots kostenbereinigt verglichen.
-  validation: 105 Tests erfolgreich; Realhandel hart deaktiviert.
+  - date: 2026-08-26
+    version: 0.1.0-dev.35
+    decision: Lernkandidaten werden je Produktklasse und Horizont auf identischen Feature-Snapshots kostenbereinigt verglichen.
+    validation: 105 Tests erfolgreich; Realhandel hart deaktiviert.
+
+
+
+
+release_0_1_0_dev_36:
+  purpose: Konsistenz, UTF-8 und reproduzierbarer Versionsstand
+  changes:
+    - Zentrale Laufzeitversion in app/version.py
+    - Health-Endpunkt, GUI und HTTP-User-Agents verwenden dieselbe Laufzeitversion
+    - Add-on-Metadaten und Projektunterlagen auf dev.36 synchronisiert
+    - Ausgelieferte Quelltexte, GUI und Dokumentation als echtes UTF-8 normalisiert
+    - Widersprüchlicher UTF-8-Test korrigiert
+  regression: 109 automatisierte Tests erfolgreich
+  safety: Realhandel weiterhin hart deaktiviert; keine Strategieänderung
+  next_recommended_release: dev.37 mit robusten, erneut geprüften Lernfreigabe-Gates
+
+release_0_1_0_dev_37:
+  purpose: Robuste, fail-closed Freigabe kontrollierter Lernkandidaten
+  changes:
+    - Harte Gates je 24h- und 168h-Horizont
+    - Konfigurierbare Mindeststichprobe und Mindestabdeckung
+    - Positive Nettorenditeverbesserung nach Kosten erforderlich
+    - Absoluter Drawdown und Drawdown-Verschlechterung begrenzt
+    - Persistente Policy und Gate-Einzelergebnisse
+    - Erneute Prüfung direkt vor atomarer Aktivierung
+  regression: 115 automatisierte Tests erfolgreich
+  safety: Keine automatische Aktivierung; Realhandel weiterhin hart deaktiviert
+  next_recommended_release: dev.38 mit zielzeitgenauer historischer Prognoseauswertung und eindeutiger Entry-Exit-Kostenkette

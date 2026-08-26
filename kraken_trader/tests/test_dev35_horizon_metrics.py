@@ -5,7 +5,7 @@ from controlled_learning import ControlledLearning
 from forecast_tracker import ForecastTracker
 class T(unittest.TestCase):
  def setUp(self):
-  self.db=DB(tempfile.mktemp());self.db.init();ForecastTracker(self.db);self.learning=ControlledLearning(self.db)
+  self.db=DB(tempfile.mktemp());self.db.init();ForecastTracker(self.db);self.db.set('learning_min_net_return_improvement','0');self.learning=ControlledLearning(self.db)
   with self.db.con() as c:
    c.execute('CREATE TABLE market_universe(symbol TEXT,category TEXT)');c.execute("INSERT INTO market_universe VALUES('EUR/USD','forex')")
  def seed(self):
@@ -20,3 +20,6 @@ class T(unittest.TestCase):
    c.execute('CREATE TABLE watchlist_versions(id INTEGER PRIMARY KEY)');c.execute('INSERT INTO watchlist_versions VALUES(1)');c.execute("INSERT INTO live_prices(symbol,last,received_at) VALUES('EUR/USD','1.1',?)",(now(),));c.execute('CREATE TABLE scanner_results(symbol TEXT PRIMARY KEY,score TEXT,signal TEXT,quality TEXT,momentum_pct TEXT,trend_pct TEXT,volatility_pct TEXT,spread_pct TEXT)');c.execute("INSERT INTO scanner_results VALUES('EUR/USD','80','BUY','VALID','1','1','.1','.05')")
   self.assertEqual(ForecastTracker(self.db).snapshot(['EUR/USD']),2);f=json.loads(self.db.rows('SELECT features_json FROM research_forecasts WHERE status=\'OPEN\' LIMIT 1')[0]['features_json']);self.assertEqual(f['schema_version'],2);self.assertIn('estimated_roundtrip_cost_pct',f);self.assertIn('cost_components_pct',f)
 if __name__=='__main__':unittest.main()
+
+
+

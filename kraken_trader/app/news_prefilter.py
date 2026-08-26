@@ -1,5 +1,6 @@
 import hashlib,json,re,time,urllib.error,urllib.request,xml.etree.ElementTree as ET
 from db import now
+from version import USER_AGENT
 from datetime import datetime,timezone,timedelta
 SOURCES=[
  {'name':'GDELT Wirtschaft','url':'https://api.gdeltproject.org/api/v2/doc/doc?query=economy&mode=ArtList&maxrecords=50&format=json&timespan=24h','kind':'gdelt_json','class':'aggregator','weight':0.70},
@@ -48,7 +49,7 @@ class NewsPrefilter:
     c.execute("INSERT INTO news_sources(name,url,kind,source_class,weight,enabled,last_status,last_checked_at) VALUES(?,?,?,?,?,1,NULL,NULL) ON CONFLICT(name) DO UPDATE SET url=excluded.url,kind=excluded.kind,source_class=excluded.source_class,weight=excluded.weight,enabled=1",(item['name'],item['url'],item['kind'],item['class'],str(item['weight'])))
  def sources(self):return self.db.rows('SELECT * FROM news_sources WHERE enabled=1 ORDER BY source_class DESC,name')
  def _read(self,url,attempts=3):
-  headers={'User-Agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 HA-Kraken-Trader/0.1.0-dev.15','Accept':'application/rss+xml,application/xml,application/json,text/xml;q=0.9,*/*;q=0.5'};last=None
+  headers={'User-Agent':USER_AGENT,'Accept':'application/rss+xml,application/xml,application/json,text/xml;q=0.9,*/*;q=0.5'};last=None
   for attempt in range(attempts):
    try:
     req=urllib.request.Request(url,headers=headers)
@@ -110,6 +111,9 @@ class NewsPrefilter:
      direct=any(x in specific for x in hits);rel=float(item['weight'])*(1.0 if direct else .25);links.append((item['id'],symbol,str(rel),('Direkter Marktbezug: ' if direct else 'Kategorietrend: ')+', '.join(hits[:4])))
   with self.db.con() as c:c.execute('DELETE FROM news_market_links');c.executemany('INSERT OR REPLACE INTO news_market_links VALUES(?,?,?,?)',links)
   return len(links)
+
+
+
 
 
 

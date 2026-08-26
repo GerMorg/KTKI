@@ -1,4 +1,21 @@
 # Changelog
+## 0.1.0-dev.37
+- robuste Freigabe-Gates je erforderlichem Prognosehorizont
+- Mindeststichprobe, Mindestabdeckung und positive Nettorenditeverbesserung sind harte Gates
+- absoluter maximaler Drawdown und maximale Drawdown-Verschlechterung sind harte Gates
+- Gate-Policy und Einzelergebnisse werden je Kandidat unveränderlich gespeichert und auditiert
+- Freigabe prüft alle Gates unmittelbar vor der atomaren Aktivierung erneut
+- Gate-Schwellen sind über Add-on-Optionen konfigurierbar und in der GUI sichtbar
+- migrationssichere Erweiterung vorhandener Kandidatentabellen
+- vollständige Regression: 115 Tests erfolgreich
+- keine automatische Aktivierung; Realhandel bleibt hart deaktiviert
+## 0.1.0-dev.36
+- zentrale Versionsquelle für Anwendung, Health-Endpunkt und HTTP-User-Agent
+- alle ausgelieferten Textdateien und GUI-Texte als echtes UTF-8 normalisiert
+- widersprüchlichen UTF-8-Regressionstest korrigiert
+- Add-on-Metadaten, README, DOCS, Verträge und Projektunterlagen synchronisiert
+- vollständige Regression: 109 Tests erfolgreich
+- keine Änderung der Handelsstrategie; Realhandel bleibt hart deaktiviert
 ## 0.1.0-dev.35
 - Offline-Schattenvergleich verwendet dieselben historischen Feature-Snapshots für aktive und vorgeschlagene Parameter
 - Lernmetriken werden getrennt für 24- und 168-Stunden-Horizonte gespeichert
@@ -88,6 +105,9 @@
 
 ## 0.1.0-dev.24
 - realen xStock-Detailscore durch korrekten Kraken-API-Vertrag repariert
+
+
+
 
 
 

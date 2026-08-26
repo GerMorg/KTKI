@@ -5,3 +5,6 @@ Auditierbare Kraken-Analyse mit Realportfolio, dynamischem Paper-Portfolio, Akti
 
 
 
+
+
+

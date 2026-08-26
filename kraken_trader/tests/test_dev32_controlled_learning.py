@@ -4,7 +4,7 @@ from db import DB
 from controlled_learning import ControlledLearning,FAMILIES
 class T(unittest.TestCase):
  def setUp(self):
-  self.db=DB(tempfile.mktemp());self.db.init();self.l=ControlledLearning(self.db)
+  self.db=DB(tempfile.mktemp());self.db.init();self.db.set('learning_required_horizons','0');self.db.set('learning_min_horizon_samples','1');self.db.set('learning_min_candidate_coverage','0');self.db.set('learning_min_net_return_improvement','0');self.l=ControlledLearning(self.db)
   with self.db.con() as c:
    c.execute('CREATE TABLE research_forecasts(id INTEGER PRIMARY KEY,symbol TEXT,direction TEXT,scanner_score TEXT)');c.execute('CREATE TABLE forecast_evaluations(forecast_id INTEGER PRIMARY KEY,direction_correct INTEGER,actual_return_pct TEXT)');c.execute('CREATE TABLE market_universe(symbol TEXT,category TEXT)');c.execute("INSERT INTO market_universe VALUES('EUR/USD','forex')")
  def seed(self,n=12,correct=12,score=80):
@@ -21,5 +21,8 @@ class T(unittest.TestCase):
  def test_reject_and_full_rollback(self):
   self.seed();r=self.l.propose('forex',10,0);self.assertEqual(self.l.decide(r['candidate_id'],'reject')['status'],'REJECTED');self.assertEqual(self.l.rollback('forex',1)['status'],'ROLLED_BACK')
 if __name__=='__main__':unittest.main()
+
+
+
 
 

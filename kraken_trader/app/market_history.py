@@ -26,3 +26,6 @@ class MarketHistory:
  def diagnostics(self):return self.db.rows('SELECT * FROM market_data_diagnostics ORDER BY asset_class,symbol')
 
 
+
+
+

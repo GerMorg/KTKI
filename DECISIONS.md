@@ -140,3 +140,18 @@ Die vollständige Regressionstestsuite ist ab dev.34 ein hartes Release-Gate. Ve
 
 ## 2026-08-26 D057
 Lernkandidaten werden ab dev.35 auf denselben historischen Feature-Snapshots wie die aktive Version bewertet. Metriken werden je Prognosehorizont getrennt und nach geschätzten Roundtrip-Kosten ausgewiesen. Abdeckung und Drawdown sind Freigabeinformationen; eine automatische Aktivierung bleibt ausgeschlossen.
+
+
+
+
+## 2026-08-26 D058
+Ab dev.36 stammen Laufzeitversion und HTTP-User-Agent aus einer einzigen zentralen Versionsquelle. Statische Add-on-Metadaten und Projektunterlagen werden durch Regressionstests auf denselben Releasewert geprüft.
+
+## 2026-08-26 D059
+Dev.36 ist ein reines Konsistenz- und Vertrauensrelease. Strategieparameter, Freigabelogik und die hart deaktivierte Real-Execution-Grenze bleiben funktional unverändert.
+
+## 2026-08-26 D060
+Ab dev.37 wird ein Lernkandidat nur PENDING, wenn für alle konfigurierten Horizonte Mindeststichprobe, Mindestabdeckung, positive Nettorenditeverbesserung, absoluter Drawdown und Drawdown-Verschlechterung sowie die bisherige Trefferquotenverbesserung erfüllt sind.
+
+## 2026-08-26 D061
+Die Gate-Policy und jedes Gate-Ergebnis werden am Kandidaten gespeichert. Eine Benutzerfreigabe wiederholt die vollständige Prüfung mit der aktuellen Policy direkt vor der atomaren Aktivierung. Bei Abweichung wird REJECTED_RECHECK gesetzt und keine Parameterfamilie verändert.
