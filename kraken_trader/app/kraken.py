@@ -8,7 +8,7 @@ class KrakenClient:
   enc=urllib.parse.urlencode(data);digest=hashlib.sha256(str(data["nonce"]).encode()+enc.encode()).digest()
   return base64.b64encode(hmac.new(base64.b64decode(secret),path.encode()+digest,hashlib.sha512).digest()).decode()
  def call(self,path,data=None,private=False):
-  data=dict(data or {});headers={"User-Agent":"HA-Kraken-Trader/0.1.0-dev.28"}
+  data=dict(data or {});headers={"User-Agent":"HA-Kraken-Trader/0.1.0-dev.29"}
   if private:
    if not self.key or not self.secret:raise KrakenError("API-Key oder Private Key fehlt")
    data["nonce"]=str(time.time_ns());headers.update({"API-Key":self.key,"API-Sign":self.sign(path,data,self.secret)})
@@ -34,6 +34,9 @@ class KrakenClient:
   data={"pair":",".join(pairs),"assetVersion":1}
   if asset_class=="tokenized_asset":data["asset_class"]=asset_class
   return self.call("/0/public/Ticker",data)
+ def trade_volume(self,pairs,fee_info=True):
+  data={'pair':','.join(pairs),'fee-info':'true' if fee_info else 'false'}
+  return self.call('/0/private/TradeVolume',data,private=True)
  def balance(self):return self.call("/0/private/Balance",private=True)
  def balance_ex(self):return self.call("/0/private/BalanceEx",private=True)
  def ledgers(self,offset=0):return self.call("/0/private/Ledgers",{"type":"all","ofs":offset},private=True)

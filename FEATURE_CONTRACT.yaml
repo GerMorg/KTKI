@@ -172,3 +172,19 @@ release_0_1_0_dev_28:
   walk_forward_backtest: {required: true, status: implemented}
   no_position_buy_hold_trend_benchmarks: {required: true, status: implemented}
   real_trading: {required: false, status: hard_disabled}
+
+release_0_1_0_dev_29:
+  account_trade_volume_read_only: {required: true, status: implemented}
+  maker_taker_fee_provenance: {required: true, status: implemented}
+  conservative_fee_fallback: {required: true, status: implemented}
+  per_pair_paper_taker_fee: {required: true, status: implemented}
+  real_trading: {required: false, status: hard_disabled}
+
+release_0_1_0_dev_30:
+  forex_v2_shadow_only: {required: true, status: implemented}
+  relative_currency_strength: {required: true, status: implemented}
+  safe_haven_regime: {required: true, status: implemented}
+  short_and_medium_horizons: {required: true, status: implemented}
+  versioned_forex_feature_snapshots: {required: true, status: implemented}
+  missing_macro_features_explicit_null: {required: true, status: enforced}
+  no_shadow_trading_effect: {required: true, status: enforced}

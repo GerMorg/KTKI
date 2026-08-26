@@ -1,5 +1,5 @@
 name: Kraken Trader
-version: "0.1.0-dev.28"
+version: "0.1.0-dev.30"
 slug: kraken_trader
 description: Read-only Kraken Portfolio und lokales Paper-Trading
 arch: [amd64]

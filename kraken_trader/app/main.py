@@ -17,6 +17,8 @@ from text_encoding import repair_database
 from learning_approval import LearningApproval
 from market_history import MarketHistory
 from backtest import BacktestEngine
+from fee_profile import FeeProfile
+from forex_shadow import ForexShadow
 class IngressPrefix:
  def __init__(self,app):self.app=app
  def __call__(self,environ,start_response):
@@ -38,7 +40,7 @@ news_prefilter=NewsPrefilter(db)
 news_prefilter.external_ai=external_news_ai
 prefilter=MarketPrefilter(db,client,news_prefilter)
 learning=LearningApproval(db)
-history=MarketHistory(db);backtests=BacktestEngine(db)
+history=MarketHistory(db);backtests=BacktestEngine(db);fees=FeeProfile(db,client);forex_shadow=ForexShadow(db)
 forecasts=ForecastTracker(db)
 pipeline=ResearchPipeline(db,universe,prefilter,scanner,forecasts)
 app=Flask(__name__);app.wsgi_app=IngressPrefix(app.wsgi_app)
@@ -90,13 +92,13 @@ def research_scheduler():
   if db.value('research_auto_enabled','false')=='true':
    result=pipeline.start();db.audit('RESEARCH_SCHEDULER_TICK',json.dumps(result))
 if os.getenv('APP_DISABLE_RESEARCH_SCHEDULER')!='1':threading.Thread(target=research_scheduler,daemon=True,name='research-scheduler').start()
-BASE='''<!doctype html><html lang=de><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:dark;--b:#09111f;--c:#142238;--a:#55c6ff;--m:#a9b8cb;--g:#5ee090;--r:#ff7272}*{box-sizing:border-box}body{margin:0;background:var(--b);color:#eef6ff;font:15px system-ui}nav{display:flex;gap:18px;flex-wrap:wrap;padding:16px;background:#101b2d;position:sticky;top:0}a{color:var(--a);text-decoration:none}main{padding:20px;max-width:1200px;margin:auto}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.card{background:var(--c);padding:18px;border-radius:14px;margin-bottom:14px}.muted{color:var(--m)}.good{color:var(--g)}.bad{color:var(--r)}table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:9px;border-bottom:1px solid #29405f}button{background:var(--a);border:0;border-radius:8px;padding:10px 14px;font-weight:700}.tag{padding:3px 7px;border-radius:9px;background:#243956}</style></head><body><nav><b>Kraken Trader dev.28</b><a href="{{url_for('dashboard')}}">Übersicht</a><a href="{{url_for('api_status')}}">API</a><a href="{{url_for('portfolio')}}">Portfolio</a><a href="{{url_for('scanner_page')}}">Scanner</a><a href="{{url_for('data_quality')}}">Datenqualität</a><a href="{{url_for('backtest_page')}}">Backtests</a><a href="{{url_for('paper')}}">Musterdepot</a><a href="{{url_for('paper_decisions')}}">Paper-Entscheidungen</a><a href="{{url_for('audit')}}">Audit</a><a href="{{url_for('learning_page')}}">Lernfreigaben</a><a href="{{url_for('settings')}}">Einstellungen</a><a href="{{url_for('exports')}}">Export</a></nav><main>{{body|safe}}</main></body></html>'''
+BASE='''<!doctype html><html lang=de><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:dark;--b:#09111f;--c:#142238;--a:#55c6ff;--m:#a9b8cb;--g:#5ee090;--r:#ff7272}*{box-sizing:border-box}body{margin:0;background:var(--b);color:#eef6ff;font:15px system-ui}nav{display:flex;gap:18px;flex-wrap:wrap;padding:16px;background:#101b2d;position:sticky;top:0}a{color:var(--a);text-decoration:none}main{padding:20px;max-width:1200px;margin:auto}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.card{background:var(--c);padding:18px;border-radius:14px;margin-bottom:14px}.muted{color:var(--m)}.good{color:var(--g)}.bad{color:var(--r)}table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:9px;border-bottom:1px solid #29405f}button{background:var(--a);border:0;border-radius:8px;padding:10px 14px;font-weight:700}.tag{padding:3px 7px;border-radius:9px;background:#243956}</style></head><body><nav><b>Kraken Trader dev.30</b><a href="{{url_for('dashboard')}}">Übersicht</a><a href="{{url_for('api_status')}}">API</a><a href="{{url_for('portfolio')}}">Portfolio</a><a href="{{url_for('scanner_page')}}">Scanner</a><a href="{{url_for('data_quality')}}">Datenqualität</a><a href="{{url_for('backtest_page')}}">Backtests</a><a href="{{url_for('fees_page')}}">Gebühren</a><a href="{{url_for('forex_shadow_page')}}">Forex v2</a><a href="{{url_for('paper')}}">Musterdepot</a><a href="{{url_for('paper_decisions')}}">Paper-Entscheidungen</a><a href="{{url_for('audit')}}">Audit</a><a href="{{url_for('learning_page')}}">Lernfreigaben</a><a href="{{url_for('settings')}}">Einstellungen</a><a href="{{url_for('exports')}}">Export</a></nav><main>{{body|safe}}</main></body></html>'''
 def page(body,**ctx):return render_template_string(BASE,body=render_template_string(body,**ctx))
 @app.get('/')
 def dashboard():
  latest=db.rows('SELECT * FROM portfolio_snapshots ORDER BY id DESC LIMIT 1');return page('<h1>HA Kraken Trader</h1><div class=grid><div class=card><h2>Realportfolio</h2><p>{{latest.total_eur if latest else "Noch nicht synchronisiert"}} EUR</p><span class="{{"good" if latest and latest.quality=="VALID" else "bad"}}">{{latest.quality if latest else "UNKNOWN"}}</span></div><div class=card><h2>Sicherheit</h2><p>Echte Orders sind serverseitig nicht implementiert.</p><b>REAL TRADING: AUS</b></div></div>',latest=latest[0] if latest else None)
 @app.get('/health')
-def health():return {'status':'ok','version':'0.1.0-dev.28','real_trading':False,'websocket_status':db.value('websocket_status','not_checked'),'market_stream':stream.status(),'private_stream':private_stream.status()}
+def health():return {'status':'ok','version':'0.1.0-dev.30','real_trading':False,'websocket_status':db.value('websocket_status','not_checked'),'market_stream':stream.status(),'private_stream':private_stream.status()}
 @app.get('/api/private-stream')
 def private_stream_api():return {'status':private_stream.status(),'balances':db.rows('SELECT * FROM private_balances ORDER BY asset'),'executions':db.rows('SELECT event_type,order_id,exec_id,symbol,sequence,received_at FROM private_execution_events ORDER BY received_at DESC LIMIT 100'),'sequence_gaps':db.rows('SELECT * FROM private_sequence_gaps ORDER BY id DESC LIMIT 20')}
 @app.post('/api/private-stream/reconnect')
@@ -168,6 +170,19 @@ def learning_page():
   action=request.form.get('action');result=learning.create_proposal() if action=='create' else learning.approve_latest();msg=json.dumps(result,ensure_ascii=False)
  latest=learning.latest();rows=learning.rows()
  return page(render_template_string('''<h1>Lernfreigaben</h1><div class=card><p>Die Strategie ändert keine Parameter automatisch. Ein Vorschlag wird zunächst angezeigt und erst mit deiner Freigabe als gemeinsame Version aktiviert.</p><form method=post><button name=action value=create>Neuen Vorschlag berechnen</button> {% if latest and latest.status=='PENDING' %}<button name=action value=approve>Alle neun Parameter mit einem Klick bestätigen</button>{% endif %}</form><p>{{msg}}</p>{% if latest %}<p>Status: <b>{{latest.status}}</b> · Stichprobe: {{latest.sample_count}} · Trefferquote: {{latest.accuracy or '—'}}</p>{% endif %}</div><table><tr><th>Parameter</th><th>Aktuell</th><th>Vorschlag</th><th>Zulässiger Bereich</th></tr>{% for x in rows %}<tr><td>{{x.label}}</td><td>{{x.current}}</td><td>{{x.proposed if x.proposed is not none else '—'}}</td><td>{{x.minimum}} bis {{x.maximum}}</td></tr>{% endfor %}</table>''',latest=latest,rows=rows,msg=msg))
+
+
+
+@app.route('/forex-shadow',methods=['GET','POST'])
+def forex_shadow_page():
+ result=forex_shadow.run() if request.method=='POST' else None;rows=forex_shadow.comparisons();return page(render_template_string("""<h1>Forex v2 Schattenmodus</h1><div class=card><p><b>Keine Handelswirkung.</b> forex-v2 wird parallel zu forex-v1 ausgewertet. Alle Eingänge werden versioniert gespeichert. Nicht verfügbare Makrofaktoren bleiben ausdrücklich <code>null</code> und verbessern den Score nicht.</p><form method=post><button>Schattenbewertung ausführen</button></form><p>{{result or ''}}</p></div><table><tr><th>Zeit</th><th>Symbol</th><th>Aktiv</th><th>Kandidat</th><th>Abweichung</th></tr>{% for x in rows %}<tr><td>{{x.created_at}}</td><td>{{x.symbol}}</td><td>{{x.active_model}}: {{x.active_score}} / {{x.active_signal}}</td><td>{{x.candidate_model}}: {{x.candidate_score}} / {{x.candidate_signal}}</td><td>{{'ja' if x.disagrees else 'nein'}}</td></tr>{% endfor %}</table>""",rows=rows,result=result))
+
+@app.route('/fees',methods=['GET','POST'])
+def fees_page():
+ result=None
+ if request.method=='POST':
+  symbols=[x['symbol'] for x in db.rows("SELECT symbol FROM market_universe WHERE LOWER(COALESCE(status,'online')) IN ('online','post_only','limit_only')")];result=fees.refresh(symbols)
+ latest=fees.latest();rows=fees.rows();return page(render_template_string("""<h1>Kontospezifische Gebühren</h1><div class=card><p>Read-only Abruf der 30-Tage-Handelsaktivität und paarbezogenen Maker-/Taker-Stufen. Bei fehlender Berechtigung bleiben die konfigurierten konservativen Gebühren aktiv.</p><form method=post><button>Gebührenprofil abrufen</button></form><p>{{result or ''}}</p>{% if latest %}<p>Status: <b>{{latest.status}}</b> · Quelle: {{latest.source}} · Volumen: {{latest.volume_30d or '—'}} {{latest.volume_currency or ''}} · {{latest.created_at}}</p><p class=bad>{{latest.error_reason or ''}}</p>{% endif %}</div><table><tr><th>Symbol</th><th>Maker bps</th><th>Taker bps</th><th>Quelle</th><th>Zeitpunkt</th></tr>{% for x in rows %}<tr><td>{{x.symbol}}</td><td>{{x.maker_bps}}</td><td>{{x.taker_bps}}</td><td>{{x.source}}</td><td>{{x.effective_at}}</td></tr>{% endfor %}</table>""",result=result,latest=latest,rows=rows))
 
 @app.get('/data-quality')
 def data_quality():

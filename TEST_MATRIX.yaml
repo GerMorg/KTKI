@@ -159,3 +159,15 @@ release_0_1_0_dev_28:
   - current OHLC candle is excluded from committed status
   - OHLCVT CSV import is idempotent by symbol interval and timestamp
   - walk-forward result includes no-position, buy-and-hold, trend, costs and drawdown
+
+release_0_1_0_dev_29:
+  - TradeVolume uses authenticated read-only private request
+  - maker and taker fee rates persist with provenance
+  - permission failure retains configured conservative fallback
+  - paper trade records and uses pair-specific taker fee
+
+release_0_1_0_dev_30:
+  - forex-v2 creates short and medium feature snapshots
+  - unavailable macro inputs remain explicit null
+  - shadow run never changes active scanner result
+  - active/candidate comparisons persist disagreement flag

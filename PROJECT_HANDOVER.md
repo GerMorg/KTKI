@@ -83,3 +83,9 @@ Dev.27 baut ausschließlich auf dem übergebenen v26-Snapshot auf. Die EUR/USD-A
 
 ## Stand 0.1.0-dev.28
 Dev.28 setzt die priorisierte Forex-Datenabsicherung um. Der neue Tab Datenqualität zeigt pro Paar Tickerstatus, Bid/Ask, Volumen, OHLC-Status, Zahl abgeschlossener Kerzen und konkrete Fehler. Der persistente OHLCVT-Speicher kann Kraken-kompatible CSV-Zeilen aufnehmen. Der neue Backtest-Tab vergleicht im zeitlich getrennten Walk-forward-Test eine einfache SMA-Strategie mit Keine Position und Buy-and-Hold und speichert Kostenannahme, Anlageklasse, Rendite, Drawdown und Umschichtungen. Realhandel bleibt hart deaktiviert.
+
+## Stand 0.1.0-dev.29
+Dev.29 ergänzt kontospezifische Gebühren über den read-only TradeVolume-Endpunkt. Maker- und Taker-Sätze werden pro Paar mit Quelle und Abrufzeitpunkt gespeichert und im neuen Tab Gebühren angezeigt. Paper-Ausführung und Kostenschätzung verwenden den paarbezogenen Taker-Satz. Bei fehlender Berechtigung oder API-Fehler bleibt der konfigurierte konservative Wert aktiv. Realhandel bleibt hart deaktiviert.
+
+## Stand 0.1.0-dev.30
+Dev.30 führt forex-v2 ausschließlich im Schattenmodus ein. Relative Währungsstärke, Safe-Haven-Regime, paarbezogene Nachrichten sowie kurze und mittlere Horizonte werden versioniert gespeichert und gegen forex-v1 verglichen. Noch nicht angebundene Makrodaten bleiben ausdrücklich null. Scanner- und Paper-Ergebnisse werden nicht verändert.

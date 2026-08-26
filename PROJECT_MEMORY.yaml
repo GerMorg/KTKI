@@ -12,7 +12,7 @@ non_negotiable_rules:
   - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
   - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.28
+  version: 0.1.0-dev.30
   status: read-only Kraken-Integration mit oeffentlichem und privatem WebSocket v2; HA-OS-Praxistest fuer dev.5 ausstehend
 implemented:
   - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
@@ -357,3 +357,15 @@ release_0_1_0_dev_28:
   base: 0.1.0-dev.27 user-provided repository snapshot
   added: [forex data diagnostics, persistent OHLCVT history, CSV import basis, walk-forward benchmark engine, data-quality and backtest GUI tabs]
   safety: [unfinished OHLC candle excluded, errors visible, real trading hard disabled]
+
+release_0_1_0_dev_29:
+  date: 2026-08-26
+  base: 0.1.0-dev.28
+  added: [read-only TradeVolume fee profile, per-pair maker and taker persistence, provenance, conservative fallback, fees GUI]
+  safety: [no order API, missing permission falls back, real trading hard disabled]
+
+release_0_1_0_dev_30:
+  date: 2026-08-26
+  base: 0.1.0-dev.29
+  added: [forex-v2 shadow mode, relative currency strength, safe-haven regime, two horizons, versioned feature snapshots, active-candidate comparison]
+  safety: [no scanner overwrite, no paper effect, missing macro data explicit null]

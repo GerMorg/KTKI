@@ -1,4 +1,5 @@
 import json,threading
+from forex_shadow import ForexShadow
 from db import now
 class ResearchPipeline:
  def __init__(self,db,universe,prefilter,scanner,forecasts):self.db,self.universe,self.prefilter,self.scanner,self.forecasts=db,universe,prefilter,scanner,forecasts;self.lock=threading.Lock();self.ensure()
@@ -15,8 +16,9 @@ class ResearchPipeline:
    with self.db.con() as c:c.execute('UPDATE research_jobs SET status=?,started_at=? WHERE id=?',('RUNNING',now(),jid))
    self.step(jid,'UNIVERSE',1);u=self.universe.sync();self.step(jid,'NEWS_AND_PREFILTER',2,u);p=self.prefilter.run(int(float(self.db.value('prefilter_top_per_category','8'))));symbols=self.prefilter.candidates();self.step(jid,'DEEP_SCAN',3,{'candidates':len(symbols)});s=self.scanner.run(symbols,60,limit=len(symbols),delay_seconds=float(self.db.value('scanner_delay_seconds','1.05')))
    with self.db.con() as c:c.execute("UPDATE research_watchlist SET status='ANALYZED' WHERE symbol IN (SELECT symbol FROM scanner_results WHERE quality='VALID')")
+   shadow=ForexShadow(self.db).run(symbols)
    self.step(jid,'FORECAST_SNAPSHOT',4);forecast_count=self.forecasts.snapshot(symbols);evaluated=self.forecasts.evaluate_due()
-   with self.db.con() as c:c.execute('UPDATE research_jobs SET status=?,stage=?,progress_current=?,finished_at=?,details_json=? WHERE id=?',('COMPLETED','DONE',5,now(),json.dumps({'universe':u,'prefilter':p,'scanner':s,'forecasts':forecast_count,'evaluated':evaluated},ensure_ascii=False),jid))
+   with self.db.con() as c:c.execute('UPDATE research_jobs SET status=?,stage=?,progress_current=?,finished_at=?,details_json=? WHERE id=?',('COMPLETED','DONE',5,now(),json.dumps({'universe':u,'prefilter':p,'scanner':s,'forex_shadow':shadow,'forecasts':forecast_count,'evaluated':evaluated},ensure_ascii=False),jid))
   except Exception as exc:
    with self.db.con() as c:c.execute('UPDATE research_jobs SET status=?,finished_at=?,error=? WHERE id=?',('FAILED',now(),type(exc).__name__+': '+str(exc)[:300],jid))
    self.db.audit('RESEARCH_PIPELINE_FAILED',type(exc).__name__+': '+str(exc)[:300],'error')

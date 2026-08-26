@@ -1,4 +1,17 @@
 # Changelog
+## 0.1.0-dev.30
+- forex-v2 als strikt wirkungsloser Schattenmodus
+- relative Stärke beider Währungen und Risiko-/Safe-Haven-Regime
+- getrennte kurzfristige und mittelfristige Horizonte
+- paarbezogene Nachrichtenmerkmale und versionierte Eingangssnapshots
+- fehlende Zins-, Inflations-, Wachstums- und Zentralbankdaten bleiben explizit null
+- Vergleich mit forex-v1 samt Abweichungsprotokoll und neuem GUI-Tab
+## 0.1.0-dev.29
+- read-only TradeVolume-Abruf für kontospezifische 30-Tage-Gebührenstufen
+- Maker und Taker je Paar mit Quelle und Zeitpunkt persistent gespeichert
+- konservativer konfigurierter Fallback bei fehlender Berechtigung oder API-Fehler
+- Paper-Ausführung und Kostenschätzung verwenden das aktive paarbezogene Taker-Profil
+- neuer Ingress-Tab Gebühren; Realhandel bleibt hart deaktiviert
 ## 0.1.0-dev.28
 - Forex-Diagnose für Ticker, Bid/Ask, Volumen, OHLC und konkrete Fehlergründe
 - persistenter OHLCVT-Historienspeicher mit CSV-Importbasis und abgeschlossenen Kerzen

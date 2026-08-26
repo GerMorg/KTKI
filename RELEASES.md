@@ -66,3 +66,9 @@ Konsolidierte Weiterentwicklung von v26 mit dokumentationskonformem Forex-Univer
 
 ## 0.1.0-dev.28
 Forex-Datenqualität, persistente abgeschlossene OHLCVT-Historie und erste reproduzierbare Walk-forward-Benchmarks.
+
+## 0.1.0-dev.29
+Kontospezifische Maker-/Taker-Gebühren mit Herkunft, Zeitpunkt und konservativem Fallback.
+
+## 0.1.0-dev.30
+Versioniertes forex-v2 im strikt wirkungslosen Schattenmodus mit Vergleich gegen forex-v1.

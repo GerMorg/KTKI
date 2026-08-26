@@ -2,6 +2,7 @@ import json
 from decimal import Decimal, ROUND_DOWN
 from db import now
 from portfolio_allocator import PortfolioAllocator
+from fee_profile import FeeProfile
 D=lambda x:Decimal(str(x or 0))
 class PaperEngine:
  def __init__(self,db,start_eur=1000,fee_bps=40,slippage_bps=10,max_position_pct=10,trade_eur=25):
@@ -42,6 +43,7 @@ class PaperEngine:
  def execute(self,symbol,side,gross,reason,decision):
   x=self.price(symbol)
   if not x:raise ValueError('Kein Livepreis')
+  fee_bps,fee_source,fee_effective_at=FeeProfile(self.db,None).rate_bps(symbol,'taker',self.fee*10000);trade_fee=fee_bps/10000
   market=D(x['last']);bid=D(x.get('bid') or market);ask=D(x.get('ask') or market);gross=D(gross);cash,pv,total,_=self.equity();pos=next((p for p in self.positions() if p['symbol']==symbol),None);oldqty=D(pos['quantity']) if pos else D(0);oldcost=D(pos['avg_cost_eur']) if pos else D(0);risk=self.db.rows('SELECT * FROM paper_position_risk WHERE symbol=?',(symbol,));olddebt=D(risk[0]['borrowed_eur']) if risk else D(0)
   quote_usd=symbol.endswith('/USD');fx_fee=fx_spread_cost=D(0)
   if quote_usd:
@@ -50,11 +52,11 @@ class PaperEngine:
    fb=D(fx[0].get('bid') or fx[0].get('last'));fa=D(fx[0].get('ask') or fx[0].get('last'));fm=(fb+fa)/2
    fx_spread_rate=((fa-fb)/fm/2) if fm else D(0);fx_fee_rate=D(self.db.value('paper_fx_fee_bps','10'))/10000
   if side=='BUY':
-   lev=max(1,int(decision.get('leverage',1)));collateral=min(gross,cash/(1+self.fee*lev));notional=collateral*lev;base_execution=max(market,ask);execp=base_execution*(1+self.slip);qty=(notional/execp).quantize(Decimal('0.00000001'),rounding=ROUND_DOWN);notional=qty*execp;fee=notional*self.fee;fx_fee=notional*fx_fee_rate if quote_usd else D(0);fx_spread_cost=notional*fx_spread_rate if quote_usd else D(0);net=collateral+fee+fx_fee+fx_spread_cost
+   lev=max(1,int(decision.get('leverage',1)));collateral=min(gross,cash/(1+trade_fee*lev));notional=collateral*lev;base_execution=max(market,ask);execp=base_execution*(1+self.slip);qty=(notional/execp).quantize(Decimal('0.00000001'),rounding=ROUND_DOWN);notional=qty*execp;fee=notional*trade_fee;fx_fee=notional*fx_fee_rate if quote_usd else D(0);fx_spread_cost=notional*fx_spread_rate if quote_usd else D(0);net=collateral+fee+fx_fee+fx_spread_cost
    if qty<=0 or net>cash:raise ValueError('Nicht genügend Paper-Cash')
    newqty=oldqty+qty;avg=((oldqty*oldcost)+notional)/newqty;newcash=cash-net;newdebt=olddebt+max(D(0),notional-collateral)
   else:
-   lev=int(risk[0]['leverage']) if risk else 1;qty=min(oldqty,(gross/(market*(1-self.slip))).quantize(Decimal('0.00000001'),rounding=ROUND_DOWN));base_execution=min(market,bid) if bid>0 else market;execp=base_execution*(1-self.slip);notional=qty*execp;fee=notional*self.fee;fx_fee=notional*fx_fee_rate if quote_usd else D(0);fx_spread_cost=notional*fx_spread_rate if quote_usd else D(0);fee+=fx_fee+fx_spread_cost
+   lev=int(risk[0]['leverage']) if risk else 1;qty=min(oldqty,(gross/(market*(1-self.slip))).quantize(Decimal('0.00000001'),rounding=ROUND_DOWN));base_execution=min(market,bid) if bid>0 else market;execp=base_execution*(1-self.slip);notional=qty*execp;fee=notional*trade_fee;fx_fee=notional*fx_fee_rate if quote_usd else D(0);fx_spread_cost=notional*fx_spread_rate if quote_usd else D(0);fee+=fx_fee+fx_spread_cost
    if qty<=0:raise ValueError('Keine Paper-Position')
    share=qty/oldqty if oldqty else D(1);repay=olddebt*share;net=notional-fee-repay;newqty=oldqty-qty;avg=oldcost;newcash=cash+net;newdebt=max(D(0),olddebt-repay);gross=notional
   rules=self.db.rows('SELECT ordermin,costmin,lot_decimals,pair_decimals,asset_class,category FROM market_universe WHERE symbol=? LIMIT 1',(symbol,))
@@ -67,7 +69,7 @@ class PaperEngine:
   realized_pnl=(notional-fee-oldcost*qty) if side=='SELL' else D(0)
   tax_rate=D(self.db.value('paper_tax_rate_pct','27.5'))/100
   estimated_tax=max(D(0),realized_pnl)*tax_rate if side=='SELL' else D(0)
-  decision=dict(decision,realized_pnl_eur=str(realized_pnl),estimated_tax_eur=str(estimated_tax),fx_conversion_required=quote_usd,fx_fee_eur=str(fx_fee),fx_spread_eur=str(fx_spread_cost),product_spread_eur=str(product_spread_cost),slippage_eur=str(slip),trade_fee_eur=str(notional*self.fee),leverage=lev,borrowed_before_eur=str(olddebt),borrowed_after_eur=str(newdebt))
+  decision=dict(decision,realized_pnl_eur=str(realized_pnl),estimated_tax_eur=str(estimated_tax),fx_conversion_required=quote_usd,fx_fee_eur=str(fx_fee),fx_spread_eur=str(fx_spread_cost),product_spread_eur=str(product_spread_cost),slippage_eur=str(slip),trade_fee_eur=str(notional*trade_fee),trade_fee_bps=str(fee_bps),trade_fee_source=fee_source,trade_fee_effective_at=fee_effective_at,leverage=lev,borrowed_before_eur=str(olddebt),borrowed_after_eur=str(newdebt))
   with self.db.con() as c:
    c.execute('UPDATE paper_accounts SET cash_eur=?,updated_at=? WHERE id=1',(str(newcash),now()))
    if newqty>0:
@@ -79,7 +81,7 @@ class PaperEngine:
   price=self.price(symbol)
   if not price:return D('999')
   last=D(price.get('last'));bid=D(price.get('bid') or last);ask=D(price.get('ask') or last);product=((ask-bid)/last) if last>0 and ask>=bid else D(0)
-  rate=product+self.fee+self.slip
+  fee_bps,_,_=FeeProfile(self.db,None).rate_bps(symbol,'taker',self.fee*10000);rate=product+fee_bps/10000+self.slip
   if symbol.endswith('/USD'):
    fx=self.db.rows("SELECT bid,ask,last FROM live_prices WHERE symbol='EUR/USD'")
    if not fx:return D('999')

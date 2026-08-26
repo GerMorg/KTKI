@@ -115,3 +115,9 @@ Paper-Umschichtungen berücksichtigen Produkspread, Slippage, Handelsgebühr, FX
 Forex-Datenqualität wird je Paar getrennt für Ticker, Bid/Ask, Volumen, OHLC und Fehlergrund persistiert. Die aktuelle, noch nicht abgeschlossene OHLC-Kerze gilt nicht als Historie.
 ## 2026-08-26 D049
 Backtests verwenden ausschließlich lokal persistierte abgeschlossene OHLCVT-Daten und weisen Kostenannahmen, Anlageklasse und Benchmarks gemeinsam aus. Reale Orders bleiben ausgeschlossen.
+
+## 2026-08-26 D050
+Kontospezifische Handelsgebühren werden ausschließlich read-only über TradeVolume bezogen. Maker und Taker werden je Paar mit Quelle und Zeitpunkt gespeichert. Fehlen Daten oder Berechtigungen, gilt der konservative konfigurierte Taker-Wert.
+
+## 2026-08-26 D051
+forex-v2 läuft ausschließlich im Schattenmodus und darf weder Scanner-Ergebnisse überschreiben noch Paper-Entscheidungen beeinflussen. Nicht verfügbare Makrofaktoren werden als null und fehlend gespeichert, niemals geschätzt.
