@@ -73,3 +73,6 @@ Aktien waren zwar im Universum und Vorfilter enthalten, aber der vollständige P
 
 ## 2026-08-25 I032 — gelöst in 0.1.0-dev.24
 Reale xStock-Scans ergaben Detailscore 0, weil Ticker und OHLC den falschen Parameter `aclass_base` statt `asset_class=tokenized_asset` sendeten. Zusätzlich wurde OHLC primär mit dem Anzeigesymbol statt dem Kraken-`source_key` angefragt. Dev.24 korrigiert beide API-Verträge und speichert konkrete Fehlertexte in den Scannergründen.
+
+## 2026-08-26 I033 — gelöst in 0.1.0-dev.25
+Für die kontrollierte Kalibrierung fehlten eine Freigabeübersicht, feste Parametergrenzen und eine atomare Aktivierung. Dev.25 zeigt aktuelle und vorgeschlagene Werte für neun xStock-Parameter, blockiert Vorschläge bei weniger als fünf Auswertungen und aktiviert alle Werte erst nach Benutzerfreigabe als gemeinsame Version.

@@ -12,7 +12,7 @@ non_negotiable_rules:
   - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
   - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.24
+  version: 0.1.0-dev.26
   status: read-only Kraken-Integration mit oeffentlichem und privatem WebSocket v2; HA-OS-Praxistest fuer dev.5 ausstehend
 implemented:
   - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
@@ -285,7 +285,7 @@ release_0_1_0_dev_22:
     - implement reproducible backtest and benchmark storage
 release_0_1_0_dev_23:
   date: 2026-08-25
-  base: 0.1.0-dev.22 user-provided repository snapshot
+  base: 0.1.0-dev.25 user-provided repository snapshot
   purpose: Aktienbewertung und Paper-Trading über die vollständige Pipeline zuverlässig integrieren.
   added:
     - xstocks-v1 deterministic detail score
@@ -314,3 +314,30 @@ release_0_1_0_dev_24:
     - assetVersion=1 for stable display keys
     - source_key-first OHLC request with symbol fallback
     - persisted concrete scanner error reason
+release_0_1_0_dev_25:
+  date: 2026-08-26
+  base: 0.1.0-dev.24 user-provided repository snapshot
+  purpose: Kontrollierter Lern- und Freigabeprozess für die Aktienbewertung.
+  parameters:
+    - xstocks_base_score
+    - xstocks_momentum_weight
+    - xstocks_trend_weight
+    - xstocks_volatility_penalty
+    - xstocks_spread_penalty
+    - xstocks_buy_threshold
+    - xstocks_buy_max_spread_pct
+    - xstocks_avoid_threshold
+    - xstocks_avoid_spread_pct
+  safety:
+    - no automatic activation
+    - minimum five evaluated xStock forecasts
+    - bounded changes only
+    - all nine values approved atomically as one version
+    - audit entry for proposal and approval
+
+release_0_1_0_dev_26:
+  date: 2026-08-26
+  base: 0.1.0-dev.25 user-provided repository snapshot
+  purpose: Kanonische Produkte, reale FX-Kostensimulation, Forex-Reparatur und stabile Umschichtungen.
+  preserved: [all prior functions, read-only Kraken integration, controlled learning, real execution hard disabled]
+  added: [canonical identity, cost-based pair selection, alternative metadata, FX spread and fee, forex-v1, holding period, cooldown, confirmation, daily turnover limit]

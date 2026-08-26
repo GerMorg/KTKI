@@ -8,7 +8,7 @@ class KrakenClient:
   enc=urllib.parse.urlencode(data);digest=hashlib.sha256(str(data["nonce"]).encode()+enc.encode()).digest()
   return base64.b64encode(hmac.new(base64.b64decode(secret),path.encode()+digest,hashlib.sha512).digest()).decode()
  def call(self,path,data=None,private=False):
-  data=dict(data or {});headers={"User-Agent":"HA-Kraken-Trader/0.1.0-dev.24"}
+  data=dict(data or {});headers={"User-Agent":"HA-Kraken-Trader/0.1.0-dev.26"}
   if private:
    if not self.key or not self.secret:raise KrakenError("API-Key oder Private Key fehlt")
    data["nonce"]=str(time.time_ns());headers.update({"API-Key":self.key,"API-Sign":self.sign(path,data,self.secret)})
@@ -20,7 +20,9 @@ class KrakenClient:
   return payload.get("result",{})
  def status(self):return self.call("/0/public/SystemStatus")
  def pairs(self,asset_class="currency"):
-  data={"aclass_base":asset_class,"assetVersion":1,"info":"info"}
+  data={"assetVersion":1,"info":"info"}
+  if asset_class in ("tokenized_asset","forex"):data["asset_class"]=asset_class
+  else:data["aclass_base"]=asset_class
   if asset_class=="tokenized_asset":data["execution_venue"]="international"
   return self.call("/0/public/AssetPairs",data)
  def assets(self,asset_class="currency"):return self.call("/0/public/Assets",{"aclass":asset_class,"assetVersion":1})

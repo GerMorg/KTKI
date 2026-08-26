@@ -20,8 +20,15 @@ class MarketScanner:
   if len(closes)<30:return {'symbol':symbol,'score':0,'signal':'AVOID','momentum_pct':None,'volatility_pct':None,'trend_pct':None,'spread_pct':None,'volume_quote':None,'data_points':len(closes),'quality':'INSUFFICIENT','reasons':['Weniger als 30 abgeschlossene Kerzen']}
   returns=[closes[i]/closes[i-1]-1 for i in range(1,len(closes))];momentum=(closes[-1]/closes[-25]-1)*100;short=sum(closes[-10:])/10;long=sum(closes[-30:])/30;trend=(short/long-1)*100;volatility=statistics.pstdev(returns[-30:])*math.sqrt(24)*100
   bid=float((ticker or {}).get('b',['0'])[0] or 0);ask=float((ticker or {}).get('a',['0'])[0] or 0);mid=(bid+ask)/2;spread=(ask-bid)/mid*100 if mid else 999;volume_quote=sum(v*p for v,p in zip(volumes[-24:],closes[-24:]))
-  if category=='xstocks':
-   score=50+max(-22,min(22,momentum*4))+max(-18,min(18,trend*10))-max(0,min(18,volatility*1.2))-max(0,min(22,spread*18));buy=score>=62 and momentum>0 and trend>0 and spread<=1.2;avoid=score<32 or spread>2.5;model='xstocks-v1'
+  if category=='forex':
+   # Deterministisches forex-v1: relative pair trend, volatility, spread/liquidity and linked macro news.
+   news_rows=self.db.rows('SELECT relevance FROM news_market_links WHERE symbol=?',(symbol,))
+   macro=min(10,sum(float(x['relevance']) for x in news_rows));score=50+max(-22,min(22,momentum*4))+max(-18,min(18,trend*9))-max(0,min(20,volatility*1.1))-max(0,min(25,spread*30))+macro
+   buy=score>=64 and momentum>0 and trend>0 and spread<=.7;avoid=score<34 or spread>1.3;model='forex-v1'
+  elif category=='xstocks':
+   params={x['name']:float(x['value']) for x in self.db.rows("SELECT name,value FROM strategy_parameters WHERE name LIKE 'xstocks_%'")} if self.db.rows("SELECT name FROM sqlite_master WHERE type='table' AND name='strategy_parameters'") else {}
+   base=params.get('xstocks_base_score',50);mw=params.get('xstocks_momentum_weight',4);tw=params.get('xstocks_trend_weight',10);vp=params.get('xstocks_volatility_penalty',1.2);sp=params.get('xstocks_spread_penalty',18);bt=params.get('xstocks_buy_threshold',62);bms=params.get('xstocks_buy_max_spread_pct',1.2);at=params.get('xstocks_avoid_threshold',32);asp=params.get('xstocks_avoid_spread_pct',2.5)
+   score=base+max(-22,min(22,momentum*mw))+max(-18,min(18,trend*tw))-max(0,min(18,volatility*vp))-max(0,min(22,spread*sp));buy=score>=bt and momentum>0 and trend>0 and spread<=bms;avoid=score<at or spread>asp;model='xstocks-approved-v'+str(max((x['version'] for x in self.db.rows("SELECT version FROM strategy_parameters")),default=1) if params else 1)
   else:
    score=50+max(-25,min(25,momentum*5))+max(-15,min(15,trend*8))-max(0,min(20,volatility*1.5))-max(0,min(20,spread*25));buy=score>=65 and momentum>0 and trend>0 and spread<=.8;avoid=score<35 or spread>1.5;model='crypto-v1'
   score=max(0,min(100,score));signal='BUY' if buy else ('AVOID' if avoid else 'HOLD');reasons=[f'Modell {model}',f'24h-Momentum {momentum:.2f} %',f'Trend SMA10/SMA30 {trend:.2f} %',f'Volatilität {volatility:.2f} %',f'Spread {spread:.3f} %',f'24h-Quotevolumen ca. {volume_quote:.2f} {quote}']

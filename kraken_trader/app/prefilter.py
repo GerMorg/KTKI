@@ -7,17 +7,38 @@ class MarketPrefilter:
  def ensure(self):
   with self.db.con() as c:c.executescript("""CREATE TABLE IF NOT EXISTS prefilter_runs(id INTEGER PRIMARY KEY AUTOINCREMENT,created_at TEXT NOT NULL,status TEXT NOT NULL,market_count INTEGER NOT NULL,candidate_count INTEGER NOT NULL,news_items INTEGER NOT NULL,details_json TEXT NOT NULL);CREATE TABLE IF NOT EXISTS prefilter_results(run_id INTEGER NOT NULL,symbol TEXT NOT NULL,category TEXT NOT NULL,score TEXT NOT NULL,liquidity_score TEXT NOT NULL,spread_score TEXT NOT NULL,momentum_score TEXT NOT NULL,news_score TEXT NOT NULL,quality TEXT NOT NULL,reasons_json TEXT NOT NULL,PRIMARY KEY(run_id,symbol));CREATE TABLE IF NOT EXISTS research_watchlist(symbol TEXT PRIMARY KEY,category TEXT NOT NULL,prefilter_score TEXT NOT NULL,status TEXT NOT NULL,selected_at TEXT NOT NULL,run_id INTEGER NOT NULL,reasons_json TEXT NOT NULL);CREATE TABLE IF NOT EXISTS watchlist_versions(id INTEGER PRIMARY KEY AUTOINCREMENT,created_at TEXT NOT NULL,prefilter_run_id INTEGER NOT NULL,status TEXT NOT NULL,item_count INTEGER NOT NULL,items_json TEXT NOT NULL);""")
  def markets(self):
-  raw=self.db.rows("SELECT u.symbol,u.asset_class,u.base_asset,u.quote_asset,u.source_key,u.category AS primary_category,m.category FROM market_universe u JOIN market_category_members m ON m.symbol=u.symbol AND m.asset_class=u.asset_class JOIN product_categories c ON c.category=m.category AND c.enabled=1 WHERE LOWER(COALESCE(u.status,'online')) IN ('online','post_only','limit_only') AND (u.symbol LIKE '%/EUR' OR u.symbol LIKE '%/USD') ORDER BY u.symbol")
-  # A leveraged xStock intentionally belongs to xstocks and leveraged_spot, but persistence is one row per symbol.
-  priority={'xstocks':0,'forex':1,'crypto_spot':2,'leveraged_spot':3};markets={}
+  raw=self.db.rows("SELECT u.symbol,u.asset_class,u.base_asset,u.quote_asset,u.source_key,u.category AS primary_category,m.category,u.canonical_id FROM market_universe u JOIN market_category_members m ON m.symbol=u.symbol AND m.asset_class=u.asset_class JOIN product_categories c ON c.category=m.category AND c.enabled=1 WHERE LOWER(COALESCE(u.status,'online')) IN ('online','post_only','limit_only') AND (u.symbol LIKE '%/EUR' OR u.symbol LIKE '%/USD') ORDER BY u.symbol")
+  priority={'xstocks':0,'forex':1,'crypto_spot':2,'leveraged_spot':3};by_symbol={}
   for row in raw:
-   current=markets.get(row['symbol'])
-   if current is None or priority.get(row['category'],99)<priority.get(current['category'],99):markets[row['symbol']]=row
-  return [markets[symbol] for symbol in sorted(markets)]
+   cur=by_symbol.get(row['symbol'])
+   if cur is None or priority.get(row['category'],99)<priority.get(cur['category'],99):by_symbol[row['symbol']]=row
+  return [by_symbol[x] for x in sorted(by_symbol)]
+ def _execution_cost(self,m,t,tickers):
+  if not t:return 10**9
+  bid=float((t.get('b') or [0])[0] or 0);ask=float((t.get('a') or [0])[0] or 0);mid=(bid+ask)/2;product_spread=(ask-bid)/mid if mid else 99
+  fee=float(self.db.value('paper_fee_bps','40'))/10000
+  if str(m.get('quote_asset') or '').upper().endswith('USD') or m['symbol'].endswith('/USD'):
+   fx=tickers.get('EUR/USD') or tickers.get('EURUSD')
+   if not fx:return 10**9
+   fb=float((fx.get('b') or [0])[0] or 0);fa=float((fx.get('a') or [0])[0] or 0);fm=(fb+fa)/2;fx_spread=(fa-fb)/fm if fm else 99;fx_fee=float(self.db.value('paper_fx_fee_bps','10'))/10000
+   return product_spread+fee+fx_spread+fx_fee
+  return product_spread+fee
+ def _canonical_markets(self,markets,tickers):
+  groups={}
+  for m in markets:groups.setdefault(m.get('canonical_id') or (m['asset_class']+':'+str(m.get('base_asset'))),[]).append(m)
+  out=[]
+  for cid,alts in groups.items():
+   ranked=[]
+   for m in alts:
+    t=tickers.get(m['source_key']) or tickers.get(m['symbol']);ranked.append((self._execution_cost(m,t,tickers),0 if m['symbol'].endswith('/EUR') else 1,m['symbol'],m))
+   chosen=min(ranked,key=lambda x:(x[0],x[1],x[2]))[3];chosen=dict(chosen);chosen['alternatives']=[x['symbol'] for x in alts];out.append(chosen)
+   with self.db.con() as c:c.execute('UPDATE canonical_products SET selected_symbol=?,alternatives_json=?,updated_at=? WHERE canonical_id=?',(chosen['symbol'],json.dumps(chosen['alternatives'],ensure_ascii=False),now(),cid))
+  return sorted(out,key=lambda x:x['symbol'])
  def run(self,top=8):
   markets=self.markets();nr=self.news.collect();self.news.link_markets(markets);tickers={};errors=[]
   groups={}
   for m in markets:groups.setdefault(m['asset_class'],[]).append(m['symbol'])
+  if any(m['symbol'].endswith('/USD') for m in markets):groups.setdefault('forex',[]).append('EUR/USD')
   for ac,syms in groups.items():
    for block in chunks(syms):
     try:tickers.update(self.client.ticker(block,ac))
@@ -26,6 +47,7 @@ class MarketPrefilter:
      for pair in block:
       try:tickers.update(self.client.ticker([pair],ac))
       except Exception as one:errors.append({'source':ac,'scope':pair,'error':type(one).__name__})
+  markets=self._canonical_markets(markets,tickers)
   rows=[];stamp=now();seen=set()
   for m in markets:
    symbol=m['symbol']
@@ -35,7 +57,7 @@ class MarketPrefilter:
     want=symbol.replace('BTC','XBT').replace('/','').replace('X','').replace('Z','')
     for k,v in tickers.items():
      if want==k.replace('/','').replace('X','').replace('Z',''):t=v;break
-   liq=spread_s=mom=0.;quality='VALID' if t else 'PENDING_TICKER';reasons=[]
+   liq=spread_s=mom=0.;quality='VALID' if t else 'PENDING_TICKER';reasons=['Kanonisches Produkt; Alternativen: '+', '.join(m.get('alternatives',[]))]
    if t:
     bid=float((t.get('b') or [0])[0] or 0);ask=float((t.get('a') or [0])[0] or 0);last=float((t.get('c') or [0])[0] or 0);op=float(t.get('o') or 0);vol=float((t.get('v') or [0,0])[-1] or 0);mid=(bid+ask)/2;sp=(ask-bid)/mid*100 if mid else 999;chg=(last/op-1)*100 if op else 0;turn=max(0,vol*last);spread_s=max(0,35-min(35,sp*35));mom=max(0,min(25,12.5+chg*2));liq=max(0,min(30,math.log10(turn+1)*5));reasons=[f'Spread {sp:.3f} %',f'24h-Veränderung {chg:.2f} %',f'Umsatzindikator {turn:.2f}']
    if not t:reasons.append('Markt wurde von Kraken gemeldet, Ticker war im Vorfilter aber nicht verfügbar; Kandidat bleibt für Detailprüfung erhalten')

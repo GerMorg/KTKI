@@ -52,3 +52,9 @@ Durchgängiger xStocks-Pfad vom Kraken-Universum über Aktien-Detailscore und EU
 
 ## 0.1.0-dev.24 — 2026-08-25
 Hotfix für reale xStock-Detailscores: dokumentierter `asset_class`-Parameter, `assetVersion=1`, Kraken-`source_key` für OHLC und aussagekräftige Fehlerdiagnose.
+
+## 0.1.0-dev.25 — 2026-08-26
+Kontrollierter xStock-Lernprozess mit neun begrenzten Parametern, übersichtlicher Gegenüberstellung und Ein-Klick-Gesamtfreigabe. Keine automatische Parameteränderung.
+
+## 0.1.0-dev.26 - 2026-08-26
+Kanonische Produkte, kostenoptimale EUR/USD-Paarwahl, vollständige FX-Kostensimulation, repariertes Forex-Universum mit forex-v1 und Schutz vor häufigen Umschichtungen. Alle bisherigen Funktionen bleiben erhalten.

@@ -128,3 +128,21 @@ release_0_1_0_dev_24:
   xstocks_source_key_ohlc: {required: true, status: implemented}
   xstocks_nonzero_score_contract_test: {required: true, status: passed}
   scanner_error_diagnostics: {required: true, status: implemented}
+release_0_1_0_dev_25:
+  xstocks_nine_parameter_learning: {required: true, status: implemented}
+  learning_no_automatic_activation: {required: true, status: enforced}
+  learning_one_click_approval: {required: true, status: implemented}
+  learning_atomic_version: {required: true, status: enforced}
+  learning_parameter_bounds: {required: true, status: enforced}
+  learning_minimum_sample_gate: {required: true, status: enforced_5}
+
+release_0_1_0_dev_26:
+  canonical_product_identity: {required: true, status: implemented}
+  single_execution_pair_per_product: {required: true, status: implemented_cost_based}
+  alternative_pair_metadata: {required: true, status: implemented}
+  usd_fx_cost_chain: {required: true, status: implemented}
+  forex_asset_class_contract: {required: true, status: enforced}
+  forex_v1_profile: {required: true, status: implemented}
+  traditional_stock_separation: {required: true, status: fail_closed}
+  turnover_stability_gates: {required: true, status: implemented}
+  real_trading: {required: false, status: hard_disabled}

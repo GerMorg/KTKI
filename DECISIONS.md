@@ -91,3 +91,13 @@ Aktien/xStocks erhalten ab dev.23 ein eigenes deterministisches Bewertungsprofil
 
 ## 2026-08-25 D040
 Nicht-kryptografische Marktdaten verwenden bei Kraken ausschließlich den dokumentierten Parameter `asset_class`; `aclass_base` ist dafür unzulässig. Für xStocks wird der originale `source_key` aus AssetPairs als primäre Pair-ID für OHLC verwendet, mit sichtbarer Fehlerdiagnose statt eines unbegründeten Scores 0.
+
+## 2026-08-26 D041
+Der Lernprozess verändert niemals automatisch aktive Strategieparameter. Aus ausgewerteten xStock-Prognosen darf nur ein begrenzter Vorschlag für exakt neun Parameter entstehen. Alle neun Werte werden gemeinsam versioniert und ausschließlich nach ausdrücklicher Ein-Klick-Freigabe aktiviert.
+
+## 2026-08-26 D042
+Produkte werden nach Anlageklasse und Basiswert kanonisiert. Watchlist, Scanner und Portfolio verwenden genau ein kostenoptimal gewähltes Ausführungspaar; Alternativen bleiben als Metadaten erhalten.
+## 2026-08-26 D043
+USD-Paper-Ausführungen bilden EUR-USD-Konvertierung, FX-Spread, FX-Gebühr, Produktspread und Handelsgebühr getrennt ab.
+## 2026-08-26 D044
+Forex verwendet asset_class=forex und ein eigenes deterministisches forex-v1-Profil. Umschichtungen benötigen Mindesthaltedauer, Cooldown, Mehrfachbestätigung, positive Verbesserung nach Kosten und ein Tageslimit.

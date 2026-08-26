@@ -133,3 +133,11 @@ release_0_1_0_dev_24:
     - {id: T079, expectation: xStock-Scan nutzt source_key und erzeugt VALID mit Score größer 0, status: passed}
   manual:
     - {id: M041, expectation: Reale Kraken-xStocks zeigen nach HA-Upgrade einen nicht-null Detailscore oder einen konkreten Fehlergrund, status: pending}
+release_0_1_0_dev_25:
+  automated:
+    - {id: T080, expectation: Ein Lernvorschlag enthält exakt neun begrenzte xStock-Parameter, status: passed}
+    - {id: T081, expectation: Ein Klick aktiviert alle neun Parameter als gemeinsame Version, status: passed}
+    - {id: T082, expectation: Ohne ausreichende Auswertungen bleiben aktive Parameter unverändert, status: passed}
+    - {id: T083, expectation: xStock-API-Vertrag und nicht-null Detailscore aus dev.24 bleiben erhalten, status: passed}
+  manual:
+    - {id: M042, expectation: HA-Ingress zeigt Lernfreigaben und bestätigt alle neun Werte mit einem Klick, status: pending}

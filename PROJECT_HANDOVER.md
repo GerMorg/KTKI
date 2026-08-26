@@ -72,3 +72,6 @@ Aktien/xStocks sind jetzt durchgängig integriert: `tokenized_asset`-Universum, 
 
 ## Stand 0.1.0-dev.24
 Der reale Detailscore-0-Fehler bei Aktien wurde auf einen API-Vertragsfehler zurückgeführt. Ticker und OHLC senden nun `asset_class=tokenized_asset`; OHLC verwendet primär den von Kraken gelieferten `source_key`. Ein Fehler wird mit Typ und gekürzter Meldung im Scannergrund gespeichert.
+
+## Stand 0.1.0-dev.25
+Der neue Tab **Lernfreigaben** zeigt die neun aktiven xStock-Parameter, einen berechneten Kandidaten und die zulässigen Grenzen. Ab fünf ausgewerteten xStock-Prognosen kann ein begrenzter Vorschlag erzeugt werden. Er verändert nichts automatisch. Der Button **Alle neun Parameter mit einem Klick bestätigen** aktiviert die Werte atomar als neue Version und protokolliert die Freigabe im Audit.
