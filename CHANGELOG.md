@@ -1,4 +1,10 @@
 # Changelog
+## 0.1.0-dev.28
+- Forex-Diagnose für Ticker, Bid/Ask, Volumen, OHLC und konkrete Fehlergründe
+- persistenter OHLCVT-Historienspeicher mit CSV-Importbasis und abgeschlossenen Kerzen
+- Walk-forward-Backtest mit Benchmarks Keine Position, Buy-and-Hold und SMA-Trend
+- getrennte Ergebnisse nach Anlageklasse sowie Kosten- und Drawdown-Kennzahlen
+- neue Ingress-Tabs Datenqualität und Backtests; Realhandel bleibt hart deaktiviert
 ## 0.1.0-dev.27
 - v26 als alleinige Entwicklungsbasis übernommen und die Umsetzung konsolidiert
 - kanonische Produkte über Anlageklasse und Basiswert
@@ -27,3 +33,5 @@
 
 ## 0.1.0-dev.24
 - realen xStock-Detailscore durch korrekten Kraken-API-Vertrag repariert
+
+

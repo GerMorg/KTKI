@@ -70,3 +70,5 @@ class MarketStream:
   if st['stale'] and st.get('state')=='CONNECTED':st['effective_state']='STALE'
   else:st['effective_state']=st.get('state','STOPPED')
   return st
+
+

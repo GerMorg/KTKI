@@ -161,3 +161,14 @@ release_0_1_0_dev_27:
   turnover_hysteresis_and_tax_awareness: {required: true, status: implemented}
   utf8_source_and_database_migration_v4: {required: true, status: implemented}
   real_trading: {required: false, status: hard_disabled}
+
+
+
+release_0_1_0_dev_28:
+  forex_data_diagnostics: {required: true, status: implemented}
+  ticker_ohlc_error_separation: {required: true, status: implemented}
+  committed_candle_history_store: {required: true, status: implemented}
+  ohlcvt_csv_import_basis: {required: true, status: implemented}
+  walk_forward_backtest: {required: true, status: implemented}
+  no_position_buy_hold_trend_benchmarks: {required: true, status: implemented}
+  real_trading: {required: false, status: hard_disabled}

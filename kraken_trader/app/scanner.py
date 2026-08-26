@@ -1,7 +1,8 @@
 import json,math,statistics,time
 from db import now
+from market_history import MarketHistory
 class MarketScanner:
- def __init__(self,db,client):self.db,self.client=db,client;self.ensure()
+ def __init__(self,db,client):self.db,self.client=db,client;self.ensure();self.history=MarketHistory(db)
  def ensure(self):
   with self.db.con() as c:c.executescript("""CREATE TABLE IF NOT EXISTS scanner_results(symbol TEXT PRIMARY KEY,scanned_at TEXT NOT NULL,score TEXT NOT NULL,signal TEXT NOT NULL,momentum_pct TEXT,volatility_pct TEXT,trend_pct TEXT,spread_pct TEXT,volume_quote TEXT,data_points INTEGER NOT NULL,quality TEXT NOT NULL,reasons_json TEXT NOT NULL);CREATE TABLE IF NOT EXISTS ohlc_cache(symbol TEXT NOT NULL,interval_min INTEGER NOT NULL,open_time INTEGER NOT NULL,open TEXT NOT NULL,high TEXT NOT NULL,low TEXT NOT NULL,close TEXT NOT NULL,vwap TEXT,volume TEXT,trades INTEGER,received_at TEXT NOT NULL,PRIMARY KEY(symbol,interval_min,open_time));CREATE TABLE IF NOT EXISTS scanner_runs(id INTEGER PRIMARY KEY AUTOINCREMENT,created_at TEXT NOT NULL,symbols_requested INTEGER NOT NULL,symbols_valid INTEGER NOT NULL,buy_count INTEGER NOT NULL,hold_count INTEGER NOT NULL,avoid_count INTEGER NOT NULL,quality TEXT NOT NULL);""")
  def profile(self,symbol):
@@ -39,24 +40,28 @@ class MarketScanner:
   for s,p in profiles.items():groups.setdefault(p['asset_class'],[]).append(s)
   for ac,batch in groups.items():
    try:tickers[ac]=self.client.ticker(batch,ac)
-   except Exception:
+   except Exception as exc:
     tickers[ac]={}
+    for symbol in batch:self.history.ticker(symbol,ac,error=type(exc).__name__+': '+str(exc)[:160])
     for symbol in batch:
      try:tickers[ac].update(self.client.ticker([symbol],ac))
-     except Exception:pass
+     except Exception as exc:self.history.ticker(symbol,ac,error=type(exc).__name__+': '+str(exc)[:160])
   for symbol in symbols:
    p=profiles[symbol]
    try:
     pair=p.get('source_key') or symbol
     try:payload=self.client.ohlc(pair,interval,p['asset_class'])
     except Exception:payload=self.client.ohlc(symbol,interval,p['asset_class']) if pair!=symbol else {}
-    key=next((k for k in payload if k!='last'),None);candles=payload.get(key,[]) if key else [];ticker=self.match(tickers.get(p['asset_class'],{}),symbol,p.get('source_key'));r=self.analyze(symbol,candles,ticker,p['category'],p.get('quote_asset') or 'EUR')
+    key=next((k for k in payload if k!='last'),None);candles=payload.get(key,[]) if key else [];ticker=self.match(tickers.get(p['asset_class'],{}),symbol,p.get('source_key'));self.history.ticker(symbol,p['asset_class'],ticker);r=self.analyze(symbol,candles,ticker,p['category'],p.get('quote_asset') or 'EUR')
+    self.history.ohlc(symbol,p['asset_class'],candles)
     with self.db.con() as c:
      for x in candles:c.execute('INSERT OR REPLACE INTO ohlc_cache VALUES(?,?,?,?,?,?,?,?,?,?,?)',(symbol,interval,int(x[0]),str(x[1]),str(x[2]),str(x[3]),str(x[4]),str(x[5]),str(x[6]),int(x[7]),stamp))
-   except Exception as exc:r={'symbol':symbol,'score':0,'signal':'AVOID','momentum_pct':None,'volatility_pct':None,'trend_pct':None,'spread_pct':None,'volume_quote':None,'data_points':0,'quality':'ERROR','reasons':[type(exc).__name__+': '+str(exc)[:180]]}
+   except Exception as exc:self.history.ohlc(symbol,p['asset_class'],error=type(exc).__name__+': '+str(exc)[:160]);r={'symbol':symbol,'score':0,'signal':'AVOID','momentum_pct':None,'volatility_pct':None,'trend_pct':None,'spread_pct':None,'volume_quote':None,'data_points':0,'quality':'ERROR','reasons':[type(exc).__name__+': '+str(exc)[:180]]}
    counts['valid']+=r['quality']=='VALID';counts[r['signal'].lower()]+=1
    with self.db.con() as c:c.execute('INSERT OR REPLACE INTO scanner_results VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',(symbol,stamp,str(r['score']),r['signal'],*(None if r[k] is None else str(r[k]) for k in ('momentum_pct','volatility_pct','trend_pct','spread_pct','volume_quote')),r['data_points'],r['quality'],json.dumps(r['reasons'],ensure_ascii=False)))
    if delay:time.sleep(delay)
   quality='VALID' if symbols and counts['valid']==len(symbols) else 'INCOMPLETE'
   with self.db.con() as c:c.execute('INSERT INTO scanner_runs(created_at,symbols_requested,symbols_valid,buy_count,hold_count,avoid_count,quality) VALUES(?,?,?,?,?,?,?)',(stamp,len(symbols),counts['valid'],counts['buy'],counts['hold'],counts['avoid'],quality))
   self.db.audit('SCANNER_RUN',json.dumps({'requested':len(symbols),**counts,'quality':quality}));return self.db.rows('SELECT * FROM scanner_results ORDER BY CAST(score AS REAL) DESC')
+
+

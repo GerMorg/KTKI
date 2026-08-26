@@ -78,3 +78,8 @@ Der neue Tab **Lernfreigaben** zeigt die neun aktiven xStock-Parameter, einen be
 
 ## Stand 0.1.0-dev.27
 Dev.27 baut ausschließlich auf dem übergebenen v26-Snapshot auf. Die EUR/USD-Auswahl verwendet vollständige erwartete Kosten und hält Alternativpaare als Metadaten. Forex wird ohne nicht dokumentierten AssetPairs-Parameter aus Fiat-zu-Fiat-Paaren abgeleitet. USD-Paper-Trades weisen FX-Spread, FX-Gebühr, Produktspread, Slippage und Handelsgebühr getrennt aus. Mindesthaltedauer, Cooldown, Bestätigungen, Hysterese, Tageslimit sowie Gewinn-/Verlust- und Steuereffekt schützen vor unnötigen Umschichtungen. Realhandel bleibt hart deaktiviert.
+
+
+
+## Stand 0.1.0-dev.28
+Dev.28 setzt die priorisierte Forex-Datenabsicherung um. Der neue Tab Datenqualität zeigt pro Paar Tickerstatus, Bid/Ask, Volumen, OHLC-Status, Zahl abgeschlossener Kerzen und konkrete Fehler. Der persistente OHLCVT-Speicher kann Kraken-kompatible CSV-Zeilen aufnehmen. Der neue Backtest-Tab vergleicht im zeitlich getrennten Walk-forward-Test eine einfache SMA-Strategie mit Keine Position und Buy-and-Hold und speichert Kostenannahme, Anlageklasse, Rendite, Drawdown und Umschichtungen. Realhandel bleibt hart deaktiviert.

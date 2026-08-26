@@ -108,3 +108,10 @@ AssetPairs verwendet den dokumentierten Parameter `aclass_base`. Das Forex-Unive
 Die Auswahl zwischen EUR- und USD-Ausführungspaar erfolgt ausschließlich nach vollständigen erwarteten Ausführungskosten; Liquidität und danach EUR dienen als Gleichstandsregeln.
 ## 2026-08-26 D047
 Paper-Umschichtungen berücksichtigen Produkspread, Slippage, Handelsgebühr, FX-Spread, FX-Gebühr, realisierten Gewinn/Verlust und eine konfigurierbare Steuersimulation.
+
+
+
+## 2026-08-26 D048
+Forex-Datenqualität wird je Paar getrennt für Ticker, Bid/Ask, Volumen, OHLC und Fehlergrund persistiert. Die aktuelle, noch nicht abgeschlossene OHLC-Kerze gilt nicht als Historie.
+## 2026-08-26 D049
+Backtests verwenden ausschließlich lokal persistierte abgeschlossene OHLCVT-Daten und weisen Kostenannahmen, Anlageklasse und Benchmarks gemeinsam aus. Reale Orders bleiben ausgeschlossen.

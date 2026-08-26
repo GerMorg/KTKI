@@ -8,7 +8,7 @@ class KrakenClient:
   enc=urllib.parse.urlencode(data);digest=hashlib.sha256(str(data["nonce"]).encode()+enc.encode()).digest()
   return base64.b64encode(hmac.new(base64.b64decode(secret),path.encode()+digest,hashlib.sha512).digest()).decode()
  def call(self,path,data=None,private=False):
-  data=dict(data or {});headers={"User-Agent":"HA-Kraken-Trader/0.1.0-dev.27"}
+  data=dict(data or {});headers={"User-Agent":"HA-Kraken-Trader/0.1.0-dev.28"}
   if private:
    if not self.key or not self.secret:raise KrakenError("API-Key oder Private Key fehlt")
    data["nonce"]=str(time.time_ns());headers.update({"API-Key":self.key,"API-Sign":self.sign(path,data,self.secret)})
@@ -39,7 +39,10 @@ class KrakenClient:
  def ledgers(self,offset=0):return self.call("/0/private/Ledgers",{"type":"all","ofs":offset},private=True)
  def websocket_token(self):return self.call("/0/private/GetWebSocketsToken",private=True)
 
- def ohlc(self,pair,interval=60,asset_class='currency'):
+ def ohlc(self,pair,interval=60,asset_class='currency',since=None):
   data={'pair':pair,'interval':int(interval),'assetVersion':1}
+  if since is not None:data['since']=int(since)
   if asset_class=='tokenized_asset':data['asset_class']=asset_class
   return self.call('/0/public/OHLC',data)
+
+

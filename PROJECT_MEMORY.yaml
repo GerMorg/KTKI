@@ -12,7 +12,7 @@ non_negotiable_rules:
   - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
   - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.26
+  version: 0.1.0-dev.28
   status: read-only Kraken-Integration mit oeffentlichem und privatem WebSocket v2; HA-OS-Praxistest fuer dev.5 ausstehend
 implemented:
   - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
@@ -349,3 +349,11 @@ release_0_1_0_dev_27:
   preserved: [all v26 functions, controlled learning, read-only Kraken integration, real execution hard disabled]
   added: [documented AssetPairs routing, fiat-pair Forex derivation, all-in pair ranking, canonical portfolio consolidation, separate product and FX costs, hysteresis, tax impact, UTF-8 migration v4]
   verification: [dev24 contract passed, dev25 learning passed, dev26 regression passed, dev27 policy tests passed, market universe tests passed]
+
+
+
+release_0_1_0_dev_28:
+  date: 2026-08-26
+  base: 0.1.0-dev.27 user-provided repository snapshot
+  added: [forex data diagnostics, persistent OHLCVT history, CSV import basis, walk-forward benchmark engine, data-quality and backtest GUI tabs]
+  safety: [unfinished OHLC candle excluded, errors visible, real trading hard disabled]

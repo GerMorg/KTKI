@@ -61,3 +61,8 @@ Kanonische Produkte, kostenoptimale EUR/USD-Paarwahl, vollständige FX-Kostensim
 
 ## 0.1.0-dev.27 - 2026-08-26
 Konsolidierte Weiterentwicklung von v26 mit dokumentationskonformem Forex-Universum, kanonischer kostenbasierter Paarwahl, vollständiger Paper-Kostenkette, stabilen Umschichtungsregeln und echter UTF-8-Migration.
+
+
+
+## 0.1.0-dev.28
+Forex-Datenqualität, persistente abgeschlossene OHLCVT-Historie und erste reproduzierbare Walk-forward-Benchmarks.

@@ -153,3 +153,9 @@ release_0_1_0_dev_27:
     - {id: M043, expectation: HA-Ingress zeigt je Basiswert nur das gewählte Ausführungspaar und Alternative-Metadaten, status: pending}
     - {id: M044, expectation: Forex-Research liefert reale Kandidaten mit Modell forex-v1, status: pending}
     - {id: M045, expectation: Einstellungen für Haltedauer, Cooldown, Bestätigung und Tageslimit sind sichtbar und persistent, status: pending}
+
+release_0_1_0_dev_28:
+  - forex ticker and OHLC diagnostics persist separately
+  - current OHLC candle is excluded from committed status
+  - OHLCVT CSV import is idempotent by symbol interval and timestamp
+  - walk-forward result includes no-position, buy-and-hold, trend, costs and drawdown

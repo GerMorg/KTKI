@@ -76,3 +76,5 @@ Reale xStock-Scans ergaben Detailscore 0, weil Ticker und OHLC den falschen Para
 
 ## 2026-08-26 I033 — gelöst in 0.1.0-dev.25
 Für die kontrollierte Kalibrierung fehlten eine Freigabeübersicht, feste Parametergrenzen und eine atomare Aktivierung. Dev.25 zeigt aktuelle und vorgeschlagene Werte für neun xStock-Parameter, blockiert Vorschläge bei weniger als fünf Auswertungen und aktiviert alle Werte erst nach Benutzerfreigabe als gemeinsame Version.
+
+
