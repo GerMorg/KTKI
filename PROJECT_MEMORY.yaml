@@ -381,3 +381,15 @@ release_0_1_0_dev_32:
   base: 0.1.0-dev.31
   added: [separate strategy families, shadow candidates, sample and improvement gates, Wilson confidence interval, approve reject rollback GUI]
   safety: [no automatic activation, no direct AI activation, versioned rollback]
+
+
+
+- date: 2026-08-26
+  version: 0.1.0-dev.34
+  decision: Vollständige Regressionstestsuite ist Release-Gate; Produktklassenlernen bleibt getrennt und wirksam.
+  validation: 103 Tests erfolgreich.
+
+- date: 2026-08-26
+  version: 0.1.0-dev.35
+  decision: Lernkandidaten werden je Produktklasse und Horizont auf identischen Feature-Snapshots kostenbereinigt verglichen.
+  validation: 105 Tests erfolgreich; Realhandel hart deaktiviert.

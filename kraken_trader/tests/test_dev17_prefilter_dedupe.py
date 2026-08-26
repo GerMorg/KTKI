@@ -24,3 +24,5 @@ class Tests(unittest.TestCase):
   r=self.p.run(8);self.assertIn('AAPLx/USD',self.p.candidates())
 
 
+
+

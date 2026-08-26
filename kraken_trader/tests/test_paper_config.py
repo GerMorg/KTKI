@@ -13,3 +13,5 @@ class ConfigTests(unittest.TestCase):
   self.assertEqual(main.refresh_allowed_prices(),1);self.assertTrue(main.db.rows("SELECT * FROM live_prices WHERE symbol='BTC/EUR'"))
 
 
+
+

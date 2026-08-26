@@ -22,3 +22,5 @@ def build_rows(balances,ledger_assets,assets,pairs,tickers):
  return rows,str(total),quality
 
 
+
+

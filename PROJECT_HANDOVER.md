@@ -95,3 +95,27 @@ Dev.31 macht kanonische Produkte vollständig sichtbar und ergänzt eine einheit
 
 ## Stand 0.1.0-dev.32
 Dev.32 vervollständigt den kontrollierten Lernprozess für Forex, xStocks und Krypto. Kandidaten werden nur im Schattenmodus bewertet, benötigen Mindeststichprobe sowie Mindestverbesserung und zeigen ein Wilson-Konfidenzintervall. Aktivierung, Ablehnung und vollständiger Rollback erfolgen ausdrücklich über die GUI. Es gibt keine automatische oder direkte KI-Aktivierung.
+
+
+
+
+## Stand 0.1.0-dev.33
+Das kontrollierte Lernen ist konsolidiert. Alle drei Produktfamilien besitzen neun versionierte Parameter und der Scanner liest ausschließlich die aktive Familienversion. Prognosen enthalten Familie, Parameterversion, vollständige Parameter und strukturierte Features. Ein Kandidat darf nur freigegeben werden, solange seine Basisversion noch aktiv ist. Der frühere xStock-Sonderweg bleibt nur migrationsbedingt im Repository und ist nicht mehr in der Hauptnavigation verlinkt.
+
+### Nächste Schritte
+1. Historische Feature-Snapshots für Rendite nach Kosten, Abdeckung und Drawdown erweitern.
+2. Lernmetriken nach 24- und 168-Stunden-Horizont getrennt ausweisen.
+3. Legacy-Tab nach bestätigter Bestandsmigration vollständig entfernen.
+4. Gesamte ältere Testsuite auf die aktuellen Verträge bereinigen.
+
+## Stand 0.1.0-dev.34
+Die dev.33-Lernintegration bleibt vollständig erhalten. Zusätzlich ist die gesamte Testsuite wieder grün. Scanner-Batches sind begrenzt, rotierend und über einen nicht blockierenden Lock geschützt. Forecasts tolerieren ältere Scanner-Schemata. UTF-8 ist in Quellen, Dokumentation und GUI bereinigt. Nächster fachlicher Schritt bleibt dev.35: kosten- und abdeckungsbewusster Offline-Schattenvergleich mit getrennten Metriken je Familie und Horizont.
+
+## Stand 0.1.0-dev.35
+Der Offline-Schattenvergleich wendet aktive und vorgeschlagene Familienparameter auf dieselben gespeicherten Features an. Für 24 und 168 Stunden werden Stichprobe, Entscheidungen, Abdeckung, Rendite nach geschätzten Kosten und maximaler Drawdown getrennt persistiert und in der GUI angezeigt. HOLD beziehungsweise keine Entscheidung gilt nicht automatisch als falsche Richtung. Die Aktivierung bleibt ausschließlich eine ausdrückliche Benutzeraktion. Die vollständige Suite umfasst 105 erfolgreiche Tests.
+
+### Nächste Schritte
+1. Freigabegates zusätzlich auf Mindestabdeckung, positive Nettorenditeverbesserung und Drawdown-Grenze erweitern.
+2. Kosten-Snapshots um kontospezifische Gebührenquelle und tatsächliche FX-Spreads ergänzen.
+3. Kandidatenvergleich über mehrere aufeinanderfolgende Walk-forward-Fenster stabilisieren.
+4. Legacy-Lernmodul nach bestätigter Datenmigration entfernen.

@@ -49,3 +49,5 @@ class KrakenClient:
   return self.call('/0/public/OHLC',data)
 
 
+
+

@@ -32,3 +32,5 @@ class Tests(unittest.TestCase):
   result=MarketPrefilter(self.db,self.client,News(self.db)).run(8);self.assertEqual(result['markets'],0);self.assertEqual(result['candidates'],0)
 
 
+
+

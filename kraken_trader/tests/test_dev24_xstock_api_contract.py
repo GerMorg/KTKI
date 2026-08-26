@@ -22,3 +22,5 @@ class Tests(unittest.TestCase):
   self.assertEqual(r['quality'],'VALID');self.assertGreater(float(r['score']),0);self.assertIn('xstocks-approved-v1',r['reasons_json'])
 
 
+
+

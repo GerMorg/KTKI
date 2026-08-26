@@ -32,3 +32,5 @@ class Tests(unittest.TestCase):
   self.assertEqual(row['last_status'],'ERROR HTTP 429');self.assertGreater(row['consecutive_failures'],0);self.assertTrue(r['errors'])
 
 
+
+

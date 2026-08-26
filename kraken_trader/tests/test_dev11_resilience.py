@@ -20,3 +20,5 @@ class Tests(unittest.TestCase):
   response=main.app.test_client().get('/');self.assertIn('charset=utf-8',response.headers['Content-Type'].lower());self.assertIn('Übersicht',response.data.decode('utf-8'))
 
 
+
+

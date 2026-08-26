@@ -2,7 +2,11 @@ import json,threading
 from forex_shadow import ForexShadow
 from db import now
 class ResearchPipeline:
- def __init__(self,db,universe,prefilter,scanner,forecasts):self.db,self.universe,self.prefilter,self.scanner,self.forecasts=db,universe,prefilter,scanner,forecasts;self.lock=threading.Lock();self.ensure()
+ def __init__(self,db,universe,prefilter,scanner,forecasts=None):
+  if forecasts is None:
+   from forecast_tracker import ForecastTracker
+   forecasts=ForecastTracker(db)
+  self.db,self.universe,self.prefilter,self.scanner,self.forecasts=db,universe,prefilter,scanner,forecasts;self.lock=threading.Lock();self.ensure()
  def ensure(self):
   with self.db.con() as c:c.execute("CREATE TABLE IF NOT EXISTS research_jobs(id INTEGER PRIMARY KEY AUTOINCREMENT,created_at TEXT NOT NULL,started_at TEXT,finished_at TEXT,status TEXT NOT NULL,stage TEXT NOT NULL,progress_current INTEGER NOT NULL,progress_total INTEGER NOT NULL,error TEXT,details_json TEXT NOT NULL)")
  def start(self):
@@ -25,5 +29,7 @@ class ResearchPipeline:
   finally:self.lock.release()
  def latest(self):
   r=self.db.rows('SELECT * FROM research_jobs ORDER BY id DESC LIMIT 1');return r[0] if r else None
+
+
 
 

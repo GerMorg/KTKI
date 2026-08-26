@@ -66,3 +66,5 @@ class PrivateStream:
   st=self.db.private_stream_status();st['configured_enabled']=self.enabled;st['sequences']=dict(self.sequences);st['effective_state']=st.get('state','STOPPED');return st
 
 
+
+

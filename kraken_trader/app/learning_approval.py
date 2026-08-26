@@ -38,3 +38,5 @@ class LearningApproval:
   self.db.audit('LEARNING_PROPOSAL_APPROVED',json.dumps({'proposal_id':p['id'],'version':new_version,'parameter_count':9}));return {'status':'APPROVED','version':new_version,'parameter_count':9}
 
 
+
+

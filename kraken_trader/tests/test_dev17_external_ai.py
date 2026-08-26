@@ -15,3 +15,5 @@ class T(unittest.TestCase):
  def test_disabled_without_key(self):self.assertEqual(ExternalNewsAI(self.db,{'ai_news_enabled':True}).analyze_pending()['status'],'DISABLED')
 
 
+
+

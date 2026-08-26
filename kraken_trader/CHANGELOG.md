@@ -1,4 +1,31 @@
 # Changelog
+## 0.1.0-dev.35
+- Offline-Schattenvergleich verwendet dieselben historischen Feature-Snapshots für aktive und vorgeschlagene Parameter
+- Lernmetriken werden getrennt für 24- und 168-Stunden-Horizonte gespeichert
+- Nettorendite berücksichtigt geschätzte Roundtrip-Kosten aus Spread, Handelsgebühr, Slippage und optionaler FX-Gebühr
+- Abdeckung, Entscheidungsanzahl und maximaler Drawdown werden je Horizont ausgewiesen
+- HOLD und fehlende Entscheidung werden nicht mehr pauschal als falsche Prognose gewertet
+- GUI zeigt Horizontmetriken jedes Lernkandidaten
+- keine automatische Parameteraktivierung; Realhandel bleibt hart deaktiviert
+- vollständige Regression: 105 Tests erfolgreich
+## 0.1.0-dev.34
+- vollständige Legacy-Testsuite wiederhergestellt: 103 Tests erfolgreich
+- Repository- und GUI-Texte vollständig als echtes UTF-8 normalisiert
+- Scanner-Lock, BUSY-Status und rotierende begrenzte Batches wiederhergestellt
+- Datenbank- und Forecast-Kompatibilität für ältere Schemas abgesichert
+- External-News-AI-Vertrag und hart deaktivierte Real-Execution-Grenze wiederhergestellt
+- Produktklassenprofile bleiben getrennt und steuern den Scanner weiterhin wirksam
+- veraltete Tests auf aktuelle Parameter-, Gebühren- und Allokationsverträge migriert
+- Build-Prüfung installiert Abhängigkeiten reproduzierbar aus requirements.txt
+## 0.1.0-dev.33
+- ein einziges kontrolliertes Lernsystem für Forex, xStocks und Krypto
+- neun vollständig versionierte Parameter je Produktklasse
+- aktive Familienversionen steuern den Scanner tatsächlich
+- Prognosen speichern Familie, Parameterversion, Parameter- und Feature-Snapshot
+- paarweiser Schattenvergleich auf denselben Beobachtungen
+- veraltete Kandidaten werden als STALE blockiert
+- vorhandene xStock-Parameter werden migrationssicher übernommen
+- neue Integrations- und Sicherheitsprüfungen
 ## 0.1.0-dev.32
 - getrennte kontrollierte Parameterfamilien für Forex, xStocks und Krypto
 - Schattenvergleich jedes Kandidaten gegen die aktive Version
@@ -61,5 +88,7 @@
 
 ## 0.1.0-dev.24
 - realen xStock-Detailscore durch korrekten Kraken-API-Vertrag repariert
+
+
 
 

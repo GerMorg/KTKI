@@ -25,3 +25,5 @@ class StartupMigrationTests(unittest.TestCase):
   self.assertIsNotNone(pipeline.latest()) if db.rows('SELECT * FROM research_jobs') else self.assertIsNone(pipeline.latest())
 
 
+
+

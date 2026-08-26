@@ -29,3 +29,5 @@ class Tests(unittest.TestCase):
   main=(root/'kraken_trader/app/main.py').read_text('utf-8');self.assertIn('Übersicht',main);self.assertIn('Gebühr',main)
 
 
+
+

@@ -78,3 +78,17 @@ Kanonische Produktansicht und auditierbare Umschichtungsmatrix mit exaktem Block
 
 ## 0.1.0-dev.32
 Kontrollierter Lernprozess für alle Anlageklassen mit Schattenmodus, Konfidenzintervall und Rollback.
+
+
+
+## 0.1.0-dev.34
+- Regression und UTF-8 bereinigt
+- 103 Tests erfolgreich
+- Scanner-Resilienz und Legacy-Schemakompatibilität wiederhergestellt
+- getrennte aktive Produktklassenprofile beibehalten
+
+## 0.1.0-dev.35
+- kostenbewusster Offline-Schattenvergleich
+- getrennte 24h- und 168h-Metriken
+- Abdeckung, Nettorendite und maximaler Drawdown
+- 105 Tests erfolgreich

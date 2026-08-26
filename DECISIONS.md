@@ -129,3 +129,14 @@ Umschichtungen werden über sieben einzeln auditierte Regeln bewertet. Die erste
 
 ## 2026-08-26 D054
 Parameterfamilien für Forex, xStocks und Krypto werden getrennt versioniert. Kandidaten benötigen Schattenvergleich, Mindeststichprobe, Mindestverbesserung und Konfidenzintervall. Aktivierung und Rollback erfolgen ausschließlich nach Benutzeraktion.
+
+
+
+## 2026-08-26 D055
+Ab dev.33 existiert genau ein kontrolliertes Lernsystem. Forex, xStocks und Krypto besitzen je neun getrennte Parameter. Nur die aktive, ausdrücklich freigegebene Familienversion darf den Scanner steuern. Prognosen speichern die zugehörige Version und den vollständigen Snapshot. Kandidaten auf einer nicht mehr aktiven Basisversion werden als STALE abgewiesen.
+
+## 2026-08-26 D056
+Die vollständige Regressionstestsuite ist ab dev.34 ein hartes Release-Gate. Veraltete Tests werden auf aktuelle, dokumentierte Verträge migriert, statt produktive Sicherheitsfunktionen für historische Testannahmen zurückzubauen.
+
+## 2026-08-26 D057
+Lernkandidaten werden ab dev.35 auf denselben historischen Feature-Snapshots wie die aktive Version bewertet. Metriken werden je Prognosehorizont getrennt und nach geschätzten Roundtrip-Kosten ausgewiesen. Abdeckung und Drawdown sind Freigabeinformationen; eine automatische Aktivierung bleibt ausgeschlossen.

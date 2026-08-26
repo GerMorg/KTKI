@@ -19,3 +19,5 @@ class Tests(unittest.TestCase):
     text=path.read_text('utf-8');self.assertEqual(corruption_score(text),0,str(path))
 
 
+
+

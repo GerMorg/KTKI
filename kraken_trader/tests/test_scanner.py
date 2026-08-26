@@ -18,3 +18,5 @@ class ScannerTests(unittest.TestCase):
   self.s.run(['BTC/EUR']);self.assertTrue(self.db.rows('SELECT * FROM scanner_results'));self.assertTrue(self.db.rows('SELECT * FROM scanner_runs'))
 
 
+
+

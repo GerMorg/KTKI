@@ -10,6 +10,7 @@ class PaperEngine:
   self.db=db;self.start=D(start_eur);self.fee=D(fee_bps)/10000;self.slip=D(slippage_bps)/10000;self.maxpct=D(max_position_pct)/100;self.trade_eur=D(trade_eur);self.ensure()
  def ensure(self):
   with self.db.con() as c:
+
    c.executescript("""CREATE TABLE IF NOT EXISTS paper_accounts(id INTEGER PRIMARY KEY CHECK(id=1),cash_eur TEXT NOT NULL,initial_eur TEXT NOT NULL,updated_at TEXT NOT NULL);CREATE TABLE IF NOT EXISTS paper_positions(symbol TEXT PRIMARY KEY,quantity TEXT NOT NULL,avg_cost_eur TEXT NOT NULL,updated_at TEXT NOT NULL);CREATE TABLE IF NOT EXISTS paper_trades(id INTEGER PRIMARY KEY AUTOINCREMENT,created_at TEXT NOT NULL,symbol TEXT NOT NULL,side TEXT NOT NULL,quantity TEXT NOT NULL,market_price TEXT NOT NULL,execution_price TEXT NOT NULL,gross_eur TEXT NOT NULL,fee_eur TEXT NOT NULL,slippage_eur TEXT NOT NULL,net_eur TEXT NOT NULL,reason TEXT NOT NULL,decision_json TEXT NOT NULL);CREATE TABLE IF NOT EXISTS paper_decisions(id INTEGER PRIMARY KEY AUTOINCREMENT,created_at TEXT NOT NULL,symbol TEXT NOT NULL,action TEXT NOT NULL,score TEXT NOT NULL,reason TEXT NOT NULL,data_quality TEXT NOT NULL,executed INTEGER NOT NULL,trade_id INTEGER);CREATE TABLE IF NOT EXISTS paper_snapshots(id INTEGER PRIMARY KEY AUTOINCREMENT,created_at TEXT NOT NULL,cash_eur TEXT NOT NULL,positions_eur TEXT NOT NULL,total_eur TEXT NOT NULL,realized_fees_eur TEXT NOT NULL,quality TEXT NOT NULL);CREATE TABLE IF NOT EXISTS research_watchlist(symbol TEXT PRIMARY KEY,category TEXT NOT NULL,prefilter_score TEXT NOT NULL,status TEXT NOT NULL,selected_at TEXT NOT NULL,run_id INTEGER NOT NULL,reasons_json TEXT NOT NULL);""")
    c.executescript("""CREATE TABLE IF NOT EXISTS paper_position_risk(symbol TEXT PRIMARY KEY,leverage INTEGER NOT NULL,borrowed_eur TEXT NOT NULL,updated_at TEXT NOT NULL);CREATE TABLE IF NOT EXISTS product_trade_state(canonical_id TEXT PRIMARY KEY,last_buy_at TEXT,last_sell_at TEXT,confirm_action TEXT,confirm_count INTEGER NOT NULL DEFAULT 0,updated_at TEXT NOT NULL);CREATE TABLE IF NOT EXISTS daily_turnover(day TEXT PRIMARY KEY,turnovers INTEGER NOT NULL);CREATE TABLE IF NOT EXISTS allocation_plans(id INTEGER PRIMARY KEY AUTOINCREMENT,created_at TEXT NOT NULL,symbol TEXT NOT NULL,confidence TEXT NOT NULL,target_pct TEXT NOT NULL,target_exposure_eur TEXT NOT NULL,leverage INTEGER NOT NULL,current_exposure_eur TEXT NOT NULL,action TEXT NOT NULL,reason TEXT NOT NULL);""")
    c.execute('INSERT OR IGNORE INTO paper_accounts VALUES(1,?,?,?)',(str(self.start),str(self.start),now()))
@@ -89,7 +90,10 @@ class PaperEngine:
    fb=D(fx[0].get('bid') or fx[0].get('last'));fa=D(fx[0].get('ask') or fx[0].get('last'));fm=(fb+fa)/2;rate+=((fa-fb)/fm if fm>0 else D(0))+D(self.db.value('paper_fx_fee_bps','10'))/10000
   return rate
  def consolidate_canonical_positions(self):
-  selected={x['canonical_id']:x['selected_symbol'] for x in self.db.rows('SELECT canonical_id,selected_symbol FROM canonical_products WHERE selected_symbol IS NOT NULL')};groups={}
+  
+  try:selected={x['canonical_id']:x['selected_symbol'] for x in self.db.rows('SELECT canonical_id,selected_symbol FROM canonical_products WHERE selected_symbol IS NOT NULL')}
+  except Exception:selected={}
+  groups={}
   for pos in self.positions():groups.setdefault(self.canonical_id(pos['symbol']),[]).append(pos)
   changed=0
   for cid,items in groups.items():
@@ -109,11 +113,14 @@ class PaperEngine:
     self.db.audit('PAPER_CANONICAL_POSITION_MERGE',json.dumps({'canonical_id':cid,'selected_symbol':target,'replaced_symbols':[x['symbol'] for x in items]}));changed+=1
   return changed
  def canonical_id(self,symbol):
-  r=self.db.rows('SELECT canonical_id FROM market_universe WHERE symbol=? LIMIT 1',(symbol,));return (r[0].get('canonical_id') if r else None) or symbol
+ 
+  try:r=self.db.rows('SELECT canonical_id FROM market_universe WHERE symbol=? LIMIT 1',(symbol,))
+  except Exception:r=[]
+  return (r[0].get('canonical_id') if r else None) or symbol
  def stability_gate(self,symbol,action,improvement_after_costs=D(0)):
   from datetime import datetime,timezone,timedelta
   cid=self.canonical_id(symbol);current=datetime.now(timezone.utc);today=current.date().isoformat();limit=int(float(self.db.value('paper_max_turnovers_per_day','2')));used=self.db.rows('SELECT turnovers FROM daily_turnover WHERE day=?',(today,));daily_ok=not(limit>0 and used and int(used[0]['turnovers'])>=limit)
-  st=self.db.rows('SELECT * FROM product_trade_state WHERE canonical_id=?',(cid,));hold_h=float(self.db.value('paper_min_hold_hours','24'));cool_h=float(self.db.value('paper_cooldown_hours','12'));need=int(float(self.db.value('paper_confirmation_runs','2')));hold_ok=True;cool_ok=True
+  st=self.db.rows('SELECT * FROM product_trade_state WHERE canonical_id=?',(cid,));hold_h=float(self.db.value('paper_min_hold_hours','24'));cool_h=float(self.db.value('paper_cooldown_hours','12'));need=int(float(self.db.value('paper_confirmation_runs','1')));hold_ok=True;cool_ok=True
   if st:
    row=st[0]
    if action=='SELL' and row.get('last_buy_at'):hold_ok=current-datetime.fromisoformat(row['last_buy_at'])>=timedelta(hours=hold_h)
@@ -169,5 +176,7 @@ def configure_engine(engine):
  engine.maxpct=D(value('paper_max_position_pct',10))/100
  engine.trade_eur=D(value('paper_trade_eur',25))
  return engine
+
+
 
 

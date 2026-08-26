@@ -71,3 +71,5 @@ class DB:
   with self.con() as c:c.execute('INSERT OR REPLACE INTO settings VALUES(?,?)',(key,str(value)))
 
 
+
+

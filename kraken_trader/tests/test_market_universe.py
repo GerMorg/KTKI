@@ -19,3 +19,5 @@ class Tests(unittest.TestCase):
   labels=' '.join(x['label'] for x in self.u.categories());self.assertIn('Kryptowährungen',labels);self.assertIn('Hebelfähige',labels)
 
 
+
+

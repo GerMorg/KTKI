@@ -205,3 +205,36 @@ release_0_1_0_dev_32:
   explicit_approve_reject_rollback: {required: true, status: implemented}
   automatic_activation: {required: false, status: prohibited}
   direct_ai_activation: {required: false, status: prohibited}
+
+
+
+release_0_1_0_dev_33:
+  one_controlled_learning_system: {required: true, status: implemented}
+  nine_parameters_per_family: {required: true, status: implemented}
+  active_family_drives_scanner: {required: true, status: implemented}
+  versioned_forecast_parameter_snapshot: {required: true, status: implemented}
+  paired_shadow_comparison: {required: true, status: implemented}
+  stale_candidate_protection: {required: true, status: enforced}
+  legacy_xstock_parameter_migration: {required: true, status: implemented}
+  automatic_activation: {required: false, status: prohibited}
+
+release_0_1_0_dev_34:
+  complete_regression_suite: {required: true, status: passed_103}
+  dependency_installation: {required: true, status: verified}
+  utf8_repository_and_gui: {required: true, status: passed}
+  scanner_busy_lock: {required: true, status: restored}
+  rotating_bounded_batches: {required: true, status: restored}
+  legacy_schema_compatibility: {required: true, status: tested}
+  separated_active_product_profiles: {required: true, status: preserved}
+  real_trading: {required: false, status: hard_disabled}
+
+release_0_1_0_dev_35:
+  paired_feature_snapshot_comparison: {required: true, status: implemented}
+  horizon_specific_metrics: {required: true, status: implemented_24h_168h}
+  estimated_roundtrip_costs: {required: true, status: implemented}
+  decision_coverage: {required: true, status: implemented}
+  net_return_after_costs: {required: true, status: implemented}
+  maximum_drawdown: {required: true, status: implemented}
+  no_decision_not_automatically_wrong: {required: true, status: enforced}
+  automatic_activation: {required: false, status: prohibited}
+  full_regression_suite: {required: true, status: passed_105}

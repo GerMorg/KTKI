@@ -66,3 +66,5 @@ class MarketUniverse:
   return sorted(x for x in set(symbols) if not quote or x.rsplit('/',1)[-1]==quote)
 
 
+
+

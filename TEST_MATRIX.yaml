@@ -184,3 +184,33 @@ release_0_1_0_dev_32:
   - candidate persists shadow rows and Wilson interval
   - proposal does not activate automatically
   - explicit approval, rejection and rollback are versioned
+
+
+dev33_controlled_learning_integration:
+  complete_nine_parameter_profiles: passed
+  scanner_uses_active_family_version: passed
+  stale_candidate_rejected: passed
+  forecast_parameter_snapshot: passed
+  dev32_regression: passed
+
+release_0_1_0_dev_34:
+  full_unittest_discovery:
+    command: PYTHONPATH=app python -m unittest discover -s tests -v
+    result: passed
+    tests: 103
+  source_compile:
+    command: python -m py_compile app/*.py tests/*.py
+    result: passed
+  utf8_regression:
+    result: passed
+  real_execution_disabled:
+    result: passed
+
+release_0_1_0_dev_35:
+  paired_shadow_replay: {result: passed}
+  horizon_24_168_separation: {result: passed}
+  cost_aware_net_return: {result: passed}
+  coverage_and_drawdown: {result: passed}
+  controlled_learning_regression: {result: passed}
+  full_unittest_discovery: {result: passed, tests: 105}
+  source_compile: {result: passed}

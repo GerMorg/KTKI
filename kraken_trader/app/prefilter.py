@@ -61,3 +61,5 @@ class MarketPrefilter:
  def candidates(self):return [x['symbol'] for x in self.db.rows("SELECT symbol FROM research_watchlist WHERE status IN ('PREFILTERED','ANALYZED') ORDER BY CAST(prefilter_score AS REAL) DESC")]
 
 
+
+

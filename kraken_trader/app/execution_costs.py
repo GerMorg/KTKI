@@ -36,3 +36,5 @@ def choose_execution_pair(alternatives,tickers,trade_fee_bps=40,fx_fee_bps=10,sl
  return selected,costs,[{'symbol':x[4]['symbol'],'total_cost_rate':str(x[5]['total_rate']),'liquidity':str(x[5]['liquidity']),'valid':x[5]['valid']} for x in ranked]
 
 
+
+

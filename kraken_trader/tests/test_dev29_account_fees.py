@@ -23,3 +23,5 @@ class T(unittest.TestCase):
   with self.db.con() as c:c.execute("CREATE TABLE market_universe(symbol TEXT,asset_class TEXT,category TEXT,ordermin TEXT,costmin TEXT,lot_decimals INTEGER,pair_decimals INTEGER)");c.execute("INSERT INTO market_universe VALUES('BTC/EUR','currency','crypto_spot','0.0001','1',8,2)");c.execute("INSERT INTO live_prices VALUES('BTC/EUR','100','99.9','100.1','1',?)",(now(),))
   tid=PaperEngine(self.db,1000).execute('BTC/EUR','BUY',100,'test',{'leverage':1});d=json.loads(self.db.rows('SELECT decision_json FROM paper_trades WHERE id=?',(tid,))[0]['decision_json']);self.assertEqual(d['trade_fee_source'],'KRAKEN_TRADE_VOLUME');self.assertEqual(d['trade_fee_bps'],'40.0000')
 if __name__=='__main__':unittest.main()
+
+

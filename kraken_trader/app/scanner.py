@@ -1,12 +1,14 @@
-import json,math,statistics,time
+import json,math,statistics,time,threading
 from db import now
 from market_history import MarketHistory
+from strategy_profiles import active_profile,score_features,family_for_category
 class MarketScanner:
- def __init__(self,db,client):self.db,self.client=db,client;self.ensure();self.history=MarketHistory(db)
+ def __init__(self,db,client):self.db,self.client=db,client;self.lock=threading.Lock();self.ensure();self.history=MarketHistory(db);self.batch_offset=0
  def ensure(self):
   with self.db.con() as c:c.executescript("""CREATE TABLE IF NOT EXISTS scanner_results(symbol TEXT PRIMARY KEY,scanned_at TEXT NOT NULL,score TEXT NOT NULL,signal TEXT NOT NULL,momentum_pct TEXT,volatility_pct TEXT,trend_pct TEXT,spread_pct TEXT,volume_quote TEXT,data_points INTEGER NOT NULL,quality TEXT NOT NULL,reasons_json TEXT NOT NULL);CREATE TABLE IF NOT EXISTS ohlc_cache(symbol TEXT NOT NULL,interval_min INTEGER NOT NULL,open_time INTEGER NOT NULL,open TEXT NOT NULL,high TEXT NOT NULL,low TEXT NOT NULL,close TEXT NOT NULL,vwap TEXT,volume TEXT,trades INTEGER,received_at TEXT NOT NULL,PRIMARY KEY(symbol,interval_min,open_time));CREATE TABLE IF NOT EXISTS scanner_runs(id INTEGER PRIMARY KEY AUTOINCREMENT,created_at TEXT NOT NULL,symbols_requested INTEGER NOT NULL,symbols_valid INTEGER NOT NULL,buy_count INTEGER NOT NULL,hold_count INTEGER NOT NULL,avoid_count INTEGER NOT NULL,quality TEXT NOT NULL);""")
  def profile(self,symbol):
-  r=self.db.rows('SELECT asset_class,category,quote_asset,source_key FROM market_universe WHERE symbol=? LIMIT 1',(symbol,))
+  try:r=self.db.rows('SELECT asset_class,category,quote_asset,source_key FROM market_universe WHERE symbol=? LIMIT 1',(symbol,))
+  except Exception:r=[]
   return r[0] if r else {'asset_class':'currency','category':'crypto_spot','quote_asset':symbol.rsplit('/',1)[-1],'source_key':symbol}
  @staticmethod
  def match(payload,symbol,source_key=None):
@@ -21,47 +23,46 @@ class MarketScanner:
   if len(closes)<30:return {'symbol':symbol,'score':0,'signal':'AVOID','momentum_pct':None,'volatility_pct':None,'trend_pct':None,'spread_pct':None,'volume_quote':None,'data_points':len(closes),'quality':'INSUFFICIENT','reasons':['Weniger als 30 abgeschlossene Kerzen']}
   returns=[closes[i]/closes[i-1]-1 for i in range(1,len(closes))];momentum=(closes[-1]/closes[-25]-1)*100;short=sum(closes[-10:])/10;long=sum(closes[-30:])/30;trend=(short/long-1)*100;volatility=statistics.pstdev(returns[-30:])*math.sqrt(24)*100
   bid=float((ticker or {}).get('b',['0'])[0] or 0);ask=float((ticker or {}).get('a',['0'])[0] or 0);mid=(bid+ask)/2;spread=(ask-bid)/mid*100 if mid else 999;volume_quote=sum(v*p for v,p in zip(volumes[-24:],closes[-24:]))
-  if category=='forex':
-   # Deterministisches forex-v1: relative pair trend, volatility, spread/liquidity and linked macro news.
-   news_rows=self.db.rows('SELECT relevance FROM news_market_links WHERE symbol=?',(symbol,))
-   macro=min(10,sum(float(x['relevance']) for x in news_rows));score=50+max(-22,min(22,momentum*4))+max(-18,min(18,trend*9))-max(0,min(20,volatility*1.1))-max(0,min(25,spread*30))+macro
-   buy=score>=64 and momentum>0 and trend>0 and spread<=.7;avoid=score<34 or spread>1.3;model='forex-v1'
-  elif category=='xstocks':
-   params={x['name']:float(x['value']) for x in self.db.rows("SELECT name,value FROM strategy_parameters WHERE name LIKE 'xstocks_%'")} if self.db.rows("SELECT name FROM sqlite_master WHERE type='table' AND name='strategy_parameters'") else {}
-   base=params.get('xstocks_base_score',50);mw=params.get('xstocks_momentum_weight',4);tw=params.get('xstocks_trend_weight',10);vp=params.get('xstocks_volatility_penalty',1.2);sp=params.get('xstocks_spread_penalty',18);bt=params.get('xstocks_buy_threshold',62);bms=params.get('xstocks_buy_max_spread_pct',1.2);at=params.get('xstocks_avoid_threshold',32);asp=params.get('xstocks_avoid_spread_pct',2.5)
-   score=base+max(-22,min(22,momentum*mw))+max(-18,min(18,trend*tw))-max(0,min(18,volatility*vp))-max(0,min(22,spread*sp));buy=score>=bt and momentum>0 and trend>0 and spread<=bms;avoid=score<at or spread>asp;model='xstocks-approved-v'+str(max((x['version'] for x in self.db.rows("SELECT version FROM strategy_parameters")),default=1) if params else 1)
-  else:
-   score=50+max(-25,min(25,momentum*5))+max(-15,min(15,trend*8))-max(0,min(20,volatility*1.5))-max(0,min(20,spread*25));buy=score>=65 and momentum>0 and trend>0 and spread<=.8;avoid=score<35 or spread>1.5;model='crypto-v1'
-  score=max(0,min(100,score));signal='BUY' if buy else ('AVOID' if avoid else 'HOLD');reasons=[f'Modell {model}',f'24h-Momentum {momentum:.2f} %',f'Trend SMA10/SMA30 {trend:.2f} %',f'Volatilität {volatility:.2f} %',f'Spread {spread:.3f} %',f'24h-Quotevolumen ca. {volume_quote:.2f} {quote}']
+  family=family_for_category(category);version,params=active_profile(self.db,family);news_score=0.0
+  if family=='forex':
+   news_rows=self.db.rows('SELECT relevance FROM news_market_links WHERE symbol=?',(symbol,));news_score=min(10,sum(float(x['relevance']) for x in news_rows))
+  features={'momentum_pct':momentum,'trend_pct':trend,'volatility_pct':volatility,'spread_pct':spread,'news_score':news_score}
+  score,signal=score_features(features,params);buy=signal=='BUY';avoid=signal=='AVOID';model=f'{family}-controlled-v{version}'
+  score=max(0,min(100,score));signal='BUY' if buy else ('AVOID' if avoid else 'HOLD');aliases={'xstocks':f'xstocks-v1 / xstocks-approved-v{version}','forex':'forex-v1','crypto_spot':'crypto-v1'};reasons=[f'Modell {aliases.get(family,family)} / {model}',f'24h-Momentum {momentum:.2f} %',f'Trend SMA10/SMA30 {trend:.2f} %',f'Volatilität {volatility:.2f} %',f'Spread {spread:.3f} %',f'24h-Quotevolumen ca. {volume_quote:.2f} {quote}']
   return {'symbol':symbol,'score':round(score,4),'signal':signal,'momentum_pct':round(momentum,6),'volatility_pct':round(volatility,6),'trend_pct':round(trend,6),'spread_pct':round(spread,6),'volume_quote':round(volume_quote,4),'data_points':len(closes),'quality':'VALID','reasons':reasons}
  def run(self,symbols,interval=60,limit=None,delay_seconds=None):
-  symbols=list(dict.fromkeys(symbols))[:int(limit or len(symbols))];delay=float(delay_seconds if delay_seconds is not None else self.db.value('scanner_delay_seconds','1.05'));stamp=now();counts={'valid':0,'buy':0,'hold':0,'avoid':0};tickers={}
-  profiles={s:self.profile(s) for s in symbols};groups={}
-  for s,p in profiles.items():groups.setdefault(p['asset_class'],[]).append(s)
-  for ac,batch in groups.items():
-   try:tickers[ac]=self.client.ticker(batch,ac)
-   except Exception as exc:
-    tickers[ac]={}
-    for symbol in batch:self.history.ticker(symbol,ac,error=type(exc).__name__+': '+str(exc)[:160])
-    for symbol in batch:
-     try:tickers[ac].update(self.client.ticker([symbol],ac))
-     except Exception as exc:self.history.ticker(symbol,ac,error=type(exc).__name__+': '+str(exc)[:160])
-  for symbol in symbols:
-   p=profiles[symbol]
-   try:
-    pair=p.get('source_key') or symbol
-    try:payload=self.client.ohlc(pair,interval,p['asset_class'])
-    except Exception:payload=self.client.ohlc(symbol,interval,p['asset_class']) if pair!=symbol else {}
-    key=next((k for k in payload if k!='last'),None);candles=payload.get(key,[]) if key else [];ticker=self.match(tickers.get(p['asset_class'],{}),symbol,p.get('source_key'));self.history.ticker(symbol,p['asset_class'],ticker);r=self.analyze(symbol,candles,ticker,p['category'],p.get('quote_asset') or 'EUR')
-    self.history.ohlc(symbol,p['asset_class'],candles)
-    with self.db.con() as c:
-     for x in candles:c.execute('INSERT OR REPLACE INTO ohlc_cache VALUES(?,?,?,?,?,?,?,?,?,?,?)',(symbol,interval,int(x[0]),str(x[1]),str(x[2]),str(x[3]),str(x[4]),str(x[5]),str(x[6]),int(x[7]),stamp))
-   except Exception as exc:self.history.ohlc(symbol,p['asset_class'],error=type(exc).__name__+': '+str(exc)[:160]);r={'symbol':symbol,'score':0,'signal':'AVOID','momentum_pct':None,'volatility_pct':None,'trend_pct':None,'spread_pct':None,'volume_quote':None,'data_points':0,'quality':'ERROR','reasons':[type(exc).__name__+': '+str(exc)[:180]]}
-   counts['valid']+=r['quality']=='VALID';counts[r['signal'].lower()]+=1
-   with self.db.con() as c:c.execute('INSERT OR REPLACE INTO scanner_results VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',(symbol,stamp,str(r['score']),r['signal'],*(None if r[k] is None else str(r[k]) for k in ('momentum_pct','volatility_pct','trend_pct','spread_pct','volume_quote')),r['data_points'],r['quality'],json.dumps(r['reasons'],ensure_ascii=False)))
-   if delay:time.sleep(delay)
-  quality='VALID' if symbols and counts['valid']==len(symbols) else 'INCOMPLETE'
-  with self.db.con() as c:c.execute('INSERT INTO scanner_runs(created_at,symbols_requested,symbols_valid,buy_count,hold_count,avoid_count,quality) VALUES(?,?,?,?,?,?,?)',(stamp,len(symbols),counts['valid'],counts['buy'],counts['hold'],counts['avoid'],quality))
-  self.db.audit('SCANNER_RUN',json.dumps({'requested':len(symbols),**counts,'quality':quality}));return self.db.rows('SELECT * FROM scanner_results ORDER BY CAST(score AS REAL) DESC')
+  if not self.lock.acquire(False):return {'status':'BUSY','processed':0}
+  all_symbols=list(dict.fromkeys(symbols));batch_size=int(limit or len(all_symbols) or 0);start=self.batch_offset%len(all_symbols) if all_symbols else 0;symbols=(all_symbols[start:start+batch_size] if start+batch_size<=len(all_symbols) else all_symbols[start:]+all_symbols[:(start+batch_size)%len(all_symbols)]);self.batch_offset=(start+len(symbols))%len(all_symbols) if all_symbols else 0;delay=float(delay_seconds if delay_seconds is not None else self.db.value('scanner_delay_seconds','1.05'));stamp=now();counts={'valid':0,'buy':0,'hold':0,'avoid':0};tickers={}
+  try:
+   profiles={s:self.profile(s) for s in symbols};groups={}
+   for s,p in profiles.items():groups.setdefault(p['asset_class'],[]).append(s)
+   for ac,batch in groups.items():
+    try:tickers[ac]=self.client.ticker(batch,ac)
+    except Exception as exc:
+     tickers[ac]={}
+     for symbol in batch:self.history.ticker(symbol,ac,error=type(exc).__name__+': '+str(exc)[:160])
+     for symbol in batch:
+      try:tickers[ac].update(self.client.ticker([symbol],ac))
+      except Exception as exc:self.history.ticker(symbol,ac,error=type(exc).__name__+': '+str(exc)[:160])
+   for symbol in symbols:
+    p=profiles[symbol]
+    try:
+     pair=p.get('source_key') or symbol
+     try:payload=self.client.ohlc(symbol,interval,p['asset_class']) if p['asset_class']=='tokenized_asset' else self.client.ohlc(pair,interval,p['asset_class'])
+     except Exception:payload=self.client.ohlc(pair,interval,p['asset_class']) if pair!=symbol else {}
+     key=next((k for k in payload if k!='last'),None);candles=payload.get(key,[]) if key else [];ticker=self.match(tickers.get(p['asset_class'],{}),symbol,p.get('source_key'));self.history.ticker(symbol,p['asset_class'],ticker);r=self.analyze(symbol,candles,ticker,p['category'],p.get('quote_asset') or 'EUR')
+     self.history.ohlc(symbol,p['asset_class'],candles)
+     with self.db.con() as c:
+      for x in candles:c.execute('INSERT OR REPLACE INTO ohlc_cache VALUES(?,?,?,?,?,?,?,?,?,?,?)',(symbol,interval,int(x[0]),str(x[1]),str(x[2]),str(x[3]),str(x[4]),str(x[5]),str(x[6]),int(x[7]),stamp))
+    except Exception as exc:self.history.ohlc(symbol,p['asset_class'],error=type(exc).__name__+': '+str(exc)[:160]);r={'symbol':symbol,'score':0,'signal':'AVOID','momentum_pct':None,'volatility_pct':None,'trend_pct':None,'spread_pct':None,'volume_quote':None,'data_points':0,'quality':'ERROR','reasons':[type(exc).__name__+': '+str(exc)[:180]]}
+    counts['valid']+=r['quality']=='VALID';counts[r['signal'].lower()]+=1
+    with self.db.con() as c:c.execute('INSERT OR REPLACE INTO scanner_results VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',(symbol,stamp,str(r['score']),r['signal'],*(None if r[k] is None else str(r[k]) for k in ('momentum_pct','volatility_pct','trend_pct','spread_pct','volume_quote')),r['data_points'],r['quality'],json.dumps(r['reasons'],ensure_ascii=False)))
+    if delay:time.sleep(delay)
+   quality='VALID' if symbols and counts['valid']==len(symbols) else 'INCOMPLETE'
+   with self.db.con() as c:c.execute('INSERT INTO scanner_runs(created_at,symbols_requested,symbols_valid,buy_count,hold_count,avoid_count,quality) VALUES(?,?,?,?,?,?,?)',(stamp,len(symbols),counts['valid'],counts['buy'],counts['hold'],counts['avoid'],quality))
+   self.db.audit('SCANNER_RUN',json.dumps({'requested':len(symbols),**counts,'quality':quality}));return {'status':'COMPLETED','processed':len(symbols),'batch_start':start,'results':self.db.rows('SELECT * FROM scanner_results ORDER BY CAST(score AS REAL) DESC')}
+  finally:self.lock.release()
+
+
 
 

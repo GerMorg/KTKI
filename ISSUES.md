@@ -81,3 +81,11 @@ Für die kontrollierte Kalibrierung fehlten eine Freigabeübersicht, feste Param
 
 ## 2026-08-26 I034 - gelöst in 0.1.0-dev.29
 Konfigurierbare Basispunkte bildeten die kontospezifische Kraken-Gebührenstufe nicht ab. Dev.29 ergänzt einen read-only TradeVolume-Abruf, persistiert Maker/Taker und verwendet bei Fehlern weiterhin den konservativen Konfigurationswert.
+
+
+
+## 2026-08-26 I036 - gelöst in 0.1.0-dev.34
+Der dev.33-Stand enthielt Testdrift, verbliebene Mojibake-Texte, fehlende Kompatibilitätsgrenzen und eine im Prüfcontainer nicht installierte Flask-Laufzeit. Dev.34 normalisiert UTF-8, stellt die Abhängigkeitsinstallation her, migriert alte Tests auf aktuelle Verträge und erreicht 103 erfolgreiche Tests.
+
+## 2026-08-26 I037 - gelöst in 0.1.0-dev.35
+Der frühere Schattenvergleich behandelte Nichtentscheidungen wie Fehler und verglich keine kostenbereinigten Renditen je Horizont. Dev.35 bewertet aktive und vorgeschlagene Parameter auf identischen Feature-Snapshots und speichert Abdeckung, Nettorendite sowie Drawdown getrennt für 24 und 168 Stunden.

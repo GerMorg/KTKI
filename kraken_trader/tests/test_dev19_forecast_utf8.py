@@ -26,3 +26,5 @@ class Tests(unittest.TestCase):
   text=(Path(__file__).parents[1]/'app'/'main.py').read_text('utf-8');self.assertIn('Übersicht',text);self.assertIn('Gebühr',text);self.assertIn('Qualität',text)
 
 
+
+

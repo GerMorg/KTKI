@@ -16,3 +16,5 @@ class Tests(unittest.TestCase):
   with self.assertRaises(RealExecutionDisabled):RealExecutionAdapter().execute({'symbol':'BTC/EUR','action':'BUY','amount':'1'})
 
 
+
+

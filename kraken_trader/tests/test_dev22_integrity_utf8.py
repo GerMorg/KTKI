@@ -32,3 +32,5 @@ class Tests(unittest.TestCase):
   for rid in (first['run_id'],second['run_id']):self.assertEqual(len(db.rows('SELECT symbol FROM prefilter_results WHERE run_id=?',(rid,))),1)
 
 
+
+

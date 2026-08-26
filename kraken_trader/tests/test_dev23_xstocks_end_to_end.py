@@ -39,3 +39,5 @@ class Tests(unittest.TestCase):
   self.db.set_setting('automation_enabled','true');e=PaperEngine(self.db,1000,40,10,10,25);e.run();self.assertFalse(self.db.rows('SELECT * FROM paper_trades'));self.assertIn('Mindestmenge',self.db.rows('SELECT reason FROM paper_decisions ORDER BY id DESC LIMIT 1')[0]['reason'])
 
 
+
+
