@@ -101,3 +101,6 @@ Konsistenz- und Vertrauensrelease mit zentraler Laufzeitversion, synchronisierte
 
 ## 0.1.0-dev.37 — 2026-08-26
 Robuste kontrollierte Lernfreigabe mit Horizontpflicht, Mindeststichprobe, Mindestabdeckung, positiver Nettorenditeverbesserung und Drawdown-Grenzen. Policy und Gate-Ergebnisse sind persistent und auditierbar; vor Aktivierung erfolgt eine erneute atomare Prüfung. 115 automatisierte Tests erfolgreich.
+
+## 0.1.0-dev.38 — 2026-08-26
+Zielzeitgenaue Prognoseauswertung aus der ersten abgeschlossenen historischen OHLC-Kerze am oder nach dem Zielzeitpunkt. Kosten-Snapshots trennen Einstieg, Ausstieg und Roundtrip und dokumentieren ihre Gebührenquelle. 119 automatisierte Tests erfolgreich.

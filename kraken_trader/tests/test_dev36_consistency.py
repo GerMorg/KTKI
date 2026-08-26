@@ -10,7 +10,7 @@ import main
 
 class Dev36ConsistencyTests(unittest.TestCase):
     def test_runtime_version_is_centralized(self):
-        self.assertEqual(APP_VERSION, "0.1.0-dev.37")
+        self.assertEqual(APP_VERSION, "0.1.0-dev.38")
         self.assertEqual(main.app.test_client().get("/health").json["version"], APP_VERSION)
         self.assertIn(APP_VERSION, main.app.test_client().get("/").data.decode("utf-8"))
         self.assertTrue(USER_AGENT.endswith(APP_VERSION))

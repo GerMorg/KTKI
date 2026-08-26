@@ -1,4 +1,4 @@
-version: 0.1.0-dev.37
+version: 0.1.0-dev.38
 compatibility_rule: Implementierte Funktionen duerfen nur nach ausdruecklicher Entscheidung mit dokumentierter Migration entfernt werden.
 features:
   ingress_gui: {required: true, status: implemented}
@@ -259,4 +259,13 @@ release_0_1_0_dev_37:
   persisted_gate_policy_and_results: {required: true, status: implemented}
   approval_gate_recheck: {required: true, status: atomic_fail_closed}
   automatic_activation: {required: false, status: prohibited}
+  real_trading: {required: false, status: hard_disabled}
+
+release_0_1_0_dev_38:
+  historical_target_candle_evaluation: {required: true, status: enforced}
+  live_price_historical_fallback: {required: false, status: prohibited}
+  evaluation_timing_provenance: {required: true, status: persisted}
+  entry_exit_roundtrip_costs: {required: true, status: implemented}
+  fee_source_provenance: {required: true, status: persisted}
+  forecast_feature_schema_v3: {required: true, status: implemented_migrated}
   real_trading: {required: false, status: hard_disabled}

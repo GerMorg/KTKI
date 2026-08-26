@@ -75,6 +75,7 @@ kraken_trader\tests\test_dev32_controlled_learning.py
 kraken_trader\tests\test_dev35_horizon_metrics.py
 kraken_trader\tests\test_dev36_consistency.py
 kraken_trader\tests\test_dev37_learning_gates.py
+kraken_trader\tests\test_dev38_target_costs.py
 kraken_trader\tests\test_dev9_coupling.py
 kraken_trader\tests\test_market_universe.py
 kraken_trader\tests\test_paper_config.py
@@ -107,6 +108,15 @@ __pycache__/
 .env
 ===== FILE: CHANGELOG.md =====
 # Changelog
+## 0.1.0-dev.38
+- fällige Prognosen werden mit der ersten vollständig abgeschlossenen historischen OHLC-Kerze am oder nach dem Zielzeitpunkt bewertet
+- Livepreise werden nicht mehr als Ersatz für historische Zielpreise verwendet
+- Zielzeit, Preisquelle, Kerzenzeit und Zeitabweichung werden persistent gespeichert
+- Kosten werden getrennt als Einstieg, Ausstieg und Roundtrip gespeichert
+- Gebührenquelle, Gebührenzeitpunkt und FX-Erfordernis werden im Feature-Snapshot nachgewiesen
+- Feature-Schema auf Version 3 angehoben und Alt-Schema migrationssicher erweitert
+- vollständige Regression: 119 Tests erfolgreich
+- Realhandel bleibt hart deaktiviert
 ## 0.1.0-dev.37
 - robuste Freigabe-Gates je erforderlichem Prognosehorizont
 - Mindeststichprobe, Mindestabdeckung und positive Nettorenditeverbesserung sind harte Gates
@@ -371,8 +381,14 @@ Ab dev.37 wird ein Lernkandidat nur PENDING, wenn für alle konfigurierten Horiz
 
 ## 2026-08-26 D061
 Die Gate-Policy und jedes Gate-Ergebnis werden am Kandidaten gespeichert. Eine Benutzerfreigabe wiederholt die vollständige Prüfung mit der aktuellen Policy direkt vor der atomaren Aktivierung. Bei Abweichung wird REJECTED_RECHECK gesetzt und keine Parameterfamilie verändert.
+
+## 2026-08-26 D062
+Ab dev.38 wird eine fällige Prognose ausschließlich mit der ersten vollständig abgeschlossenen lokalen OHLC-Kerze am oder nach ihrem exakten Zielzeitpunkt bewertet. Fehlt eine solche Kerze, bleibt die Prognose OPEN; ein aktueller Livepreis ist kein historischer Ersatz.
+
+## 2026-08-26 D063
+Forecast-Kosten werden als getrennte Einstiegs-, Ausstiegs- und Roundtrip-Werte gespeichert. Gebührenquelle und Gültigkeitszeitpunkt sowie FX-Erfordernis sind Bestandteil des unveränderlichen Feature-Snapshots.
 ===== FILE: FEATURE_CONTRACT.yaml =====
-version: 0.1.0-dev.37
+version: 0.1.0-dev.38
 compatibility_rule: Implementierte Funktionen duerfen nur nach ausdruecklicher Entscheidung mit dokumentierter Migration entfernt werden.
 features:
   ingress_gui: {required: true, status: implemented}
@@ -634,6 +650,15 @@ release_0_1_0_dev_37:
   approval_gate_recheck: {required: true, status: atomic_fail_closed}
   automatic_activation: {required: false, status: prohibited}
   real_trading: {required: false, status: hard_disabled}
+
+release_0_1_0_dev_38:
+  historical_target_candle_evaluation: {required: true, status: enforced}
+  live_price_historical_fallback: {required: false, status: prohibited}
+  evaluation_timing_provenance: {required: true, status: persisted}
+  entry_exit_roundtrip_costs: {required: true, status: implemented}
+  fee_source_provenance: {required: true, status: persisted}
+  forecast_feature_schema_v3: {required: true, status: implemented_migrated}
+  real_trading: {required: false, status: hard_disabled}
 ===== FILE: ISSUES.md =====
 # Issues — append-only
 
@@ -735,6 +760,9 @@ Der übergebene dev.35-Snapshot enthielt widersprüchliche Versionsangaben und w
 
 ## 2026-08-26 I039 - gelöst in 0.1.0-dev.37
 Dev.35 zeigte Abdeckung, Nettorendite und Drawdown nur als Information; ein Kandidat konnte trotz riskanter Horizontmetriken PENDING werden und bei der Freigabe wurden diese Werte nicht erneut geprüft. Dev.37 macht alle Metriken zu konfigurierbaren harten Gates und wiederholt die Prüfung atomar vor jeder Aktivierung.
+
+## 2026-08-26 I040 - gelöst in 0.1.0-dev.38
+Fällige Prognosen wurden zuvor mit dem beim Auswertungslauf aktuellen Livepreis bewertet und die als Roundtrip bezeichneten Kosten trennten Einstieg und Ausstieg nicht eindeutig. Dev.38 verwendet historische Zielkerzen und persistiert eine quellenbezogene Entry-/Exit-Kostenkette.
 ===== FILE: PROJECT_HANDOVER.md =====
 # HA Kraken Trader Projektuebergabe
 
@@ -886,6 +914,15 @@ Die vollständige Testsuite wurde ausgeführt: 115 Tests erfolgreich. Realhandel
 
 ### Nächster empfohlener Schritt
 Dev.38 soll Prognosen am exakten historischen Zielzeitpunkt auswerten und Ein-, Ausstiegs- sowie Roundtrip-Kosten eindeutig und quellenbezogen speichern.
+
+## Stand 0.1.0-dev.38
+Dev.38 baut vollständig auf dev.37 auf. Prognoseauswertungen verwenden keine verspäteten Livepreise mehr, sondern die erste abgeschlossene lokale OHLC-Kerze am oder nach dem exakten Zielzeitpunkt. Ohne passende Historie bleibt die Prognose offen. Auswertungen speichern Zielzeit, Preisquelle, Kerzenzeit und Zeitabweichung. Feature-Snapshots trennen Einstiegs-, Ausstiegs- und Roundtrip-Kosten und dokumentieren die Gebührenherkunft.
+
+### Verifikation
+119 automatisierte Tests erfolgreich. YAML, Python, UTF-8 und Archivintegrität wurden zusätzlich geprüft. Realhandel bleibt hart deaktiviert.
+
+### Nächster empfohlener Schritt
+Dev.39 sollte eine echte zeitlich getrennte Walk-forward-Validierung für Lernkandidaten mit stabilen Teilfenster-Gates ergänzen.
 ===== FILE: PROJECT_MEMORY.yaml =====
 schema_version: 2
 project:
@@ -901,8 +938,8 @@ non_negotiable_rules:
   - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
   - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.37
-  status: Robuste kontrollierte Lernfreigabe; 115 automatisierte Tests erfolgreich; Realhandel hart deaktiviert
+  version: 0.1.0-dev.38
+  status: Zielzeitgenaue historische Prognoseauswertung und quellenbezogene Kostenkette; 119 Tests erfolgreich
 implemented:
   - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
   - Kraken-REST-Signierung und sichere Secret-Konfiguration unter /data/options.json
@@ -1311,8 +1348,15 @@ release_0_1_0_dev_37:
   regression: 115 automatisierte Tests erfolgreich
   safety: Keine automatische Aktivierung; Realhandel weiterhin hart deaktiviert
   next_recommended_release: dev.38 mit zielzeitgenauer historischer Prognoseauswertung und eindeutiger Entry-Exit-Kostenkette
+
+release_0_1_0_dev_38:
+  purpose: Zielzeitgenaue Prognoseauswertung und eindeutige Kostenprovenienz
+  changes: [historische Zielkerze, kein Livepreis-Fallback, Timing-Provenienz, Entry-Exit-Roundtrip-Kosten, Gebührenquelle, Feature-Schema v3]
+  regression: 119 automatisierte Tests erfolgreich
+  safety: Realhandel weiterhin hart deaktiviert
+  next_recommended_release: dev.39 Walk-forward-Validierung mit Teilfenster-Gates
 ===== FILE: README.md =====
-# HA Kraken Trader 0.1.0-dev.32
+# HA Kraken Trader 0.1.0-dev.38
 
 Auditierbare Kraken-Analyse mit Realportfolio, dynamischem Paper-Portfolio, Aktien/xStocks und vorbereitetem, aber hart deaktiviertem Realhandel.
 ===== FILE: RELEASES.md =====
@@ -1419,8 +1463,11 @@ Konsistenz- und Vertrauensrelease mit zentraler Laufzeitversion, synchronisierte
 
 ## 0.1.0-dev.37 — 2026-08-26
 Robuste kontrollierte Lernfreigabe mit Horizontpflicht, Mindeststichprobe, Mindestabdeckung, positiver Nettorenditeverbesserung und Drawdown-Grenzen. Policy und Gate-Ergebnisse sind persistent und auditierbar; vor Aktivierung erfolgt eine erneute atomare Prüfung. 115 automatisierte Tests erfolgreich.
+
+## 0.1.0-dev.38 — 2026-08-26
+Zielzeitgenaue Prognoseauswertung aus der ersten abgeschlossenen historischen OHLC-Kerze am oder nach dem Zielzeitpunkt. Kosten-Snapshots trennen Einstieg, Ausstieg und Roundtrip und dokumentieren ihre Gebührenquelle. 119 automatisierte Tests erfolgreich.
 ===== FILE: TEST_MATRIX.yaml =====
-version: 0.1.0-dev.37
+version: 0.1.0-dev.38
 tests:
   - {id: T-001, area: Flask routes and tabs, status: passed}
   - {id: T-002, area: Ingress prefix navigation, status: passed}
@@ -1659,8 +1706,25 @@ release_0_1_0_dev_37:
     - {id: T-D37-REG, expectation: Vollständige Regression, status: passed_115}
   manual:
     - {id: M-D37-001, expectation: GUI zeigt aktive Gate-Policy und blockierte Kandidaten nachvollziehbar, status: pending}
+
+release_0_1_0_dev_38:
+  automated:
+    - {id: T-D38-001, expectation: Erste abgeschlossene Zielkerze wird verwendet, status: passed}
+    - {id: T-D38-002, expectation: Fehlende Historie lässt Prognose offen, status: passed}
+    - {id: T-D38-003, expectation: Entry Exit Roundtrip und Gebührenquelle werden gespeichert, status: passed}
+    - {id: T-D38-004, expectation: Bewertungsschema migriert idempotent, status: passed}
+    - {id: T-D38-REG, expectation: Vollständige Regression, status: passed_119}
 ===== FILE: kraken_trader\CHANGELOG.md =====
 # Changelog
+## 0.1.0-dev.38
+- fällige Prognosen werden mit der ersten vollständig abgeschlossenen historischen OHLC-Kerze am oder nach dem Zielzeitpunkt bewertet
+- Livepreise werden nicht mehr als Ersatz für historische Zielpreise verwendet
+- Zielzeit, Preisquelle, Kerzenzeit und Zeitabweichung werden persistent gespeichert
+- Kosten werden getrennt als Einstieg, Ausstieg und Roundtrip gespeichert
+- Gebührenquelle, Gebührenzeitpunkt und FX-Erfordernis werden im Feature-Snapshot nachgewiesen
+- Feature-Schema auf Version 3 angehoben und Alt-Schema migrationssicher erweitert
+- vollständige Regression: 119 Tests erfolgreich
+- Realhandel bleibt hart deaktiviert
 ## 0.1.0-dev.37
 - robuste Freigabe-Gates je erforderlichem Prognosehorizont
 - Mindeststichprobe, Mindestabdeckung und positive Nettorenditeverbesserung sind harte Gates
@@ -1768,7 +1832,7 @@ release_0_1_0_dev_37:
 ## 0.1.0-dev.24
 - realen xStock-Detailscore durch korrekten Kraken-API-Vertrag repariert
 ===== FILE: kraken_trader\DOCS.md =====
-# Kraken Trader 0.1.0-dev.37
+# Kraken Trader 0.1.0-dev.38
 
 ## Dauerhafte UTF-8-Strategie
 1. Alle Repository-Texte sind UTF-8 mit LF.
@@ -1795,7 +1859,7 @@ RUN chmod a+x /run.sh
 WORKDIR /app
 CMD ["/run.sh"]
 ===== FILE: kraken_trader\README.md =====
-# HA Kraken Trader 0.1.0-dev.37
+# HA Kraken Trader 0.1.0-dev.38
 
 Auditierbare Kraken-Analyse mit Realportfolio, dynamischem Paper-Portfolio, Aktien/xStocks und vorbereitetem, aber hart deaktiviertem Realhandel.
 ===== FILE: kraken_trader\app\backtest.py =====
@@ -2370,9 +2434,11 @@ class FeeProfile:
   r=self.db.rows('SELECT * FROM account_fee_snapshots ORDER BY id DESC LIMIT 1');return r[0] if r else None
 ===== FILE: kraken_trader\app\forecast_tracker.py =====
 import json
-from datetime import datetime,timezone,timedelta
+from datetime import datetime, timezone, timedelta
 from db import now
-from strategy_profiles import active_profile,family_for_category
+from strategy_profiles import active_profile, family_for_category
+
+
 class ForecastTracker:
  def __init__(self,db):self.db=db;self.ensure()
  def ensure(self):
@@ -2382,27 +2448,57 @@ class ForecastTracker:
    cols={x['name'] for x in self.db.rows('PRAGMA table_info(research_forecasts)')}
    for name,definition in [('family',"TEXT NOT NULL DEFAULT 'crypto_spot'"),('parameter_version','INTEGER NOT NULL DEFAULT 1'),('parameters_json',"TEXT NOT NULL DEFAULT '{}'"),('feature_schema_version','INTEGER NOT NULL DEFAULT 1')]:
     if name not in cols:c.execute(f'ALTER TABLE research_forecasts ADD COLUMN {name} {definition}')
+   cols={x['name'] for x in self.db.rows('PRAGMA table_info(forecast_evaluations)')}
+   for name,definition in [('target_at','TEXT'),('price_source',"TEXT NOT NULL DEFAULT 'LIVE_FALLBACK'"),('source_open_time','INTEGER'),('timing_error_seconds','INTEGER')]:
+    if name not in cols:c.execute(f'ALTER TABLE forecast_evaluations ADD COLUMN {name} {definition}')
+
+ def _cost_snapshot(self,symbol,spread_pct):
+  fee_bps=float(self.db.value('paper_fee_bps','40'));fee_source='CONFIG';fee_effective_at=None
+  try:
+   fee=self.db.rows('SELECT taker_bps,source,effective_at FROM account_pair_fees WHERE symbol=?',(symbol,))
+   if fee:fee_bps=float(fee[0]['taker_bps']);fee_source=fee[0]['source'];fee_effective_at=fee[0]['effective_at']
+  except Exception:pass
+  trade_fee=fee_bps/100;slippage=float(self.db.value('paper_slippage_bps','10'))/100
+  fx_required=symbol.endswith('/USD');fx_fee=float(self.db.value('paper_fx_fee_bps','10'))/100 if fx_required else 0.0;fx_spread=0.0
+  if fx_required:
+   fx=self.db.rows("SELECT bid,ask,last,received_at FROM live_prices WHERE symbol='EUR/USD'")
+   if fx:
+    bid=float(fx[0].get('bid') or fx[0].get('last') or 0);ask=float(fx[0].get('ask') or fx[0].get('last') or 0);mid=(bid+ask)/2
+    fx_spread=(ask-bid)/mid*100 if mid and ask>=bid else 0.0
+  entry={'product_spread':spread_pct/2,'trade_fee':trade_fee,'slippage':slippage,'fx_spread':fx_spread/2,'fx_fee':fx_fee}
+  exit_cost=dict(entry);entry_total=sum(entry.values());exit_total=sum(exit_cost.values());roundtrip=entry_total+exit_total
+  return {'entry_cost_pct':round(entry_total,8),'exit_cost_pct':round(exit_total,8),'roundtrip_cost_pct':round(roundtrip,8),'components_pct':{'entry':entry,'exit':exit_cost},'provenance':{'trade_fee_source':fee_source,'trade_fee_effective_at':fee_effective_at,'trade_fee_bps':fee_bps,'fx_required':fx_required,'captured_at':now()}}
+
  def snapshot(self,symbols):
   ver=self.db.rows('SELECT id FROM watchlist_versions ORDER BY id DESC LIMIT 1');vid=ver[0]['id'] if ver else None;saved=0
   with self.db.con() as c:
    for symbol in symbols:
-    p=self.db.rows('SELECT last FROM live_prices WHERE symbol=?',(symbol,));cols={x['name'] for x in self.db.rows('PRAGMA table_info(scanner_results)')};wanted=['score','signal','quality','momentum_pct','trend_pct','volatility_pct','spread_pct'];select=','.join(x if x in cols else 'NULL AS '+x for x in wanted);s=self.db.rows('SELECT '+select+' FROM scanner_results WHERE symbol=?',(symbol,));
+    p=self.db.rows('SELECT last FROM live_prices WHERE symbol=?',(symbol,));cols={x['name'] for x in self.db.rows('PRAGMA table_info(scanner_results)')};wanted=['score','signal','quality','momentum_pct','trend_pct','volatility_pct','spread_pct'];select=','.join(x if x in cols else 'NULL AS '+x for x in wanted);s=self.db.rows('SELECT '+select+' FROM scanner_results WHERE symbol=?',(symbol,))
     try:u=self.db.rows('SELECT category FROM market_universe WHERE symbol=? LIMIT 1',(symbol,))
     except Exception:u=[]
     if not p or not s or s[0]['quality']!='VALID':continue
-    family=family_for_category(u[0]['category'] if u else 'crypto_spot');version,parameters=active_profile(self.db,family);features={k:s[0].get(k) for k in ('momentum_pct','trend_pct','volatility_pct','spread_pct')};spread=float(s[0].get('spread_pct') or 0);fee=float(self.db.value('paper_fee_bps','40'))/100;slippage=float(self.db.value('paper_slippage_bps','10'))/100;fx=(float(self.db.value('paper_fx_fee_bps','10'))/100 if symbol.endswith('/USD') else 0);features.update({'schema_version':2,'estimated_roundtrip_cost_pct':round(spread+fee+slippage+fx,8),'cost_components_pct':{'spread':spread,'trade_fee':fee,'slippage':slippage,'fx_fee':fx}})
+    family=family_for_category(u[0]['category'] if u else 'crypto_spot');version,parameters=active_profile(self.db,family);features={k:s[0].get(k) for k in ('momentum_pct','trend_pct','volatility_pct','spread_pct')};costs=self._cost_snapshot(symbol,float(s[0].get('spread_pct') or 0));features.update({'schema_version':3,'entry_cost_pct':costs['entry_cost_pct'],'exit_cost_pct':costs['exit_cost_pct'],'estimated_roundtrip_cost_pct':costs['roundtrip_cost_pct'],'cost_components_pct':costs['components_pct'],'cost_provenance':costs['provenance']})
     direction='UP' if s[0]['signal']=='BUY' else ('DOWN' if s[0]['signal']=='AVOID' else 'FLAT');confidence=str(min(1,max(0,float(s[0]['score'])/100)));model=f'{family}-controlled-v{version}'
     for h in (24,168):
-     c.execute('INSERT INTO research_forecasts(created_at,symbol,watchlist_version_id,model_version,horizon_hours,direction,baseline_price,scanner_score,confidence,status,features_json,family,parameter_version,parameters_json,feature_schema_version) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(now(),symbol,vid,model,h,direction,p[0]['last'],s[0]['score'],confidence,'OPEN',json.dumps(features,sort_keys=True),family,version,json.dumps(parameters,sort_keys=True),2));saved+=1
+     c.execute('INSERT INTO research_forecasts(created_at,symbol,watchlist_version_id,model_version,horizon_hours,direction,baseline_price,scanner_score,confidence,status,features_json,family,parameter_version,parameters_json,feature_schema_version) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(now(),symbol,vid,model,h,direction,p[0]['last'],s[0]['score'],confidence,'OPEN',json.dumps(features,sort_keys=True),family,version,json.dumps(parameters,sort_keys=True),3));saved+=1
   return saved
+
+ def _target_candle(self,symbol,target,current):
+  target_ts=int(target.timestamp());current_ts=int(current.timestamp())
+  rows=self.db.rows('SELECT open_time,close,interval_min FROM ohlc_cache WHERE symbol=? AND open_time>=? AND open_time+interval_min*60<=? ORDER BY open_time ASC LIMIT 1',(symbol,target_ts,current_ts))
+  return rows[0] if rows else None
+
  def evaluate_due(self):
   rows=self.db.rows("SELECT * FROM research_forecasts WHERE status='OPEN'");done=0;current=datetime.now(timezone.utc)
   for f in rows:
-   if current<datetime.fromisoformat(f['created_at'])+timedelta(hours=f['horizon_hours']):continue
-   p=self.db.rows('SELECT last FROM live_prices WHERE symbol=?',(f['symbol'],))
-   if not p:continue
-   base=float(f['baseline_price']);actual=float(p[0]['last']);ret=(actual/base-1)*100 if base else 0;correct=(f['direction']=='UP' and ret>0) or (f['direction']=='DOWN' and ret<0) or (f['direction']=='FLAT' and abs(ret)<1)
-   with self.db.con() as c:c.execute('INSERT OR REPLACE INTO forecast_evaluations VALUES(?,?,?,?,?,?)',(f['id'],now(),str(actual),str(ret),1 if correct else 0,json.dumps({'direction':f['direction'],'family':f.get('family'),'parameter_version':f.get('parameter_version')})));c.execute("UPDATE research_forecasts SET status='EVALUATED' WHERE id=?",(f['id'],));done+=1
+   target=datetime.fromisoformat(f['created_at'])+timedelta(hours=f['horizon_hours'])
+   if current<target:continue
+   candle=self._target_candle(f['symbol'],target,current)
+   if not candle:continue
+   base=float(f['baseline_price']);actual=float(candle['close']);ret=(actual/base-1)*100 if base else 0;correct=(f['direction']=='UP' and ret>0) or (f['direction']=='DOWN' and ret<0) or (f['direction']=='FLAT' and abs(ret)<1);source_time=int(candle['open_time']);timing_error=source_time-int(target.timestamp())
+   details={'direction':f['direction'],'family':f.get('family'),'parameter_version':f.get('parameter_version'),'target_at':target.isoformat(),'price_source':'OHLC_CACHE_FIRST_CLOSED_AT_OR_AFTER_TARGET','source_open_time':source_time,'interval_min':int(candle['interval_min']),'timing_error_seconds':timing_error}
+   with self.db.con() as c:
+    c.execute('INSERT OR REPLACE INTO forecast_evaluations(forecast_id,evaluated_at,actual_price,actual_return_pct,direction_correct,details_json,target_at,price_source,source_open_time,timing_error_seconds) VALUES(?,?,?,?,?,?,?,?,?,?)',(f['id'],now(),str(actual),str(ret),1 if correct else 0,json.dumps(details,sort_keys=True),target.isoformat(),details['price_source'],source_time,timing_error));c.execute("UPDATE research_forecasts SET status='EVALUATED' WHERE id=?",(f['id'],));done+=1
   return done
 ===== FILE: kraken_trader\app\forex_shadow.py =====
 import json,math,statistics
@@ -3477,7 +3573,7 @@ def repair_database(db):
     c.execute(f'UPDATE "{table}" SET {set_sql} WHERE {where}',list(updates.values())+[row[k] for k in pk]);changed+=len(updates)
  db.set_setting(marker,'done');db.audit('UTF8_DATA_MIGRATION_V4',str(changed));return {'status':'DONE','changed':changed}
 ===== FILE: kraken_trader\app\version.py =====
-APP_VERSION = "0.1.0-dev.37"
+APP_VERSION = "0.1.0-dev.38"
 APP_NAME = "HA Kraken Trader"
 USER_AGENT = f"HA-Kraken-Trader/{APP_VERSION}"
 ===== FILE: kraken_trader\app\ws_market.py =====
@@ -3622,7 +3718,7 @@ class PrivateStream:
   st=self.db.private_stream_status();st['configured_enabled']=self.enabled;st['sequences']=dict(self.sequences);st['effective_state']=st.get('state','STOPPED');return st
 ===== FILE: kraken_trader\config.yaml =====
 name: Kraken Trader
-version: "0.1.0-dev.37"
+version: "0.1.0-dev.38"
 slug: kraken_trader
 description: Read-only Kraken Portfolio und lokales Paper-Trading
 arch: [amd64]
@@ -4327,13 +4423,13 @@ class T(unittest.TestCase):
   features={'momentum_pct':2,'trend_pct':2,'volatility_pct':.1,'spread_pct':.05,'estimated_roundtrip_cost_pct':.2}
   with self.db.con() as c:
    for i in range(12):
-    h=24 if i<6 else 168;c.execute('INSERT INTO research_forecasts(created_at,symbol,model_version,horizon_hours,direction,baseline_price,scanner_score,confidence,status,features_json,family,parameter_version,parameters_json,feature_schema_version) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(now(),'EUR/USD','forex-controlled-v1',h,'UP','100','80','.8','EVALUATED',json.dumps(features),'forex',1,'{}',2));fid=c.execute('SELECT last_insert_rowid()').fetchone()[0];c.execute('INSERT INTO forecast_evaluations VALUES(?,?,?,?,?,?)',(fid,now(),'101','1',1,'{}'))
+    h=24 if i<6 else 168;c.execute('INSERT INTO research_forecasts(created_at,symbol,model_version,horizon_hours,direction,baseline_price,scanner_score,confidence,status,features_json,family,parameter_version,parameters_json,feature_schema_version) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(now(),'EUR/USD','forex-controlled-v1',h,'UP','100','80','.8','EVALUATED',json.dumps(features),'forex',1,'{}',2));fid=c.execute('SELECT last_insert_rowid()').fetchone()[0];c.execute('INSERT INTO forecast_evaluations(forecast_id,evaluated_at,actual_price,actual_return_pct,direction_correct,details_json) VALUES(?,?,?,?,?,?)',(fid,now(),'101','1',1,'{}'))
  def test_metrics_are_separate_by_horizon_and_cost_aware(self):
   self.seed();r=self.learning.propose('forex',10,0);self.assertEqual(r['status'],'PENDING');metrics=self.learning.metrics(r['candidate_id']);self.assertEqual({x['horizon_hours'] for x in metrics},{24,168});self.assertTrue(all(float(x['active_net_return'])<x['sample_count'] for x in metrics));self.assertTrue(all(0<=float(x['candidate_coverage'])<=1 for x in metrics))
  def test_forecast_snapshot_contains_cost_components(self):
   with self.db.con() as c:
    c.execute('CREATE TABLE watchlist_versions(id INTEGER PRIMARY KEY)');c.execute('INSERT INTO watchlist_versions VALUES(1)');c.execute("INSERT INTO live_prices(symbol,last,received_at) VALUES('EUR/USD','1.1',?)",(now(),));c.execute('CREATE TABLE scanner_results(symbol TEXT PRIMARY KEY,score TEXT,signal TEXT,quality TEXT,momentum_pct TEXT,trend_pct TEXT,volatility_pct TEXT,spread_pct TEXT)');c.execute("INSERT INTO scanner_results VALUES('EUR/USD','80','BUY','VALID','1','1','.1','.05')")
-  self.assertEqual(ForecastTracker(self.db).snapshot(['EUR/USD']),2);f=json.loads(self.db.rows('SELECT features_json FROM research_forecasts WHERE status=\'OPEN\' LIMIT 1')[0]['features_json']);self.assertEqual(f['schema_version'],2);self.assertIn('estimated_roundtrip_cost_pct',f);self.assertIn('cost_components_pct',f)
+  self.assertEqual(ForecastTracker(self.db).snapshot(['EUR/USD']),2);f=json.loads(self.db.rows('SELECT features_json FROM research_forecasts WHERE status=\'OPEN\' LIMIT 1')[0]['features_json']);self.assertEqual(f['schema_version'],3);self.assertIn('estimated_roundtrip_cost_pct',f);self.assertIn('cost_components_pct',f)
 if __name__=='__main__':unittest.main()
 ===== FILE: kraken_trader\tests\test_dev36_consistency.py =====
 import os, sys, tempfile, unittest
@@ -4348,7 +4444,7 @@ import main
 
 class Dev36ConsistencyTests(unittest.TestCase):
     def test_runtime_version_is_centralized(self):
-        self.assertEqual(APP_VERSION, "0.1.0-dev.37")
+        self.assertEqual(APP_VERSION, "0.1.0-dev.38")
         self.assertEqual(main.app.test_client().get("/health").json["version"], APP_VERSION)
         self.assertIn(APP_VERSION, main.app.test_client().get("/").data.decode("utf-8"))
         self.assertTrue(USER_AGENT.endswith(APP_VERSION))
@@ -4463,6 +4559,36 @@ class Dev37LearningGateTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+===== FILE: kraken_trader\tests\test_dev38_target_costs.py =====
+import json, os, sys, tempfile, unittest
+from datetime import datetime, timezone, timedelta
+sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','app'))
+from db import DB, now
+from forecast_tracker import ForecastTracker
+
+class Dev38Tests(unittest.TestCase):
+ def setUp(self):
+  self.db=DB(tempfile.mktemp());self.db.init();self.f=ForecastTracker(self.db)
+  with self.db.con() as c:c.execute('CREATE TABLE IF NOT EXISTS ohlc_cache(symbol TEXT,interval_min INTEGER,open_time INTEGER,open TEXT,high TEXT,low TEXT,close TEXT,vwap TEXT,volume TEXT,trades INTEGER,received_at TEXT,PRIMARY KEY(symbol,interval_min,open_time))')
+ def add_forecast(self,created,horizon=24):
+  with self.db.con() as c:
+   cur=c.execute("INSERT INTO research_forecasts(created_at,symbol,model_version,horizon_hours,direction,baseline_price,scanner_score,confidence,status,features_json,family,parameter_version,parameters_json,feature_schema_version) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(created,'BTC/EUR','test',horizon,'UP','100','80','.8','OPEN','{}','crypto_spot',1,'{}',3));return cur.lastrowid
+ def candle(self,ts,close):
+  with self.db.con() as c:c.execute('INSERT INTO ohlc_cache VALUES(?,?,?,?,?,?,?,?,?,?,?)',('BTC/EUR',60,ts,'100','110','90',str(close),'100','1',1,now()))
+ def test_first_closed_candle_at_or_after_target_is_used(self):
+  target=datetime.now(timezone.utc)-timedelta(hours=3);created=target-timedelta(hours=24);fid=self.add_forecast(created.isoformat());self.candle(int(target.timestamp())-3600,150);self.candle(int(target.timestamp())+10,110);self.candle(int(target.timestamp())+3610,120)
+  self.assertEqual(self.f.evaluate_due(),1);e=self.db.rows('SELECT * FROM forecast_evaluations WHERE forecast_id=?',(fid,))[0];self.assertEqual(float(e['actual_price']),110);self.assertEqual(e['price_source'],'OHLC_CACHE_FIRST_CLOSED_AT_OR_AFTER_TARGET');self.assertEqual(e['timing_error_seconds'],10)
+ def test_no_historical_target_candle_keeps_forecast_open(self):
+  target=datetime.now(timezone.utc)-timedelta(hours=3);fid=self.add_forecast((target-timedelta(hours=24)).isoformat());
+  with self.db.con() as c:c.execute("INSERT OR REPLACE INTO live_prices(symbol,last,received_at) VALUES('BTC/EUR','999',?)",(now(),))
+  self.assertEqual(self.f.evaluate_due(),0);self.assertEqual(self.db.rows('SELECT status FROM research_forecasts WHERE id=?',(fid,))[0]['status'],'OPEN')
+ def test_cost_snapshot_separates_entry_exit_and_provenance(self):
+  with self.db.con() as c:
+   c.execute('CREATE TABLE account_pair_fees(symbol TEXT PRIMARY KEY,maker_bps TEXT,taker_bps TEXT,source TEXT,effective_at TEXT,snapshot_id INTEGER,payload_json TEXT)');c.execute("INSERT INTO account_pair_fees VALUES('BTC/EUR','20','30','KRAKEN_TRADE_VOLUME','2026-01-01',1,'{}')")
+  x=self.f._cost_snapshot('BTC/EUR',.2);self.assertAlmostEqual(x['roundtrip_cost_pct'],x['entry_cost_pct']+x['exit_cost_pct']);self.assertEqual(x['provenance']['trade_fee_source'],'KRAKEN_TRADE_VOLUME');self.assertIn('entry',x['components_pct']);self.assertIn('exit',x['components_pct'])
+ def test_old_evaluation_schema_migrates_idempotently(self):
+  cols={x['name'] for x in self.db.rows('PRAGMA table_info(forecast_evaluations)')};self.assertTrue({'target_at','price_source','source_open_time','timing_error_seconds'}.issubset(cols));ForecastTracker(self.db);self.assertEqual(cols,{x['name'] for x in self.db.rows('PRAGMA table_info(forecast_evaluations)')})
+if __name__=='__main__':unittest.main()
 ===== FILE: kraken_trader\tests\test_dev9_coupling.py =====
 import os,sys,tempfile,unittest
 sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','app'))
@@ -4623,4 +4749,4 @@ maintainer: GerMorg
 
 
 
-version: 0.1.0-dev.37
+version: 0.1.0-dev.38

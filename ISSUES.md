@@ -98,3 +98,6 @@ Der übergebene dev.35-Snapshot enthielt widersprüchliche Versionsangaben und w
 
 ## 2026-08-26 I039 - gelöst in 0.1.0-dev.37
 Dev.35 zeigte Abdeckung, Nettorendite und Drawdown nur als Information; ein Kandidat konnte trotz riskanter Horizontmetriken PENDING werden und bei der Freigabe wurden diese Werte nicht erneut geprüft. Dev.37 macht alle Metriken zu konfigurierbaren harten Gates und wiederholt die Prüfung atomar vor jeder Aktivierung.
+
+## 2026-08-26 I040 - gelöst in 0.1.0-dev.38
+Fällige Prognosen wurden zuvor mit dem beim Auswertungslauf aktuellen Livepreis bewertet und die als Roundtrip bezeichneten Kosten trennten Einstieg und Ausstieg nicht eindeutig. Dev.38 verwendet historische Zielkerzen und persistiert eine quellenbezogene Entry-/Exit-Kostenkette.

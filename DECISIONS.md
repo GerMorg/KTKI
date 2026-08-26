@@ -155,3 +155,9 @@ Ab dev.37 wird ein Lernkandidat nur PENDING, wenn für alle konfigurierten Horiz
 
 ## 2026-08-26 D061
 Die Gate-Policy und jedes Gate-Ergebnis werden am Kandidaten gespeichert. Eine Benutzerfreigabe wiederholt die vollständige Prüfung mit der aktuellen Policy direkt vor der atomaren Aktivierung. Bei Abweichung wird REJECTED_RECHECK gesetzt und keine Parameterfamilie verändert.
+
+## 2026-08-26 D062
+Ab dev.38 wird eine fällige Prognose ausschließlich mit der ersten vollständig abgeschlossenen lokalen OHLC-Kerze am oder nach ihrem exakten Zielzeitpunkt bewertet. Fehlt eine solche Kerze, bleibt die Prognose OPEN; ein aktueller Livepreis ist kein historischer Ersatz.
+
+## 2026-08-26 D063
+Forecast-Kosten werden als getrennte Einstiegs-, Ausstiegs- und Roundtrip-Werte gespeichert. Gebührenquelle und Gültigkeitszeitpunkt sowie FX-Erfordernis sind Bestandteil des unveränderlichen Feature-Snapshots.

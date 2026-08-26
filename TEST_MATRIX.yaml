@@ -1,4 +1,4 @@
-version: 0.1.0-dev.37
+version: 0.1.0-dev.38
 tests:
   - {id: T-001, area: Flask routes and tabs, status: passed}
   - {id: T-002, area: Ingress prefix navigation, status: passed}
@@ -237,3 +237,11 @@ release_0_1_0_dev_37:
     - {id: T-D37-REG, expectation: Vollständige Regression, status: passed_115}
   manual:
     - {id: M-D37-001, expectation: GUI zeigt aktive Gate-Policy und blockierte Kandidaten nachvollziehbar, status: pending}
+
+release_0_1_0_dev_38:
+  automated:
+    - {id: T-D38-001, expectation: Erste abgeschlossene Zielkerze wird verwendet, status: passed}
+    - {id: T-D38-002, expectation: Fehlende Historie lässt Prognose offen, status: passed}
+    - {id: T-D38-003, expectation: Entry Exit Roundtrip und Gebührenquelle werden gespeichert, status: passed}
+    - {id: T-D38-004, expectation: Bewertungsschema migriert idempotent, status: passed}
+    - {id: T-D38-REG, expectation: Vollständige Regression, status: passed_119}

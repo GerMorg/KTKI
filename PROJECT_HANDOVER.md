@@ -148,3 +148,12 @@ Die vollständige Testsuite wurde ausgeführt: 115 Tests erfolgreich. Realhandel
 
 ### Nächster empfohlener Schritt
 Dev.38 soll Prognosen am exakten historischen Zielzeitpunkt auswerten und Ein-, Ausstiegs- sowie Roundtrip-Kosten eindeutig und quellenbezogen speichern.
+
+## Stand 0.1.0-dev.38
+Dev.38 baut vollständig auf dev.37 auf. Prognoseauswertungen verwenden keine verspäteten Livepreise mehr, sondern die erste abgeschlossene lokale OHLC-Kerze am oder nach dem exakten Zielzeitpunkt. Ohne passende Historie bleibt die Prognose offen. Auswertungen speichern Zielzeit, Preisquelle, Kerzenzeit und Zeitabweichung. Feature-Snapshots trennen Einstiegs-, Ausstiegs- und Roundtrip-Kosten und dokumentieren die Gebührenherkunft.
+
+### Verifikation
+119 automatisierte Tests erfolgreich. YAML, Python, UTF-8 und Archivintegrität wurden zusätzlich geprüft. Realhandel bleibt hart deaktiviert.
+
+### Nächster empfohlener Schritt
+Dev.39 sollte eine echte zeitlich getrennte Walk-forward-Validierung für Lernkandidaten mit stabilen Teilfenster-Gates ergänzen.

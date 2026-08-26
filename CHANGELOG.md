@@ -1,4 +1,13 @@
 # Changelog
+## 0.1.0-dev.38
+- fällige Prognosen werden mit der ersten vollständig abgeschlossenen historischen OHLC-Kerze am oder nach dem Zielzeitpunkt bewertet
+- Livepreise werden nicht mehr als Ersatz für historische Zielpreise verwendet
+- Zielzeit, Preisquelle, Kerzenzeit und Zeitabweichung werden persistent gespeichert
+- Kosten werden getrennt als Einstieg, Ausstieg und Roundtrip gespeichert
+- Gebührenquelle, Gebührenzeitpunkt und FX-Erfordernis werden im Feature-Snapshot nachgewiesen
+- Feature-Schema auf Version 3 angehoben und Alt-Schema migrationssicher erweitert
+- vollständige Regression: 119 Tests erfolgreich
+- Realhandel bleibt hart deaktiviert
 ## 0.1.0-dev.37
 - robuste Freigabe-Gates je erforderlichem Prognosehorizont
 - Mindeststichprobe, Mindestabdeckung und positive Nettorenditeverbesserung sind harte Gates

@@ -12,8 +12,8 @@ non_negotiable_rules:
   - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
   - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.37
-  status: Robuste kontrollierte Lernfreigabe; 115 automatisierte Tests erfolgreich; Realhandel hart deaktiviert
+  version: 0.1.0-dev.38
+  status: Zielzeitgenaue historische Prognoseauswertung und quellenbezogene Kostenkette; 119 Tests erfolgreich
 implemented:
   - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
   - Kraken-REST-Signierung und sichere Secret-Konfiguration unter /data/options.json
@@ -422,3 +422,10 @@ release_0_1_0_dev_37:
   regression: 115 automatisierte Tests erfolgreich
   safety: Keine automatische Aktivierung; Realhandel weiterhin hart deaktiviert
   next_recommended_release: dev.38 mit zielzeitgenauer historischer Prognoseauswertung und eindeutiger Entry-Exit-Kostenkette
+
+release_0_1_0_dev_38:
+  purpose: Zielzeitgenaue Prognoseauswertung und eindeutige Kostenprovenienz
+  changes: [historische Zielkerze, kein Livepreis-Fallback, Timing-Provenienz, Entry-Exit-Roundtrip-Kosten, Gebührenquelle, Feature-Schema v3]
+  regression: 119 automatisierte Tests erfolgreich
+  safety: Realhandel weiterhin hart deaktiviert
+  next_recommended_release: dev.39 Walk-forward-Validierung mit Teilfenster-Gates
