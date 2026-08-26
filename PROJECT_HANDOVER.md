@@ -75,3 +75,6 @@ Der reale Detailscore-0-Fehler bei Aktien wurde auf einen API-Vertragsfehler zur
 
 ## Stand 0.1.0-dev.25
 Der neue Tab **Lernfreigaben** zeigt die neun aktiven xStock-Parameter, einen berechneten Kandidaten und die zulässigen Grenzen. Ab fünf ausgewerteten xStock-Prognosen kann ein begrenzter Vorschlag erzeugt werden. Er verändert nichts automatisch. Der Button **Alle neun Parameter mit einem Klick bestätigen** aktiviert die Werte atomar als neue Version und protokolliert die Freigabe im Audit.
+
+## Stand 0.1.0-dev.27
+Dev.27 baut ausschließlich auf dem übergebenen v26-Snapshot auf. Die EUR/USD-Auswahl verwendet vollständige erwartete Kosten und hält Alternativpaare als Metadaten. Forex wird ohne nicht dokumentierten AssetPairs-Parameter aus Fiat-zu-Fiat-Paaren abgeleitet. USD-Paper-Trades weisen FX-Spread, FX-Gebühr, Produktspread, Slippage und Handelsgebühr getrennt aus. Mindesthaltedauer, Cooldown, Bestätigungen, Hysterese, Tageslimit sowie Gewinn-/Verlust- und Steuereffekt schützen vor unnötigen Umschichtungen. Realhandel bleibt hart deaktiviert.

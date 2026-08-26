@@ -1,5 +1,6 @@
 import json,math
 from db import now
+from execution_costs import choose_execution_pair,ticker_item
 def chunks(xs,n=80):
  for i in range(0,len(xs),n):yield xs[i:i+n]
 class MarketPrefilter:
@@ -13,26 +14,13 @@ class MarketPrefilter:
    cur=by_symbol.get(row['symbol'])
    if cur is None or priority.get(row['category'],99)<priority.get(cur['category'],99):by_symbol[row['symbol']]=row
   return [by_symbol[x] for x in sorted(by_symbol)]
- def _execution_cost(self,m,t,tickers):
-  if not t:return 10**9
-  bid=float((t.get('b') or [0])[0] or 0);ask=float((t.get('a') or [0])[0] or 0);mid=(bid+ask)/2;product_spread=(ask-bid)/mid if mid else 99
-  fee=float(self.db.value('paper_fee_bps','40'))/10000
-  if str(m.get('quote_asset') or '').upper().endswith('USD') or m['symbol'].endswith('/USD'):
-   fx=tickers.get('EUR/USD') or tickers.get('EURUSD')
-   if not fx:return 10**9
-   fb=float((fx.get('b') or [0])[0] or 0);fa=float((fx.get('a') or [0])[0] or 0);fm=(fb+fa)/2;fx_spread=(fa-fb)/fm if fm else 99;fx_fee=float(self.db.value('paper_fx_fee_bps','10'))/10000
-   return product_spread+fee+fx_spread+fx_fee
-  return product_spread+fee
  def _canonical_markets(self,markets,tickers):
   groups={}
-  for m in markets:groups.setdefault(m.get('canonical_id') or (m['asset_class']+':'+str(m.get('base_asset'))),[]).append(m)
-  out=[]
-  for cid,alts in groups.items():
-   ranked=[]
-   for m in alts:
-    t=tickers.get(m['source_key']) or tickers.get(m['symbol']);ranked.append((self._execution_cost(m,t,tickers),0 if m['symbol'].endswith('/EUR') else 1,m['symbol'],m))
-   chosen=min(ranked,key=lambda x:(x[0],x[1],x[2]))[3];chosen=dict(chosen);chosen['alternatives']=[x['symbol'] for x in alts];out.append(chosen)
-   with self.db.con() as c:c.execute('UPDATE canonical_products SET selected_symbol=?,alternatives_json=?,updated_at=? WHERE canonical_id=?',(chosen['symbol'],json.dumps(chosen['alternatives'],ensure_ascii=False),now(),cid))
+  for market in markets:groups.setdefault(market.get('canonical_id') or market['asset_class']+':'+str(market.get('base_asset')),[]).append(market)
+  out=[];trade_fee=self.db.value('paper_fee_bps','40');fx_fee=self.db.value('paper_fx_fee_bps','10');slippage=self.db.value('paper_slippage_bps','10')
+  for cid,alternatives in groups.items():
+   chosen,costs,ranking=choose_execution_pair(alternatives,tickers,trade_fee,fx_fee,slippage);chosen=dict(chosen);chosen['alternatives']=[x['symbol'] for x in alternatives];chosen['execution_costs']=costs;chosen['pair_ranking']=ranking;out.append(chosen)
+   with self.db.con() as c:c.execute('UPDATE canonical_products SET selected_symbol=?,alternatives_json=?,updated_at=? WHERE canonical_id=?',(chosen['symbol'],json.dumps({'pairs':chosen['alternatives'],'ranking':ranking},ensure_ascii=False,sort_keys=True),now(),cid))
   return sorted(out,key=lambda x:x['symbol'])
  def run(self,top=8):
   markets=self.markets();nr=self.news.collect();self.news.link_markets(markets);tickers={};errors=[]
@@ -59,7 +47,7 @@ class MarketPrefilter:
      if want==k.replace('/','').replace('X','').replace('Z',''):t=v;break
    liq=spread_s=mom=0.;quality='VALID' if t else 'PENDING_TICKER';reasons=['Kanonisches Produkt; Alternativen: '+', '.join(m.get('alternatives',[]))]
    if t:
-    bid=float((t.get('b') or [0])[0] or 0);ask=float((t.get('a') or [0])[0] or 0);last=float((t.get('c') or [0])[0] or 0);op=float(t.get('o') or 0);vol=float((t.get('v') or [0,0])[-1] or 0);mid=(bid+ask)/2;sp=(ask-bid)/mid*100 if mid else 999;chg=(last/op-1)*100 if op else 0;turn=max(0,vol*last);spread_s=max(0,35-min(35,sp*35));mom=max(0,min(25,12.5+chg*2));liq=max(0,min(30,math.log10(turn+1)*5));reasons=[f'Spread {sp:.3f} %',f'24h-Veränderung {chg:.2f} %',f'Umsatzindikator {turn:.2f}']
+    bid=float((t.get('b') or [0])[0] or 0);ask=float((t.get('a') or [0])[0] or 0);last=float((t.get('c') or [0])[0] or 0);op=float(t.get('o') or 0);vol=float((t.get('v') or [0,0])[-1] or 0);mid=(bid+ask)/2;sp=(ask-bid)/mid*100 if mid else 999;chg=(last/op-1)*100 if op else 0;turn=max(0,vol*last);spread_s=max(0,35-min(35,sp*35));mom=max(0,min(25,12.5+chg*2));liq=max(0,min(30,math.log10(turn+1)*5));reasons+=['Ausführungskosten gesamt '+str(round(float(m['execution_costs']['total_rate'])*100,4))+' %',f'Spread {sp:.3f} %',f'24h-Veränderung {chg:.2f} %',f'Umsatzindikator {turn:.2f}']
    if not t:reasons.append('Markt wurde von Kraken gemeldet, Ticker war im Vorfilter aber nicht verfügbar; Kandidat bleibt für Detailprüfung erhalten')
    nl=self.db.rows('SELECT relevance FROM news_market_links WHERE symbol=?',(symbol,));news=min(10,sum(float(x['relevance']) for x in nl));reasons.append(f'Nachrichten {news:.2f}/10 aus {len(nl)} Zuordnungen');score=liq+spread_s+mom+news;rows.append({'symbol':symbol,'category':m['category'],'score':round(score,4),'liq':liq,'spread':spread_s,'mom':mom,'news':news,'quality':quality,'reasons':reasons})
   valid=[x for x in rows if x['quality']=='VALID'];chosen=[]

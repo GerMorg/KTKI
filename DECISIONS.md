@@ -101,3 +101,10 @@ Produkte werden nach Anlageklasse und Basiswert kanonisiert. Watchlist, Scanner 
 USD-Paper-Ausführungen bilden EUR-USD-Konvertierung, FX-Spread, FX-Gebühr, Produktspread und Handelsgebühr getrennt ab.
 ## 2026-08-26 D044
 Forex verwendet asset_class=forex und ein eigenes deterministisches forex-v1-Profil. Umschichtungen benötigen Mindesthaltedauer, Cooldown, Mehrfachbestätigung, positive Verbesserung nach Kosten und ein Tageslimit.
+
+## 2026-08-26 D045
+AssetPairs verwendet den dokumentierten Parameter `aclass_base`. Das Forex-Universum wird reproduzierbar aus Fiat-zu-Fiat-Paaren der Currency-Antwort abgeleitet; Ticker und OHLC bleiben für Forex im Currency-Routing.
+## 2026-08-26 D046
+Die Auswahl zwischen EUR- und USD-Ausführungspaar erfolgt ausschließlich nach vollständigen erwarteten Ausführungskosten; Liquidität und danach EUR dienen als Gleichstandsregeln.
+## 2026-08-26 D047
+Paper-Umschichtungen berücksichtigen Produkspread, Slippage, Handelsgebühr, FX-Spread, FX-Gebühr, realisierten Gewinn/Verlust und eine konfigurierbare Steuersimulation.

@@ -1,10 +1,11 @@
 import json
 from db import now
 from product_identity import canonical_product_id,is_traditional_stock
+FIAT={'EUR','USD','GBP','CHF','JPY','CAD','AUD','NZD'}
 CATEGORIES={'crypto_spot':('Kryptowährungen (Spot)','currency'),'xstocks':('xStocks / tokenisierte Aktien und ETFs','tokenized_asset'),'forex':('Devisen (Forex)','forex'),'leveraged_spot':('Hebelfähige Spot-Produkte','derived')}
 def classify(pair,ac):
  if ac=='tokenized_asset':return 'xstocks'
- if ac=='forex':return 'forex'
+ if ac=='forex' or (str(pair.get('base')) in FIAT and str(pair.get('quote')) in FIAT):return 'forex'
  if pair.get('leverage_buy') or pair.get('leverage_sell'):return 'leveraged_spot'
  return 'crypto_spot'
 class MarketUniverse:
@@ -32,6 +33,7 @@ class MarketUniverse:
    try:pairs=self.client.pairs(ac)
    except Exception as exc:errors.append({'asset_class':ac,'error':type(exc).__name__});continue
    for source,pair in pairs.items():
+    if ac=='currency' and classify(pair,ac)=='forex':continue
     symbol=pair.get('wsname') or pair.get('altname')
     if not symbol:continue
     if is_traditional_stock(ac):
@@ -45,6 +47,9 @@ class MarketUniverse:
     rows.append((symbol,ac,cat,pair.get('base'),pair.get('quote'),pair.get('status'),str(pair.get('ordermin')) if pair.get('ordermin') is not None else None,str(pair.get('costmin')) if pair.get('costmin') is not None else None,pair.get('lot_decimals'),pair.get('pair_decimals'),json.dumps(pair.get('leverage_buy') or []),json.dumps(pair.get('leverage_sell') or []),source,stamp,cid,kind,json.dumps(pair,ensure_ascii=False,sort_keys=True)))
   if rows:
    with self.db.con() as c:
+    c.execute("DELETE FROM market_universe WHERE asset_class IN ('currency','tokenized_asset','forex')")
+    c.execute('DELETE FROM universe_api_metadata')
+    c.executemany('INSERT INTO universe_api_metadata(created_at,asset_class,source_key,payload_json) VALUES(?,?,?,?)',[(stamp,r[1],r[12],r[16]) for r in rows])
     c.executemany('INSERT OR REPLACE INTO market_universe(symbol,asset_class,category,base_asset,quote_asset,status,ordermin,costmin,lot_decimals,pair_decimals,leverage_buy_json,leverage_sell_json,source_key,updated_at,canonical_id,product_kind,metadata_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',rows)
     c.execute('DELETE FROM market_category_members');c.executemany('INSERT OR REPLACE INTO market_category_members VALUES(?,?,?)',members);c.execute('DELETE FROM canonical_products')
     grouped={}

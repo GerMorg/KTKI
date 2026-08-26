@@ -146,3 +146,18 @@ release_0_1_0_dev_26:
   traditional_stock_separation: {required: true, status: fail_closed}
   turnover_stability_gates: {required: true, status: implemented}
   real_trading: {required: false, status: hard_disabled}
+
+release_0_1_0_dev_27:
+  v26_as_only_base: {required: true, status: enforced}
+  canonical_identity_by_asset_class_and_underlying: {required: true, status: implemented}
+  all_in_pair_selection: {required: true, status: implemented}
+  one_product_in_watchlist_scanner_portfolio: {required: true, status: implemented_with_position_consolidation}
+  alternative_pairs_as_metadata: {required: true, status: implemented}
+  usd_fx_spread_and_fee: {required: true, status: implemented_separately}
+  product_spread_and_trade_fee: {required: true, status: implemented_separately}
+  forex_currency_pair_derivation: {required: true, status: implemented}
+  forex_v1_profile: {required: true, status: preserved}
+  xstock_traditional_stock_separation: {required: true, status: fail_closed}
+  turnover_hysteresis_and_tax_awareness: {required: true, status: implemented}
+  utf8_source_and_database_migration_v4: {required: true, status: implemented}
+  real_trading: {required: false, status: hard_disabled}

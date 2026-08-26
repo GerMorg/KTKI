@@ -141,3 +141,15 @@ release_0_1_0_dev_25:
     - {id: T083, expectation: xStock-API-Vertrag und nicht-null Detailscore aus dev.24 bleiben erhalten, status: passed}
   manual:
     - {id: M042, expectation: HA-Ingress zeigt Lernfreigaben und bestätigt alle neun Werte mit einem Klick, status: pending}
+
+release_0_1_0_dev_27:
+  automated:
+    - {id: T084, expectation: EUR- und USD-Paare desselben Basiswerts teilen eine kanonische Identität, status: passed}
+    - {id: T085, expectation: Paarwahl verwendet vollständige Kosten und kann trotz EUR-Verfügbarkeit USD wählen, status: passed}
+    - {id: T086, expectation: Forex wird aus dokumentierten Fiat-Currency-Paaren ohne Duplikat abgeleitet, status: passed}
+    - {id: T087, expectation: USD-Paper-Trade protokolliert FX-, Produktspread-, Slippage- und Handelskosten separat, status: passed}
+    - {id: T088, expectation: v24- bis v27-Vertragstests und Marktuniversum-Regressionen bleiben bestanden, status: passed}
+  manual:
+    - {id: M043, expectation: HA-Ingress zeigt je Basiswert nur das gewählte Ausführungspaar und Alternative-Metadaten, status: pending}
+    - {id: M044, expectation: Forex-Research liefert reale Kandidaten mit Modell forex-v1, status: pending}
+    - {id: M045, expectation: Einstellungen für Haltedauer, Cooldown, Bestätigung und Tageslimit sind sichtbar und persistent, status: pending}

@@ -58,3 +58,6 @@ Kontrollierter xStock-Lernprozess mit neun begrenzten Parametern, übersichtlich
 
 ## 0.1.0-dev.26 - 2026-08-26
 Kanonische Produkte, kostenoptimale EUR/USD-Paarwahl, vollständige FX-Kostensimulation, repariertes Forex-Universum mit forex-v1 und Schutz vor häufigen Umschichtungen. Alle bisherigen Funktionen bleiben erhalten.
+
+## 0.1.0-dev.27 - 2026-08-26
+Konsolidierte Weiterentwicklung von v26 mit dokumentationskonformem Forex-Universum, kanonischer kostenbasierter Paarwahl, vollständiger Paper-Kostenkette, stabilen Umschichtungsregeln und echter UTF-8-Migration.

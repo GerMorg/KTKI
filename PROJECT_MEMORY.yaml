@@ -341,3 +341,11 @@ release_0_1_0_dev_26:
   purpose: Kanonische Produkte, reale FX-Kostensimulation, Forex-Reparatur und stabile Umschichtungen.
   preserved: [all prior functions, read-only Kraken integration, controlled learning, real execution hard disabled]
   added: [canonical identity, cost-based pair selection, alternative metadata, FX spread and fee, forex-v1, holding period, cooldown, confirmation, daily turnover limit]
+
+release_0_1_0_dev_27:
+  date: 2026-08-26
+  base: 0.1.0-dev.26 user-provided repository snapshot
+  purpose: Konsolidierte und getestete Umsetzung der kanonischen Produkte, FX-Kosten, Forex-Reparatur und Umschichtungsstabilität.
+  preserved: [all v26 functions, controlled learning, read-only Kraken integration, real execution hard disabled]
+  added: [documented AssetPairs routing, fiat-pair Forex derivation, all-in pair ranking, canonical portfolio consolidation, separate product and FX costs, hysteresis, tax impact, UTF-8 migration v4]
+  verification: [dev24 contract passed, dev25 learning passed, dev26 regression passed, dev27 policy tests passed, market universe tests passed]

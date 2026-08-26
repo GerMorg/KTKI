@@ -1,4 +1,13 @@
 # Changelog
+## 0.1.0-dev.27
+- v26 als alleinige Entwicklungsbasis übernommen und die Umsetzung konsolidiert
+- kanonische Produkte über Anlageklasse und Basiswert
+- kostenoptimale EUR/USD-Paarwahl mit Spread, Liquidität, Slippage, Handels- und FX-Kosten
+- vollständige USD-Paper-Kostenkette mit separatem Produkspread und FX-Kosten
+- Forex-Universum aus dokumentierten Currency-Paaren abgeleitet und eigenes forex-v1 beibehalten
+- xStocks und traditionelle Aktien strikt getrennt; Rohmetadaten auditierbar
+- Mindesthaltedauer, Cooldown, Bestätigung, Hysterese, Tageslimit und Steuersimulation
+- echte UTF-8-Quelltextbereinigung und idempotente SQLite-Migration v4
 ## 0.1.0-dev.26
 - Kanonische Produktidentität und kostenbasierte EUR/USD-Ausführungspaarwahl
 - vollständige FX-Kostenkette für USD-Paper-Trades
