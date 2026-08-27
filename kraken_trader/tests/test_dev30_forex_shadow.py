@@ -17,8 +17,3 @@ class T(unittest.TestCase):
  def test_comparison_records_disagreement_flag(self):
   self.f.run();self.assertEqual(len(self.f.comparisons()),2)
 if __name__=='__main__':unittest.main()
-
-
-
-
-

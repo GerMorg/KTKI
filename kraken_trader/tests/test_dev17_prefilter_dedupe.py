@@ -22,10 +22,3 @@ class Tests(unittest.TestCase):
   markets=self.p.markets();self.assertEqual(sum(x['symbol']=='AAPLx/USD' for x in markets),1);r=self.p.run(8);rows=self.db.rows('SELECT * FROM prefilter_results WHERE run_id=?',(r['run_id'],));self.assertEqual(sum(x['symbol']=='AAPLx/USD' for x in rows),1)
  def test_usd_xstock_is_candidate(self):
   r=self.p.run(8);self.assertIn('AAPLx/USD',self.p.candidates())
-
-
-
-
-
-
-

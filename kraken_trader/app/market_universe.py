@@ -64,10 +64,3 @@ class MarketUniverse:
   if not enabled:return []
   marks=','.join('?'*len(enabled));rows=self.db.rows(f"SELECT DISTINCT u.symbol FROM market_universe u JOIN market_category_members m ON m.symbol=u.symbol AND m.asset_class=u.asset_class WHERE m.category IN ({marks}) AND LOWER(COALESCE(u.status,'online')) IN ('online','post_only','limit_only')",list(enabled));symbols=[x['symbol'] for x in rows]
   return sorted(x for x in set(symbols) if not quote or x.rsplit('/',1)[-1]==quote)
-
-
-
-
-
-
-

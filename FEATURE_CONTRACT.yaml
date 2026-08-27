@@ -1,4 +1,4 @@
-version: 0.1.0-dev.38
+version: 0.1.0-dev.39
 compatibility_rule: Implementierte Funktionen duerfen nur nach ausdruecklicher Entscheidung mit dokumentierter Migration entfernt werden.
 features:
   ingress_gui: {required: true, status: implemented}
@@ -268,4 +268,13 @@ release_0_1_0_dev_38:
   entry_exit_roundtrip_costs: {required: true, status: implemented}
   fee_source_provenance: {required: true, status: persisted}
   forecast_feature_schema_v3: {required: true, status: implemented_migrated}
+  real_trading: {required: false, status: hard_disabled}
+
+release_0_1_0_dev_39:
+  canonical_trade_volume_pair_resolution: {required: true, status: implemented}
+  unsupported_fee_asset_class_fallback: {required: true, status: enforced}
+  isolated_fee_pair_failures: {required: true, status: implemented}
+  guided_responsive_ingress_gui: {required: true, status: implemented}
+  controlled_learning_parameter_diff_gui: {required: true, status: implemented}
+  repository_utf8_source_gate: {required: true, status: enforced}
   real_trading: {required: false, status: hard_disabled}

@@ -101,3 +101,8 @@ Dev.35 zeigte Abdeckung, Nettorendite und Drawdown nur als Information; ein Kand
 
 ## 2026-08-26 I040 - gelöst in 0.1.0-dev.38
 Fällige Prognosen wurden zuvor mit dem beim Auswertungslauf aktuellen Livepreis bewertet und die als Roundtrip bezeichneten Kosten trennten Einstieg und Ausstieg nicht eindeutig. Dev.38 verwendet historische Zielkerzen und persistiert eine quellenbezogene Entry-/Exit-Kostenkette.
+
+## 2026-08-27 I041 - gelöst in 0.1.0-dev.39
+Der Gebührenabruf übergab interne Anzeige- und nicht unterstützte Produktpaare gemeinsam an TradeVolume. Ein unbekanntes Paar erzeugte EQuery:Unknown asset pair und verhinderte den gesamten Abruf. Dev.39 löst Currency-Paare kanonisch auf, trennt nicht unterstützte Assetklassen und isoliert Teilfehler.
+## 2026-08-27 I042 - gelöst in 0.1.0-dev.39
+Der übergebene dev.38-Snapshot enthielt erneut Mojibake in Quelltexten, GUI und Dokumentation. Dev.39 repariert die Texte und bestätigt die UTF-8-Gates in der vollständigen Regression.

@@ -16,10 +16,3 @@ class ScannerTests(unittest.TestCase):
  def test_persistence(self):
   self.s.client.ohlc=lambda sym,interval:{sym:self.candles(),'last':1};self.s.client.ticker=lambda syms:{'BTC/EUR':{'b':['114.6'],'a':['114.8']}}
   self.s.run(['BTC/EUR']);self.assertTrue(self.db.rows('SELECT * FROM scanner_results'));self.assertTrue(self.db.rows('SELECT * FROM scanner_runs'))
-
-
-
-
-
-
-

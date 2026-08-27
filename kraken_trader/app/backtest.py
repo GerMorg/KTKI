@@ -21,8 +21,3 @@ class BacktestEngine:
   ac=(self.db.rows('SELECT asset_class FROM market_universe WHERE symbol=? LIMIT 1',(symbol,)) or [{'asset_class':'unknown'}])[0]['asset_class']
   with self.db.con() as c:cur=c.execute('INSERT INTO backtest_runs(created_at,symbol,asset_class,interval_min,model_version,train_points,test_points,cost_rate,status,results_json) VALUES(?,?,?,?,?,?,?,?,?,?)',(now(),symbol,ac,int(interval_min),'trend-sma10-30-v1',split,len(test),str(cost_rate),'VALID',json.dumps(results,sort_keys=True)));rid=cur.lastrowid
   return {'status':'VALID','run_id':rid,**results}
-
-
-
-
-

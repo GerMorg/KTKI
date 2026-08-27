@@ -161,3 +161,8 @@ Ab dev.38 wird eine fällige Prognose ausschließlich mit der ersten vollständi
 
 ## 2026-08-26 D063
 Forecast-Kosten werden als getrennte Einstiegs-, Ausstiegs- und Roundtrip-Werte gespeichert. Gebührenquelle und Gültigkeitszeitpunkt sowie FX-Erfordernis sind Bestandteil des unveränderlichen Feature-Snapshots.
+
+## 2026-08-27 D064
+Gebührenpaare werden vor TradeVolume aus der kanonischen Marktidentität gegen Kraken-Quellschlüssel und Aliasse aufgelöst. Ein ungültiges Paar darf gültige Gebührenprofile nicht verwerfen; nicht unterstützte Assetklassen bleiben beim konservativen Konfigurationswert.
+## 2026-08-27 D065
+Die Ingress-GUI erhält eine durchgängige responsive Navigation, eine geführte Startseite und verständliche Sicherheits- und Freigabehinweise. Bestehende Funktionen bleiben erhalten.

@@ -20,10 +20,3 @@ class Tests(unittest.TestCase):
  def test_scanner_uses_kraken_source_key_and_produces_nonzero_score(self):
   db=DB(tempfile.mktemp());db.init();u=MarketUniverse(db,Client());u.set_categories({'xstocks'});u.sync();s=MarketScanner(db,Client());s.run(['AAPLx/USD'],60,1,0);r=db.rows("SELECT * FROM scanner_results WHERE symbol='AAPLx/USD'")[0]
   self.assertEqual(r['quality'],'VALID');self.assertGreater(float(r['score']),0);self.assertIn('xstocks-approved-v1',r['reasons_json'])
-
-
-
-
-
-
-

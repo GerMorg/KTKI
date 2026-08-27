@@ -8,10 +8,3 @@ class T(unittest.TestCase):
   d=self.c.get('/',headers={'X-Ingress-Path':'/api/hassio_ingress/token'}).data;self.assertIn(b'/api/hassio_ingress/token/api',d);self.assertNotIn(b'href="/"',d)
  def test_disabled(self):self.assertFalse(self.c.get('/health').json['real_trading'])
 if __name__=='__main__':unittest.main()
-
-
-
-
-
-
-

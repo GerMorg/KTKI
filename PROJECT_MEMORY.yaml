@@ -429,3 +429,7 @@ release_0_1_0_dev_38:
   regression: 119 automatisierte Tests erfolgreich
   safety: Realhandel weiterhin hart deaktiviert
   next_recommended_release: dev.39 Walk-forward-Validierung mit Teilfenster-Gates
+
+  - date: 2026-08-27
+    version: 0.1.0-dev.39
+    decision: Gebührenauflösung kanonisch und teilfehlertolerant; GUI durchgängig geführt und responsive; vollständiges Repository bei jeder Weiterentwicklung ausgeben.

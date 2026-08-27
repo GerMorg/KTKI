@@ -245,3 +245,19 @@ release_0_1_0_dev_38:
     - {id: T-D38-003, expectation: Entry Exit Roundtrip und Gebührenquelle werden gespeichert, status: passed}
     - {id: T-D38-004, expectation: Bewertungsschema migriert idempotent, status: passed}
     - {id: T-D38-REG, expectation: Vollständige Regression, status: passed_119}
+
+
+release_0_1_0_dev_39:
+  expected_test_count: 124
+  checks:
+    - id: dev39_fee_pair_resolution
+      status: passed
+      evidence: test_dev39_fee_gui.py
+    - id: dev39_fee_partial_failure_isolation
+      status: passed
+      evidence: test_dev39_fee_gui.py
+    - id: dev39_guided_gui
+      status: passed
+      evidence: test_dev39_fee_gui.py
+    - id: dev39_full_regression
+      status: passed_124

@@ -18,10 +18,3 @@ class Tests(unittest.TestCase):
  def test_html_declares_utf8(self):
   os.environ['APP_DISABLE_PAPER_SCHEDULER']='1';import main
   response=main.app.test_client().get('/');self.assertIn('charset=utf-8',response.headers['Content-Type'].lower());self.assertIn('Übersicht',response.data.decode('utf-8'))
-
-
-
-
-
-
-

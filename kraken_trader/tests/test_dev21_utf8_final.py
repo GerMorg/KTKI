@@ -17,10 +17,3 @@ class Tests(unittest.TestCase):
   for path in root.rglob('*'):
    if path.is_file() and path.suffix in ('','.py','.md','.yaml','.yml','.txt'):
     text=path.read_text('utf-8');self.assertEqual(corruption_score(text),0,str(path))
-
-
-
-
-
-
-

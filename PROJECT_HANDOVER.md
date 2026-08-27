@@ -157,3 +157,9 @@ Dev.38 baut vollständig auf dev.37 auf. Prognoseauswertungen verwenden keine ve
 
 ### Nächster empfohlener Schritt
 Dev.39 sollte eine echte zeitlich getrennte Walk-forward-Validierung für Lernkandidaten mit stabilen Teilfenster-Gates ergänzen.
+
+## Stand 0.1.0-dev.39
+Dev.39 basiert ausschließlich auf dem gelieferten dev.38-Snapshot. Alle erkannten UTF-8-Schäden wurden repariert. Der Gebührenabruf verwendet nun kanonische Kraken-Paaridentitäten, lässt nicht unterstützte Assetklassen beim sicheren Konfigurations-Fallback und isoliert ungültige Paare. Die GUI besitzt eine neue responsive Navigation, eine geführte Übersicht sowie eine verständliche kontrollierte Lernfreigabe mit aktiver Version, Parametervergleich und Gate-Details. Die vollständige Regression umfasst 124 erfolgreiche Tests. Realhandel bleibt hart deaktiviert.
+
+### Nächster Schritt
+Praktischer Home-Assistant-OS-Test des Gebührenabrufs mit dem realen Marktuniversum sowie schrittweise Modularisierung der großen main.py in Blueprints ohne Funktionsverlust.

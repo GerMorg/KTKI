@@ -11,10 +11,3 @@ class ConfigTests(unittest.TestCase):
   main.client.ticker=lambda symbols:{'XXBTZEUR':{'c':['50000'],'b':['49990'],'a':['50010'],'o':'49000'}}
   with main.db.con() as c:c.execute("INSERT OR REPLACE INTO allowlist VALUES('BTC/EUR',1)")
   self.assertEqual(main.refresh_allowed_prices(),1);self.assertTrue(main.db.rows("SELECT * FROM live_prices WHERE symbol='BTC/EUR'"))
-
-
-
-
-
-
-

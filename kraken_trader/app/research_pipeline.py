@@ -29,10 +29,3 @@ class ResearchPipeline:
   finally:self.lock.release()
  def latest(self):
   r=self.db.rows('SELECT * FROM research_jobs ORDER BY id DESC LIMIT 1');return r[0] if r else None
-
-
-
-
-
-
-

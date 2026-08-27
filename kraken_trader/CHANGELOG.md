@@ -1,4 +1,13 @@
 # Changelog
+## 0.1.0-dev.39
+- Repository und sichtbare GUI-Texte vollständig als echtes UTF-8 repariert
+- Gebührenabruf löst interne Symbole vor TradeVolume gegen Kraken-Quellschlüssel und Aliasse auf
+- nicht unterstützte Assetklassen werden mit dokumentiertem Konfigurations-Fallback übersprungen
+- fehlerhafte Gebührenpaare werden isoliert; gültige Paare bleiben bei Teilfehlern erhalten
+- neue übersichtliche, responsive Hauptnavigation und geführte Startseite
+- kontrolliertes Lernen zeigt aktive Version, Parametervergleich, Gates und Aktivierungswirkung verständlich an
+- 124 automatische Regressionstests erfolgreich
+- Realhandel bleibt hart deaktiviert
 ## 0.1.0-dev.38
 - fällige Prognosen werden mit der ersten vollständig abgeschlossenen historischen OHLC-Kerze am oder nach dem Zielzeitpunkt bewertet
 - Livepreise werden nicht mehr als Ersatz für historische Zielpreise verwendet
@@ -114,10 +123,3 @@
 
 ## 0.1.0-dev.24
 - realen xStock-Detailscore durch korrekten Kraken-API-Vertrag repariert
-
-
-
-
-
-
-
