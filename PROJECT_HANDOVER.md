@@ -30,110 +30,110 @@ Der sichtbare Ticker-Zeitstempel aendert sich nur bei einem gespeicherten Ticker
 Nachvollziehbare Kostenbasis sowie realisierte/unrealisierte Ergebnisse aus Kraken-Ledger und Execution-Daten; weiterhin ohne echte Orders.
 
 ## Stand 0.1.0-dev.6
-Dev.6 baut unmittelbar auf dev.5 auf. Neu ist `paper_engine.py`. Die Engine hÃƒÂ¤lt ein eigenes persistentes Paper-Konto, Positionen, Trades, Entscheidungen und Snapshots. Sie verwendet nur Allowlist-Symbole und `live_prices`. Ohne aktiven Analyse-/Paper-Schalter oder ohne Livepreis wird kein simulierter Trade ausgefÃƒÂ¼hrt. GebÃƒÂ¼hren, Slippage und Positionslimit sind App-Optionen. Der reale Kraken-Transport enthÃƒÂ¤lt weiterhin keine Ordermethode.
+Dev.6 baut unmittelbar auf dev.5 auf. Neu ist `paper_engine.py`. Die Engine hÃƒÆ’Ã‚Â¤lt ein eigenes persistentes Paper-Konto, Positionen, Trades, Entscheidungen und Snapshots. Sie verwendet nur Allowlist-Symbole und `live_prices`. Ohne aktiven Analyse-/Paper-Schalter oder ohne Livepreis wird kein simulierter Trade ausgefÃƒÆ’Ã‚Â¼hrt. GebÃƒÆ’Ã‚Â¼hren, Slippage und Positionslimit sind App-Optionen. Der reale Kraken-Transport enthÃƒÆ’Ã‚Â¤lt weiterhin keine Ordermethode.
 
 ## Stand 0.1.0-dev.7
-Die fehlende praktische Automatisierung aus dev.6 wurde geschlossen. Einstellungen sind vollstÃƒÂ¤ndig in der Ingress-GUI sichtbar und werden in `settings` gespeichert. Allowlist-Symbole werden an den ÃƒÂ¶ffentlichen WebSocket ÃƒÂ¼bergeben. `refresh_allowed_prices()` aktualisiert sie vor jedem Lauf zusÃƒÂ¤tzlich ÃƒÂ¼ber REST. `paper_scheduler()` fÃƒÂ¼hrt `run_paper_cycle()` im konfigurierten Intervall aus. Der manuelle Knopf verwendet exakt dieselbe Pipeline. BUY wird weiterhin nur bei erfÃƒÂ¼lltem Signal ausgefÃƒÂ¼hrt.
+Die fehlende praktische Automatisierung aus dev.6 wurde geschlossen. Einstellungen sind vollstÃƒÆ’Ã‚Â¤ndig in der Ingress-GUI sichtbar und werden in `settings` gespeichert. Allowlist-Symbole werden an den ÃƒÆ’Ã‚Â¶ffentlichen WebSocket ÃƒÆ’Ã‚Â¼bergeben. `refresh_allowed_prices()` aktualisiert sie vor jedem Lauf zusÃƒÆ’Ã‚Â¤tzlich ÃƒÆ’Ã‚Â¼ber REST. `paper_scheduler()` fÃƒÆ’Ã‚Â¼hrt `run_paper_cycle()` im konfigurierten Intervall aus. Der manuelle Knopf verwendet exakt dieselbe Pipeline. BUY wird weiterhin nur bei erfÃƒÆ’Ã‚Â¼lltem Signal ausgefÃƒÆ’Ã‚Â¼hrt.
 
 ## Stand 0.1.0-dev.8
-Neu ist `scanner.py` mit persistenten Tabellen `ohlc_cache`, `scanner_results` und `scanner_runs`. Die Seite **Scanner** analysiert die freigegebenen Produkte auf abgeschlossenen 1-Stunden-Kerzen. Der Scanner ist absichtlich noch nicht direkt mit Paper-Trades gekoppelt; die Ergebnisse sollen zuerst praktisch geprÃƒÂ¼ft und spÃƒÂ¤ter gebenchmarkt werden.
+Neu ist `scanner.py` mit persistenten Tabellen `ohlc_cache`, `scanner_results` und `scanner_runs`. Die Seite **Scanner** analysiert die freigegebenen Produkte auf abgeschlossenen 1-Stunden-Kerzen. Der Scanner ist absichtlich noch nicht direkt mit Paper-Trades gekoppelt; die Ergebnisse sollen zuerst praktisch geprÃƒÆ’Ã‚Â¼ft und spÃƒÆ’Ã‚Â¤ter gebenchmarkt werden.
 
 
 ## Stand 0.1.0-dev.13
-Der globale Nachrichtenindex GDELT wird mit EZB-, Federal-Reserve- und Kraken-Feeds kombiniert. Quellenklassen und Gewichte bleiben nachvollziehbar. Nachrichten werden deterministisch taxonomiert und nur fÃƒÂ¼r die Vorfilterung verwendet. Jeder Vorfilterlauf erzeugt eine Watchlist-Version; valide Detailanalysen erzeugen 24h- und 168h-Prognosesnapshots, die spÃƒÂ¤ter gegen reale Preise bewertet werden. Modellgewichte ÃƒÂ¤ndern sich nicht automatisch.
+Der globale Nachrichtenindex GDELT wird mit EZB-, Federal-Reserve- und Kraken-Feeds kombiniert. Quellenklassen und Gewichte bleiben nachvollziehbar. Nachrichten werden deterministisch taxonomiert und nur fÃƒÆ’Ã‚Â¼r die Vorfilterung verwendet. Jeder Vorfilterlauf erzeugt eine Watchlist-Version; valide Detailanalysen erzeugen 24h- und 168h-Prognosesnapshots, die spÃƒÆ’Ã‚Â¤ter gegen reale Preise bewertet werden. Modellgewichte ÃƒÆ’Ã‚Â¤ndern sich nicht automatisch.
 
 
 ## Stand 0.1.0-dev.14
-Dev.14 ist ein gezielter Start-Hotfix auf Basis von dev.13. Ursache des Exit-Codes war die fehlende SQLite-Migration der in dev.13 erweiterten Nachrichtentabellen. Fehlende Spalten werden nun beim Start idempotent ergÃƒÂ¤nzt; Quellen und Nachrichten werden mit expliziten Spaltenlisten geschrieben. Bestehende Nachrichten bleiben erhalten.
+Dev.14 ist ein gezielter Start-Hotfix auf Basis von dev.13. Ursache des Exit-Codes war die fehlende SQLite-Migration der in dev.13 erweiterten Nachrichtentabellen. Fehlende Spalten werden nun beim Start idempotent ergÃƒÆ’Ã‚Â¤nzt; Quellen und Nachrichten werden mit expliziten Spaltenlisten geschrieben. Bestehende Nachrichten bleiben erhalten.
 
 ## Stand 0.1.0-dev.15
-Die fehleranfÃƒÂ¤llige breite GDELT-Global-Abfrage wurde stillgelegt. GDELT Wirtschaft und GDELT Geopolitik verwenden kleinere Abfragen; Google News Wirtschaft AT und Google News Geopolitik AT ergÃƒÂ¤nzen sie als RSS-Aggregatoren. Abrufe verwenden einen gesetzten User-Agent, bis zu drei begrenzte Versuche und persistieren HTTP-Status, Detailfehler, FehlerzÃƒÂ¤hler sowie letzten Erfolg. In den Einstellungen kann ein eigener automatischer Research-Zeitplan aktiviert werden.
+Die fehleranfÃƒÆ’Ã‚Â¤llige breite GDELT-Global-Abfrage wurde stillgelegt. GDELT Wirtschaft und GDELT Geopolitik verwenden kleinere Abfragen; Google News Wirtschaft AT und Google News Geopolitik AT ergÃƒÆ’Ã‚Â¤nzen sie als RSS-Aggregatoren. Abrufe verwenden einen gesetzten User-Agent, bis zu drei begrenzte Versuche und persistieren HTTP-Status, Detailfehler, FehlerzÃƒÆ’Ã‚Â¤hler sowie letzten Erfolg. In den Einstellungen kann ein eigener automatischer Research-Zeitplan aktiviert werden.
 
 ## Stand 0.1.0-dev.16
-Dev.16 erweitert das Universum auf Kraken-Aktien/xStocks der Assetklasse `tokenized_asset` und akzeptiert EUR- sowie USD-Paare im ÃƒÂ¶ffentlichen Stream. USD-Produkte werden fÃƒÂ¼r das Paper-Portfolio ÃƒÂ¼ber EUR/USD in EUR bewertet. Der neue PortfolioAllocator berechnet Zielgewichte aus Scanner-Score, VolatilitÃƒÂ¤t, Portfolioobergrenze und No-Trade-Band. SchwÃƒÂ¤chere Positionen dÃƒÂ¼rfen eine bessere Gelegenheit nur finanzieren, wenn der konfigurierte Konfidenzabstand die geschÃƒÂ¤tzten Rundlaufkosten ÃƒÂ¼bersteigt. Dynamischer Paper-Hebel nutzt ausschlieÃƒÅ¸lich Kraken-Metadaten und das Benutzermaximum. RealausfÃƒÂ¼hrung bleibt hart deaktiviert; ein separater Adapter validiert lediglich zukÃƒÂ¼nftige PlÃƒÂ¤ne.
+Dev.16 erweitert das Universum auf Kraken-Aktien/xStocks der Assetklasse `tokenized_asset` und akzeptiert EUR- sowie USD-Paare im ÃƒÆ’Ã‚Â¶ffentlichen Stream. USD-Produkte werden fÃƒÆ’Ã‚Â¼r das Paper-Portfolio ÃƒÆ’Ã‚Â¼ber EUR/USD in EUR bewertet. Der neue PortfolioAllocator berechnet Zielgewichte aus Scanner-Score, VolatilitÃƒÆ’Ã‚Â¤t, Portfolioobergrenze und No-Trade-Band. SchwÃƒÆ’Ã‚Â¤chere Positionen dÃƒÆ’Ã‚Â¼rfen eine bessere Gelegenheit nur finanzieren, wenn der konfigurierte Konfidenzabstand die geschÃƒÆ’Ã‚Â¤tzten Rundlaufkosten ÃƒÆ’Ã‚Â¼bersteigt. Dynamischer Paper-Hebel nutzt ausschlieÃƒÆ’Ã…Â¸lich Kraken-Metadaten und das Benutzermaximum. RealausfÃƒÆ’Ã‚Â¼hrung bleibt hart deaktiviert; ein separater Adapter validiert lediglich zukÃƒÆ’Ã‚Â¼nftige PlÃƒÆ’Ã‚Â¤ne.
 
 ## Stand 0.1.0-dev.18
-Ursache der leeren xStocks-Watchlist war die harte Bindung der Kandidatenauswahl an einen im gemeinsamen Vorfilterabruf erfolgreich zugeordneten Ticker. Dev.18 fragt xStocks explizit am internationalen AusfÃƒÂ¼hrungsplatz ab, routet Ticker nach Assetklasse, fÃƒÂ¤llt bei Batchfehlern auf Einzelabrufe zurÃƒÂ¼ck und ÃƒÂ¼bernimmt weiterhin von Kraken gemeldete MÃƒÂ¤rkte als `PENDING_TICKER`. Diese Kandidaten werden geprÃƒÂ¼ft, dÃƒÂ¼rfen ohne valide Detailanalyse aber nicht gehandelt werden.
+Ursache der leeren xStocks-Watchlist war die harte Bindung der Kandidatenauswahl an einen im gemeinsamen Vorfilterabruf erfolgreich zugeordneten Ticker. Dev.18 fragt xStocks explizit am internationalen AusfÃƒÆ’Ã‚Â¼hrungsplatz ab, routet Ticker nach Assetklasse, fÃƒÆ’Ã‚Â¤llt bei Batchfehlern auf Einzelabrufe zurÃƒÆ’Ã‚Â¼ck und ÃƒÆ’Ã‚Â¼bernimmt weiterhin von Kraken gemeldete MÃƒÆ’Ã‚Â¤rkte als `PENDING_TICKER`. Diese Kandidaten werden geprÃƒÆ’Ã‚Â¼ft, dÃƒÆ’Ã‚Â¼rfen ohne valide Detailanalyse aber nicht gehandelt werden.
 
 ## Stand 0.1.0-dev.20
-Der Mehrklassenlauf scheiterte beim Prognose-Snapshot, weil `research_forecasts` zwÃƒÂ¶lf Spalten hatte, der positionsabhÃƒÂ¤ngige Insert aber nur elf Gesamtwerte lieferte. Der Insert benennt jetzt alle elf Nicht-ID-Spalten explizit. ZusÃƒÂ¤tzlich wurde das gesamte Repository auf echtes UTF-8 normalisiert und mit Regressionstests gegen beschÃƒÂ¤digte Umlaute abgesichert.
+Der Mehrklassenlauf scheiterte beim Prognose-Snapshot, weil `research_forecasts` zwÃƒÆ’Ã‚Â¶lf Spalten hatte, der positionsabhÃƒÆ’Ã‚Â¤ngige Insert aber nur elf Gesamtwerte lieferte. Der Insert benennt jetzt alle elf Nicht-ID-Spalten explizit. ZusÃƒÆ’Ã‚Â¤tzlich wurde das gesamte Repository auf echtes UTF-8 normalisiert und mit Regressionstests gegen beschÃƒÆ’Ã‚Â¤digte Umlaute abgesichert.
 
 ## Stand 0.1.0-dev.20
-Dev.20 basiert ausschlieÃƒÅ¸lich auf dem vom Benutzer gelieferten dev.19-Snapshot. Die konkrete UNIQUE-Ursache liegt in der bisherigen SQL-Abfrage: `DISTINCT` umfasste auch `m.category`; ein hebelfÃƒÂ¤higer xStock erschien daher einmal als `xstocks` und nochmals als `leveraged_spot`. Die Mehrfachmitgliedschaft bleibt im Universum erhalten, wÃƒÂ¤hrend der Vorfilter pro Symbol eine kanonische Kategorie auswÃƒÂ¤hlt. ZusÃƒÂ¤tzlich schÃƒÂ¼tzen eine Schleifen-Deduplizierung und `ON CONFLICT(run_id,symbol) DO UPDATE` die Persistenz. SÃƒÂ¤mtliche ausgelieferten Texte und sichtbaren GUI-Strings wurden erneut auf echtes UTF-8 repariert.
+Dev.20 basiert ausschlieÃƒÆ’Ã…Â¸lich auf dem vom Benutzer gelieferten dev.19-Snapshot. Die konkrete UNIQUE-Ursache liegt in der bisherigen SQL-Abfrage: `DISTINCT` umfasste auch `m.category`; ein hebelfÃƒÆ’Ã‚Â¤higer xStock erschien daher einmal als `xstocks` und nochmals als `leveraged_spot`. Die Mehrfachmitgliedschaft bleibt im Universum erhalten, wÃƒÆ’Ã‚Â¤hrend der Vorfilter pro Symbol eine kanonische Kategorie auswÃƒÆ’Ã‚Â¤hlt. ZusÃƒÆ’Ã‚Â¤tzlich schÃƒÆ’Ã‚Â¼tzen eine Schleifen-Deduplizierung und `ON CONFLICT(run_id,symbol) DO UPDATE` die Persistenz. SÃƒÆ’Ã‚Â¤mtliche ausgelieferten Texte und sichtbaren GUI-Strings wurden erneut auf echtes UTF-8 repariert.
 
 ## Stand 0.1.0-dev.24
-Das Umlautproblem wird nicht mehr nur in den Dateien behandelt. `text_encoding.py` repariert beim ersten Start auch bereits persistierte Anzeigetexte in SQLite und markiert die Migration danach als abgeschlossen. `.editorconfig` und `.gitattributes` erzwingen UTF-8/LF fÃƒÂ¼r zukÃƒÂ¼nftige Ãƒâ€žnderungen. HTTP-Antworten behalten ein explizites UTF-8-Charset und erhalten `X-Content-Type-Options: nosniff`.
+Das Umlautproblem wird nicht mehr nur in den Dateien behandelt. `text_encoding.py` repariert beim ersten Start auch bereits persistierte Anzeigetexte in SQLite und markiert die Migration danach als abgeschlossen. `.editorconfig` und `.gitattributes` erzwingen UTF-8/LF fÃƒÆ’Ã‚Â¼r zukÃƒÆ’Ã‚Â¼nftige ÃƒÆ’Ã¢â‚¬Å¾nderungen. HTTP-Antworten behalten ein explizites UTF-8-Charset und erhalten `X-Content-Type-Options: nosniff`.
 
 ## Stand 0.1.0-dev.24
-Dev.22 basiert ausschlieÃƒÅ¸lich auf dem ÃƒÂ¼bergebenen dev.21-Snapshot. Alle Mojibake-Folgen wurden direkt aus Quelltexten, Tests und Dokumentation entfernt. Die Datenbankmigration verwendet eine neue v2-Markierung und lÃƒÂ¤uft deshalb auch dann einmalig, wenn dev.21 bereits `utf8_data_migration_v1=done` gespeichert hatte. Die UNIQUE-Absicherung des Vorfilters bleibt erhalten und wird zusammen mit der UTF-8-Reparatur getestet.
+Dev.22 basiert ausschlieÃƒÆ’Ã…Â¸lich auf dem ÃƒÆ’Ã‚Â¼bergebenen dev.21-Snapshot. Alle Mojibake-Folgen wurden direkt aus Quelltexten, Tests und Dokumentation entfernt. Die Datenbankmigration verwendet eine neue v2-Markierung und lÃƒÆ’Ã‚Â¤uft deshalb auch dann einmalig, wenn dev.21 bereits `utf8_data_migration_v1=done` gespeichert hatte. Die UNIQUE-Absicherung des Vorfilters bleibt erhalten und wird zusammen mit der UTF-8-Reparatur getestet.
 
 ## Stand 0.1.0-dev.24
-Aktien/xStocks sind jetzt durchgÃƒÂ¤ngig integriert: `tokenized_asset`-Universum, Ticker, OHLC, eigenes Scoreprofil `xstocks-v1`, Watchliststatus ANALYZED, BUY-Gate, dynamische Zielallokation, USD/EUR-Umrechnung und simulierte AusfÃƒÂ¼hrung. Paper-KÃƒÂ¤ufe werden abgelehnt, wenn Kraken-Metadaten zu `ordermin` oder `costmin` nicht erfÃƒÂ¼llt sind. Realhandel bleibt weiterhin technisch deaktiviert.
+Aktien/xStocks sind jetzt durchgÃƒÆ’Ã‚Â¤ngig integriert: `tokenized_asset`-Universum, Ticker, OHLC, eigenes Scoreprofil `xstocks-v1`, Watchliststatus ANALYZED, BUY-Gate, dynamische Zielallokation, USD/EUR-Umrechnung und simulierte AusfÃƒÆ’Ã‚Â¼hrung. Paper-KÃƒÆ’Ã‚Â¤ufe werden abgelehnt, wenn Kraken-Metadaten zu `ordermin` oder `costmin` nicht erfÃƒÆ’Ã‚Â¼llt sind. Realhandel bleibt weiterhin technisch deaktiviert.
 
 ## Stand 0.1.0-dev.24
-Der reale Detailscore-0-Fehler bei Aktien wurde auf einen API-Vertragsfehler zurÃƒÂ¼ckgefÃƒÂ¼hrt. Ticker und OHLC senden nun `asset_class=tokenized_asset`; OHLC verwendet primÃƒÂ¤r den von Kraken gelieferten `source_key`. Ein Fehler wird mit Typ und gekÃƒÂ¼rzter Meldung im Scannergrund gespeichert.
+Der reale Detailscore-0-Fehler bei Aktien wurde auf einen API-Vertragsfehler zurÃƒÆ’Ã‚Â¼ckgefÃƒÆ’Ã‚Â¼hrt. Ticker und OHLC senden nun `asset_class=tokenized_asset`; OHLC verwendet primÃƒÆ’Ã‚Â¤r den von Kraken gelieferten `source_key`. Ein Fehler wird mit Typ und gekÃƒÆ’Ã‚Â¼rzter Meldung im Scannergrund gespeichert.
 
 ## Stand 0.1.0-dev.25
-Der neue Tab **Lernfreigaben** zeigt die neun aktiven xStock-Parameter, einen berechneten Kandidaten und die zulÃƒÂ¤ssigen Grenzen. Ab fÃƒÂ¼nf ausgewerteten xStock-Prognosen kann ein begrenzter Vorschlag erzeugt werden. Er verÃƒÂ¤ndert nichts automatisch. Der Button **Alle neun Parameter mit einem Klick bestÃƒÂ¤tigen** aktiviert die Werte atomar als neue Version und protokolliert die Freigabe im Audit.
+Der neue Tab **Lernfreigaben** zeigt die neun aktiven xStock-Parameter, einen berechneten Kandidaten und die zulÃƒÆ’Ã‚Â¤ssigen Grenzen. Ab fÃƒÆ’Ã‚Â¼nf ausgewerteten xStock-Prognosen kann ein begrenzter Vorschlag erzeugt werden. Er verÃƒÆ’Ã‚Â¤ndert nichts automatisch. Der Button **Alle neun Parameter mit einem Klick bestÃƒÆ’Ã‚Â¤tigen** aktiviert die Werte atomar als neue Version und protokolliert die Freigabe im Audit.
 
 ## Stand 0.1.0-dev.27
-Dev.27 baut ausschlieÃƒÅ¸lich auf dem ÃƒÂ¼bergebenen v26-Snapshot auf. Die EUR/USD-Auswahl verwendet vollstÃƒÂ¤ndige erwartete Kosten und hÃƒÂ¤lt Alternativpaare als Metadaten. Forex wird ohne nicht dokumentierten AssetPairs-Parameter aus Fiat-zu-Fiat-Paaren abgeleitet. USD-Paper-Trades weisen FX-Spread, FX-GebÃƒÂ¼hr, Produktspread, Slippage und HandelsgebÃƒÂ¼hr getrennt aus. Mindesthaltedauer, Cooldown, BestÃƒÂ¤tigungen, Hysterese, Tageslimit sowie Gewinn-/Verlust- und Steuereffekt schÃƒÂ¼tzen vor unnÃƒÂ¶tigen Umschichtungen. Realhandel bleibt hart deaktiviert.
+Dev.27 baut ausschlieÃƒÆ’Ã…Â¸lich auf dem ÃƒÆ’Ã‚Â¼bergebenen v26-Snapshot auf. Die EUR/USD-Auswahl verwendet vollstÃƒÆ’Ã‚Â¤ndige erwartete Kosten und hÃƒÆ’Ã‚Â¤lt Alternativpaare als Metadaten. Forex wird ohne nicht dokumentierten AssetPairs-Parameter aus Fiat-zu-Fiat-Paaren abgeleitet. USD-Paper-Trades weisen FX-Spread, FX-GebÃƒÆ’Ã‚Â¼hr, Produktspread, Slippage und HandelsgebÃƒÆ’Ã‚Â¼hr getrennt aus. Mindesthaltedauer, Cooldown, BestÃƒÆ’Ã‚Â¤tigungen, Hysterese, Tageslimit sowie Gewinn-/Verlust- und Steuereffekt schÃƒÆ’Ã‚Â¼tzen vor unnÃƒÆ’Ã‚Â¶tigen Umschichtungen. Realhandel bleibt hart deaktiviert.
 
 
 
 ## Stand 0.1.0-dev.28
-Dev.28 setzt die priorisierte Forex-Datenabsicherung um. Der neue Tab DatenqualitÃƒÂ¤t zeigt pro Paar Tickerstatus, Bid/Ask, Volumen, OHLC-Status, Zahl abgeschlossener Kerzen und konkrete Fehler. Der persistente OHLCVT-Speicher kann Kraken-kompatible CSV-Zeilen aufnehmen. Der neue Backtest-Tab vergleicht im zeitlich getrennten Walk-forward-Test eine einfache SMA-Strategie mit Keine Position und Buy-and-Hold und speichert Kostenannahme, Anlageklasse, Rendite, Drawdown und Umschichtungen. Realhandel bleibt hart deaktiviert.
+Dev.28 setzt die priorisierte Forex-Datenabsicherung um. Der neue Tab DatenqualitÃƒÆ’Ã‚Â¤t zeigt pro Paar Tickerstatus, Bid/Ask, Volumen, OHLC-Status, Zahl abgeschlossener Kerzen und konkrete Fehler. Der persistente OHLCVT-Speicher kann Kraken-kompatible CSV-Zeilen aufnehmen. Der neue Backtest-Tab vergleicht im zeitlich getrennten Walk-forward-Test eine einfache SMA-Strategie mit Keine Position und Buy-and-Hold und speichert Kostenannahme, Anlageklasse, Rendite, Drawdown und Umschichtungen. Realhandel bleibt hart deaktiviert.
 
 ## Stand 0.1.0-dev.29
-Dev.29 ergÃƒÂ¤nzt kontospezifische GebÃƒÂ¼hren ÃƒÂ¼ber den read-only TradeVolume-Endpunkt. Maker- und Taker-SÃƒÂ¤tze werden pro Paar mit Quelle und Abrufzeitpunkt gespeichert und im neuen Tab GebÃƒÂ¼hren angezeigt. Paper-AusfÃƒÂ¼hrung und KostenschÃƒÂ¤tzung verwenden den paarbezogenen Taker-Satz. Bei fehlender Berechtigung oder API-Fehler bleibt der konfigurierte konservative Wert aktiv. Realhandel bleibt hart deaktiviert.
+Dev.29 ergÃƒÆ’Ã‚Â¤nzt kontospezifische GebÃƒÆ’Ã‚Â¼hren ÃƒÆ’Ã‚Â¼ber den read-only TradeVolume-Endpunkt. Maker- und Taker-SÃƒÆ’Ã‚Â¤tze werden pro Paar mit Quelle und Abrufzeitpunkt gespeichert und im neuen Tab GebÃƒÆ’Ã‚Â¼hren angezeigt. Paper-AusfÃƒÆ’Ã‚Â¼hrung und KostenschÃƒÆ’Ã‚Â¤tzung verwenden den paarbezogenen Taker-Satz. Bei fehlender Berechtigung oder API-Fehler bleibt der konfigurierte konservative Wert aktiv. Realhandel bleibt hart deaktiviert.
 
 ## Stand 0.1.0-dev.30
-Dev.30 fÃƒÂ¼hrt forex-v2 ausschlieÃƒÅ¸lich im Schattenmodus ein. Relative WÃƒÂ¤hrungsstÃƒÂ¤rke, Safe-Haven-Regime, paarbezogene Nachrichten sowie kurze und mittlere Horizonte werden versioniert gespeichert und gegen forex-v1 verglichen. Noch nicht angebundene Makrodaten bleiben ausdrÃƒÂ¼cklich null. Scanner- und Paper-Ergebnisse werden nicht verÃƒÂ¤ndert.
+Dev.30 fÃƒÆ’Ã‚Â¼hrt forex-v2 ausschlieÃƒÆ’Ã…Â¸lich im Schattenmodus ein. Relative WÃƒÆ’Ã‚Â¤hrungsstÃƒÆ’Ã‚Â¤rke, Safe-Haven-Regime, paarbezogene Nachrichten sowie kurze und mittlere Horizonte werden versioniert gespeichert und gegen forex-v1 verglichen. Noch nicht angebundene Makrodaten bleiben ausdrÃƒÆ’Ã‚Â¼cklich null. Scanner- und Paper-Ergebnisse werden nicht verÃƒÆ’Ã‚Â¤ndert.
 
 ## Stand 0.1.0-dev.31
-Dev.31 macht kanonische Produkte vollstÃƒÂ¤ndig sichtbar und ergÃƒÂ¤nzt eine einheitliche Umschichtungsmatrix. Die GUI zeigt IdentitÃƒÂ¤t, gewÃƒÂ¤hltes Paar, Alternativen, EUR-/USD-Kosten, Wahlzeitpunkt, Auswahlgrund und zugeordnete Position. Jede Umschichtung speichert sieben Einzelregeln; die erste fehlgeschlagene Regel wird als konkreter Blockierungsgrund angezeigt.
+Dev.31 macht kanonische Produkte vollstÃƒÆ’Ã‚Â¤ndig sichtbar und ergÃƒÆ’Ã‚Â¤nzt eine einheitliche Umschichtungsmatrix. Die GUI zeigt IdentitÃƒÆ’Ã‚Â¤t, gewÃƒÆ’Ã‚Â¤hltes Paar, Alternativen, EUR-/USD-Kosten, Wahlzeitpunkt, Auswahlgrund und zugeordnete Position. Jede Umschichtung speichert sieben Einzelregeln; die erste fehlgeschlagene Regel wird als konkreter Blockierungsgrund angezeigt.
 
 ## Stand 0.1.0-dev.32
-Dev.32 vervollstÃƒÂ¤ndigt den kontrollierten Lernprozess fÃƒÂ¼r Forex, xStocks und Krypto. Kandidaten werden nur im Schattenmodus bewertet, benÃƒÂ¶tigen Mindeststichprobe sowie Mindestverbesserung und zeigen ein Wilson-Konfidenzintervall. Aktivierung, Ablehnung und vollstÃƒÂ¤ndiger Rollback erfolgen ausdrÃƒÂ¼cklich ÃƒÂ¼ber die GUI. Es gibt keine automatische oder direkte KI-Aktivierung.
+Dev.32 vervollstÃƒÆ’Ã‚Â¤ndigt den kontrollierten Lernprozess fÃƒÆ’Ã‚Â¼r Forex, xStocks und Krypto. Kandidaten werden nur im Schattenmodus bewertet, benÃƒÆ’Ã‚Â¶tigen Mindeststichprobe sowie Mindestverbesserung und zeigen ein Wilson-Konfidenzintervall. Aktivierung, Ablehnung und vollstÃƒÆ’Ã‚Â¤ndiger Rollback erfolgen ausdrÃƒÆ’Ã‚Â¼cklich ÃƒÆ’Ã‚Â¼ber die GUI. Es gibt keine automatische oder direkte KI-Aktivierung.
 
 
 
 
 ## Stand 0.1.0-dev.36
-Das kontrollierte Lernen ist konsolidiert. Alle drei Produktfamilien besitzen neun versionierte Parameter und der Scanner liest ausschlieÃƒÅ¸lich die aktive Familienversion. Prognosen enthalten Familie, Parameterversion, vollstÃƒÂ¤ndige Parameter und strukturierte Features. Ein Kandidat darf nur freigegeben werden, solange seine Basisversion noch aktiv ist. Der frÃƒÂ¼here xStock-Sonderweg bleibt nur migrationsbedingt im Repository und ist nicht mehr in der Hauptnavigation verlinkt.
+Das kontrollierte Lernen ist konsolidiert. Alle drei Produktfamilien besitzen neun versionierte Parameter und der Scanner liest ausschlieÃƒÆ’Ã…Â¸lich die aktive Familienversion. Prognosen enthalten Familie, Parameterversion, vollstÃƒÆ’Ã‚Â¤ndige Parameter und strukturierte Features. Ein Kandidat darf nur freigegeben werden, solange seine Basisversion noch aktiv ist. Der frÃƒÆ’Ã‚Â¼here xStock-Sonderweg bleibt nur migrationsbedingt im Repository und ist nicht mehr in der Hauptnavigation verlinkt.
 
-### NÃƒÂ¤chste Schritte
-1. Historische Feature-Snapshots fÃƒÂ¼r Rendite nach Kosten, Abdeckung und Drawdown erweitern.
+### NÃƒÆ’Ã‚Â¤chste Schritte
+1. Historische Feature-Snapshots fÃƒÆ’Ã‚Â¼r Rendite nach Kosten, Abdeckung und Drawdown erweitern.
 2. Lernmetriken nach 24- und 168-Stunden-Horizont getrennt ausweisen.
-3. Legacy-Tab nach bestÃƒÂ¤tigter Bestandsmigration vollstÃƒÂ¤ndig entfernen.
-4. Gesamte ÃƒÂ¤ltere Testsuite auf die aktuellen VertrÃƒÂ¤ge bereinigen.
+3. Legacy-Tab nach bestÃƒÆ’Ã‚Â¤tigter Bestandsmigration vollstÃƒÆ’Ã‚Â¤ndig entfernen.
+4. Gesamte ÃƒÆ’Ã‚Â¤ltere Testsuite auf die aktuellen VertrÃƒÆ’Ã‚Â¤ge bereinigen.
 
 ## Stand 0.1.0-dev.34
-Die dev.33-Lernintegration bleibt vollstÃƒÂ¤ndig erhalten. ZusÃƒÂ¤tzlich ist die gesamte Testsuite wieder grÃƒÂ¼n. Scanner-Batches sind begrenzt, rotierend und ÃƒÂ¼ber einen nicht blockierenden Lock geschÃƒÂ¼tzt. Forecasts tolerieren ÃƒÂ¤ltere Scanner-Schemata. UTF-8 ist in Quellen, Dokumentation und GUI bereinigt. NÃƒÂ¤chster fachlicher Schritt bleibt dev.35: kosten- und abdeckungsbewusster Offline-Schattenvergleich mit getrennten Metriken je Familie und Horizont.
+Die dev.33-Lernintegration bleibt vollstÃƒÆ’Ã‚Â¤ndig erhalten. ZusÃƒÆ’Ã‚Â¤tzlich ist die gesamte Testsuite wieder grÃƒÆ’Ã‚Â¼n. Scanner-Batches sind begrenzt, rotierend und ÃƒÆ’Ã‚Â¼ber einen nicht blockierenden Lock geschÃƒÆ’Ã‚Â¼tzt. Forecasts tolerieren ÃƒÆ’Ã‚Â¤ltere Scanner-Schemata. UTF-8 ist in Quellen, Dokumentation und GUI bereinigt. NÃƒÆ’Ã‚Â¤chster fachlicher Schritt bleibt dev.35: kosten- und abdeckungsbewusster Offline-Schattenvergleich mit getrennten Metriken je Familie und Horizont.
 
 ## Stand 0.1.0-dev.36
-Der Offline-Schattenvergleich wendet aktive und vorgeschlagene Familienparameter auf dieselben gespeicherten Features an. FÃƒÂ¼r 24 und 168 Stunden werden Stichprobe, Entscheidungen, Abdeckung, Rendite nach geschÃƒÂ¤tzten Kosten und maximaler Drawdown getrennt persistiert und in der GUI angezeigt. HOLD beziehungsweise keine Entscheidung gilt nicht automatisch als falsche Richtung. Die Aktivierung bleibt ausschlieÃƒÅ¸lich eine ausdrÃƒÂ¼ckliche Benutzeraktion. Die vollstÃƒÂ¤ndige Suite umfasst 105 erfolgreiche Tests.
+Der Offline-Schattenvergleich wendet aktive und vorgeschlagene Familienparameter auf dieselben gespeicherten Features an. FÃƒÆ’Ã‚Â¼r 24 und 168 Stunden werden Stichprobe, Entscheidungen, Abdeckung, Rendite nach geschÃƒÆ’Ã‚Â¤tzten Kosten und maximaler Drawdown getrennt persistiert und in der GUI angezeigt. HOLD beziehungsweise keine Entscheidung gilt nicht automatisch als falsche Richtung. Die Aktivierung bleibt ausschlieÃƒÆ’Ã…Â¸lich eine ausdrÃƒÆ’Ã‚Â¼ckliche Benutzeraktion. Die vollstÃƒÆ’Ã‚Â¤ndige Suite umfasst 105 erfolgreiche Tests.
 
-### NÃƒÂ¤chste Schritte
-1. Freigabegates zusÃƒÂ¤tzlich auf Mindestabdeckung, positive Nettorenditeverbesserung und Drawdown-Grenze erweitern.
-2. Kosten-Snapshots um kontospezifische GebÃƒÂ¼hrenquelle und tatsÃƒÂ¤chliche FX-Spreads ergÃƒÂ¤nzen.
-3. Kandidatenvergleich ÃƒÂ¼ber mehrere aufeinanderfolgende Walk-forward-Fenster stabilisieren.
-4. Legacy-Lernmodul nach bestÃƒÂ¤tigter Datenmigration entfernen.
+### NÃƒÆ’Ã‚Â¤chste Schritte
+1. Freigabegates zusÃƒÆ’Ã‚Â¤tzlich auf Mindestabdeckung, positive Nettorenditeverbesserung und Drawdown-Grenze erweitern.
+2. Kosten-Snapshots um kontospezifische GebÃƒÆ’Ã‚Â¼hrenquelle und tatsÃƒÆ’Ã‚Â¤chliche FX-Spreads ergÃƒÆ’Ã‚Â¤nzen.
+3. Kandidatenvergleich ÃƒÆ’Ã‚Â¼ber mehrere aufeinanderfolgende Walk-forward-Fenster stabilisieren.
+4. Legacy-Lernmodul nach bestÃƒÆ’Ã‚Â¤tigter Datenmigration entfernen.
 
 
 
 
 ## Stand 0.1.0-dev.36
-Dev.36 ÃƒÂ¼bernimmt den vollstÃƒÂ¤ndigen dev.35-Snapshot ohne Entfernung bestehender Funktionen. Der Release zentralisiert die Laufzeitversion in `app/version.py`, synchronisiert Health, GUI, HTTP-User-Agents, Add-on-Metadaten und Projektunterlagen und normalisiert alle ausgelieferten Texte auf echtes UTF-8. Die Handelsstrategie und Lernfreigabelogik bleiben unverÃƒÂ¤ndert. Realhandel bleibt hart deaktiviert.
+Dev.36 ÃƒÆ’Ã‚Â¼bernimmt den vollstÃƒÆ’Ã‚Â¤ndigen dev.35-Snapshot ohne Entfernung bestehender Funktionen. Der Release zentralisiert die Laufzeitversion in `app/version.py`, synchronisiert Health, GUI, HTTP-User-Agents, Add-on-Metadaten und Projektunterlagen und normalisiert alle ausgelieferten Texte auf echtes UTF-8. Die Handelsstrategie und Lernfreigabelogik bleiben unverÃƒÆ’Ã‚Â¤ndert. Realhandel bleibt hart deaktiviert.
 
 ### Verifikation
-Die vollstÃƒÂ¤ndige Testsuite wurde mit installierten AbhÃƒÂ¤ngigkeiten ausgefÃƒÂ¼hrt: 109 Tests erfolgreich. ZusÃƒÂ¤tzlich prÃƒÂ¼fen vier dev.36-Tests Versionskonsistenz, Add-on-Metadaten, UTF-8 und die deaktivierte Real-Execution-Grenze.
+Die vollstÃƒÆ’Ã‚Â¤ndige Testsuite wurde mit installierten AbhÃƒÆ’Ã‚Â¤ngigkeiten ausgefÃƒÆ’Ã‚Â¼hrt: 109 Tests erfolgreich. ZusÃƒÆ’Ã‚Â¤tzlich prÃƒÆ’Ã‚Â¼fen vier dev.36-Tests Versionskonsistenz, Add-on-Metadaten, UTF-8 und die deaktivierte Real-Execution-Grenze.
 
-### NÃƒÂ¤chster empfohlener Schritt
-Dev.37 soll die Freigabe kontrollierter Lernkandidaten um konfigurierbare Mindestabdeckung, positive Nettorenditeverbesserung, Drawdown-Grenze und eine transaktionale erneute Gate-PrÃƒÂ¼fung bei der Benutzerfreigabe erweitern.
+### NÃƒÆ’Ã‚Â¤chster empfohlener Schritt
+Dev.37 soll die Freigabe kontrollierter Lernkandidaten um konfigurierbare Mindestabdeckung, positive Nettorenditeverbesserung, Drawdown-Grenze und eine transaktionale erneute Gate-PrÃƒÆ’Ã‚Â¼fung bei der Benutzerfreigabe erweitern.
 
 ## Stand 0.1.0-dev.37
-Dev.37 baut vollstÃƒÂ¤ndig auf dev.36 auf und entfernt keine Funktionen. Kontrollierte Lernkandidaten mÃƒÂ¼ssen jetzt fÃƒÂ¼r jeden erforderlichen Horizont alle konfigurierten Risiko- und QualitÃƒÂ¤tsgates erfÃƒÂ¼llen. Policy und Einzelergebnisse werden am Kandidaten gespeichert und im Audit protokolliert. Eine ausdrÃƒÂ¼ckliche Benutzerfreigabe wiederholt die PrÃƒÂ¼fung direkt vor der atomaren Aktivierung; bei einem Fehler bleibt die aktive Version unverÃƒÂ¤ndert.
+Dev.37 baut vollstÃƒÆ’Ã‚Â¤ndig auf dev.36 auf und entfernt keine Funktionen. Kontrollierte Lernkandidaten mÃƒÆ’Ã‚Â¼ssen jetzt fÃƒÆ’Ã‚Â¼r jeden erforderlichen Horizont alle konfigurierten Risiko- und QualitÃƒÆ’Ã‚Â¤tsgates erfÃƒÆ’Ã‚Â¼llen. Policy und Einzelergebnisse werden am Kandidaten gespeichert und im Audit protokolliert. Eine ausdrÃƒÆ’Ã‚Â¼ckliche Benutzerfreigabe wiederholt die PrÃƒÆ’Ã‚Â¼fung direkt vor der atomaren Aktivierung; bei einem Fehler bleibt die aktive Version unverÃƒÆ’Ã‚Â¤ndert.
 
 ### Standard-Gates
 - erforderliche Horizonte: 24 und 168 Stunden
@@ -141,50 +141,50 @@ Dev.37 baut vollstÃƒÂ¤ndig auf dev.36 auf und entfernt keine Funktionen. Kon
 - mindestens 50 Prozent Kandidatenabdeckung
 - mindestens 0,01 Prozentpunkte Nettorenditeverbesserung je Horizont
 - Kandidaten-Drawdown nicht schlechter als -25 Prozent
-- Drawdown hÃƒÂ¶chstens 2 Prozentpunkte schlechter als die aktive Version
+- Drawdown hÃƒÆ’Ã‚Â¶chstens 2 Prozentpunkte schlechter als die aktive Version
 
 ### Verifikation
-Die vollstÃƒÂ¤ndige Testsuite wurde ausgefÃƒÂ¼hrt: 115 Tests erfolgreich. Realhandel und automatische Parameteraktivierung bleiben ausgeschlossen.
+Die vollstÃƒÆ’Ã‚Â¤ndige Testsuite wurde ausgefÃƒÆ’Ã‚Â¼hrt: 115 Tests erfolgreich. Realhandel und automatische Parameteraktivierung bleiben ausgeschlossen.
 
-### NÃƒÂ¤chster empfohlener Schritt
+### NÃƒÆ’Ã‚Â¤chster empfohlener Schritt
 Dev.38 soll Prognosen am exakten historischen Zielzeitpunkt auswerten und Ein-, Ausstiegs- sowie Roundtrip-Kosten eindeutig und quellenbezogen speichern.
 
 ## Stand 0.1.0-dev.38
-Dev.38 baut vollstÃƒÂ¤ndig auf dev.37 auf. Prognoseauswertungen verwenden keine verspÃƒÂ¤teten Livepreise mehr, sondern die erste abgeschlossene lokale OHLC-Kerze am oder nach dem exakten Zielzeitpunkt. Ohne passende Historie bleibt die Prognose offen. Auswertungen speichern Zielzeit, Preisquelle, Kerzenzeit und Zeitabweichung. Feature-Snapshots trennen Einstiegs-, Ausstiegs- und Roundtrip-Kosten und dokumentieren die GebÃƒÂ¼hrenherkunft.
+Dev.38 baut vollstÃƒÆ’Ã‚Â¤ndig auf dev.37 auf. Prognoseauswertungen verwenden keine verspÃƒÆ’Ã‚Â¤teten Livepreise mehr, sondern die erste abgeschlossene lokale OHLC-Kerze am oder nach dem exakten Zielzeitpunkt. Ohne passende Historie bleibt die Prognose offen. Auswertungen speichern Zielzeit, Preisquelle, Kerzenzeit und Zeitabweichung. Feature-Snapshots trennen Einstiegs-, Ausstiegs- und Roundtrip-Kosten und dokumentieren die GebÃƒÆ’Ã‚Â¼hrenherkunft.
 
 ### Verifikation
-119 automatisierte Tests erfolgreich. YAML, Python, UTF-8 und ArchivintegritÃƒÂ¤t wurden zusÃƒÂ¤tzlich geprÃƒÂ¼ft. Realhandel bleibt hart deaktiviert.
+119 automatisierte Tests erfolgreich. YAML, Python, UTF-8 und ArchivintegritÃƒÆ’Ã‚Â¤t wurden zusÃƒÆ’Ã‚Â¤tzlich geprÃƒÆ’Ã‚Â¼ft. Realhandel bleibt hart deaktiviert.
 
-### NÃƒÂ¤chster empfohlener Schritt
-Dev.39 sollte eine echte zeitlich getrennte Walk-forward-Validierung fÃƒÂ¼r Lernkandidaten mit stabilen Teilfenster-Gates ergÃƒÂ¤nzen.
-
-## Stand 0.1.0-dev.43
-Dev.39 basiert ausschlieÃƒÅ¸lich auf dem gelieferten dev.38-Snapshot. Alle erkannten UTF-8-SchÃƒÂ¤den wurden repariert. Der GebÃƒÂ¼hrenabruf verwendet nun kanonische Kraken-PaaridentitÃƒÂ¤ten, lÃƒÂ¤sst nicht unterstÃƒÂ¼tzte Assetklassen beim sicheren Konfigurations-Fallback und isoliert ungÃƒÂ¼ltige Paare. Die GUI besitzt eine neue responsive Navigation, eine gefÃƒÂ¼hrte ÃƒÅ“bersicht sowie eine verstÃƒÂ¤ndliche kontrollierte Lernfreigabe mit aktiver Version, Parametervergleich und Gate-Details. Die vollstÃƒÂ¤ndige Regression umfasst 124 erfolgreiche Tests. Realhandel bleibt hart deaktiviert.
-
-### NÃƒÂ¤chster Schritt
-Praktischer Home-Assistant-OS-Test des GebÃƒÂ¼hrenabrufs mit dem realen Marktuniversum sowie schrittweise Modularisierung der groÃƒÅ¸en main.py in Blueprints ohne Funktionsverlust.
-
+### NÃƒÆ’Ã‚Â¤chster empfohlener Schritt
+Dev.39 sollte eine echte zeitlich getrennte Walk-forward-Validierung fÃƒÆ’Ã‚Â¼r Lernkandidaten mit stabilen Teilfenster-Gates ergÃƒÆ’Ã‚Â¤nzen.
 
 ## Stand 0.1.0-dev.43
-Die externe Nachrichten-AI kann nun automatisch mit der aktiven lokalen Nachrichtenbewertung verglichen werden. Ein begrenzter lokaler Kandidat wird nur bei geringerem Fehler und mindestens gleich guter RichtungsÃƒÂ¼bereinstimmung PENDING. Aktivierung erfolgt ausschlieÃƒÅ¸lich manuell, nach erneuter PrÃƒÂ¼fung und als vollstÃƒÂ¤ndige neue Version.
+Dev.39 basiert ausschlieÃƒÆ’Ã…Â¸lich auf dem gelieferten dev.38-Snapshot. Alle erkannten UTF-8-SchÃƒÆ’Ã‚Â¤den wurden repariert. Der GebÃƒÆ’Ã‚Â¼hrenabruf verwendet nun kanonische Kraken-PaaridentitÃƒÆ’Ã‚Â¤ten, lÃƒÆ’Ã‚Â¤sst nicht unterstÃƒÆ’Ã‚Â¼tzte Assetklassen beim sicheren Konfigurations-Fallback und isoliert ungÃƒÆ’Ã‚Â¼ltige Paare. Die GUI besitzt eine neue responsive Navigation, eine gefÃƒÆ’Ã‚Â¼hrte ÃƒÆ’Ã…â€œbersicht sowie eine verstÃƒÆ’Ã‚Â¤ndliche kontrollierte Lernfreigabe mit aktiver Version, Parametervergleich und Gate-Details. Die vollstÃƒÆ’Ã‚Â¤ndige Regression umfasst 124 erfolgreiche Tests. Realhandel bleibt hart deaktiviert.
 
-### NÃƒÂ¤chster Schritt
-Zeitlich getrennte Trainings- und Validierungsfenster fÃƒÂ¼r Nachrichtenkandidaten sowie eine spÃƒÂ¤tere PrÃƒÂ¼fung gegen tatsÃƒÂ¤chlich eingetretene Marktrenditen statt ausschlieÃƒÅ¸lich gegen AI-Lehrergebnisse.
+### NÃƒÆ’Ã‚Â¤chster Schritt
+Praktischer Home-Assistant-OS-Test des GebÃƒÆ’Ã‚Â¼hrenabrufs mit dem realen Marktuniversum sowie schrittweise Modularisierung der groÃƒÆ’Ã…Â¸en main.py in Blueprints ohne Funktionsverlust.
 
-## Stand 0.1.0-dev.43
-Dev.41 baut vollstÃƒÂ¤ndig auf dev.40 auf und entfernt keine Funktionen. Nachrichtenkandidaten werden auf dem ÃƒÂ¤lteren Teil der chronologisch sortierten AI-Vergleiche optimiert. Nur der spÃƒÂ¤tere, disjunkte Teil entscheidet ÃƒÂ¼ber Verlustverbesserung und RichtungsÃƒÂ¼bereinstimmung. Fenstergrenzen, Anzahlen und Policy werden gespeichert. Vor einer manuellen Aktivierung werden Datenfingerprint und Validierung erneut geprÃƒÂ¼ft. Realhandel bleibt hart deaktiviert.
-
-### NÃƒÂ¤chster empfohlener Schritt
-Mehrere aufeinanderfolgende Walk-forward-Teilfenster einfÃƒÂ¼hren und StabilitÃƒÂ¤tsgates je Teilfenster ergÃƒÂ¤nzen.
 
 ## Stand 0.1.0-dev.43
-Dev.42 erweitert die zeitlich getrennte Validierung aus dev.41 um mehrere aufeinanderfolgende Walk-forward-Fenster. StandardmÃƒÂ¤ÃƒÅ¸ig werden drei disjunkte Validierungsabschnitte gegen ein jeweils wachsendes Trainingsfenster geprÃƒÂ¼ft; mindestens zwei mÃƒÂ¼ssen stabil bestehen. Die vollstÃƒÂ¤ndigen Fenstermetriken werden gespeichert und bei der manuellen Freigabe erneut geprÃƒÂ¼ft. Bestehende Funktionen bleiben erhalten. Realhandel bleibt hart deaktiviert.
+Die externe Nachrichten-AI kann nun automatisch mit der aktiven lokalen Nachrichtenbewertung verglichen werden. Ein begrenzter lokaler Kandidat wird nur bei geringerem Fehler und mindestens gleich guter RichtungsÃƒÆ’Ã‚Â¼bereinstimmung PENDING. Aktivierung erfolgt ausschlieÃƒÆ’Ã…Â¸lich manuell, nach erneuter PrÃƒÆ’Ã‚Â¼fung und als vollstÃƒÆ’Ã‚Â¤ndige neue Version.
 
-### NÃƒÂ¤chster empfohlener Schritt
-Walk-forward-StabilitÃƒÂ¤tsgates auf das kontrollierte Lernen der Produktfamilien ÃƒÂ¼bertragen und anschlieÃƒÅ¸end main.py schrittweise in Blueprints modularisieren.
+### NÃƒÆ’Ã‚Â¤chster Schritt
+Zeitlich getrennte Trainings- und Validierungsfenster fÃƒÆ’Ã‚Â¼r Nachrichtenkandidaten sowie eine spÃƒÆ’Ã‚Â¤tere PrÃƒÆ’Ã‚Â¼fung gegen tatsÃƒÆ’Ã‚Â¤chlich eingetretene Marktrenditen statt ausschlieÃƒÆ’Ã…Â¸lich gegen AI-Lehrergebnisse.
 
-## ÃƒÅ“bergabe 0.1.0-dev.43
-Die StartÃƒÂ¼bersicht unterscheidet nun DatenverfÃƒÂ¼gbarkeit vom Zustand der optionalen WebSocket-KanÃƒÂ¤le. Gemini kann als Nachrichten-AI-Provider konfiguriert werden. Der externe AI-Pfad bleibt ohne direkte Handelswirkung.
+## Stand 0.1.0-dev.43
+Dev.41 baut vollstÃƒÆ’Ã‚Â¤ndig auf dev.40 auf und entfernt keine Funktionen. Nachrichtenkandidaten werden auf dem ÃƒÆ’Ã‚Â¤lteren Teil der chronologisch sortierten AI-Vergleiche optimiert. Nur der spÃƒÆ’Ã‚Â¤tere, disjunkte Teil entscheidet ÃƒÆ’Ã‚Â¼ber Verlustverbesserung und RichtungsÃƒÆ’Ã‚Â¼bereinstimmung. Fenstergrenzen, Anzahlen und Policy werden gespeichert. Vor einer manuellen Aktivierung werden Datenfingerprint und Validierung erneut geprÃƒÆ’Ã‚Â¼ft. Realhandel bleibt hart deaktiviert.
+
+### NÃƒÆ’Ã‚Â¤chster empfohlener Schritt
+Mehrere aufeinanderfolgende Walk-forward-Teilfenster einfÃƒÆ’Ã‚Â¼hren und StabilitÃƒÆ’Ã‚Â¤tsgates je Teilfenster ergÃƒÆ’Ã‚Â¤nzen.
+
+## Stand 0.1.0-dev.43
+Dev.42 erweitert die zeitlich getrennte Validierung aus dev.41 um mehrere aufeinanderfolgende Walk-forward-Fenster. StandardmÃƒÆ’Ã‚Â¤ÃƒÆ’Ã…Â¸ig werden drei disjunkte Validierungsabschnitte gegen ein jeweils wachsendes Trainingsfenster geprÃƒÆ’Ã‚Â¼ft; mindestens zwei mÃƒÆ’Ã‚Â¼ssen stabil bestehen. Die vollstÃƒÆ’Ã‚Â¤ndigen Fenstermetriken werden gespeichert und bei der manuellen Freigabe erneut geprÃƒÆ’Ã‚Â¼ft. Bestehende Funktionen bleiben erhalten. Realhandel bleibt hart deaktiviert.
+
+### NÃƒÆ’Ã‚Â¤chster empfohlener Schritt
+Walk-forward-StabilitÃƒÆ’Ã‚Â¤tsgates auf das kontrollierte Lernen der Produktfamilien ÃƒÆ’Ã‚Â¼bertragen und anschlieÃƒÆ’Ã…Â¸end main.py schrittweise in Blueprints modularisieren.
+
+## ÃƒÆ’Ã…â€œbergabe 0.1.0-dev.43
+Die StartÃƒÆ’Ã‚Â¼bersicht unterscheidet nun DatenverfÃƒÆ’Ã‚Â¼gbarkeit vom Zustand der optionalen WebSocket-KanÃƒÆ’Ã‚Â¤le. Gemini kann als Nachrichten-AI-Provider konfiguriert werden. Der externe AI-Pfad bleibt ohne direkte Handelswirkung.
 
 
 
@@ -192,17 +192,17 @@ Die StartÃƒÂ¼bersicht unterscheidet nun DatenverfÃƒÂ¼gbarkeit vom Zustan
 Kontrolliertes Lernen zeigt Forex, xStocks und Krypto Spot gemeinsam. Auswahl einer Familie filtert Kandidaten, Versionshistorie und Horizontmetriken; Parameterfreigaben bleiben manuell und atomar.
 
 ## Dev.46
-Die Lernseite zeigt je Familie aktive Version, offene Kandidaten und letzten Kandidatenstatus. Unbekannte Familienwerte werden fail-closed auf Forex normalisiert. NÃƒÂ¤chster Hauptschritt bleibt die mehrfenstrige Walk-forward-StabilitÃƒÂ¤t.
+Die Lernseite zeigt je Familie aktive Version, offene Kandidaten und letzten Kandidatenstatus. Unbekannte Familienwerte werden fail-closed auf Forex normalisiert. NÃƒÆ’Ã‚Â¤chster Hauptschritt bleibt die mehrfenstrige Walk-forward-StabilitÃƒÆ’Ã‚Â¤t.
 
 ## Dev.47
-Kontrolliertes Lernen ist durch den fehlenden FAMILIES-Import wieder erreichbar. Nachrichten-Lernen unterscheidet fehlende Nachrichten, fehlende gÃƒÂ¼ltige AI-Ergebnisse und eine zu kleine Stichprobe. Die Mindeststichprobe bleibt unverÃƒÂ¤ndert und fail-closed.
+Kontrolliertes Lernen ist durch den fehlenden FAMILIES-Import wieder erreichbar. Nachrichten-Lernen unterscheidet fehlende Nachrichten, fehlende gÃƒÆ’Ã‚Â¼ltige AI-Ergebnisse und eine zu kleine Stichprobe. Die Mindeststichprobe bleibt unverÃƒÆ’Ã‚Â¤ndert und fail-closed.
 
 
 ## Stand dev.48
-UTF-8- und Versionsinkonsistenzen des dev.47-Snapshots sind behoben. Der ÃƒÂ¶ffentliche WebSocket berÃƒÂ¼cksichtigt EUR- und USD-notierte MÃƒÂ¤rkte. SÃƒÂ¤mtliche bisherigen Sicherheitsgrenzen und Funktionen bleiben erhalten.
+UTF-8- und Versionsinkonsistenzen des dev.47-Snapshots sind behoben. Der ÃƒÆ’Ã‚Â¶ffentliche WebSocket berÃƒÆ’Ã‚Â¼cksichtigt EUR- und USD-notierte MÃƒÆ’Ã‚Â¤rkte. SÃƒÆ’Ã‚Â¤mtliche bisherigen Sicherheitsgrenzen und Funktionen bleiben erhalten.
 
-## ÃƒÅ“bergabe dev.49
-Monitoring ist als erster Blueprint ausgelagert. Ereignis-Dashboard und redigierter Audit-Export sind implementiert. WebSockets kÃƒÂ¶nnen in isolierten Tests ÃƒÂ¼ber APP_DISABLE_WEBSOCKETS=1 unterdrÃƒÂ¼ckt werden. Alle bestehenden Funktionen und Sicherheitsgrenzen bleiben erhalten.
+## ÃƒÆ’Ã…â€œbergabe dev.49
+Monitoring ist als erster Blueprint ausgelagert. Ereignis-Dashboard und redigierter Audit-Export sind implementiert. WebSockets kÃƒÆ’Ã‚Â¶nnen in isolierten Tests ÃƒÆ’Ã‚Â¼ber APP_DISABLE_WEBSOCKETS=1 unterdrÃƒÆ’Ã‚Â¼ckt werden. Alle bestehenden Funktionen und Sicherheitsgrenzen bleiben erhalten.
 
 
-V54: Zentrale kompakte Zahlenanzeige, übersichtlichere GUI sowie dokumentierter Informations-, Lern- und Realorderpfad mit ehrlicher Systemmatrix.
+V54: Zentrale kompakte Zahlenanzeige, Ã¼bersichtlichere GUI sowie dokumentierter Informations-, Lern- und Realorderpfad mit ehrlicher Systemmatrix.

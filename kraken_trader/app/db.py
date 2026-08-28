@@ -15,8 +15,12 @@ class DB:
   r=self.rows('SELECT value FROM settings WHERE key=?',(k,));return r[0]['value'] if r else d
  def set(self,k,v):
   with self.con() as c:c.execute('INSERT OR REPLACE INTO settings VALUES(?,?)',(k,str(v)))
- def audit(self,e,d='',level='info'):
-  with self.con() as c:c.execute('INSERT INTO audit(created_at,event,level,details) VALUES(?,?,?,?)',(now(),e,level,d))
+ def audit(self,e,d='',level='info',context='SYSTEM'):
+  context=str(context or 'SYSTEM').upper()
+  with self.con() as c:
+   cols={x['name'] for x in c.execute('PRAGMA table_info(audit)').fetchall()}
+   if 'trade_context' not in cols:c.execute("ALTER TABLE audit ADD COLUMN trade_context TEXT NOT NULL DEFAULT 'SYSTEM'")
+   c.execute('INSERT INTO audit(created_at,event,level,details,trade_context) VALUES(?,?,?,?,?)',(now(),e,level,d,context))
  def replace_balances(self,items):
   with self.con() as c:
    c.execute('DELETE FROM balances');c.executemany('INSERT INTO balances VALUES(?,?,?)',[(k,str(v),now()) for k,v in items.items()])
