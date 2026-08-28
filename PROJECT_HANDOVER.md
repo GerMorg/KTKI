@@ -158,21 +158,30 @@ Dev.38 baut vollständig auf dev.37 auf. Prognoseauswertungen verwenden keine ve
 ### Nächster empfohlener Schritt
 Dev.39 sollte eine echte zeitlich getrennte Walk-forward-Validierung für Lernkandidaten mit stabilen Teilfenster-Gates ergänzen.
 
-## Stand 0.1.0-dev.41
+## Stand 0.1.0-dev.43
 Dev.39 basiert ausschließlich auf dem gelieferten dev.38-Snapshot. Alle erkannten UTF-8-Schäden wurden repariert. Der Gebührenabruf verwendet nun kanonische Kraken-Paaridentitäten, lässt nicht unterstützte Assetklassen beim sicheren Konfigurations-Fallback und isoliert ungültige Paare. Die GUI besitzt eine neue responsive Navigation, eine geführte Übersicht sowie eine verständliche kontrollierte Lernfreigabe mit aktiver Version, Parametervergleich und Gate-Details. Die vollständige Regression umfasst 124 erfolgreiche Tests. Realhandel bleibt hart deaktiviert.
 
 ### Nächster Schritt
 Praktischer Home-Assistant-OS-Test des Gebührenabrufs mit dem realen Marktuniversum sowie schrittweise Modularisierung der großen main.py in Blueprints ohne Funktionsverlust.
 
 
-## Stand 0.1.0-dev.41
+## Stand 0.1.0-dev.43
 Die externe Nachrichten-AI kann nun automatisch mit der aktiven lokalen Nachrichtenbewertung verglichen werden. Ein begrenzter lokaler Kandidat wird nur bei geringerem Fehler und mindestens gleich guter Richtungsübereinstimmung PENDING. Aktivierung erfolgt ausschließlich manuell, nach erneuter Prüfung und als vollständige neue Version.
 
 ### Nächster Schritt
 Zeitlich getrennte Trainings- und Validierungsfenster für Nachrichtenkandidaten sowie eine spätere Prüfung gegen tatsächlich eingetretene Marktrenditen statt ausschließlich gegen AI-Lehrergebnisse.
 
-## Stand 0.1.0-dev.41
+## Stand 0.1.0-dev.43
 Dev.41 baut vollständig auf dev.40 auf und entfernt keine Funktionen. Nachrichtenkandidaten werden auf dem älteren Teil der chronologisch sortierten AI-Vergleiche optimiert. Nur der spätere, disjunkte Teil entscheidet über Verlustverbesserung und Richtungsübereinstimmung. Fenstergrenzen, Anzahlen und Policy werden gespeichert. Vor einer manuellen Aktivierung werden Datenfingerprint und Validierung erneut geprüft. Realhandel bleibt hart deaktiviert.
 
 ### Nächster empfohlener Schritt
 Mehrere aufeinanderfolgende Walk-forward-Teilfenster einführen und Stabilitätsgates je Teilfenster ergänzen.
+
+## Stand 0.1.0-dev.43
+Dev.42 erweitert die zeitlich getrennte Validierung aus dev.41 um mehrere aufeinanderfolgende Walk-forward-Fenster. Standardmäßig werden drei disjunkte Validierungsabschnitte gegen ein jeweils wachsendes Trainingsfenster geprüft; mindestens zwei müssen stabil bestehen. Die vollständigen Fenstermetriken werden gespeichert und bei der manuellen Freigabe erneut geprüft. Bestehende Funktionen bleiben erhalten. Realhandel bleibt hart deaktiviert.
+
+### Nächster empfohlener Schritt
+Walk-forward-Stabilitätsgates auf das kontrollierte Lernen der Produktfamilien übertragen und anschließend main.py schrittweise in Blueprints modularisieren.
+
+## Übergabe 0.1.0-dev.43
+Die Startübersicht unterscheidet nun Datenverfügbarkeit vom Zustand der optionalen WebSocket-Kanäle. Gemini kann als Nachrichten-AI-Provider konfiguriert werden. Der externe AI-Pfad bleibt ohne direkte Handelswirkung.

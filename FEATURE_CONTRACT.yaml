@@ -1,4 +1,4 @@
-version: 0.1.0-dev.41
+version: 0.1.0-dev.43
 compatibility_rule: Implementierte Funktionen duerfen nur nach ausdruecklicher Entscheidung mit dokumentierter Migration entfernt werden.
 features:
   ingress_gui: {required: true, status: implemented}
@@ -293,4 +293,17 @@ release_0_1_0_dev_41:
   persisted_window_provenance: {required: true, status: implemented}
   approval_sample_fingerprint_recheck: {required: true, status: atomic_fail_closed}
   automatic_activation: {required: false, status: prohibited}
+  real_trading: {required: false, status: hard_disabled}
+release_0_1_0_dev_42:
+  multi_window_news_walk_forward: {required: true, status: implemented_3_windows}
+  minimum_stable_window_gate: {required: true, status: enforced_2_of_3}
+  persisted_window_metrics: {required: true, status: implemented}
+  approval_stability_recheck: {required: true, status: atomic_fail_closed}
+  insufficient_history: {required: false, status: blocks_candidate}
+  automatic_activation: {required: false, status: prohibited}
+  real_trading: {required: false, status: hard_disabled}
+release_0_1_0_dev_43:
+  dashboard_data_channel_separation: {required: true, status: implemented}
+  gemini_news_ai_provider: {required: true, status: implemented}
+  ai_direct_trading: {required: false, status: prohibited}
   real_trading: {required: false, status: hard_disabled}

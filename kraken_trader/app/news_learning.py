@@ -54,7 +54,10 @@ class NewsLearning:
                 ('validation_count', 'INTEGER NOT NULL DEFAULT 0'),
                 ('training_start_at', 'TEXT'), ('training_end_at', 'TEXT'),
                 ('validation_start_at', 'TEXT'), ('validation_end_at', 'TEXT'),
-                ('window_policy_json', "TEXT NOT NULL DEFAULT '{}'")
+                ('window_policy_json', "TEXT NOT NULL DEFAULT '{}'"),
+                ('walk_forward_json', "TEXT NOT NULL DEFAULT '[]'"),
+                ('stable_window_count', 'INTEGER NOT NULL DEFAULT 0'),
+                ('required_stable_windows', 'INTEGER NOT NULL DEFAULT 0')
             )
             for name, definition in additions:
                 if name not in cols:
@@ -129,6 +132,29 @@ class NewsLearning:
                 'no_overlap':not set(x['id'] for x in training)&set(x['id'] for x in validation)}
         return training,validation,policy
 
+    def _walk_forward(self, rows, params, active_params, windows=3, minimum_validation=3, minimum_improvement=.01):
+        windows=max(2,min(8,int(windows)))
+        minimum_validation=max(2,int(minimum_validation))
+        ordered=sorted(rows,key=lambda x:(self._timestamp(x) or datetime.min.replace(tzinfo=timezone.utc),str(x['id'])))
+        required=minimum_validation*(windows+1)
+        if len(ordered)<required:
+            return {'status':'INSUFFICIENT','required':required,'available':len(ordered),'windows':[]}
+        first_training=len(ordered)-minimum_validation*windows
+        results=[]
+        for index in range(windows):
+            validation_start=first_training+index*minimum_validation
+            training=ordered[:validation_start]
+            validation=ordered[validation_start:validation_start+minimum_validation]
+            active=self._evaluate(validation,active_params);candidate=self._evaluate(validation,params)
+            improvement=active['loss']-candidate['loss']
+            passed=improvement>=minimum_improvement and candidate['agreement']>=active['agreement']
+            results.append({'index':index+1,'training_count':len(training),'validation_count':len(validation),
+              'training_end_at':training[-1].get('observed_at'),'validation_start_at':validation[0].get('observed_at'),
+              'validation_end_at':validation[-1].get('observed_at'),'active':active,'candidate':candidate,
+              'improvement':improvement,'passed':passed})
+        stable=sum(x['passed'] for x in results)
+        return {'status':'VALID','window_count':windows,'stable_window_count':stable,'windows':results}
+
     def _evaluate(self, rows, params):
         if not rows:return {'loss':1.0,'agreement':0.0,'samples':0}
         predictions=[self._local(x,params) for x in rows]
@@ -149,7 +175,7 @@ class NewsLearning:
                 if loss < best: candidate,best=trial,loss
         return candidate
 
-    def propose(self, min_sample=10, min_improvement=.01, automatic=False, validation_ratio=.30, minimum_validation=3):
+    def propose(self, min_sample=10, min_improvement=.01, automatic=False, validation_ratio=.30, minimum_validation=3, walk_forward_windows=3, required_stable_windows=2):
         rows=self._samples();n=len(rows)
         if n < min_sample:return {'status':'INSUFFICIENT_DATA','sample_count':n,'required':min_sample}
         training,validation,policy=self._split(rows,validation_ratio,minimum_validation)
@@ -161,16 +187,19 @@ class NewsLearning:
         active=self.active();active_params=json.loads(active['parameters_json']);candidate=self._optimize(training,active_params)
         train_old=self._evaluate(training,active_params);train_new=self._evaluate(training,candidate)
         old=self._evaluate(validation,active_params);new=self._evaluate(validation,candidate);improvement=old['loss']-new['loss']
-        passed=policy['no_overlap'] and improvement>=min_improvement and new['agreement']>=old['agreement'] and candidate!=active_params
+        walk=self._walk_forward(rows,candidate,active_params,walk_forward_windows,minimum_validation,min_improvement)
+        required_stable=max(1,min(int(required_stable_windows),int(walk_forward_windows)))
+        stable_ok=walk['status']=='VALID' and walk['stable_window_count']>=required_stable
+        passed=policy['no_overlap'] and improvement>=min_improvement and new['agreement']>=old['agreement'] and candidate!=active_params and stable_ok
         status='PENDING' if passed else 'REJECTED_GATE'
         comparison={'training':{'active':train_old,'candidate':train_new},'validation':{'active':old,'candidate':new},
-                    'minimum_validation_improvement':min_improvement,'automatic_comparison':bool(automatic),'window_policy':policy}
+                    'minimum_validation_improvement':min_improvement,'automatic_comparison':bool(automatic),'window_policy':policy,'walk_forward':walk,'required_stable_windows':required_stable}
         reason='Zeitlich getrennte Validierung bestanden; ausdrückliche Freigabe erforderlich' if passed else 'Validierungs- oder Vergleichsgate nicht erfüllt'
-        values=(now(),status,active['version'],n,fingerprint,str(old['loss']),str(new['loss']),str(improvement),str(old['agreement']),str(new['agreement']),json.dumps(candidate,sort_keys=True),json.dumps(comparison,sort_keys=True),reason,None if passed else now(),len(training),len(validation),policy['training_start_at'],policy['training_end_at'],policy['validation_start_at'],policy['validation_end_at'],json.dumps(policy,sort_keys=True))
+        values=(now(),status,active['version'],n,fingerprint,str(old['loss']),str(new['loss']),str(improvement),str(old['agreement']),str(new['agreement']),json.dumps(candidate,sort_keys=True),json.dumps(comparison,sort_keys=True),reason,None if passed else now(),len(training),len(validation),policy['training_start_at'],policy['training_end_at'],policy['validation_start_at'],policy['validation_end_at'],json.dumps(policy,sort_keys=True),json.dumps(walk,sort_keys=True),walk.get('stable_window_count',0),required_stable)
         with self.db.con() as c:
-            cur=c.execute('INSERT INTO news_model_candidates(created_at,status,base_version,sample_count,sample_fingerprint,active_loss,candidate_loss,improvement,agreement_active,agreement_candidate,parameters_json,comparison_json,reason,decided_at,training_count,validation_count,training_start_at,training_end_at,validation_start_at,validation_end_at,window_policy_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',values);candidate_id=cur.lastrowid
-        self.db.audit('NEWS_MODEL_CANDIDATE',json.dumps({'candidate_id':candidate_id,'status':status,'samples':n,'validation_improvement':improvement,'window_policy':policy},sort_keys=True))
-        return {'status':status,'candidate_id':candidate_id,'sample_count':n,'training_count':len(training),'validation_count':len(validation),'improvement':improvement,'agreement_active':old['agreement'],'agreement_candidate':new['agreement'],'window_policy':policy}
+            cur=c.execute('INSERT INTO news_model_candidates(created_at,status,base_version,sample_count,sample_fingerprint,active_loss,candidate_loss,improvement,agreement_active,agreement_candidate,parameters_json,comparison_json,reason,decided_at,training_count,validation_count,training_start_at,training_end_at,validation_start_at,validation_end_at,window_policy_json,walk_forward_json,stable_window_count,required_stable_windows) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',values);candidate_id=cur.lastrowid
+        self.db.audit('NEWS_MODEL_CANDIDATE',json.dumps({'candidate_id':candidate_id,'status':status,'samples':n,'validation_improvement':improvement,'window_policy':policy,'walk_forward':walk,'required_stable_windows':required_stable},sort_keys=True))
+        return {'status':status,'candidate_id':candidate_id,'sample_count':n,'training_count':len(training),'validation_count':len(validation),'improvement':improvement,'agreement_active':old['agreement'],'agreement_candidate':new['agreement'],'window_policy':policy,'walk_forward':walk,'required_stable_windows':required_stable}
 
     def decide(self, candidate_id, action):
         found=self.db.rows('SELECT * FROM news_model_candidates WHERE id=?',(candidate_id,))
@@ -194,8 +223,13 @@ class NewsLearning:
         training,validation,current_policy=self._split(rows,policy.get('validation_ratio',.30),policy.get('minimum_validation',3))
         fingerprint=hashlib.sha256('|'.join(x['id'] for x in rows).encode()).hexdigest()
         old=self._evaluate(validation,json.loads(active['parameters_json']));check=self._evaluate(validation,params)
-        required=float(json.loads(item['comparison_json']).get('minimum_validation_improvement',.01))
-        valid=(fingerprint==item['sample_fingerprint'] and current_policy['no_overlap'] and old['loss']-check['loss']>=required and check['agreement']>=old['agreement'])
+        comparison=json.loads(item['comparison_json'])
+        required=float(comparison.get('minimum_validation_improvement',.01))
+        stored_walk=comparison.get('walk_forward') or {}
+        required_stable=int(item.get('required_stable_windows') or comparison.get('required_stable_windows') or 1)
+        walk=self._walk_forward(rows,params,json.loads(active['parameters_json']),stored_walk.get('window_count',3),policy.get('minimum_validation',3),required)
+        stable_ok=walk['status']=='VALID' and walk['stable_window_count']>=required_stable
+        valid=(fingerprint==item['sample_fingerprint'] and current_policy['no_overlap'] and old['loss']-check['loss']>=required and check['agreement']>=old['agreement'] and stable_ok)
         if not valid:
             with self.db.con() as c:c.execute("UPDATE news_model_candidates SET status='REJECTED_RECHECK',decided_at=? WHERE id=?",(now(),candidate_id))
             self.db.audit('NEWS_MODEL_APPROVAL_BLOCKED',json.dumps({'candidate_id':candidate_id,'sample_unchanged':fingerprint==item['sample_fingerprint']}),'warning')

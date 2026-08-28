@@ -102,14 +102,22 @@ Dev.35 zeigte Abdeckung, Nettorendite und Drawdown nur als Information; ein Kand
 ## 2026-08-26 I040 - gelöst in 0.1.0-dev.38
 Fällige Prognosen wurden zuvor mit dem beim Auswertungslauf aktuellen Livepreis bewertet und die als Roundtrip bezeichneten Kosten trennten Einstieg und Ausstieg nicht eindeutig. Dev.38 verwendet historische Zielkerzen und persistiert eine quellenbezogene Entry-/Exit-Kostenkette.
 
-## 2026-08-27 I041 - gelöst in 0.1.0-dev.41
+## 2026-08-27 I041 - gelöst in 0.1.0-dev.42
 Der Gebührenabruf übergab interne Anzeige- und nicht unterstützte Produktpaare gemeinsam an TradeVolume. Ein unbekanntes Paar erzeugte EQuery:Unknown asset pair und verhinderte den gesamten Abruf. Dev.39 löst Currency-Paare kanonisch auf, trennt nicht unterstützte Assetklassen und isoliert Teilfehler.
-## 2026-08-27 I042 - gelöst in 0.1.0-dev.41
+## 2026-08-27 I042 - gelöst in 0.1.0-dev.42
 Der übergebene dev.38-Snapshot enthielt erneut Mojibake in Quelltexten, GUI und Dokumentation. Dev.39 repariert die Texte und bestätigt die UTF-8-Gates in der vollständigen Regression.
 
 
-## 2026-08-28 I043 - gelöst in 0.1.0-dev.41
+## 2026-08-28 I043 - gelöst in 0.1.0-dev.42
 AI-Nachrichtenergebnisse konnten bisher gespeichert, aber nicht kontrolliert gegen die lokale Auswertung verglichen und als freigabepflichtige lokale Modellversion übernommen werden. Dev.40 ergänzt den automatischen Schattenvergleich und eine manuelle atomare Freigabe.
 
-## 2026-08-28 I044 - gelöst in 0.1.0-dev.41
+## 2026-08-28 I044 - gelöst in 0.1.0-dev.42
 Nachrichtenkandidaten wurden in dev.40 auf derselben Stichprobe optimiert und bewertet. Dev.41 trennt Training und Validierung zeitlich, persistiert die Fensterprovenienz und prüft sie vor der manuellen Aktivierung erneut.
+
+## 2026-08-28 I045 - gelöst in 0.1.0-dev.42
+Ein einzelnes Validierungsfenster konnte zeitabschnittsspezifische Ergebnisse überbewerten. Dev.42 ergänzt drei aufeinanderfolgende Walk-forward-Fenster und verlangt Stabilität in mindestens zwei Fenstern.
+
+## 2026-08-28 I045 - gelöst in 0.1.0-dev.43
+Die Übersicht zeigte WebSocket-Fehler als allgemeinen Markt- oder Kontodatenfehler, obwohl REST- beziehungsweise Portfoliodaten verfügbar waren. Dev.43 trennt Datenverfügbarkeit und Kanalzustand.
+## 2026-08-28 I046 - gelöst in 0.1.0-dev.43
+Gemini fehlte in der Add-on-Konfiguration und im Nachrichten-AI-Transport. Dev.43 ergänzt Provider, REST-Anfrage und Antwortnormalisierung.

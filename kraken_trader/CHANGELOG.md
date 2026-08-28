@@ -1,5 +1,5 @@
 # Changelog
-## 0.1.0-dev.41
+## 0.1.0-dev.42
 - externe Nachrichten-AI dient als versionierte Vergleichsinstanz für die lokale Auswertung
 - nach erfolgreichen AI-Auswertungen wird automatisch ein deduplizierter Schattenvergleich gestartet
 - neun begrenzte lokale Nachrichtenparameter werden per deterministischer Koordinatensuche vorgeschlagen
@@ -9,7 +9,7 @@
 - aktive lokale Nachrichtenbewertung wird mit Modellversion persistent gespeichert und beeinflusst die Relevanzgewichtung
 - neue Ingress-Seite „Nachrichten-Lernen“ mit Kandidaten, Vergleichswerten und Versionshistorie
 - Realhandel bleibt hart deaktiviert
-## 0.1.0-dev.41
+## 0.1.0-dev.42
 - Repository und sichtbare GUI-Texte vollständig als echtes UTF-8 repariert
 - Gebührenabruf löst interne Symbole vor TradeVolume gegen Kraken-Quellschlüssel und Aliasse auf
 - nicht unterstützte Assetklassen werden mit dokumentiertem Konfigurations-Fallback übersprungen
@@ -134,9 +134,25 @@
 ## 0.1.0-dev.24
 - realen xStock-Detailscore durch korrekten Kraken-API-Vertrag repariert
 
-## 0.1.0-dev.41 - 2026-08-28
+## 0.1.0-dev.42 - 2026-08-28
 - Nachrichtenkandidaten werden ausschließlich auf einem älteren Trainingsfenster optimiert und auf einem späteren, disjunkten Validierungsfenster geprüft
 - Fenstergrenzen, Stichprobenzahlen, Policy und Vergleichsmetriken werden persistent gespeichert und auditiert
 - Freigaben prüfen Datenfingerprint und Validierung erneut; geänderte Stichproben blockieren fail-closed
 - idempotente Schemaerweiterung und neue Regressionstests
 - keine automatische Aktivierung; Realhandel bleibt hart deaktiviert
+
+## 0.1.0-dev.42 - 2026-08-28
+- Nachrichtenkandidaten erhalten drei aufeinanderfolgende Walk-forward-Validierungsfenster
+- mindestens zwei Fenster müssen Verlustverbesserung und unveränderte oder bessere Richtungsübereinstimmung erfüllen
+- Ergebnisse jedes Teilfensters und die Stabilitätsanforderung werden persistent gespeichert und in der GUI angezeigt
+- unzureichende Historie und instabile Kandidaten werden fail-closed blockiert
+- Freigabe wiederholt auch die Walk-forward-Stabilitätsgates
+- Realhandel und automatische Aktivierung bleiben hart deaktiviert
+
+## 0.1.0-dev.43
+- Übersicht trennt verfügbare REST-/Portfoliodaten vom Zustand der optionalen WebSocket-Kanäle
+- vorhandene Marktdaten und Portfolios werden nicht mehr pauschal als Fehler dargestellt
+- Gemini ist als externer Nachrichten-AI-Anbieter konfigurierbar
+- Gemini-REST-Transport unterstützt JSON-Ausgaben, API-Key-Header, Modell und Timeout
+- AI-Verarbeitung erzwingt das konfigurierte Lauf-Limit
+- Realhandel bleibt hart deaktiviert

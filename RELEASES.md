@@ -105,12 +105,15 @@ Robuste kontrollierte Lernfreigabe mit Horizontpflicht, Mindeststichprobe, Minde
 ## 0.1.0-dev.38 — 2026-08-26
 Zielzeitgenaue Prognoseauswertung aus der ersten abgeschlossenen historischen OHLC-Kerze am oder nach dem Zielzeitpunkt. Kosten-Snapshots trennen Einstieg, Ausstieg und Roundtrip und dokumentieren ihre Gebührenquelle. 119 automatisierte Tests erfolgreich.
 
-## 0.1.0-dev.41 — 2026-08-27
+## 0.1.0-dev.43 — 2026-08-27
 Stabilisierung, robuster kanonischer Gebührenabruf, isolierte Paarfehler und vollständig überarbeitete geführte Ingress-GUI. 124 Tests erfolgreich; Realhandel hart deaktiviert.
 
 
-## 0.1.0-dev.41 - 2026-08-28
+## 0.1.0-dev.43 - 2026-08-28
 Kontrolliertes Nachrichten-Lernen mit externer AI als Lehrer, automatischem Schattenvergleich und ausschließlich manueller lokaler Aktivierung. Realhandel bleibt hart deaktiviert.
 
-## 0.1.0-dev.41 - 2026-08-28
+## 0.1.0-dev.43 - 2026-08-28
 Zeitlich getrennte Trainings- und Validierungsfenster für kontrolliertes Nachrichten-Lernen mit persistenter Provenienz und fail-closed Freigabeprüfung. Realhandel bleibt hart deaktiviert.
+
+## 0.1.0-dev.43 - 2026-08-28
+Mehrfenster-Walk-forward-Stabilitätsprüfung für Nachrichtenkandidaten mit persistierten Teilfenster-Metriken und erneuter Prüfung bei manueller Freigabe.

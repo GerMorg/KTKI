@@ -1,4 +1,4 @@
-version: 0.1.0-dev.41
+version: 0.1.0-dev.43
 tests:
   - {id: T-001, area: Flask routes and tabs, status: passed}
   - {id: T-002, area: Ingress prefix navigation, status: passed}
@@ -274,3 +274,15 @@ release_0_1_0_dev_41:
     - {id: T-D41-002, expectation: Fensterprovenienz wird persistent gespeichert, status: passed}
     - {id: T-D41-003, expectation: Geänderte Stichprobe blockiert Freigabe, status: passed}
     - {id: T-D41-004, expectation: Schemamigration ist idempotent, status: passed}
+release_0_1_0_dev_42:
+  automated:
+    - {id: T-D42-001, expectation: Walk-forward-Fenster sind chronologisch strikt getrennt, status: passed}
+    - {id: T-D42-002, expectation: Stabilitätsmetriken werden persistent gespeichert, status: passed}
+    - {id: T-D42-003, expectation: Unzureichende Historie blockiert fail-closed, status: passed}
+    - {id: T-D42-004, expectation: Schemaerweiterung ist idempotent, status: passed}
+release_0_1_0_dev_43:
+  automated:
+    - {id: T-D43-001, expectation: Gemini-Konfiguration und REST-Antwort werden unterstützt, status: passed}
+    - {id: T-D43-002, expectation: Vorhandene Daten bleiben trotz WebSocket-Fehler in der Übersicht verfügbar, status: passed}
+  safety:
+    - {id: T-D43-SAFE, expectation: Realhandel bleibt hart deaktiviert, status: passed}

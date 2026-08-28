@@ -1,7 +1,4 @@
 === FILE TREE ===
-.editorconfig
-.gitattributes
-.gitignore
 CHANGELOG.md
 DECISIONS.md
 FEATURE_CONTRACT.yaml
@@ -13,7 +10,6 @@ RELEASES.md
 TEST_MATRIX.yaml
 kraken_trader\CHANGELOG.md
 kraken_trader\DOCS.md
-kraken_trader\Dockerfile
 kraken_trader\README.md
 kraken_trader\app\backtest.py
 kraken_trader\app\controlled_learning.py
@@ -80,6 +76,8 @@ kraken_trader\tests\test_dev38_target_costs.py
 kraken_trader\tests\test_dev39_fee_gui.py
 kraken_trader\tests\test_dev40_news_learning.py
 kraken_trader\tests\test_dev41_news_validation_windows.py
+kraken_trader\tests\test_dev42_walk_forward_stability.py
+kraken_trader\tests\test_dev43_dashboard_gemini.py
 kraken_trader\tests\test_dev9_coupling.py
 kraken_trader\tests\test_market_universe.py
 kraken_trader\tests\test_paper_config.py
@@ -90,33 +88,9 @@ kraken_trader\tests\test_scanner.py
 kraken_trader\tests\test_websocket.py
 repository.yaml
 
-===== FILE: .editorconfig =====
-root = true
-[*]
-charset = utf-8
-end_of_line = lf
-insert_final_newline = true
-[*.py]
-indent_style = space
-indent_size = 1
-
-===== FILE: .gitattributes =====
-* text=auto eol=lf
-*.py text working-tree-encoding=UTF-8
-*.md text working-tree-encoding=UTF-8
-*.yaml text working-tree-encoding=UTF-8
-*.yml text working-tree-encoding=UTF-8
-*.txt text working-tree-encoding=UTF-8
-
-===== FILE: .gitignore =====
-__pycache__/
-*.pyc
-*.db
-.env
-
 ===== FILE: CHANGELOG.md =====
 # Changelog
-## 0.1.0-dev.41
+## 0.1.0-dev.42
 - externe Nachrichten-AI dient als versionierte Vergleichsinstanz für die lokale Auswertung
 - nach erfolgreichen AI-Auswertungen wird automatisch ein deduplizierter Schattenvergleich gestartet
 - neun begrenzte lokale Nachrichtenparameter werden per deterministischer Koordinatensuche vorgeschlagen
@@ -126,7 +100,7 @@ __pycache__/
 - aktive lokale Nachrichtenbewertung wird mit Modellversion persistent gespeichert und beeinflusst die Relevanzgewichtung
 - neue Ingress-Seite „Nachrichten-Lernen“ mit Kandidaten, Vergleichswerten und Versionshistorie
 - Realhandel bleibt hart deaktiviert
-## 0.1.0-dev.41
+## 0.1.0-dev.42
 - Repository und sichtbare GUI-Texte vollständig als echtes UTF-8 repariert
 - Gebührenabruf löst interne Symbole vor TradeVolume gegen Kraken-Quellschlüssel und Aliasse auf
 - nicht unterstützte Assetklassen werden mit dokumentiertem Konfigurations-Fallback übersprungen
@@ -251,12 +225,29 @@ __pycache__/
 ## 0.1.0-dev.24
 - realen xStock-Detailscore durch korrekten Kraken-API-Vertrag repariert
 
-## 0.1.0-dev.41 - 2026-08-28
+## 0.1.0-dev.42 - 2026-08-28
 - Nachrichtenkandidaten werden ausschließlich auf einem älteren Trainingsfenster optimiert und auf einem späteren, disjunkten Validierungsfenster geprüft
 - Fenstergrenzen, Stichprobenzahlen, Policy und Vergleichsmetriken werden persistent gespeichert und auditiert
 - Freigaben prüfen Datenfingerprint und Validierung erneut; geänderte Stichproben blockieren fail-closed
 - idempotente Schemaerweiterung und neue Regressionstests
 - keine automatische Aktivierung; Realhandel bleibt hart deaktiviert
+
+## 0.1.0-dev.42 - 2026-08-28
+- Nachrichtenkandidaten erhalten drei aufeinanderfolgende Walk-forward-Validierungsfenster
+- mindestens zwei Fenster müssen Verlustverbesserung und unveränderte oder bessere Richtungsübereinstimmung erfüllen
+- Ergebnisse jedes Teilfensters und die Stabilitätsanforderung werden persistent gespeichert und in der GUI angezeigt
+- unzureichende Historie und instabile Kandidaten werden fail-closed blockiert
+- Freigabe wiederholt auch die Walk-forward-Stabilitätsgates
+- Realhandel und automatische Aktivierung bleiben hart deaktiviert
+
+## 0.1.0-dev.43
+- Übersicht trennt verfügbare REST-/Portfoliodaten vom Zustand der optionalen WebSocket-Kanäle
+- vorhandene Marktdaten und Portfolios werden nicht mehr pauschal als Fehler dargestellt
+- Gemini ist als externer Nachrichten-AI-Anbieter konfigurierbar
+- Gemini-REST-Transport unterstützt JSON-Ausgaben, API-Key-Header, Modell und Timeout
+- AI-Verarbeitung erzwingt das konfigurierte Lauf-Limit
+- Realhandel bleibt hart deaktiviert
+
 
 ===== FILE: DECISIONS.md =====
 # Decisions — append-only
@@ -435,8 +426,17 @@ Die externe Nachrichten-AI darf lokale Nachrichtenparameter nur als Vergleichsin
 ## 2026-08-28 D066
 Nachrichtenparameter dürfen nur auf älteren Beobachtungen optimiert werden. Freigabemetriken stammen ausschließlich aus einem späteren, disjunkten Validierungsfenster. Jede Freigabe wiederholt Fingerprint und Gates; veränderte Daten blockieren die Aktivierung.
 
+## 2026-08-28 D067
+Ein Nachrichtenkandidat benötigt neben dem finalen Validierungsfenster stabile Ergebnisse über mehrere chronologische Walk-forward-Teilfenster. Standardmäßig müssen mindestens zwei von drei Fenstern alle Verlust- und Richtungsübereinstimmungs-Gates erfüllen. Unzureichende Historie blockiert fail-closed.
+
+## 2026-08-28 D067
+Dashboard-Verfügbarkeit wird aus tatsächlich vorhandenen Daten abgeleitet. WebSocket-Zustände bleiben separat sichtbar und überschreiben erfolgreiche REST- oder Portfolio-Daten nicht.
+## 2026-08-28 D068
+Gemini wird als zusätzlicher externer Nachrichten-AI-Anbieter über den offiziellen generateContent-REST-Vertrag unterstützt. AI-Ergebnisse bleiben Vergleichsdaten ohne automatische Handels- oder Aktivierungswirkung.
+
+
 ===== FILE: FEATURE_CONTRACT.yaml =====
-version: 0.1.0-dev.41
+version: 0.1.0-dev.43
 compatibility_rule: Implementierte Funktionen duerfen nur nach ausdruecklicher Entscheidung mit dokumentierter Migration entfernt werden.
 features:
   ingress_gui: {required: true, status: implemented}
@@ -732,6 +732,20 @@ release_0_1_0_dev_41:
   approval_sample_fingerprint_recheck: {required: true, status: atomic_fail_closed}
   automatic_activation: {required: false, status: prohibited}
   real_trading: {required: false, status: hard_disabled}
+release_0_1_0_dev_42:
+  multi_window_news_walk_forward: {required: true, status: implemented_3_windows}
+  minimum_stable_window_gate: {required: true, status: enforced_2_of_3}
+  persisted_window_metrics: {required: true, status: implemented}
+  approval_stability_recheck: {required: true, status: atomic_fail_closed}
+  insufficient_history: {required: false, status: blocks_candidate}
+  automatic_activation: {required: false, status: prohibited}
+  real_trading: {required: false, status: hard_disabled}
+release_0_1_0_dev_43:
+  dashboard_data_channel_separation: {required: true, status: implemented}
+  gemini_news_ai_provider: {required: true, status: implemented}
+  ai_direct_trading: {required: false, status: prohibited}
+  real_trading: {required: false, status: hard_disabled}
+
 
 ===== FILE: ISSUES.md =====
 # Issues — append-only
@@ -838,17 +852,26 @@ Dev.35 zeigte Abdeckung, Nettorendite und Drawdown nur als Information; ein Kand
 ## 2026-08-26 I040 - gelöst in 0.1.0-dev.38
 Fällige Prognosen wurden zuvor mit dem beim Auswertungslauf aktuellen Livepreis bewertet und die als Roundtrip bezeichneten Kosten trennten Einstieg und Ausstieg nicht eindeutig. Dev.38 verwendet historische Zielkerzen und persistiert eine quellenbezogene Entry-/Exit-Kostenkette.
 
-## 2026-08-27 I041 - gelöst in 0.1.0-dev.41
+## 2026-08-27 I041 - gelöst in 0.1.0-dev.42
 Der Gebührenabruf übergab interne Anzeige- und nicht unterstützte Produktpaare gemeinsam an TradeVolume. Ein unbekanntes Paar erzeugte EQuery:Unknown asset pair und verhinderte den gesamten Abruf. Dev.39 löst Currency-Paare kanonisch auf, trennt nicht unterstützte Assetklassen und isoliert Teilfehler.
-## 2026-08-27 I042 - gelöst in 0.1.0-dev.41
+## 2026-08-27 I042 - gelöst in 0.1.0-dev.42
 Der übergebene dev.38-Snapshot enthielt erneut Mojibake in Quelltexten, GUI und Dokumentation. Dev.39 repariert die Texte und bestätigt die UTF-8-Gates in der vollständigen Regression.
 
 
-## 2026-08-28 I043 - gelöst in 0.1.0-dev.41
+## 2026-08-28 I043 - gelöst in 0.1.0-dev.42
 AI-Nachrichtenergebnisse konnten bisher gespeichert, aber nicht kontrolliert gegen die lokale Auswertung verglichen und als freigabepflichtige lokale Modellversion übernommen werden. Dev.40 ergänzt den automatischen Schattenvergleich und eine manuelle atomare Freigabe.
 
-## 2026-08-28 I044 - gelöst in 0.1.0-dev.41
+## 2026-08-28 I044 - gelöst in 0.1.0-dev.42
 Nachrichtenkandidaten wurden in dev.40 auf derselben Stichprobe optimiert und bewertet. Dev.41 trennt Training und Validierung zeitlich, persistiert die Fensterprovenienz und prüft sie vor der manuellen Aktivierung erneut.
+
+## 2026-08-28 I045 - gelöst in 0.1.0-dev.42
+Ein einzelnes Validierungsfenster konnte zeitabschnittsspezifische Ergebnisse überbewerten. Dev.42 ergänzt drei aufeinanderfolgende Walk-forward-Fenster und verlangt Stabilität in mindestens zwei Fenstern.
+
+## 2026-08-28 I045 - gelöst in 0.1.0-dev.43
+Die Übersicht zeigte WebSocket-Fehler als allgemeinen Markt- oder Kontodatenfehler, obwohl REST- beziehungsweise Portfoliodaten verfügbar waren. Dev.43 trennt Datenverfügbarkeit und Kanalzustand.
+## 2026-08-28 I046 - gelöst in 0.1.0-dev.43
+Gemini fehlte in der Add-on-Konfiguration und im Nachrichten-AI-Transport. Dev.43 ergänzt Provider, REST-Anfrage und Antwortnormalisierung.
+
 
 ===== FILE: PROJECT_HANDOVER.md =====
 # HA Kraken Trader Projektuebergabe
@@ -1011,24 +1034,34 @@ Dev.38 baut vollständig auf dev.37 auf. Prognoseauswertungen verwenden keine ve
 ### Nächster empfohlener Schritt
 Dev.39 sollte eine echte zeitlich getrennte Walk-forward-Validierung für Lernkandidaten mit stabilen Teilfenster-Gates ergänzen.
 
-## Stand 0.1.0-dev.41
+## Stand 0.1.0-dev.43
 Dev.39 basiert ausschließlich auf dem gelieferten dev.38-Snapshot. Alle erkannten UTF-8-Schäden wurden repariert. Der Gebührenabruf verwendet nun kanonische Kraken-Paaridentitäten, lässt nicht unterstützte Assetklassen beim sicheren Konfigurations-Fallback und isoliert ungültige Paare. Die GUI besitzt eine neue responsive Navigation, eine geführte Übersicht sowie eine verständliche kontrollierte Lernfreigabe mit aktiver Version, Parametervergleich und Gate-Details. Die vollständige Regression umfasst 124 erfolgreiche Tests. Realhandel bleibt hart deaktiviert.
 
 ### Nächster Schritt
 Praktischer Home-Assistant-OS-Test des Gebührenabrufs mit dem realen Marktuniversum sowie schrittweise Modularisierung der großen main.py in Blueprints ohne Funktionsverlust.
 
 
-## Stand 0.1.0-dev.41
+## Stand 0.1.0-dev.43
 Die externe Nachrichten-AI kann nun automatisch mit der aktiven lokalen Nachrichtenbewertung verglichen werden. Ein begrenzter lokaler Kandidat wird nur bei geringerem Fehler und mindestens gleich guter Richtungsübereinstimmung PENDING. Aktivierung erfolgt ausschließlich manuell, nach erneuter Prüfung und als vollständige neue Version.
 
 ### Nächster Schritt
 Zeitlich getrennte Trainings- und Validierungsfenster für Nachrichtenkandidaten sowie eine spätere Prüfung gegen tatsächlich eingetretene Marktrenditen statt ausschließlich gegen AI-Lehrergebnisse.
 
-## Stand 0.1.0-dev.41
+## Stand 0.1.0-dev.43
 Dev.41 baut vollständig auf dev.40 auf und entfernt keine Funktionen. Nachrichtenkandidaten werden auf dem älteren Teil der chronologisch sortierten AI-Vergleiche optimiert. Nur der spätere, disjunkte Teil entscheidet über Verlustverbesserung und Richtungsübereinstimmung. Fenstergrenzen, Anzahlen und Policy werden gespeichert. Vor einer manuellen Aktivierung werden Datenfingerprint und Validierung erneut geprüft. Realhandel bleibt hart deaktiviert.
 
 ### Nächster empfohlener Schritt
 Mehrere aufeinanderfolgende Walk-forward-Teilfenster einführen und Stabilitätsgates je Teilfenster ergänzen.
+
+## Stand 0.1.0-dev.43
+Dev.42 erweitert die zeitlich getrennte Validierung aus dev.41 um mehrere aufeinanderfolgende Walk-forward-Fenster. Standardmäßig werden drei disjunkte Validierungsabschnitte gegen ein jeweils wachsendes Trainingsfenster geprüft; mindestens zwei müssen stabil bestehen. Die vollständigen Fenstermetriken werden gespeichert und bei der manuellen Freigabe erneut geprüft. Bestehende Funktionen bleiben erhalten. Realhandel bleibt hart deaktiviert.
+
+### Nächster empfohlener Schritt
+Walk-forward-Stabilitätsgates auf das kontrollierte Lernen der Produktfamilien übertragen und anschließend main.py schrittweise in Blueprints modularisieren.
+
+## Übergabe 0.1.0-dev.43
+Die Startübersicht unterscheidet nun Datenverfügbarkeit vom Zustand der optionalen WebSocket-Kanäle. Gemini kann als Nachrichten-AI-Provider konfiguriert werden. Der externe AI-Pfad bleibt ohne direkte Handelswirkung.
+
 
 ===== FILE: PROJECT_MEMORY.yaml =====
 schema_version: 2
@@ -1045,7 +1078,7 @@ non_negotiable_rules:
   - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
   - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.41
+  version: 0.1.0-dev.43
   status: Zielzeitgenaue historische Prognoseauswertung und quellenbezogene Kostenkette; 119 Tests erfolgreich
 implemented:
   - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
@@ -1464,7 +1497,7 @@ release_0_1_0_dev_38:
   next_recommended_release: dev.39 Walk-forward-Validierung mit Teilfenster-Gates
 
   - date: 2026-08-27
-    version: 0.1.0-dev.41
+    version: 0.1.0-dev.43
     decision: Gebührenauflösung kanonisch und teilfehlertolerant; GUI durchgängig geführt und responsive; vollständiges Repository bei jeder Weiterentwicklung ausgeben.
 release_0_1_0_dev_41:
   date: 2026-08-28
@@ -1472,11 +1505,23 @@ release_0_1_0_dev_41:
   purpose: Zeitlich getrennte Validierung für kontrolliertes Nachrichten-Lernen
   added: [chronologischer Trainingssplit, disjunktes Validierungsfenster, Fensterprovenienz, Fingerprint-Recheck]
   safety: [keine automatische Aktivierung, manuelle atomare Freigabe, Realhandel hart deaktiviert]
+release_0_1_0_dev_42:
+  date: 2026-08-28
+  base: 0.1.0-dev.41 complete repository
+  purpose: Stabile Mehrfenster-Walk-forward-Validierung für Nachrichtenkandidaten
+  added: [drei Walk-forward-Fenster, Zwei-von-drei-Stabilitätsgate, persistierte Fenstermetriken, Freigabe-Recheck]
+  safety: [unzureichende Historie blockiert, keine automatische Aktivierung, Realhandel hart deaktiviert]
+release_0_1_0_dev_43:
+  purpose: Datenverfügbarkeit korrekt darstellen und Gemini für Nachrichten-AI ergänzen
+  safety: Externe AI bleibt Vergleichsinstanz; keine automatische Aktivierung; Realhandel hart deaktiviert
+  delivery: Vollständig aktualisiertes Repository inklusive Snapshot und ZIP
+
 
 ===== FILE: README.md =====
-# HA Kraken Trader 0.1.0-dev.41
+# HA Kraken Trader 0.1.0-dev.43
 
 Auditierbare Kraken-Analyse mit Realportfolio, dynamischem Paper-Portfolio, Aktien/xStocks und vorbereitetem, aber hart deaktiviertem Realhandel.
+
 
 ===== FILE: RELEASES.md =====
 # Releases — append-only
@@ -1586,18 +1631,22 @@ Robuste kontrollierte Lernfreigabe mit Horizontpflicht, Mindeststichprobe, Minde
 ## 0.1.0-dev.38 — 2026-08-26
 Zielzeitgenaue Prognoseauswertung aus der ersten abgeschlossenen historischen OHLC-Kerze am oder nach dem Zielzeitpunkt. Kosten-Snapshots trennen Einstieg, Ausstieg und Roundtrip und dokumentieren ihre Gebührenquelle. 119 automatisierte Tests erfolgreich.
 
-## 0.1.0-dev.41 — 2026-08-27
+## 0.1.0-dev.43 — 2026-08-27
 Stabilisierung, robuster kanonischer Gebührenabruf, isolierte Paarfehler und vollständig überarbeitete geführte Ingress-GUI. 124 Tests erfolgreich; Realhandel hart deaktiviert.
 
 
-## 0.1.0-dev.41 - 2026-08-28
+## 0.1.0-dev.43 - 2026-08-28
 Kontrolliertes Nachrichten-Lernen mit externer AI als Lehrer, automatischem Schattenvergleich und ausschließlich manueller lokaler Aktivierung. Realhandel bleibt hart deaktiviert.
 
-## 0.1.0-dev.41 - 2026-08-28
+## 0.1.0-dev.43 - 2026-08-28
 Zeitlich getrennte Trainings- und Validierungsfenster für kontrolliertes Nachrichten-Lernen mit persistenter Provenienz und fail-closed Freigabeprüfung. Realhandel bleibt hart deaktiviert.
 
+## 0.1.0-dev.43 - 2026-08-28
+Mehrfenster-Walk-forward-Stabilitätsprüfung für Nachrichtenkandidaten mit persistierten Teilfenster-Metriken und erneuter Prüfung bei manueller Freigabe.
+
+
 ===== FILE: TEST_MATRIX.yaml =====
-version: 0.1.0-dev.41
+version: 0.1.0-dev.43
 tests:
   - {id: T-001, area: Flask routes and tabs, status: passed}
   - {id: T-002, area: Ingress prefix navigation, status: passed}
@@ -1873,10 +1922,23 @@ release_0_1_0_dev_41:
     - {id: T-D41-002, expectation: Fensterprovenienz wird persistent gespeichert, status: passed}
     - {id: T-D41-003, expectation: Geänderte Stichprobe blockiert Freigabe, status: passed}
     - {id: T-D41-004, expectation: Schemamigration ist idempotent, status: passed}
+release_0_1_0_dev_42:
+  automated:
+    - {id: T-D42-001, expectation: Walk-forward-Fenster sind chronologisch strikt getrennt, status: passed}
+    - {id: T-D42-002, expectation: Stabilitätsmetriken werden persistent gespeichert, status: passed}
+    - {id: T-D42-003, expectation: Unzureichende Historie blockiert fail-closed, status: passed}
+    - {id: T-D42-004, expectation: Schemaerweiterung ist idempotent, status: passed}
+release_0_1_0_dev_43:
+  automated:
+    - {id: T-D43-001, expectation: Gemini-Konfiguration und REST-Antwort werden unterstützt, status: passed}
+    - {id: T-D43-002, expectation: Vorhandene Daten bleiben trotz WebSocket-Fehler in der Übersicht verfügbar, status: passed}
+  safety:
+    - {id: T-D43-SAFE, expectation: Realhandel bleibt hart deaktiviert, status: passed}
+
 
 ===== FILE: kraken_trader\CHANGELOG.md =====
 # Changelog
-## 0.1.0-dev.41
+## 0.1.0-dev.42
 - externe Nachrichten-AI dient als versionierte Vergleichsinstanz für die lokale Auswertung
 - nach erfolgreichen AI-Auswertungen wird automatisch ein deduplizierter Schattenvergleich gestartet
 - neun begrenzte lokale Nachrichtenparameter werden per deterministischer Koordinatensuche vorgeschlagen
@@ -1886,7 +1948,7 @@ release_0_1_0_dev_41:
 - aktive lokale Nachrichtenbewertung wird mit Modellversion persistent gespeichert und beeinflusst die Relevanzgewichtung
 - neue Ingress-Seite „Nachrichten-Lernen“ mit Kandidaten, Vergleichswerten und Versionshistorie
 - Realhandel bleibt hart deaktiviert
-## 0.1.0-dev.41
+## 0.1.0-dev.42
 - Repository und sichtbare GUI-Texte vollständig als echtes UTF-8 repariert
 - Gebührenabruf löst interne Symbole vor TradeVolume gegen Kraken-Quellschlüssel und Aliasse auf
 - nicht unterstützte Assetklassen werden mit dokumentiertem Konfigurations-Fallback übersprungen
@@ -2011,15 +2073,32 @@ release_0_1_0_dev_41:
 ## 0.1.0-dev.24
 - realen xStock-Detailscore durch korrekten Kraken-API-Vertrag repariert
 
-## 0.1.0-dev.41 - 2026-08-28
+## 0.1.0-dev.42 - 2026-08-28
 - Nachrichtenkandidaten werden ausschließlich auf einem älteren Trainingsfenster optimiert und auf einem späteren, disjunkten Validierungsfenster geprüft
 - Fenstergrenzen, Stichprobenzahlen, Policy und Vergleichsmetriken werden persistent gespeichert und auditiert
 - Freigaben prüfen Datenfingerprint und Validierung erneut; geänderte Stichproben blockieren fail-closed
 - idempotente Schemaerweiterung und neue Regressionstests
 - keine automatische Aktivierung; Realhandel bleibt hart deaktiviert
 
+## 0.1.0-dev.42 - 2026-08-28
+- Nachrichtenkandidaten erhalten drei aufeinanderfolgende Walk-forward-Validierungsfenster
+- mindestens zwei Fenster müssen Verlustverbesserung und unveränderte oder bessere Richtungsübereinstimmung erfüllen
+- Ergebnisse jedes Teilfensters und die Stabilitätsanforderung werden persistent gespeichert und in der GUI angezeigt
+- unzureichende Historie und instabile Kandidaten werden fail-closed blockiert
+- Freigabe wiederholt auch die Walk-forward-Stabilitätsgates
+- Realhandel und automatische Aktivierung bleiben hart deaktiviert
+
+## 0.1.0-dev.43
+- Übersicht trennt verfügbare REST-/Portfoliodaten vom Zustand der optionalen WebSocket-Kanäle
+- vorhandene Marktdaten und Portfolios werden nicht mehr pauschal als Fehler dargestellt
+- Gemini ist als externer Nachrichten-AI-Anbieter konfigurierbar
+- Gemini-REST-Transport unterstützt JSON-Ausgaben, API-Key-Header, Modell und Timeout
+- AI-Verarbeitung erzwingt das konfigurierte Lauf-Limit
+- Realhandel bleibt hart deaktiviert
+
+
 ===== FILE: kraken_trader\DOCS.md =====
-# Kraken Trader 0.1.0-dev.41
+# Kraken Trader 0.1.0-dev.43
 
 ## Dauerhafte UTF-8-Strategie
 1. Alle Repository-Texte sind UTF-8 mit LF.
@@ -2036,21 +2115,12 @@ Die Migration verändert einen Wert nur, wenn die Rückwandlung die Anzahl bekan
 ## dev.28 Datenqualität und Backtest
 Ticker- und OHLC-Status werden getrennt persistiert. Die letzte, noch laufende REST-OHLC-Kerze wird nicht als abgeschlossen gewertet. Der lokale OHLCVT-Speicher ist die Grundlage für reproduzierbare Walk-forward-Benchmarks.
 
-===== FILE: kraken_trader\Dockerfile =====
-FROM ghcr.io/home-assistant/base:latest
-RUN apk add --no-cache python3 py3-pip && python3 -m venv /opt/venv
-COPY requirements.txt /tmp/requirements.txt
-RUN /opt/venv/bin/pip install --no-cache-dir -r /tmp/requirements.txt
-COPY app /app
-COPY run.sh /run.sh
-RUN chmod a+x /run.sh
-WORKDIR /app
-CMD ["/run.sh"]
 
 ===== FILE: kraken_trader\README.md =====
-# HA Kraken Trader 0.1.0-dev.41
+# HA Kraken Trader 0.1.0-dev.43
 
 Auditierbare Kraken-Analyse mit Realportfolio, dynamischem Paper-Portfolio, Aktien/xStocks und vorbereitetem, aber hart deaktiviertem Realhandel.
+
 
 ===== FILE: kraken_trader\app\backtest.py =====
 import json,math
@@ -2076,6 +2146,7 @@ class BacktestEngine:
   ac=(self.db.rows('SELECT asset_class FROM market_universe WHERE symbol=? LIMIT 1',(symbol,)) or [{'asset_class':'unknown'}])[0]['asset_class']
   with self.db.con() as c:cur=c.execute('INSERT INTO backtest_runs(created_at,symbol,asset_class,interval_min,model_version,train_points,test_points,cost_rate,status,results_json) VALUES(?,?,?,?,?,?,?,?,?,?)',(now(),symbol,ac,int(interval_min),'trend-sma10-30-v1',split,len(test),str(cost_rate),'VALID',json.dumps(results,sort_keys=True)));rid=cur.lastrowid
   return {'status':'VALID','run_id':rid,**results}
+
 
 ===== FILE: kraken_trader\app\controlled_learning.py =====
 import json
@@ -2437,6 +2508,7 @@ class ControlledLearning:
     def versions(self):
         return self.db.rows('SELECT * FROM parameter_family_versions ORDER BY family,version DESC')
 
+
 ===== FILE: kraken_trader\app\db.py =====
 import json,sqlite3
 from datetime import datetime,timezone
@@ -2510,6 +2582,7 @@ class DB:
  def set_setting(self,key,value):
   with self.con() as c:c.execute('INSERT OR REPLACE INTO settings VALUES(?,?)',(key,str(value)))
 
+
 ===== FILE: kraken_trader\app\decision_matrix.py =====
 import json
 from datetime import datetime,timezone,timedelta
@@ -2535,6 +2608,7 @@ class DecisionMatrix:
    for x in checks:c.execute('INSERT INTO decision_rule_evaluations(created_at,symbol,canonical_id,action,rule_key,passed,reason,details_json,decision_id) VALUES(?,?,?,?,?,?,?,?,?)',(now(),symbol,cid,action,x['rule_key'],1 if x['passed'] else 0,x['reason'],json.dumps(x['details'],sort_keys=True),context.get('decision_id')))
   return {'allowed':allowed,'blocker':blocker,'checks':checks}
  def recent(self):return self.db.rows('SELECT * FROM decision_rule_evaluations ORDER BY id DESC LIMIT 500')
+
 
 ===== FILE: kraken_trader\app\execution_costs.py =====
 from decimal import Decimal
@@ -2574,27 +2648,63 @@ def choose_execution_pair(alternatives,tickers,trade_fee_bps=40,fx_fee_bps=10,sl
  _,_,_,_,selected,costs=ranked[0]
  return selected,costs,[{'symbol':x[4]['symbol'],'total_cost_rate':str(x[5]['total_rate']),'liquidity':str(x[5]['liquidity']),'valid':x[5]['valid']} for x in ranked]
 
+
 ===== FILE: kraken_trader\app\external_ai.py =====
 import json
+import urllib.parse
+import urllib.request
 from db import now
+
 REQUIRED={'relevance','sentiment','expected_impact','horizon','confidence','fact_status','priced_in','topics','affected_assets','summary','counterarguments'}
+
 class ExternalNewsAI:
- def __init__(self,db,options,transport=None):self.db,self.options,self.transport=db,options or {},transport;self.ensure()
+ def __init__(self,db,options,transport=None):
+  self.db,self.options=db,options or {}
+  self.transport=transport or self._http_transport
+  self.ensure()
  def ensure(self):
   with self.db.con() as c:c.execute('CREATE TABLE IF NOT EXISTS external_news_ai_results(news_id TEXT PRIMARY KEY,created_at TEXT NOT NULL,status TEXT NOT NULL,result_json TEXT NOT NULL,error TEXT)')
+ def _prompt(self,row):
+  return ('Bewerte die Nachricht ausschließlich als JSON mit den Feldern relevance, sentiment, expected_impact, horizon, confidence, fact_status, priced_in, topics, affected_assets, summary, counterarguments. '
+          'Keine Handelsanweisung. Nachricht: '+str(row.get('title') or '')+'\n'+str(row.get('summary') or ''))
+ def _http_transport(self,request):
+  provider=str(self.options.get('ai_provider') or 'openai').lower()
+  key=str(self.options.get('ai_api_key') or '')
+  model=str(request.get('model') or self.options.get('ai_model') or '')
+  timeout=max(5,min(120,int(self.options.get('ai_timeout_seconds',30))))
+  prompt=self._prompt(request['news'])
+  if provider=='gemini':
+   endpoint=str(self.options.get('ai_endpoint') or 'https://generativelanguage.googleapis.com/v1beta').rstrip('/')
+   url=endpoint+'/models/'+urllib.parse.quote(model,safe='-_.')+':generateContent'
+   body={'contents':[{'parts':[{'text':prompt}]}],'generationConfig':{'responseMimeType':'application/json'}}
+   headers={'Content-Type':'application/json','X-Goog-Api-Key':key}
+  elif provider in ('openai','azure_openai'):
+   endpoint=str(self.options.get('ai_endpoint') or 'https://api.openai.com/v1/chat/completions')
+   url=endpoint
+   body={'model':model,'messages':[{'role':'user','content':prompt}],'response_format':{'type':'json_object'}}
+   headers={'Content-Type':'application/json','Authorization':'Bearer '+key}
+   if provider=='azure_openai':headers={'Content-Type':'application/json','api-key':key}
+  else:raise ValueError('unsupported provider: '+provider)
+  req=urllib.request.Request(url,data=json.dumps(body).encode('utf-8'),headers=headers,method='POST')
+  with urllib.request.urlopen(req,timeout=timeout) as response:return json.load(response)
+ def _content(self,payload):
+  provider=str(self.options.get('ai_provider') or 'openai').lower()
+  if provider=='gemini':return payload['candidates'][0]['content']['parts'][0]['text']
+  return payload['choices'][0]['message']['content']
  def analyze_pending(self):
   if not self.options.get('ai_news_enabled') or not self.options.get('ai_api_key'):return {'status':'DISABLED','processed':0,'succeeded':0,'failed':0}
-  if self.transport is None:return {'status':'DEFERRED','processed':0,'succeeded':0,'failed':0}
-  rows=self.db.rows('SELECT id,title,summary FROM news_items WHERE id NOT IN (SELECT news_id FROM external_news_ai_results)');ok=failed=0
+  limit=max(1,min(100,int(self.options.get('ai_max_items_per_run',20))))
+  rows=self.db.rows('SELECT id,title,summary FROM news_items WHERE id NOT IN (SELECT news_id FROM external_news_ai_results) ORDER BY id LIMIT '+str(limit));ok=failed=0
   for row in rows:
    try:
-    payload=self.transport({'model':self.options.get('ai_model'),'news':row});content=payload['choices'][0]['message']['content'];result=json.loads(content)
+    payload=self.transport({'model':self.options.get('ai_model'),'news':row});result=json.loads(self._content(payload))
     if not REQUIRED.issubset(result):raise ValueError('incomplete response')
     status='VALID';error=None;ok+=1
    except Exception as exc:result={};status='INVALID';error=type(exc).__name__+': '+str(exc)[:160];failed+=1
    with self.db.con() as c:c.execute('INSERT OR REPLACE INTO external_news_ai_results VALUES(?,?,?,?,?)',(row['id'],now(),status,json.dumps(result,sort_keys=True),error))
   comparison=self.news_learning.propose(automatic=True) if ok and getattr(self,'news_learning',None) else {'status':'NOT_RUN'}
-  return {'status':'COMPLETED','processed':len(rows),'succeeded':ok,'failed':failed,'local_comparison':comparison}
+  return {'status':'COMPLETED','provider':str(self.options.get('ai_provider') or 'openai'),'processed':len(rows),'succeeded':ok,'failed':failed,'local_comparison':comparison}
+
 
 ===== FILE: kraken_trader\app\fee_profile.py =====
 import json
@@ -2826,6 +2936,7 @@ class FeeProfile:
         rows = self.db.rows('SELECT * FROM account_fee_snapshots ORDER BY id DESC LIMIT 1')
         return rows[0] if rows else None
 
+
 ===== FILE: kraken_trader\app\forecast_tracker.py =====
 import json
 from datetime import datetime, timezone, timedelta
@@ -2895,6 +3006,7 @@ class ForecastTracker:
     c.execute('INSERT OR REPLACE INTO forecast_evaluations(forecast_id,evaluated_at,actual_price,actual_return_pct,direction_correct,details_json,target_at,price_source,source_open_time,timing_error_seconds) VALUES(?,?,?,?,?,?,?,?,?,?)',(f['id'],now(),str(actual),str(ret),1 if correct else 0,json.dumps(details,sort_keys=True),target.isoformat(),details['price_source'],source_time,timing_error));c.execute("UPDATE research_forecasts SET status='EVALUATED' WHERE id=?",(f['id'],));done+=1
   return done
 
+
 ===== FILE: kraken_trader\app\forex_shadow.py =====
 import json,math,statistics
 from db import now
@@ -2933,6 +3045,7 @@ class ForexShadow:
    results.extend([dict(x,symbol=row['symbol']) for x in self.score(row['symbol'],row)])
   self.db.audit('FOREX_V2_SHADOW_RUN',json.dumps({'snapshots':len(results),'symbols':len(set(x['symbol'] for x in results))}));return {'status':'SHADOW_ONLY','snapshots':len(results),'symbols':len(set(x['symbol'] for x in results))}
  def comparisons(self):return self.db.rows('SELECT * FROM forex_shadow_comparisons ORDER BY id DESC LIMIT 200')
+
 
 ===== FILE: kraken_trader\app\kraken.py =====
 import base64,hashlib,hmac,json,time,urllib.parse,urllib.request
@@ -2986,6 +3099,7 @@ class KrakenClient:
   if asset_class=='tokenized_asset':data['asset_class']=asset_class
   return self.call('/0/public/OHLC',data)
 
+
 ===== FILE: kraken_trader\app\learning_approval.py =====
 import json
 from db import now
@@ -3025,6 +3139,7 @@ class LearningApproval:
    for name,value in params.items():c.execute('UPDATE strategy_parameters SET value=?,version=?,updated_at=?,source=? WHERE name=?',(str(value),new_version,now(),f'APPROVED_PROPOSAL_{p["id"]}',name))
    c.execute("UPDATE learning_proposals SET status='APPROVED',approved_at=? WHERE id=?",(now(),p['id']))
   self.db.audit('LEARNING_PROPOSAL_APPROVED',json.dumps({'proposal_id':p['id'],'version':new_version,'parameter_count':9}));return {'status':'APPROVED','version':new_version,'parameter_count':9}
+
 
 ===== FILE: kraken_trader\app\main.py =====
 import csv,io,json,os,threading,time
@@ -3141,8 +3256,8 @@ def page(body,**ctx):
  return render_template_string(BASE,body=render_template_string(body,**ctx),app_version=APP_VERSION,nav=[(request.script_root+href,label) for href,label in NAV_ITEMS],current_path=request.script_root+request.path)
 @app.get('/')
 def index():
- portfolio=db.rows('SELECT total_eur,quality,created_at FROM portfolio_snapshots ORDER BY id DESC LIMIT 1');stream_state=db.stream_status();private_state=db.private_stream_status();pending=db.rows("SELECT COUNT(*) n FROM learning_candidates WHERE status='PENDING'");latest_fee=fees.latest()
- return page("""<h1>Übersicht</h1><p class=lead>Zentrale Arbeitsoberfläche für Daten, Analyse, Simulation und kontrollierte Lernfreigaben. Jeder Schritt bleibt nachvollziehbar; reale Orders sind technisch ausgeschlossen.</p><div class=grid><div class=card><h3>Portfolio</h3><div class=metric>{{portfolio[0].total_eur if portfolio else '—'}} €</div><span class=pill>{{portfolio[0].quality if portfolio else 'Noch kein Snapshot'}}</span></div><div class=card><h3>Marktdaten</h3><div class=metric>{{stream.state}}</div><small>Public WebSocket</small></div><div class=card><h3>Kontodaten</h3><div class=metric>{{private.state}}</div><small>Read-only Private WebSocket</small></div><div class=card><h3>Lernfreigaben</h3><div class=metric>{{pending[0].n if pending else 0}}</div><small>offene Kandidaten</small></div><div class=card><h3>Gebührenprofil</h3><div class=metric>{{fee.status if fee else '—'}}</div><small>{{fee.created_at if fee else 'Noch nicht abgerufen'}}</small></div></div><div class=card><h2>Empfohlener Ablauf</h2><div class=steps><div class=step><div><b>Daten verbinden und prüfen</b><br><span class=muted>API, Portfolio und Datenqualität kontrollieren.</span><br><a href="{{url_for('api_status')}}">API öffnen</a> · <a href="{{url_for('data_quality')}}">Datenqualität</a></div></div><div class=step><div><b>Produkte und Gebühren aktualisieren</b><br><a href="{{url_for('products_page')}}">Produkte</a> · <a href="{{url_for('fees_page')}}">Gebühren</a></div></div><div class=step><div><b>Analyse und Simulation ausführen</b><br><a href="{{url_for('scanner_page')}}">Analyse</a> · <a href="{{url_for('paper')}}">Paper-Handel</a></div></div><div class=step><div><b>Lernkandidaten bewusst freigeben</b><br><span class=muted>Ohne ausdrückliche Freigabe ändert sich kein aktiver Parameter.</span><br><a href="{{url_for('controlled_learning_page')}}">Kontrolliertes Lernen</a><a href="{{url_for('news_learning_page')}}">Nachrichten-Lernen</a></div></div></div></div>""",portfolio=portfolio,stream=stream_state,private=private_state,pending=pending,fee=latest_fee)
+ portfolio=db.rows('SELECT total_eur,quality,created_at FROM portfolio_snapshots ORDER BY id DESC LIMIT 1');stream_state=stream.status();private_state=private_stream.status();market_rows=db.rows('SELECT received_at FROM live_prices ORDER BY received_at DESC LIMIT 1');private_rows=db.rows('SELECT received_at FROM private_balances ORDER BY received_at DESC LIMIT 1');stream_state['dashboard_state']='DATEN VERFÜGBAR' if market_rows else ('DEAKTIVIERT' if not stream_state.get('configured_enabled') else stream_state.get('effective_state','NOCH KEINE DATEN'));private_state['dashboard_state']='KONTODATEN VERFÜGBAR' if private_rows or portfolio else ('DEAKTIVIERT' if not private_state.get('configured_enabled') else private_state.get('effective_state','NOCH KEINE DATEN'));pending=db.rows("SELECT COUNT(*) n FROM learning_candidates WHERE status='PENDING'");latest_fee=fees.latest()
+ return page("""<h1>Übersicht</h1><p class=lead>Zentrale Arbeitsoberfläche für Daten, Analyse, Simulation und kontrollierte Lernfreigaben. Jeder Schritt bleibt nachvollziehbar; reale Orders sind technisch ausgeschlossen.</p><div class=grid><div class=card><h3>Portfolio</h3><div class=metric>{{portfolio[0].total_eur if portfolio else '—'}} €</div><span class=pill>{{portfolio[0].quality if portfolio else 'Noch kein Snapshot'}}</span></div><div class=card><h3>Marktdaten</h3><div class=metric>{{stream.dashboard_state}}</div><small>Public WebSocket: {{stream.effective_state}}</small></div><div class=card><h3>Kontodaten</h3><div class=metric>{{private.dashboard_state}}</div><small>Read-only Private WebSocket: {{private.effective_state}}</small></div><div class=card><h3>Lernfreigaben</h3><div class=metric>{{pending[0].n if pending else 0}}</div><small>offene Kandidaten</small></div><div class=card><h3>Gebührenprofil</h3><div class=metric>{{fee.status if fee else '—'}}</div><small>{{fee.created_at if fee else 'Noch nicht abgerufen'}}</small></div></div><div class=card><h2>Empfohlener Ablauf</h2><div class=steps><div class=step><div><b>Daten verbinden und prüfen</b><br><span class=muted>API, Portfolio und Datenqualität kontrollieren.</span><br><a href="{{url_for('api_status')}}">API öffnen</a> · <a href="{{url_for('data_quality')}}">Datenqualität</a></div></div><div class=step><div><b>Produkte und Gebühren aktualisieren</b><br><a href="{{url_for('products_page')}}">Produkte</a> · <a href="{{url_for('fees_page')}}">Gebühren</a></div></div><div class=step><div><b>Analyse und Simulation ausführen</b><br><a href="{{url_for('scanner_page')}}">Analyse</a> · <a href="{{url_for('paper')}}">Paper-Handel</a></div></div><div class=step><div><b>Lernkandidaten bewusst freigeben</b><br><span class=muted>Ohne ausdrückliche Freigabe ändert sich kein aktiver Parameter.</span><br><a href="{{url_for('controlled_learning_page')}}">Kontrolliertes Lernen</a><a href="{{url_for('news_learning_page')}}">Nachrichten-Lernen</a></div></div></div></div>""",portfolio=portfolio,stream=stream_state,private=private_state,pending=pending,fee=latest_fee)
 @app.get('/health')
 def health():return {'status':'ok','version':APP_VERSION,'real_trading':False,'websocket_status':db.value('websocket_status','not_checked'),'market_stream':stream.status(),'private_stream':private_stream.status()}
 @app.get('/api/private-stream')
@@ -3244,7 +3359,7 @@ def news_learning_page():
   if action=='compare':result=news_learning.propose()
   elif action in ('approve','reject'):result=news_learning.decide(int(request.form.get('candidate_id')),action)
  active=news_learning.active();candidates=news_learning.candidates();versions=news_learning.versions()
- return page(render_template_string("""<h1>Nachrichten-AI und lokale Auswertung</h1><div class=card><p>Die externe Nachrichten-AI dient nur als Vergleichsinstanz. Neue lokale Parameter werden in zeitlich getrennten Trainings- und Validierungsfenstern im Schattenmodus verglichen, aber niemals automatisch aktiviert.</p><p>Aktive lokale Version: <b>v{{active.version}}</b></p><form method=post><button name=action value=compare>Vergleich jetzt berechnen</button></form><p>{{result or ''}}</p></div><h2>Kandidaten</h2><table><tr><th>ID</th><th>Status</th><th>Gesamt</th><th>Training / Validierung</th><th>Validierungszeitraum</th><th>Fehler aktiv / Kandidat</th><th>Verbesserung</th><th>Richtungsübereinstimmung</th><th>Freigabe</th></tr>{% for x in candidates %}<tr><td>#{{x.id}}</td><td>{{x.status}}</td><td>{{x.sample_count}}</td><td>{{x.training_count}} / {{x.validation_count}}</td><td><small>{{x.validation_start_at or "–"}}<br>bis {{x.validation_end_at or "–"}}</small></td><td>{{x.active_loss}} / {{x.candidate_loss}}</td><td>{{x.improvement}}</td><td>{{x.agreement_active}} / {{x.agreement_candidate}}</td><td>{% if x.status=='PENDING' %}<form method=post><input type=hidden name=candidate_id value={{x.id}}><button name=action value=approve>Lokale Version freigeben</button><button name=action value=reject>Ablehnen</button></form>{% endif %}</td></tr>{% endfor %}</table><h2>Lokale Versionen</h2><table>{% for x in versions %}<tr><td>v{{x.version}}</td><td>{{x.status}}</td><td>{{x.source}}</td><td><small>{{x.parameters_json}}</small></td></tr>{% endfor %}</table>""",active=active,candidates=candidates,versions=versions,result=result))
+ return page(render_template_string("""<h1>Nachrichten-AI und lokale Auswertung</h1><div class=card><p>Die externe Nachrichten-AI dient nur als Vergleichsinstanz. Neue lokale Parameter werden in mehreren zeitlich getrennten Walk-forward-Fenstern im Schattenmodus verglichen, aber niemals automatisch aktiviert.</p><p>Aktive lokale Version: <b>v{{active.version}}</b></p><form method=post><button name=action value=compare>Vergleich jetzt berechnen</button></form><p>{{result or ''}}</p></div><h2>Kandidaten</h2><table><tr><th>ID</th><th>Status</th><th>Gesamt</th><th>Training / Validierung</th><th>Validierungszeitraum</th><th>Stabile Fenster</th><th>Fehler aktiv / Kandidat</th><th>Verbesserung</th><th>Richtungsübereinstimmung</th><th>Freigabe</th></tr>{% for x in candidates %}<tr><td>#{{x.id}}</td><td>{{x.status}}</td><td>{{x.sample_count}}</td><td>{{x.training_count}} / {{x.validation_count}}</td><td><small>{{x.validation_start_at or "–"}}<br>bis {{x.validation_end_at or "–"}}</small></td><td>{{x.stable_window_count}} / {{x.required_stable_windows}}</td><td>{{x.active_loss}} / {{x.candidate_loss}}</td><td>{{x.improvement}}</td><td>{{x.agreement_active}} / {{x.agreement_candidate}}</td><td>{% if x.status=='PENDING' %}<form method=post><input type=hidden name=candidate_id value={{x.id}}><button name=action value=approve>Lokale Version freigeben</button><button name=action value=reject>Ablehnen</button></form>{% endif %}</td></tr>{% endfor %}</table><h2>Lokale Versionen</h2><table>{% for x in versions %}<tr><td>v{{x.version}}</td><td>{{x.status}}</td><td>{{x.source}}</td><td><small>{{x.parameters_json}}</small></td></tr>{% endfor %}</table>""",active=active,candidates=candidates,versions=versions,result=result))
 
 @app.get('/products')
 def products_page():
@@ -3300,6 +3415,7 @@ def ledger_csv():
 def portfolio_csv():
  out=io.StringIO();w=csv.writer(out);w.writerow(['created_at','total_eur','priced_asset_count','unpriced_asset_count','quality']);[w.writerow(x.values()) for x in db.rows('SELECT created_at,total_eur,priced_asset_count,unpriced_asset_count,quality FROM portfolio_snapshots ORDER BY id')];return Response(out.getvalue(),mimetype='text/csv',headers={'Content-Disposition':'attachment; filename=kraken-portfolio-history.csv'})
 
+
 ===== FILE: kraken_trader\app\market_history.py =====
 import csv,io,json
 from datetime import datetime,timezone
@@ -3327,6 +3443,7 @@ class MarketHistory:
    c.execute('INSERT INTO history_imports(created_at,source,symbol,interval_min,rows_seen,rows_saved,status,details_json) VALUES(?,?,?,?,?,?,?,?)',(now(),source,symbol,int(interval_min),seen,saved,'VALID' if saved else 'ERROR',json.dumps({'format':'Kraken OHLCVT CSV'})))
   return {'status':'VALID' if saved else 'ERROR','rows_seen':seen,'rows_saved':saved}
  def diagnostics(self):return self.db.rows('SELECT * FROM market_data_diagnostics ORDER BY asset_class,symbol')
+
 
 ===== FILE: kraken_trader\app\market_universe.py =====
 import json
@@ -3396,6 +3513,7 @@ class MarketUniverse:
   marks=','.join('?'*len(enabled));rows=self.db.rows(f"SELECT DISTINCT u.symbol FROM market_universe u JOIN market_category_members m ON m.symbol=u.symbol AND m.asset_class=u.asset_class WHERE m.category IN ({marks}) AND LOWER(COALESCE(u.status,'online')) IN ('online','post_only','limit_only')",list(enabled));symbols=[x['symbol'] for x in rows]
   return sorted(x for x in set(symbols) if not quote or x.rsplit('/',1)[-1]==quote)
 
+
 ===== FILE: kraken_trader\app\news_learning.py =====
 import hashlib
 import json
@@ -3453,7 +3571,10 @@ class NewsLearning:
                 ('validation_count', 'INTEGER NOT NULL DEFAULT 0'),
                 ('training_start_at', 'TEXT'), ('training_end_at', 'TEXT'),
                 ('validation_start_at', 'TEXT'), ('validation_end_at', 'TEXT'),
-                ('window_policy_json', "TEXT NOT NULL DEFAULT '{}'")
+                ('window_policy_json', "TEXT NOT NULL DEFAULT '{}'"),
+                ('walk_forward_json', "TEXT NOT NULL DEFAULT '[]'"),
+                ('stable_window_count', 'INTEGER NOT NULL DEFAULT 0'),
+                ('required_stable_windows', 'INTEGER NOT NULL DEFAULT 0')
             )
             for name, definition in additions:
                 if name not in cols:
@@ -3528,6 +3649,29 @@ class NewsLearning:
                 'no_overlap':not set(x['id'] for x in training)&set(x['id'] for x in validation)}
         return training,validation,policy
 
+    def _walk_forward(self, rows, params, active_params, windows=3, minimum_validation=3, minimum_improvement=.01):
+        windows=max(2,min(8,int(windows)))
+        minimum_validation=max(2,int(minimum_validation))
+        ordered=sorted(rows,key=lambda x:(self._timestamp(x) or datetime.min.replace(tzinfo=timezone.utc),str(x['id'])))
+        required=minimum_validation*(windows+1)
+        if len(ordered)<required:
+            return {'status':'INSUFFICIENT','required':required,'available':len(ordered),'windows':[]}
+        first_training=len(ordered)-minimum_validation*windows
+        results=[]
+        for index in range(windows):
+            validation_start=first_training+index*minimum_validation
+            training=ordered[:validation_start]
+            validation=ordered[validation_start:validation_start+minimum_validation]
+            active=self._evaluate(validation,active_params);candidate=self._evaluate(validation,params)
+            improvement=active['loss']-candidate['loss']
+            passed=improvement>=minimum_improvement and candidate['agreement']>=active['agreement']
+            results.append({'index':index+1,'training_count':len(training),'validation_count':len(validation),
+              'training_end_at':training[-1].get('observed_at'),'validation_start_at':validation[0].get('observed_at'),
+              'validation_end_at':validation[-1].get('observed_at'),'active':active,'candidate':candidate,
+              'improvement':improvement,'passed':passed})
+        stable=sum(x['passed'] for x in results)
+        return {'status':'VALID','window_count':windows,'stable_window_count':stable,'windows':results}
+
     def _evaluate(self, rows, params):
         if not rows:return {'loss':1.0,'agreement':0.0,'samples':0}
         predictions=[self._local(x,params) for x in rows]
@@ -3548,7 +3692,7 @@ class NewsLearning:
                 if loss < best: candidate,best=trial,loss
         return candidate
 
-    def propose(self, min_sample=10, min_improvement=.01, automatic=False, validation_ratio=.30, minimum_validation=3):
+    def propose(self, min_sample=10, min_improvement=.01, automatic=False, validation_ratio=.30, minimum_validation=3, walk_forward_windows=3, required_stable_windows=2):
         rows=self._samples();n=len(rows)
         if n < min_sample:return {'status':'INSUFFICIENT_DATA','sample_count':n,'required':min_sample}
         training,validation,policy=self._split(rows,validation_ratio,minimum_validation)
@@ -3560,16 +3704,19 @@ class NewsLearning:
         active=self.active();active_params=json.loads(active['parameters_json']);candidate=self._optimize(training,active_params)
         train_old=self._evaluate(training,active_params);train_new=self._evaluate(training,candidate)
         old=self._evaluate(validation,active_params);new=self._evaluate(validation,candidate);improvement=old['loss']-new['loss']
-        passed=policy['no_overlap'] and improvement>=min_improvement and new['agreement']>=old['agreement'] and candidate!=active_params
+        walk=self._walk_forward(rows,candidate,active_params,walk_forward_windows,minimum_validation,min_improvement)
+        required_stable=max(1,min(int(required_stable_windows),int(walk_forward_windows)))
+        stable_ok=walk['status']=='VALID' and walk['stable_window_count']>=required_stable
+        passed=policy['no_overlap'] and improvement>=min_improvement and new['agreement']>=old['agreement'] and candidate!=active_params and stable_ok
         status='PENDING' if passed else 'REJECTED_GATE'
         comparison={'training':{'active':train_old,'candidate':train_new},'validation':{'active':old,'candidate':new},
-                    'minimum_validation_improvement':min_improvement,'automatic_comparison':bool(automatic),'window_policy':policy}
+                    'minimum_validation_improvement':min_improvement,'automatic_comparison':bool(automatic),'window_policy':policy,'walk_forward':walk,'required_stable_windows':required_stable}
         reason='Zeitlich getrennte Validierung bestanden; ausdrückliche Freigabe erforderlich' if passed else 'Validierungs- oder Vergleichsgate nicht erfüllt'
-        values=(now(),status,active['version'],n,fingerprint,str(old['loss']),str(new['loss']),str(improvement),str(old['agreement']),str(new['agreement']),json.dumps(candidate,sort_keys=True),json.dumps(comparison,sort_keys=True),reason,None if passed else now(),len(training),len(validation),policy['training_start_at'],policy['training_end_at'],policy['validation_start_at'],policy['validation_end_at'],json.dumps(policy,sort_keys=True))
+        values=(now(),status,active['version'],n,fingerprint,str(old['loss']),str(new['loss']),str(improvement),str(old['agreement']),str(new['agreement']),json.dumps(candidate,sort_keys=True),json.dumps(comparison,sort_keys=True),reason,None if passed else now(),len(training),len(validation),policy['training_start_at'],policy['training_end_at'],policy['validation_start_at'],policy['validation_end_at'],json.dumps(policy,sort_keys=True),json.dumps(walk,sort_keys=True),walk.get('stable_window_count',0),required_stable)
         with self.db.con() as c:
-            cur=c.execute('INSERT INTO news_model_candidates(created_at,status,base_version,sample_count,sample_fingerprint,active_loss,candidate_loss,improvement,agreement_active,agreement_candidate,parameters_json,comparison_json,reason,decided_at,training_count,validation_count,training_start_at,training_end_at,validation_start_at,validation_end_at,window_policy_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',values);candidate_id=cur.lastrowid
-        self.db.audit('NEWS_MODEL_CANDIDATE',json.dumps({'candidate_id':candidate_id,'status':status,'samples':n,'validation_improvement':improvement,'window_policy':policy},sort_keys=True))
-        return {'status':status,'candidate_id':candidate_id,'sample_count':n,'training_count':len(training),'validation_count':len(validation),'improvement':improvement,'agreement_active':old['agreement'],'agreement_candidate':new['agreement'],'window_policy':policy}
+            cur=c.execute('INSERT INTO news_model_candidates(created_at,status,base_version,sample_count,sample_fingerprint,active_loss,candidate_loss,improvement,agreement_active,agreement_candidate,parameters_json,comparison_json,reason,decided_at,training_count,validation_count,training_start_at,training_end_at,validation_start_at,validation_end_at,window_policy_json,walk_forward_json,stable_window_count,required_stable_windows) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',values);candidate_id=cur.lastrowid
+        self.db.audit('NEWS_MODEL_CANDIDATE',json.dumps({'candidate_id':candidate_id,'status':status,'samples':n,'validation_improvement':improvement,'window_policy':policy,'walk_forward':walk,'required_stable_windows':required_stable},sort_keys=True))
+        return {'status':status,'candidate_id':candidate_id,'sample_count':n,'training_count':len(training),'validation_count':len(validation),'improvement':improvement,'agreement_active':old['agreement'],'agreement_candidate':new['agreement'],'window_policy':policy,'walk_forward':walk,'required_stable_windows':required_stable}
 
     def decide(self, candidate_id, action):
         found=self.db.rows('SELECT * FROM news_model_candidates WHERE id=?',(candidate_id,))
@@ -3593,8 +3740,13 @@ class NewsLearning:
         training,validation,current_policy=self._split(rows,policy.get('validation_ratio',.30),policy.get('minimum_validation',3))
         fingerprint=hashlib.sha256('|'.join(x['id'] for x in rows).encode()).hexdigest()
         old=self._evaluate(validation,json.loads(active['parameters_json']));check=self._evaluate(validation,params)
-        required=float(json.loads(item['comparison_json']).get('minimum_validation_improvement',.01))
-        valid=(fingerprint==item['sample_fingerprint'] and current_policy['no_overlap'] and old['loss']-check['loss']>=required and check['agreement']>=old['agreement'])
+        comparison=json.loads(item['comparison_json'])
+        required=float(comparison.get('minimum_validation_improvement',.01))
+        stored_walk=comparison.get('walk_forward') or {}
+        required_stable=int(item.get('required_stable_windows') or comparison.get('required_stable_windows') or 1)
+        walk=self._walk_forward(rows,params,json.loads(active['parameters_json']),stored_walk.get('window_count',3),policy.get('minimum_validation',3),required)
+        stable_ok=walk['status']=='VALID' and walk['stable_window_count']>=required_stable
+        valid=(fingerprint==item['sample_fingerprint'] and current_policy['no_overlap'] and old['loss']-check['loss']>=required and check['agreement']>=old['agreement'] and stable_ok)
         if not valid:
             with self.db.con() as c:c.execute("UPDATE news_model_candidates SET status='REJECTED_RECHECK',decided_at=? WHERE id=?",(now(),candidate_id))
             self.db.audit('NEWS_MODEL_APPROVAL_BLOCKED',json.dumps({'candidate_id':candidate_id,'sample_unchanged':fingerprint==item['sample_fingerprint']}),'warning')
@@ -3618,6 +3770,7 @@ class NewsLearning:
 
     def candidates(self):return self.db.rows('SELECT * FROM news_model_candidates ORDER BY id DESC LIMIT 100')
     def versions(self):return self.db.rows('SELECT * FROM news_model_versions ORDER BY version DESC')
+
 
 ===== FILE: kraken_trader\app\news_prefilter.py =====
 import hashlib,json,re,time,urllib.error,urllib.request,xml.etree.ElementTree as ET
@@ -3733,6 +3886,7 @@ class NewsPrefilter:
      direct=any(x in specific for x in hits);rel=float(item['weight'])*(1.0 if direct else .25)*(1.0+min(1.0,abs(float(item.get('local_score') or 0))));links.append((item['id'],symbol,str(rel),('Direkter Marktbezug: ' if direct else 'Kategorietrend: ')+', '.join(hits[:4])))
   with self.db.con() as c:c.execute('DELETE FROM news_market_links');c.executemany('INSERT OR REPLACE INTO news_market_links VALUES(?,?,?,?)',links)
   return len(links)
+
 
 ===== FILE: kraken_trader\app\paper_engine.py =====
 import json
@@ -3914,6 +4068,7 @@ def configure_engine(engine):
  engine.trade_eur=D(value('paper_trade_eur',25))
  return engine
 
+
 ===== FILE: kraken_trader\app\portfolio_allocator.py =====
 from decimal import Decimal
 import json
@@ -3932,6 +4087,7 @@ class PortfolioAllocator:
      if allowed:lev=max(allowed)
    out.append({'symbol':row['symbol'],'category':row['category'],'confidence':str(confidence),'target_pct':str(target_pct*100),'target_exposure_eur':str(total*target_pct),'leverage':lev,'scanner_signal':row['signal']})
   return out
+
 
 ===== FILE: kraken_trader\app\portfolio_sync.py =====
 from decimal import Decimal,InvalidOperation
@@ -3956,6 +4112,7 @@ def build_rows(balances,ledger_assets,assets,pairs,tickers):
   rows.append({'asset':code,'display_name':name,'amount':str(amount),'eur_price':str(price) if price is not None else None,'eur_value':str(value) if value is not None else None,'classification':'HELD' if amount!=0 else 'HISTORICAL_ZERO','ever_held':1 if code in ledger_assets or amount!=0 else 0})
  quality='VALID' if all(x['eur_value'] is not None or dec(x['amount'])==0 for x in rows) else 'INCOMPLETE'
  return rows,str(total),quality
+
 
 ===== FILE: kraken_trader\app\prefilter.py =====
 import json,math
@@ -4020,6 +4177,7 @@ class MarketPrefilter:
   return {'run_id':rid,'markets':len(markets),'valid':len(valid),'pending_ticker':sum(x['quality']=='PENDING_TICKER' for x in rows),'candidates':len(chosen),'errors':errors+nr['errors']}
  def candidates(self):return [x['symbol'] for x in self.db.rows("SELECT symbol FROM research_watchlist WHERE status IN ('PREFILTERED','ANALYZED') ORDER BY CAST(prefilter_score AS REAL) DESC")]
 
+
 ===== FILE: kraken_trader\app\product_identity.py =====
 import re
 TRADITIONAL_ASSET_CLASSES={'equity','stock','stocks','traditional_equity'}
@@ -4039,6 +4197,7 @@ def product_kind(asset_class,category=None):
 def canonical_product_id(asset_class,base_asset,category=None):return product_kind(asset_class,category)+':'+normalized_asset(base_asset)
 def is_traditional_stock(asset_class):return str(asset_class or '') in TRADITIONAL_ASSET_CLASSES
 
+
 ===== FILE: kraken_trader\app\product_view.py =====
 import json
 class ProductView:
@@ -4052,6 +4211,7 @@ class ProductView:
    out.append(dict(p,alternatives=alts,ranking=ranking,eur_cost=(eur or {}).get('total_cost_rate'),usd_cost=(usd or {}).get('total_cost_rate'),selection_reason=reason,position_symbol=position.get('symbol') if position else None,position_quantity=position.get('quantity') if position else None))
   return out
 
+
 ===== FILE: kraken_trader\app\real_execution_adapter.py =====
 class RealExecutionDisabled(RuntimeError):pass
 class RealExecutionAdapter:
@@ -4060,6 +4220,7 @@ class RealExecutionAdapter:
   required=('symbol','action','confidence','leverage','target_exposure_eur');missing=[x for x in required if x not in plan]
   return {'status':'REJECTED' if missing else 'PREPARED_ONLY','missing':missing,'real_execution':False,'plan':plan}
  def execute(self,plan):raise RealExecutionDisabled('Real execution is hard disabled')
+
 
 ===== FILE: kraken_trader\app\research_pipeline.py =====
 import json,threading
@@ -4093,6 +4254,7 @@ class ResearchPipeline:
   finally:self.lock.release()
  def latest(self):
   r=self.db.rows('SELECT * FROM research_jobs ORDER BY id DESC LIMIT 1');return r[0] if r else None
+
 
 ===== FILE: kraken_trader\app\scanner.py =====
 import json,math,statistics,time,threading
@@ -4160,6 +4322,7 @@ class MarketScanner:
    self.db.audit('SCANNER_RUN',json.dumps({'requested':len(symbols),**counts,'quality':quality}));return {'status':'COMPLETED','processed':len(symbols),'batch_start':start,'results':self.db.rows('SELECT * FROM scanner_results ORDER BY CAST(score AS REAL) DESC')}
   finally:self.lock.release()
 
+
 ===== FILE: kraken_trader\app\strategy_profiles.py =====
 import json
 
@@ -4195,6 +4358,7 @@ def score_features(features,params):
  score=params['base_score']+max(-25,min(25,momentum*params['momentum_weight']))+max(-18,min(18,trend*params['trend_weight']))-max(0,min(22,vol*params['volatility_penalty']))-max(0,min(30,spread*params['spread_penalty']))+news
  score=max(0,min(100,score));buy=score>=params['buy_threshold'] and momentum>0 and trend>0 and spread<=params['buy_max_spread_pct'];avoid=score<params['avoid_threshold'] or spread>params['avoid_spread_pct']
  return score,'BUY' if buy else ('AVOID' if avoid else 'HOLD')
+
 
 ===== FILE: kraken_trader\app\text_encoding.py =====
 MARKERS=(chr(0x00c3),chr(0x00c2),chr(0x00e2)+chr(0x20ac),chr(0x00e2)+chr(0x201a),chr(0x00f0)+chr(0x0178),chr(0xfffd))
@@ -4232,9 +4396,11 @@ def repair_database(db):
     c.execute(f'UPDATE "{table}" SET {set_sql} WHERE {where}',list(updates.values())+[row[k] for k in pk]);changed+=len(updates)
  db.set_setting(marker,'done');db.audit('UTF8_DATA_MIGRATION_V4',str(changed));return {'status':'DONE','changed':changed}
 
+
 ===== FILE: kraken_trader\app\version.py =====
-APP_VERSION = "0.1.0-dev.41"
+APP_VERSION = "0.1.0-dev.43"
 USER_AGENT = f"HA-Kraken-Trader/{APP_VERSION}"
+
 
 ===== FILE: kraken_trader\app\ws_market.py =====
 import json,threading,time
@@ -4310,6 +4476,7 @@ class MarketStream:
   else:st['effective_state']=st.get('state','STOPPED')
   return st
 
+
 ===== FILE: kraken_trader\app\ws_private.py =====
 import json,threading
 from datetime import datetime,timezone
@@ -4378,9 +4545,10 @@ class PrivateStream:
  def status(self):
   st=self.db.private_stream_status();st['configured_enabled']=self.enabled;st['sequences']=dict(self.sequences);st['effective_state']=st.get('state','STOPPED');return st
 
+
 ===== FILE: kraken_trader\config.yaml =====
 name: Kraken Trader
-version: "0.1.0-dev.41"
+version: "0.1.0-dev.42"
 slug: kraken_trader
 description: Read-only Kraken Portfolio und lokales Paper-Trading
 arch: [amd64]
@@ -4428,7 +4596,7 @@ schema:
   paper_tax_rate_pct: float
 
   ai_news_enabled: bool
-  ai_provider: list(openai|azure_openai)
+  ai_provider: list(openai|azure_openai|gemini)
   ai_endpoint: str?
   ai_model: str
   ai_api_key: password?
@@ -4448,10 +4616,12 @@ schema:
   learning_max_candidate_drawdown_pct: float
   learning_max_drawdown_degradation_pct: float
 
+
 ===== FILE: kraken_trader\requirements.txt =====
 Flask==3.1.1
 gunicorn==23.0.0
 websocket-client==1.8.0
+
 
 ===== FILE: kraken_trader\run.sh =====
 #!/usr/bin/with-contenv bashio
@@ -4459,10 +4629,12 @@ set -euo pipefail
 export APP_DATA_DIR=/data APP_OPTIONS=/data/options.json
 exec /opt/venv/bin/gunicorn --workers 1 --threads 4 --bind 0.0.0.0:8099 main:app
 
+
 ===== FILE: kraken_trader\run_tests.sh =====
 #!/bin/sh
 set -eu
 PYTHONPATH=app python -m unittest discover -s tests -v
+
 
 ===== FILE: kraken_trader\tests\test_app.py =====
 import os,sys,tempfile,unittest
@@ -4475,6 +4647,7 @@ class T(unittest.TestCase):
   d=self.c.get('/',headers={'X-Ingress-Path':'/api/hassio_ingress/token'}).data;self.assertIn(b'/api/hassio_ingress/token/api',d);self.assertNotIn(b'href="/"',d)
  def test_disabled(self):self.assertFalse(self.c.get('/health').json['real_trading'])
 if __name__=='__main__':unittest.main()
+
 
 ===== FILE: kraken_trader\tests\test_dev11_resilience.py =====
 import os,sys,tempfile,unittest
@@ -4497,6 +4670,7 @@ class Tests(unittest.TestCase):
  def test_html_declares_utf8(self):
   os.environ['APP_DISABLE_PAPER_SCHEDULER']='1';import main
   response=main.app.test_client().get('/');self.assertIn('charset=utf-8',response.headers['Content-Type'].lower());self.assertIn('Übersicht',response.data.decode('utf-8'))
+
 
 ===== FILE: kraken_trader\tests\test_dev12_pipeline.py =====
 import os,sys,tempfile,time,unittest
@@ -4530,6 +4704,7 @@ class Tests(unittest.TestCase):
   from paper_engine import PaperEngine
   e=PaperEngine(self.db);self.assertEqual(e.run(),[])
 
+
 ===== FILE: kraken_trader\tests\test_dev13_research.py =====
 import os,sys,tempfile,time,unittest
 sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','app'))
@@ -4562,6 +4737,7 @@ class Tests(unittest.TestCase):
   self.assertEqual(j['status'],'COMPLETED')
  def test_weights_are_controlled(self):self.assertEqual(self.db.rows("SELECT status FROM model_weights WHERE version='rules-v1'")[0]['status'],'ACTIVE')
 
+
 ===== FILE: kraken_trader\tests\test_dev14_startup_migration.py =====
 import os,sqlite3,sys,tempfile,unittest
 sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','app'))
@@ -4588,6 +4764,7 @@ class StartupMigrationTests(unittest.TestCase):
  def test_all_startup_services_construct_on_migrated_db(self):
   db=self.make_old_db();client=FakeClient();scanner=MarketScanner(db,client);universe=MarketUniverse(db,client);news=NewsPrefilter(db);prefilter=MarketPrefilter(db,client,news);forecasts=ForecastTracker(db);pipeline=ResearchPipeline(db,universe,prefilter,scanner,forecasts)
   self.assertIsNotNone(pipeline.latest()) if db.rows('SELECT * FROM research_jobs') else self.assertIsNone(pipeline.latest())
+
 
 ===== FILE: kraken_trader\tests\test_dev15_news_resilience.py =====
 import os,sys,tempfile,unittest,urllib.error
@@ -4623,6 +4800,7 @@ class Tests(unittest.TestCase):
   row=db.rows("SELECT last_status,last_error,consecutive_failures FROM news_sources WHERE name='GDELT Wirtschaft'")[0]
   self.assertEqual(row['last_status'],'ERROR HTTP 429');self.assertGreater(row['consecutive_failures'],0);self.assertTrue(r['errors'])
 
+
 ===== FILE: kraken_trader\tests\test_dev16_allocator.py =====
 import json,os,sys,tempfile,unittest
 sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','app'))
@@ -4641,6 +4819,7 @@ class Tests(unittest.TestCase):
  def test_real_execution_is_disabled(self):
   with self.assertRaises(RealExecutionDisabled):RealExecutionAdapter().execute({'symbol':'BTC/EUR','action':'BUY','amount':'1'})
 
+
 ===== FILE: kraken_trader\tests\test_dev17_external_ai.py =====
 import json,os,sys,tempfile,unittest
 sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','app'))
@@ -4657,6 +4836,7 @@ class T(unittest.TestCase):
  def test_invalid_fails_closed(self):
   a=ExternalNewsAI(self.db,{'ai_news_enabled':True,'ai_api_key':'secret','ai_model':'test'},lambda p:{'choices':[{'message':{'content':'{}'}}]});self.assertEqual(a.analyze_pending()['failed'],1)
  def test_disabled_without_key(self):self.assertEqual(ExternalNewsAI(self.db,{'ai_news_enabled':True}).analyze_pending()['status'],'DISABLED')
+
 
 ===== FILE: kraken_trader\tests\test_dev17_prefilter_dedupe.py =====
 import os,sys,tempfile,unittest
@@ -4683,6 +4863,7 @@ class Tests(unittest.TestCase):
   markets=self.p.markets();self.assertEqual(sum(x['symbol']=='AAPLx/USD' for x in markets),1);r=self.p.run(8);rows=self.db.rows('SELECT * FROM prefilter_results WHERE run_id=?',(r['run_id'],));self.assertEqual(sum(x['symbol']=='AAPLx/USD' for x in rows),1)
  def test_usd_xstock_is_candidate(self):
   r=self.p.run(8);self.assertIn('AAPLx/USD',self.p.candidates())
+
 
 ===== FILE: kraken_trader\tests\test_dev18_xstock_candidates.py =====
 import os,sys,tempfile,unittest
@@ -4718,6 +4899,7 @@ class Tests(unittest.TestCase):
   with self.db.con() as c:c.execute('DELETE FROM market_universe');c.execute('DELETE FROM market_category_members')
   result=MarketPrefilter(self.db,self.client,News(self.db)).run(8);self.assertEqual(result['markets'],0);self.assertEqual(result['candidates'],0)
 
+
 ===== FILE: kraken_trader\tests\test_dev19_forecast_utf8.py =====
 import json,os,sys,tempfile,unittest
 from pathlib import Path
@@ -4745,6 +4927,7 @@ class Tests(unittest.TestCase):
     text=p.read_text('utf-8');self.assertFalse(any(x in text for x in bad),str(p))
  def test_visible_german_text_is_correct(self):
   text=(Path(__file__).parents[1]/'app'/'main.py').read_text('utf-8');self.assertIn('Übersicht',text);self.assertIn('Gebühr',text);self.assertIn('Qualität',text)
+
 
 ===== FILE: kraken_trader\tests\test_dev20_prefilter_utf8.py =====
 import os,sys,tempfile,unittest
@@ -4777,6 +4960,7 @@ class Tests(unittest.TestCase):
     text=path.read_text('utf-8');self.assertFalse(any(x in text for x in bad),str(path))
   main=(root/'kraken_trader/app/main.py').read_text('utf-8');self.assertIn('Übersicht',main);self.assertIn('Gebühr',main)
 
+
 ===== FILE: kraken_trader\tests\test_dev21_utf8_final.py =====
 import os,sys,tempfile,unittest
 from pathlib import Path
@@ -4797,6 +4981,7 @@ class Tests(unittest.TestCase):
   for path in root.rglob('*'):
    if path.is_file() and path.suffix in ('','.py','.md','.yaml','.yml','.txt'):
     text=path.read_text('utf-8');self.assertEqual(corruption_score(text),0,str(path))
+
 
 ===== FILE: kraken_trader\tests\test_dev22_integrity_utf8.py =====
 import os,sys,tempfile,unittest
@@ -4831,6 +5016,7 @@ class Tests(unittest.TestCase):
   u=MarketUniverse(db,Client());u.set_categories({'xstocks','leveraged_spot'});u.sync();p=MarketPrefilter(db,Client(),News())
   first=p.run(8);second=p.run(8)
   for rid in (first['run_id'],second['run_id']):self.assertEqual(len(db.rows('SELECT symbol FROM prefilter_results WHERE run_id=?',(rid,))),1)
+
 
 ===== FILE: kraken_trader\tests\test_dev23_xstocks_end_to_end.py =====
 import os,sys,tempfile,unittest,json
@@ -4873,6 +5059,7 @@ class Tests(unittest.TestCase):
   with self.db.con() as c:c.execute("UPDATE research_watchlist SET status='ANALYZED'");c.execute("UPDATE market_universe SET ordermin='100' WHERE symbol='AAPLx/USD'")
   self.db.set_setting('automation_enabled','true');e=PaperEngine(self.db,1000,40,10,10,25);e.run();self.assertFalse(self.db.rows('SELECT * FROM paper_trades'));self.assertIn('Mindestmenge',self.db.rows('SELECT reason FROM paper_decisions ORDER BY id DESC LIMIT 1')[0]['reason'])
 
+
 ===== FILE: kraken_trader\tests\test_dev24_xstock_api_contract.py =====
 import os,sys,tempfile,unittest
 from unittest.mock import patch
@@ -4896,6 +5083,7 @@ class Tests(unittest.TestCase):
  def test_scanner_uses_kraken_source_key_and_produces_nonzero_score(self):
   db=DB(tempfile.mktemp());db.init();u=MarketUniverse(db,Client());u.set_categories({'xstocks'});u.sync();s=MarketScanner(db,Client());s.run(['AAPLx/USD'],60,1,0);r=db.rows("SELECT * FROM scanner_results WHERE symbol='AAPLx/USD'")[0]
   self.assertEqual(r['quality'],'VALID');self.assertGreater(float(r['score']),0);self.assertIn('xstocks-approved-v1',r['reasons_json'])
+
 
 ===== FILE: kraken_trader\tests\test_dev25_learning_approval.py =====
 import os,sys,tempfile,unittest,json
@@ -4921,6 +5109,7 @@ class Tests(unittest.TestCase):
   with db.con() as c:c.executescript("CREATE TABLE research_forecasts(id INTEGER PRIMARY KEY,symbol TEXT,scanner_score TEXT);CREATE TABLE forecast_evaluations(forecast_id INTEGER PRIMARY KEY,direction_correct INTEGER,actual_return_pct TEXT);CREATE TABLE market_universe(symbol TEXT,category TEXT);")
   self.assertEqual(l.create_proposal()['status'],'INSUFFICIENT_DATA');self.assertEqual(before,l.values())
 
+
 ===== FILE: kraken_trader\tests\test_dev26_canonical_fx_forex_stability.py =====
 import os,sys,tempfile,unittest
 sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','app'))
@@ -4940,6 +5129,7 @@ class T(unittest.TestCase):
   candles=[[i,'99','101','98',str(100+i*.1),'100','1000',2] for i in range(40)]
   r=s.analyze('EUR/USD',candles,{'b':['1.1'],'a':['1.101']},'forex','USD');self.assertIn('forex-v1',' '.join(r['reasons']))
 if __name__=='__main__':unittest.main()
+
 
 ===== FILE: kraken_trader\tests\test_dev27_execution_policy.py =====
 import json,os,sys,tempfile,unittest
@@ -4987,6 +5177,7 @@ class Tests(unittest.TestCase):
   broken='Geb'+chr(0xc3)+chr(0xbc)+'hr und '+chr(0xc3)+chr(0x153)+'bersicht';self.assertEqual(repair_text(broken),'Gebühr und Übersicht')
 if __name__=='__main__':unittest.main()
 
+
 ===== FILE: kraken_trader\tests\test_dev28_data_quality_backtest.py =====
 import os,sys,tempfile,unittest
 sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','app'))
@@ -5004,6 +5195,7 @@ class T(unittest.TestCase):
  def test_kraken_last_candle_not_persisted_as_committed_status(self):
   self.h.ohlc('EUR/USD','forex',[[1,'1','1','1','1','1','1',1],[2,'1','1','1','1','1','1',1]]);self.assertEqual(self.h.diagnostics()[0]['last_committed_open_time'],1)
 if __name__=='__main__':unittest.main()
+
 
 ===== FILE: kraken_trader\tests\test_dev29_account_fees.py =====
 import json,os,sys,tempfile,unittest
@@ -5032,6 +5224,7 @@ class T(unittest.TestCase):
   tid=PaperEngine(self.db,1000).execute('BTC/EUR','BUY',100,'test',{'leverage':1});d=json.loads(self.db.rows('SELECT decision_json FROM paper_trades WHERE id=?',(tid,))[0]['decision_json']);self.assertEqual(d['trade_fee_source'],'KRAKEN_TRADE_VOLUME');self.assertEqual(d['trade_fee_bps'],'40.0000')
 if __name__=='__main__':unittest.main()
 
+
 ===== FILE: kraken_trader\tests\test_dev30_forex_shadow.py =====
 import json,os,sys,tempfile,unittest
 sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','app'))
@@ -5053,6 +5246,7 @@ class T(unittest.TestCase):
   self.f.run();self.assertEqual(len(self.f.comparisons()),2)
 if __name__=='__main__':unittest.main()
 
+
 ===== FILE: kraken_trader\tests\test_dev31_products_matrix.py =====
 import json,os,sys,tempfile,unittest
 sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','app'))
@@ -5072,6 +5266,7 @@ class T(unittest.TestCase):
  def test_data_freshness_is_hard_gate(self):
   r=DecisionMatrix(self.db).evaluate('EUR/USD','BUY',{'confirmation_count':1,'confirmation_required':1,'improvement_after_costs':'1','data_fresh':False});self.assertFalse(r['allowed']);self.assertEqual(r['checks'][-1]['rule_key'],'DATA_FRESHNESS')
 if __name__=='__main__':unittest.main()
+
 
 ===== FILE: kraken_trader\tests\test_dev32_controlled_learning.py =====
 import os,sys,tempfile,unittest
@@ -5098,6 +5293,7 @@ class T(unittest.TestCase):
   self.seed();r=self.l.propose('forex',10,0);self.assertEqual(self.l.decide(r['candidate_id'],'reject')['status'],'REJECTED');self.assertEqual(self.l.rollback('forex',1)['status'],'ROLLED_BACK')
 if __name__=='__main__':unittest.main()
 
+
 ===== FILE: kraken_trader\tests\test_dev35_horizon_metrics.py =====
 import json,os,sys,tempfile,unittest
 sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','app'))
@@ -5122,6 +5318,7 @@ class T(unittest.TestCase):
   self.assertEqual(ForecastTracker(self.db).snapshot(['EUR/USD']),2);f=json.loads(self.db.rows('SELECT features_json FROM research_forecasts WHERE status=\'OPEN\' LIMIT 1')[0]['features_json']);self.assertEqual(f['schema_version'],3);self.assertIn('estimated_roundtrip_cost_pct',f);self.assertIn('cost_components_pct',f)
 if __name__=='__main__':unittest.main()
 
+
 ===== FILE: kraken_trader\tests\test_dev36_consistency.py =====
 import os, sys, tempfile, unittest
 from pathlib import Path
@@ -5135,7 +5332,7 @@ import main
 
 class Dev36ConsistencyTests(unittest.TestCase):
     def test_runtime_version_is_centralized(self):
-        self.assertEqual(APP_VERSION, "0.1.0-dev.41")
+        self.assertEqual(APP_VERSION, "0.1.0-dev.42")
         self.assertEqual(main.app.test_client().get("/health").json["version"], APP_VERSION)
         self.assertIn(APP_VERSION, main.app.test_client().get("/").data.decode("utf-8"))
         self.assertTrue(USER_AGENT.endswith(APP_VERSION))
@@ -5156,6 +5353,7 @@ class Dev36ConsistencyTests(unittest.TestCase):
         self.assertFalse(main.app.test_client().get("/health").json["real_trading"])
 
 if __name__ == "__main__": unittest.main()
+
 
 ===== FILE: kraken_trader\tests\test_dev37_learning_gates.py =====
 import json, os, sys, tempfile, unittest
@@ -5252,6 +5450,7 @@ class Dev37LearningGateTests(unittest.TestCase):
 if __name__ == '__main__':
     unittest.main()
 
+
 ===== FILE: kraken_trader\tests\test_dev38_target_costs.py =====
 import json, os, sys, tempfile, unittest
 from datetime import datetime, timezone, timedelta
@@ -5282,6 +5481,7 @@ class Dev38Tests(unittest.TestCase):
  def test_old_evaluation_schema_migrates_idempotently(self):
   cols={x['name'] for x in self.db.rows('PRAGMA table_info(forecast_evaluations)')};self.assertTrue({'target_at','price_source','source_open_time','timing_error_seconds'}.issubset(cols));ForecastTracker(self.db);self.assertEqual(cols,{x['name'] for x in self.db.rows('PRAGMA table_info(forecast_evaluations)')})
 if __name__=='__main__':unittest.main()
+
 
 ===== FILE: kraken_trader\tests\test_dev39_fee_gui.py =====
 import os,sys,tempfile,unittest
@@ -5317,6 +5517,7 @@ class Dev39GuiTests(unittest.TestCase):
  def test_learning_page_explains_activation(self):
   body=self.client.get('/controlled-learning').data.decode('utf-8');self.assertIn('ausdrücklichen Freigabe',body);self.assertIn('Aktive Version',body);self.assertIn('Freigaberegeln',body)
 if __name__=='__main__':unittest.main()
+
 
 ===== FILE: kraken_trader\tests\test_dev40_news_learning.py =====
 import json
@@ -5366,6 +5567,7 @@ def test_active_local_model_is_persisted(tmp_path):
     assert out['evaluated']==12
     assert len(db.rows('SELECT * FROM news_local_evaluations'))==12
 
+
 ===== FILE: kraken_trader\tests\test_dev41_news_validation_windows.py =====
 import json,os,sys,tempfile,unittest
 from datetime import datetime,timezone,timedelta
@@ -5409,6 +5611,70 @@ class Dev41NewsWindows(unittest.TestCase):
 
 if __name__=='__main__':unittest.main()
 
+
+===== FILE: kraken_trader\tests\test_dev42_walk_forward_stability.py =====
+import json,os,sys,tempfile,unittest
+from datetime import datetime,timezone,timedelta
+sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','app'))
+from db import DB
+from news_learning import NewsLearning
+
+class Dev42WalkForward(unittest.TestCase):
+ def setUp(self):
+  self.db=DB(tempfile.mktemp());self.db.init();self.nl=NewsLearning(self.db)
+  with self.db.con() as c:
+   c.execute('CREATE TABLE news_sources(name TEXT PRIMARY KEY,source_class TEXT)')
+   c.execute('CREATE TABLE news_items(id TEXT PRIMARY KEY,title TEXT,summary TEXT,source_name TEXT,published_at TEXT,fetched_at TEXT)')
+   c.execute('CREATE TABLE external_news_ai_results(news_id TEXT PRIMARY KEY,created_at TEXT,status TEXT,result_json TEXT,error TEXT)')
+   c.execute("INSERT INTO news_sources VALUES('primary','primary')")
+   base=datetime(2026,1,1,tzinfo=timezone.utc)
+   for i in range(24):
+    pos=i%2==0;stamp=(base+timedelta(hours=i)).isoformat();title=('gain ' if pos else 'loss ')+str(i)
+    ai={'relevance':1,'sentiment':'positive' if pos else 'negative','expected_impact':'medium','confidence':1,'priced_in':False}
+    c.execute("INSERT INTO news_items VALUES(?,?,?,'primary',?,?)",(str(i),title,'',stamp,stamp))
+    c.execute("INSERT INTO external_news_ai_results VALUES(?,?,'VALID',?,NULL)",(str(i),stamp,json.dumps(ai)))
+ def test_walk_forward_windows_are_strictly_ordered(self):
+  rows=self.nl._samples();active=json.loads(self.nl.active()['parameters_json']);walk=self.nl._walk_forward(rows,active,active,3,3,0)
+  self.assertEqual(walk['status'],'VALID');self.assertEqual(len(walk['windows']),3)
+  for x in walk['windows']:self.assertLess(x['training_end_at'],x['validation_start_at'])
+ def test_candidate_persists_stability_evidence(self):
+  result=self.nl.propose(min_sample=10,min_improvement=0,walk_forward_windows=3,required_stable_windows=2)
+  row=self.db.rows('SELECT * FROM news_model_candidates WHERE id=?',(result['candidate_id'],))[0]
+  self.assertEqual(row['required_stable_windows'],2);self.assertEqual(len(json.loads(row['walk_forward_json'])['windows']),3)
+ def test_insufficient_walk_forward_fails_closed(self):
+  rows=self.nl._samples()[:8];active=json.loads(self.nl.active()['parameters_json'])
+  self.assertEqual(self.nl._walk_forward(rows,active,active,3,3,0)['status'],'INSUFFICIENT')
+ def test_migration_idempotent(self):
+  self.nl.ensure();self.nl.ensure();cols={x['name'] for x in self.db.rows('PRAGMA table_info(news_model_candidates)')}
+  self.assertTrue({'walk_forward_json','stable_window_count','required_stable_windows'}<=cols)
+if __name__=='__main__':unittest.main()
+
+
+===== FILE: kraken_trader\tests\test_dev43_dashboard_gemini.py =====
+import json,os,sys,tempfile,unittest
+from unittest.mock import patch
+os.environ['APP_DISABLE_PAPER_SCHEDULER']='1';os.environ['APP_DISABLE_RESEARCH_SCHEDULER']='1';os.environ['APP_DATA_DIR']=tempfile.mkdtemp()
+sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','app'))
+from db import DB,now
+from external_ai import ExternalNewsAI
+class Response:
+ def __enter__(self):return self
+ def __exit__(self,*args):pass
+ def read(self):return json.dumps({'candidates':[{'content':{'parts':[{'text':json.dumps({'relevance':1,'sentiment':'positive','expected_impact':'medium','horizon':'short','confidence':1,'fact_status':'confirmed','priced_in':False,'topics':[],'affected_assets':[],'summary':'x','counterarguments':[]})}]}}]}).encode()
+class Dev43Tests(unittest.TestCase):
+ def test_gemini_request_and_response(self):
+  db=DB(tempfile.mktemp());db.init()
+  with db.con() as c:c.execute('CREATE TABLE news_items(id TEXT PRIMARY KEY,title TEXT,summary TEXT,fetched_at TEXT)');c.execute("INSERT INTO news_items VALUES('n','t','s',?)",(now(),))
+  ai=ExternalNewsAI(db,{'ai_news_enabled':True,'ai_provider':'gemini','ai_api_key':'secret','ai_model':'gemini-test'})
+  with patch('urllib.request.urlopen',return_value=Response()) as call:r=ai.analyze_pending()
+  self.assertEqual(r['succeeded'],1);self.assertIn('generativelanguage.googleapis.com',call.call_args.args[0].full_url);self.assertEqual(call.call_args.args[0].headers['X-goog-api-key'],'secret')
+ def test_dashboard_uses_available_data_despite_stream_error(self):
+  import main
+  with main.db.con() as c:c.execute("UPDATE stream_state SET state='ERROR' WHERE id=1");c.execute("UPDATE private_stream_state SET state='ERROR' WHERE id=1");c.execute("INSERT OR REPLACE INTO live_prices VALUES('BTC/EUR','1',NULL,NULL,NULL,?)",(now(),));c.execute("INSERT INTO portfolio_snapshots(created_at,total_eur,priced_asset_count,unpriced_asset_count,quality) VALUES(?,100,1,0,'COMPLETE')",(now(),))
+  body=main.app.test_client().get('/').data.decode('utf-8');self.assertIn('DATEN VERFÜGBAR',body);self.assertIn('KONTODATEN VERFÜGBAR',body)
+if __name__=='__main__':unittest.main()
+
+
 ===== FILE: kraken_trader\tests\test_dev9_coupling.py =====
 import os,sys,tempfile,unittest
 sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','app'))
@@ -5433,6 +5699,7 @@ class Dev9Tests(unittest.TestCase):
   with self.db.con() as c:c.execute('INSERT INTO paper_positions VALUES(?,?,?,?)',('BTC/EUR','0.001','49000',now()))
   self.scanner('AVOID','VALID','20');self.e.run();self.assertFalse(self.db.rows('SELECT side FROM paper_trades'))
 
+
 ===== FILE: kraken_trader\tests\test_market_universe.py =====
 import os,sys,tempfile,unittest
 sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','app'))
@@ -5454,6 +5721,7 @@ class Tests(unittest.TestCase):
  def test_settings_utf8(self):
   labels=' '.join(x['label'] for x in self.u.categories());self.assertIn('Kryptowährungen',labels);self.assertIn('Hebelfähige',labels)
 
+
 ===== FILE: kraken_trader\tests\test_paper_config.py =====
 import os,sys,tempfile,unittest
 os.environ['APP_DATA_DIR']=tempfile.mkdtemp();os.environ['APP_DISABLE_PAPER_SCHEDULER']='1';os.environ['APP_DISABLE_WEBSOCKET']='1';sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','app'));import main
@@ -5468,6 +5736,7 @@ class ConfigTests(unittest.TestCase):
   main.client.ticker=lambda symbols:{'XXBTZEUR':{'c':['50000'],'b':['49990'],'a':['50010'],'o':'49000'}}
   with main.db.con() as c:c.execute("INSERT OR REPLACE INTO allowlist VALUES('BTC/EUR',1)")
   self.assertEqual(main.refresh_allowed_prices(),1);self.assertTrue(main.db.rows("SELECT * FROM live_prices WHERE symbol='BTC/EUR'"))
+
 
 ===== FILE: kraken_trader\tests\test_paper_engine.py =====
 import os,sys,tempfile,unittest
@@ -5490,6 +5759,7 @@ class PaperTests(unittest.TestCase):
   for _ in range(10):self.e.run()
   cash,pv,total,_=self.e.equity();self.assertLessEqual(pv,total*__import__('decimal').Decimal('0.11'))
 
+
 ===== FILE: kraken_trader\tests\test_portfolio.py =====
 import os,sys,tempfile,unittest
 os.environ['APP_DATA_DIR']=tempfile.mkdtemp();sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','app'))
@@ -5507,6 +5777,7 @@ class PortfolioTests(unittest.TestCase):
   sid=db.store_portfolio([{'asset':'ZEUR','display_name':'EUR','amount':'5','eur_price':'1','eur_value':'5','classification':'HELD','ever_held':1}],'5','VALID')
   self.assertEqual(sid,1);self.assertEqual(db.rows('SELECT quality FROM portfolio_snapshots')[0]['quality'],'VALID')
 if __name__=='__main__':unittest.main()
+
 
 ===== FILE: kraken_trader\tests\test_private_websocket.py =====
 import json,os,sys,tempfile,unittest
@@ -5531,6 +5802,7 @@ class PrivateWebSocketTests(unittest.TestCase):
   columns=' '.join(x['name'] for x in self.db.rows('PRAGMA table_info(private_stream_state)'));self.assertNotIn('token',columns.lower())
 if __name__=='__main__':unittest.main()
 
+
 ===== FILE: kraken_trader\tests\test_scanner.py =====
 import os,sys,tempfile,unittest
 sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','app'))
@@ -5551,6 +5823,7 @@ class ScannerTests(unittest.TestCase):
   self.s.client.ohlc=lambda sym,interval:{sym:self.candles(),'last':1};self.s.client.ticker=lambda syms:{'BTC/EUR':{'b':['114.6'],'a':['114.8']}}
   self.s.run(['BTC/EUR']);self.assertTrue(self.db.rows('SELECT * FROM scanner_results'));self.assertTrue(self.db.rows('SELECT * FROM scanner_runs'))
 
+
 ===== FILE: kraken_trader\tests\test_websocket.py =====
 import json,os,sys,tempfile,unittest
 sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','app'))
@@ -5568,6 +5841,7 @@ class WebSocketTests(unittest.TestCase):
   self.stream.set_symbols(['BTC/EUR','BTC/EUR','ETH/USD']);self.assertEqual(self.stream.symbols,['BTC/EUR']);self.assertTrue(self.stream.status()['stale'])
 if __name__=='__main__':unittest.main()
 
+
 ===== FILE: repository.yaml =====
 name: HA Kraken Trader Repository
 url: https://github.com/GerMorg/ha-kraken-trader
@@ -5577,7 +5851,8 @@ maintainer: GerMorg
 
 
 
-version: 0.1.0-dev.41
+version: 0.1.0-dev.43
+
 
 
 

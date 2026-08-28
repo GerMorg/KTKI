@@ -173,3 +173,11 @@ Die externe Nachrichten-AI darf lokale Nachrichtenparameter nur als Vergleichsin
 
 ## 2026-08-28 D066
 Nachrichtenparameter dürfen nur auf älteren Beobachtungen optimiert werden. Freigabemetriken stammen ausschließlich aus einem späteren, disjunkten Validierungsfenster. Jede Freigabe wiederholt Fingerprint und Gates; veränderte Daten blockieren die Aktivierung.
+
+## 2026-08-28 D067
+Ein Nachrichtenkandidat benötigt neben dem finalen Validierungsfenster stabile Ergebnisse über mehrere chronologische Walk-forward-Teilfenster. Standardmäßig müssen mindestens zwei von drei Fenstern alle Verlust- und Richtungsübereinstimmungs-Gates erfüllen. Unzureichende Historie blockiert fail-closed.
+
+## 2026-08-28 D067
+Dashboard-Verfügbarkeit wird aus tatsächlich vorhandenen Daten abgeleitet. WebSocket-Zustände bleiben separat sichtbar und überschreiben erfolgreiche REST- oder Portfolio-Daten nicht.
+## 2026-08-28 D068
+Gemini wird als zusätzlicher externer Nachrichten-AI-Anbieter über den offiziellen generateContent-REST-Vertrag unterstützt. AI-Ergebnisse bleiben Vergleichsdaten ohne automatische Handels- oder Aktivierungswirkung.

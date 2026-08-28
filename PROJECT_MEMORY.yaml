@@ -12,7 +12,7 @@ non_negotiable_rules:
   - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
   - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.41
+  version: 0.1.0-dev.43
   status: Zielzeitgenaue historische Prognoseauswertung und quellenbezogene Kostenkette; 119 Tests erfolgreich
 implemented:
   - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
@@ -431,7 +431,7 @@ release_0_1_0_dev_38:
   next_recommended_release: dev.39 Walk-forward-Validierung mit Teilfenster-Gates
 
   - date: 2026-08-27
-    version: 0.1.0-dev.41
+    version: 0.1.0-dev.43
     decision: Gebührenauflösung kanonisch und teilfehlertolerant; GUI durchgängig geführt und responsive; vollständiges Repository bei jeder Weiterentwicklung ausgeben.
 release_0_1_0_dev_41:
   date: 2026-08-28
@@ -439,3 +439,13 @@ release_0_1_0_dev_41:
   purpose: Zeitlich getrennte Validierung für kontrolliertes Nachrichten-Lernen
   added: [chronologischer Trainingssplit, disjunktes Validierungsfenster, Fensterprovenienz, Fingerprint-Recheck]
   safety: [keine automatische Aktivierung, manuelle atomare Freigabe, Realhandel hart deaktiviert]
+release_0_1_0_dev_42:
+  date: 2026-08-28
+  base: 0.1.0-dev.41 complete repository
+  purpose: Stabile Mehrfenster-Walk-forward-Validierung für Nachrichtenkandidaten
+  added: [drei Walk-forward-Fenster, Zwei-von-drei-Stabilitätsgate, persistierte Fenstermetriken, Freigabe-Recheck]
+  safety: [unzureichende Historie blockiert, keine automatische Aktivierung, Realhandel hart deaktiviert]
+release_0_1_0_dev_43:
+  purpose: Datenverfügbarkeit korrekt darstellen und Gemini für Nachrichten-AI ergänzen
+  safety: Externe AI bleibt Vergleichsinstanz; keine automatische Aktivierung; Realhandel hart deaktiviert
+  delivery: Vollständig aktualisiertes Repository inklusive Snapshot und ZIP
