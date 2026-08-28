@@ -1,5 +1,13 @@
 # Changelog
-## 0.1.0-dev.39
+## 0.1.0-dev.40
+- Lernoberfläche zeigt Forex, xStocks und Krypto Spot gleichzeitig mit eigener aktiver Version und neun Parametern
+- Freigabeknopf und seine PENDING-Voraussetzung eindeutig erklärt
+- altes Lernsystem endgültig aus Anwendung, Route und Tests entfernt
+- Google AI Studio als direkt nutzbarer Gemini-Provider ergänzt
+- externe Nachrichtenbewertungen werden mit lokaler Taxonomie verglichen und als Kalibrierhinweise gespeichert
+- externe AI darf lokale Regeln oder Handelsparameter weiterhin nicht automatisch verändern
+- Realhandel bleibt hart deaktiviert
+## 0.1.0-dev.40
 - Repository und sichtbare GUI-Texte vollständig als echtes UTF-8 repariert
 - Gebührenabruf löst interne Symbole vor TradeVolume gegen Kraken-Quellschlüssel und Aliasse auf
 - nicht unterstützte Assetklassen werden mit dokumentiertem Konfigurations-Fallback übersprungen

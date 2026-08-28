@@ -105,5 +105,9 @@ Robuste kontrollierte Lernfreigabe mit Horizontpflicht, Mindeststichprobe, Minde
 ## 0.1.0-dev.38 — 2026-08-26
 Zielzeitgenaue Prognoseauswertung aus der ersten abgeschlossenen historischen OHLC-Kerze am oder nach dem Zielzeitpunkt. Kosten-Snapshots trennen Einstieg, Ausstieg und Roundtrip und dokumentieren ihre Gebührenquelle. 119 automatisierte Tests erfolgreich.
 
-## 0.1.0-dev.39 — 2026-08-27
+## 0.1.0-dev.40 — 2026-08-27
 Stabilisierung, robuster kanonischer Gebührenabruf, isolierte Paarfehler und vollständig überarbeitete geführte Ingress-GUI. 124 Tests erfolgreich; Realhandel hart deaktiviert.
+
+
+## dev.40
+Die Lern-GUI zeigt alle drei aktiven Parameterfamilien parallel und erklärt PENDING als einzige Freigabestufe. Google AI Studio/Gemini ist als optionaler kostenloser Schattenprovider integriert. Externe Themen und betroffene Assets werden mit der lokalen Taxonomie verglichen; Abweichungen sind nur Kalibrierhinweise und ändern nichts automatisch. Vollständige Regression: 123 Tests erfolgreich.

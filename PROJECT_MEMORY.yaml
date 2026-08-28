@@ -431,5 +431,9 @@ release_0_1_0_dev_38:
   next_recommended_release: dev.39 Walk-forward-Validierung mit Teilfenster-Gates
 
   - date: 2026-08-27
-    version: 0.1.0-dev.39
+    version: 0.1.0-dev.40
     decision: Gebührenauflösung kanonisch und teilfehlertolerant; GUI durchgängig geführt und responsive; vollständiges Repository bei jeder Weiterentwicklung ausgeben.
+
+
+## dev.40
+Die Lern-GUI zeigt alle drei aktiven Parameterfamilien parallel und erklärt PENDING als einzige Freigabestufe. Google AI Studio/Gemini ist als optionaler kostenloser Schattenprovider integriert. Externe Themen und betroffene Assets werden mit der lokalen Taxonomie verglichen; Abweichungen sind nur Kalibrierhinweise und ändern nichts automatisch. Vollständige Regression: 123 Tests erfolgreich.

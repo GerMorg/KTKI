@@ -261,3 +261,7 @@ release_0_1_0_dev_39:
       evidence: test_dev39_fee_gui.py
     - id: dev39_full_regression
       status: passed_124
+
+
+## dev.40
+Die Lern-GUI zeigt alle drei aktiven Parameterfamilien parallel und erklärt PENDING als einzige Freigabestufe. Google AI Studio/Gemini ist als optionaler kostenloser Schattenprovider integriert. Externe Themen und betroffene Assets werden mit der lokalen Taxonomie verglichen; Abweichungen sind nur Kalibrierhinweise und ändern nichts automatisch. Vollständige Regression: 123 Tests erfolgreich.
