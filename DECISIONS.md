@@ -182,5 +182,7 @@ Dashboard-VerfÃ¼gbarkeit wird aus tatsÃ¤chlich vorhandenen Daten abgeleitet.
 ## 2026-08-28 D068
 Gemini wird als zusÃ¤tzlicher externer Nachrichten-AI-Anbieter Ã¼ber den offiziellen generateContent-REST-Vertrag unterstÃ¼tzt. AI-Ergebnisse bleiben Vergleichsdaten ohne automatische Handels- oder Aktivierungswirkung.
 
-## 2026-08-28 D044 - Lernversionsübersicht je Familie
-Die Lernseite zeigt Forex, xStocks und Krypto Spot gemeinsam. Parameterdetails bleiben auf die gewählte Familie begrenzt, damit die Ansicht übersichtlich bleibt.
+
+
+## 2026-08-28 D045 - Familienbezogene Lernansicht
+Die Übersicht zeigt alle aktiven Familienversionen. Detaildaten werden ausschließlich für die ausgewählte Familie geladen, um Fehlinterpretationen zu vermeiden.

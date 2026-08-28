@@ -35,3 +35,5 @@ class ForexShadow:
    results.extend([dict(x,symbol=row['symbol']) for x in self.score(row['symbol'],row)])
   self.db.audit('FOREX_V2_SHADOW_RUN',json.dumps({'snapshots':len(results),'symbols':len(set(x['symbol'] for x in results))}));return {'status':'SHADOW_ONLY','snapshots':len(results),'symbols':len(set(x['symbol'] for x in results))}
  def comparisons(self):return self.db.rows('SELECT * FROM forex_shadow_comparisons ORDER BY id DESC LIMIT 200')
+
+

@@ -93,12 +93,7 @@ class ControlledLearning:
 
     def active_versions(self):
         """Return exactly one active version for every supported family."""
-        result = []
-        for family in FAMILIES:
-            active = self.active(family)
-            if active:
-                result.append(active)
-        return result
+        return [active for family in FAMILIES if (active := self.active(family))]
 
     def _required_horizons(self):
         raw = self.db.value('learning_required_horizons', '24,168')
@@ -354,14 +349,21 @@ class ControlledLearning:
                       'target_version': target_version, 'new_version': next_version}))
         return {'status': 'ROLLED_BACK', 'version': next_version}
 
-    def candidates(self):
-        return self.db.rows('SELECT * FROM learning_candidates ORDER BY id DESC LIMIT 100')
+    def candidates(self, family=None):
+        if family is None:
+            return self.db.rows('SELECT * FROM learning_candidates ORDER BY id DESC LIMIT 100')
+        return self.db.rows('SELECT * FROM learning_candidates WHERE family=? ORDER BY id DESC LIMIT 100', (family,))
 
-    def metrics(self, candidate_id=None):
-        return self.db.rows('SELECT * FROM learning_candidate_metrics' +
-                            (' WHERE candidate_id=?' if candidate_id is not None else '') +
-                            ' ORDER BY candidate_id DESC,horizon_hours',
-                            (candidate_id,) if candidate_id is not None else ())
+    def metrics(self, candidate_id=None, family=None):
+        if candidate_id is not None:
+            return self.db.rows('SELECT * FROM learning_candidate_metrics WHERE candidate_id=? ORDER BY candidate_id DESC,horizon_hours', (candidate_id,))
+        if family is not None:
+            return self.db.rows('SELECT m.* FROM learning_candidate_metrics m JOIN learning_candidates c ON c.id=m.candidate_id WHERE c.family=? ORDER BY m.candidate_id DESC,m.horizon_hours', (family,))
+        return self.db.rows('SELECT * FROM learning_candidate_metrics ORDER BY candidate_id DESC,horizon_hours')
 
-    def versions(self):
-        return self.db.rows('SELECT * FROM parameter_family_versions ORDER BY family,version DESC')
+    def versions(self, family=None):
+        if family is None:
+            return self.db.rows('SELECT * FROM parameter_family_versions ORDER BY family,version DESC')
+        return self.db.rows('SELECT * FROM parameter_family_versions WHERE family=? ORDER BY version DESC', (family,))
+
+

@@ -1,9 +1,10 @@
 # Changelog
-## 0.1.0-dev.44
-- Lernseite zeigt unter „Aktuelle Versionen“ gleichzeitig Forex, xStocks und Krypto Spot
-- gewählte Parameterfamilie bleibt hervorgehoben und ihre aktiven Parameter bleiben einsehbar
-- neue Regressionstests sichern die vollständige Familienübersicht
-- keine automatische Aktivierung; Realhandel bleibt hart deaktiviert
+## 0.1.0-dev.45
+- Aktuelle Lernversionen zeigen Forex, xStocks und Krypto Spot gleichzeitig
+- Familiennamen sind direkt auswählbar
+- Kandidaten, Versionshistorie und Horizontmetriken werden auf die gewählte Familie gefiltert
+- Regressionstests für Familienübersicht und Filterung ergänzt
+- Realhandel bleibt hart deaktiviert
 ## 0.1.0-dev.42
 - externe Nachrichten-AI dient als versionierte Vergleichsinstanz fÃ¼r die lokale Auswertung
 - nach erfolgreichen AI-Auswertungen wird automatisch ein deduplizierter Schattenvergleich gestartet
@@ -161,3 +162,5 @@
 - Gemini-REST-Transport unterstÃ¼tzt JSON-Ausgaben, API-Key-Header, Modell und Timeout
 - AI-Verarbeitung erzwingt das konfigurierte Lauf-Limit
 - Realhandel bleibt hart deaktiviert
+
+

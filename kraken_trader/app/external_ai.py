@@ -52,3 +52,5 @@ class ExternalNewsAI:
    with self.db.con() as c:c.execute('INSERT OR REPLACE INTO external_news_ai_results VALUES(?,?,?,?,?)',(row['id'],now(),status,json.dumps(result,sort_keys=True),error))
   comparison=self.news_learning.propose(automatic=True) if ok and getattr(self,'news_learning',None) else {'status':'NOT_RUN'}
   return {'status':'COMPLETED','provider':str(self.options.get('ai_provider') or 'openai'),'processed':len(rows),'succeeded':ok,'failed':failed,'local_comparison':comparison}
+
+

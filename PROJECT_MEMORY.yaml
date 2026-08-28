@@ -450,6 +450,9 @@ release_0_1_0_dev_43:
   safety: Externe AI bleibt Vergleichsinstanz; keine automatische Aktivierung; Realhandel hart deaktiviert
   delivery: VollstÃ¤ndig aktualisiertes Repository inklusive Snapshot und ZIP
 
-release_0_1_0_dev_44:
+
+
+release_0_1_0_dev_45:
   learning_current_versions: [forex, xstocks, crypto_spot]
+  family_filtered_details: [candidates, versions, metrics]
   real_trading: hard_disabled

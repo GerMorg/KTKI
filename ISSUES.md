@@ -122,5 +122,7 @@ Die Ãœbersicht zeigte WebSocket-Fehler als allgemeinen Markt- oder Kontodatenf
 ## 2026-08-28 I046 - gelÃ¶st in 0.1.0-dev.43
 Gemini fehlte in der Add-on-Konfiguration und im Nachrichten-AI-Transport. Dev.43 ergÃ¤nzt Provider, REST-Anfrage und Antwortnormalisierung.
 
-## 2026-08-28 I047 - gelöst in 0.1.0-dev.44
-Die Lernseite zeigte bei „Aktive Version“ nur die gewählte Standardfamilie Forex. Dev.44 zeigt die aktiven Versionen aller drei Parameterfamilien gleichzeitig.
+
+
+## 2026-08-28 I047 - gelöst in 0.1.0-dev.45
+Die Lernseite zeigte nur Forex als aktuelle Version und mischte Kandidaten, Historien und Metriken aller Familien. Dev.45 zeigt alle Familienversionen und filtert die Detailbereiche konsistent.

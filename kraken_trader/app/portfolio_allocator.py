@@ -15,3 +15,5 @@ class PortfolioAllocator:
      if allowed:lev=max(allowed)
    out.append({'symbol':row['symbol'],'category':row['category'],'confidence':str(confidence),'target_pct':str(target_pct*100),'target_exposure_eur':str(total*target_pct),'leverage':lev,'scanner_signal':row['signal']})
   return out
+
+

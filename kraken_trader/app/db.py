@@ -69,3 +69,5 @@ class DB:
 
  def set_setting(self,key,value):
   with self.con() as c:c.execute('INSERT OR REPLACE INTO settings VALUES(?,?)',(key,str(value)))
+
+

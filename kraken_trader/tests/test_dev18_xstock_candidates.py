@@ -30,3 +30,5 @@ class Tests(unittest.TestCase):
  def test_empty_enabled_market_set_is_distinguishable(self):
   with self.db.con() as c:c.execute('DELETE FROM market_universe');c.execute('DELETE FROM market_category_members')
   result=MarketPrefilter(self.db,self.client,News(self.db)).run(8);self.assertEqual(result['markets'],0);self.assertEqual(result['candidates'],0)
+
+

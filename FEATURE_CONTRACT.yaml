@@ -308,8 +308,10 @@ release_0_1_0_dev_43:
   ai_direct_trading: {required: false, status: prohibited}
   real_trading: {required: false, status: hard_disabled}
 
-release_0_1_0_dev_44:
-  controlled_learning_current_versions:
-    families: [forex, xstocks, crypto_spot]
-    selected_family_controls_details: true
+
+
+release_0_1_0_dev_45:
+  controlled_learning_navigation:
+    overview_families: [forex, xstocks, crypto_spot]
+    filtered_details: [candidates, versions, metrics]
     automatic_activation: false

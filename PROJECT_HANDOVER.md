@@ -186,5 +186,7 @@ Walk-forward-StabilitÃ¤tsgates auf das kontrollierte Lernen der Produktfamilie
 ## Ãœbergabe 0.1.0-dev.43
 Die StartÃ¼bersicht unterscheidet nun DatenverfÃ¼gbarkeit vom Zustand der optionalen WebSocket-KanÃ¤le. Gemini kann als Nachrichten-AI-Provider konfiguriert werden. Der externe AI-Pfad bleibt ohne direkte Handelswirkung.
 
-## Dev.44
-Die Seite Kontrolliertes Lernen zeigt nun die aktiven Versionen aller unterstützten Parameterfamilien. Die gewählte Familie steuert weiterhin Kandidatenberechnung und Parameterdetails.
+
+
+## Dev.45
+Kontrolliertes Lernen zeigt Forex, xStocks und Krypto Spot gemeinsam. Auswahl einer Familie filtert Kandidaten, Versionshistorie und Horizontmetriken; Parameterfreigaben bleiben manuell und atomar.

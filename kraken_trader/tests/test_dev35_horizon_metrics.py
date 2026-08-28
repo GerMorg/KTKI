@@ -20,3 +20,5 @@ class T(unittest.TestCase):
    c.execute('CREATE TABLE watchlist_versions(id INTEGER PRIMARY KEY)');c.execute('INSERT INTO watchlist_versions VALUES(1)');c.execute("INSERT INTO live_prices(symbol,last,received_at) VALUES('EUR/USD','1.1',?)",(now(),));c.execute('CREATE TABLE scanner_results(symbol TEXT PRIMARY KEY,score TEXT,signal TEXT,quality TEXT,momentum_pct TEXT,trend_pct TEXT,volatility_pct TEXT,spread_pct TEXT)');c.execute("INSERT INTO scanner_results VALUES('EUR/USD','80','BUY','VALID','1','1','.1','.05')")
   self.assertEqual(ForecastTracker(self.db).snapshot(['EUR/USD']),2);f=json.loads(self.db.rows('SELECT features_json FROM research_forecasts WHERE status=\'OPEN\' LIMIT 1')[0]['features_json']);self.assertEqual(f['schema_version'],3);self.assertIn('estimated_roundtrip_cost_pct',f);self.assertIn('cost_components_pct',f)
 if __name__=='__main__':unittest.main()
+
+

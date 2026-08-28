@@ -118,5 +118,7 @@ Zeitlich getrennte Trainings- und Validierungsfenster fÃ¼r kontrolliertes Nach
 ## 0.1.0-dev.43 - 2026-08-28
 Mehrfenster-Walk-forward-StabilitÃ¤tsprÃ¼fung fÃ¼r Nachrichtenkandidaten mit persistierten Teilfenster-Metriken und erneuter PrÃ¼fung bei manueller Freigabe.
 
-## 0.1.0-dev.44 - 2026-08-28
-Vollständige Übersicht der aktiven Lernversionen für Forex, xStocks und Krypto Spot. Realhandel bleibt hart deaktiviert.
+
+
+## 0.1.0-dev.45 - 2026-08-28
+Vollständige Lernversionsübersicht mit familienbezogener Navigation und konsistent gefilterten Detaildaten.

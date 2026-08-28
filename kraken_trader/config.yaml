@@ -66,3 +66,5 @@ schema:
   learning_min_net_return_improvement: float
   learning_max_candidate_drawdown_pct: float
   learning_max_drawdown_degradation_pct: float
+
+

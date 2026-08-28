@@ -19,3 +19,5 @@ class PrivateWebSocketTests(unittest.TestCase):
  def test_token_not_persisted(self):
   columns=' '.join(x['name'] for x in self.db.rows('PRAGMA table_info(private_stream_state)'));self.assertNotIn('token',columns.lower())
 if __name__=='__main__':unittest.main()
+
+
