@@ -25,6 +25,7 @@ from controlled_learning import ControlledLearning
 from strategy_profiles import FAMILIES
 from news_learning import NewsLearning
 from version import APP_VERSION
+from monitoring import NotificationService,create_monitoring_blueprint
 class IngressPrefix:
  def __init__(self,app):self.app=app
  def __call__(self,environ,start_response):
@@ -65,7 +66,9 @@ def D(x):
 def ws_asset(name):return 'BTC' if name=='XBT' else name
 def restore_stream_symbols():
  rows=db.rows("SELECT display_name FROM portfolio_assets WHERE classification='HELD'");stream.set_symbols([ws_asset(x['display_name'])+'/EUR' for x in rows if x['display_name']!='EUR']);stream.start()
-restore_stream_symbols();private_stream.start()
+
+if os.getenv('APP_DISABLE_WEBSOCKETS')!='1':
+ restore_stream_symbols();private_stream.start()
 def allowed_symbols():
  rows=db.rows('SELECT symbol FROM allowlist WHERE enabled=1 ORDER BY symbol')
  return [x['symbol'] for x in rows] if rows else universe.symbols(None)
@@ -108,9 +111,11 @@ if os.getenv('APP_DISABLE_RESEARCH_SCHEDULER')!='1':threading.Thread(target=rese
 BASE='''<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kraken Trader</title><style>
 :root{color-scheme:dark;--bg:#07111f;--panel:#101e31;--panel2:#152842;--line:#29405d;--text:#f2f7fc;--muted:#9eb1c8;--accent:#57c7ff;--good:#5fe090;--warn:#ffc861;--bad:#ff7b7b;--radius:14px}*{box-sizing:border-box}body{margin:0;background:linear-gradient(145deg,#07111f,#0c1728 55%,#07111f);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}a{color:var(--accent)}.shell{min-height:100vh}.top{position:sticky;top:0;z-index:10;background:rgba(7,17,31,.96);border-bottom:1px solid var(--line)}.brand{display:flex;align-items:center;justify-content:space-between;max-width:1500px;margin:auto;padding:12px 20px}.brand strong{font-size:18px}.brand small,.muted,small{color:var(--muted)}.safety{padding:5px 10px;border:1px solid #83555b;border-radius:999px;color:#ffb5b5;background:#321a22;font-size:12px;font-weight:700}.nav{display:flex;gap:6px;overflow-x:auto;max-width:1500px;margin:auto;padding:0 20px 12px}.nav a{white-space:nowrap;text-decoration:none;color:#cbd8e8;padding:8px 10px;border-radius:9px}.nav a:hover,.nav a.active{color:white;background:var(--panel2)}main{max-width:1500px;margin:auto;padding:24px 20px 64px}h1{font-size:clamp(25px,4vw,38px);margin:0 0 8px}h2{margin-top:28px}h3{margin-top:0}.lead{color:var(--muted);max-width:900px;margin-top:0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}.card{background:linear-gradient(145deg,var(--panel),#0d1a2c);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin:14px 0;box-shadow:0 10px 26px #0003}.metric{font-size:28px;font-weight:750}.pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:3px 9px;font-size:12px}.ok{color:var(--good)}.warning{color:var(--warn)}.error{color:var(--bad)}form{display:flex;gap:10px;flex-wrap:wrap;align-items:end}label{display:grid;gap:5px;color:var(--muted)}input,select,button,textarea{font:inherit;color:var(--text);background:#0a1728;border:1px solid #365171;border-radius:9px;padding:10px 12px}button,.button{background:#1679a8;border-color:#45bdec;color:white;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}.tablewrap{width:100%;overflow:auto;border:1px solid var(--line);border-radius:12px;margin:14px 0}table{width:100%;border-collapse:collapse;background:#0c192a}th,td{text-align:left;padding:11px 12px;border-bottom:1px solid #223750;vertical-align:top}th{background:#14253b;color:#acc4df;font-size:12px;text-transform:uppercase;letter-spacing:.04em}.steps{counter-reset:step;display:grid;gap:10px}.step{display:grid;grid-template-columns:34px 1fr;gap:10px}.step:before{counter-increment:step;content:counter(step);display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#173d59;color:#8dd9ff;font-weight:800}details{background:#0b1727;border:1px solid var(--line);border-radius:10px;padding:10px 13px;margin:8px 0}@media(max-width:700px){main,.brand,.nav{padding-left:12px;padding-right:12px}.safety{display:none}th,td{padding:9px 8px}}
 </style></head><body><div class="shell"><header class="top"><div class="brand"><div><strong>Kraken Trader</strong> <small>v{{app_version}}</small></div><span class="safety">REALHANDEL DEAKTIVIERT</span></div><nav class="nav">{% for href,label in nav %}<a href="{{href}}" class="{% if current_path==href %}active{% endif %}">{{label}}</a>{% endfor %}</nav></header><main>{{body|safe}}</main></div></body></html>'''
-NAV_ITEMS=[('/', 'Übersicht'),('/portfolio','Portfolio'),('/products','Produkte'),('/scanner','Analyse'),('/paper','Paper-Handel'),('/controlled-learning','Lernen'),('/news-learning','Nachrichten-Lernen'),('/fees','Gebühren'),('/data-quality','Datenqualität'),('/backtests','Backtests'),('/decision-matrix','Regelmatrix'),('/settings','Einstellungen'),('/audit','Audit'),('/exports','Export')]
+NAV_ITEMS=[('/', 'Übersicht'),('/portfolio','Portfolio'),('/products','Produkte'),('/scanner','Analyse'),('/paper','Paper-Handel'),('/controlled-learning','Lernen'),('/news-learning','Nachrichten-Lernen'),('/fees','Gebühren'),('/data-quality','Datenqualität'),('/backtests','Backtests'),('/decision-matrix','Regelmatrix'),('/settings','Einstellungen'),('/event-dashboard','Ereignisse'),('/audit','Audit'),('/exports','Export')]
 def page(body,**ctx):
  return render_template_string(BASE,body=render_template_string(body,**ctx),app_version=APP_VERSION,nav=[(request.script_root+href,label) for href,label in NAV_ITEMS],current_path=request.script_root+request.path)
+notifications=NotificationService(db)
+app.register_blueprint(create_monitoring_blueprint(db,page))
 @app.get('/')
 def index():
  portfolio=db.rows('SELECT total_eur,quality,created_at FROM portfolio_snapshots ORDER BY id DESC LIMIT 1');stream_state=stream.status();private_state=private_stream.status();market_rows=db.rows('SELECT received_at FROM live_prices ORDER BY received_at DESC LIMIT 1');private_rows=db.rows('SELECT received_at FROM private_balances ORDER BY received_at DESC LIMIT 1');stream_state['dashboard_state']='DATEN VERFÜGBAR' if market_rows else ('DEAKTIVIERT' if not stream_state.get('configured_enabled') else stream_state.get('effective_state','NOCH KEINE DATEN'));private_state['dashboard_state']='KONTODATEN VERFÜGBAR' if private_rows or portfolio else ('DEAKTIVIERT' if not private_state.get('configured_enabled') else private_state.get('effective_state','NOCH KEINE DATEN'));pending=db.rows("SELECT COUNT(*) n FROM learning_candidates WHERE status='PENDING'");latest_fee=fees.latest()
@@ -272,4 +277,3 @@ def ledger_csv():
 @app.get('/exports/portfolio-history.csv')
 def portfolio_csv():
  out=io.StringIO();w=csv.writer(out);w.writerow(['created_at','total_eur','priced_asset_count','unpriced_asset_count','quality']);[w.writerow(x.values()) for x in db.rows('SELECT created_at,total_eur,priced_asset_count,unpriced_asset_count,quality FROM portfolio_snapshots ORDER BY id')];return Response(out.getvalue(),mimetype='text/csv',headers={'Content-Disposition':'attachment; filename=kraken-portfolio-history.csv'})
-

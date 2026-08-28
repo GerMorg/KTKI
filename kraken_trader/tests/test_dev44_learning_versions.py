@@ -11,4 +11,3 @@ class Dev44LearningVersionTests(unittest.TestCase):
  def test_source_renders_all_current_versions(self):
   source=(Path(__file__).parents[1]/'app'/'main.py').read_text('utf-8')
   self.assertIn('Aktuelle Versionen',source);self.assertIn("'xstocks':'xStocks'",source);self.assertIn("'crypto_spot':'Krypto Spot'",source)
-

@@ -315,3 +315,12 @@ release_0_1_0_dev_48:
   version_consistency_gate: passed
   usd_websocket_symbol_gate: passed
   real_trading: hard_disabled
+
+release_0_1_0_dev_49:
+  - monitoring_blueprint_registered
+  - event_dashboard_filters_audit_rows
+  - audit_export_json_csv_and_redaction
+  - invalid_audit_export_format_fails_closed
+  - websocket_start_can_be_disabled_for_tests
+  - version_metadata_synchronized
+  - real_trading_remains_disabled

@@ -33,4 +33,3 @@ class Dev42WalkForward(unittest.TestCase):
   self.nl.ensure();self.nl.ensure();cols={x['name'] for x in self.db.rows('PRAGMA table_info(news_model_candidates)')}
   self.assertTrue({'walk_forward_json','stable_window_count','required_stable_windows'}<=cols)
 if __name__=='__main__':unittest.main()
-

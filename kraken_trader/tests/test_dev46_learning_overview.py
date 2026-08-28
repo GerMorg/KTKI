@@ -16,4 +16,3 @@ class Dev46LearningOverviewTests(unittest.TestCase):
   source=(Path(__file__).parents[1]/'app'/'main.py').read_text('utf-8');self.assertIn("family=family if family in FAMILIES else 'forex'",source)
  def test_gui_shows_pending_and_latest_candidate_columns(self):
   source=(Path(__file__).parents[1]/'app'/'main.py').read_text('utf-8');self.assertIn('<th>Offen</th>',source);self.assertIn('<th>Letzter Kandidat</th>',source)
-

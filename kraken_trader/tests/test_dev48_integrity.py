@@ -6,7 +6,7 @@ from version import APP_VERSION
 from ws_market import MarketStream
 
 def test_version_sources_are_synchronized():
- assert APP_VERSION == "0.1.0-dev.48"
+ assert APP_VERSION == "0.1.0-dev.49"
  assert f'version: "{APP_VERSION}"' in (ROOT/'config.yaml').read_text('utf-8')
  assert f'version: {APP_VERSION}' in (ROOT.parent/'repository.yaml').read_text('utf-8')
 

@@ -23,4 +23,3 @@ class StartupMigrationTests(unittest.TestCase):
  def test_all_startup_services_construct_on_migrated_db(self):
   db=self.make_old_db();client=FakeClient();scanner=MarketScanner(db,client);universe=MarketUniverse(db,client);news=NewsPrefilter(db);prefilter=MarketPrefilter(db,client,news);forecasts=ForecastTracker(db);pipeline=ResearchPipeline(db,universe,prefilter,scanner,forecasts)
   self.assertIsNotNone(pipeline.latest()) if db.rows('SELECT * FROM research_jobs') else self.assertIsNone(pipeline.latest())
-

@@ -27,4 +27,3 @@ class Dev38Tests(unittest.TestCase):
  def test_old_evaluation_schema_migrates_idempotently(self):
   cols={x['name'] for x in self.db.rows('PRAGMA table_info(forecast_evaluations)')};self.assertTrue({'target_at','price_source','source_open_time','timing_error_seconds'}.issubset(cols));ForecastTracker(self.db);self.assertEqual(cols,{x['name'] for x in self.db.rows('PRAGMA table_info(forecast_evaluations)')})
 if __name__=='__main__':unittest.main()
-

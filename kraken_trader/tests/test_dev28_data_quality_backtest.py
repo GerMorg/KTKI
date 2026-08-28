@@ -14,4 +14,3 @@ class T(unittest.TestCase):
  def test_kraken_last_candle_not_persisted_as_committed_status(self):
   self.h.ohlc('EUR/USD','forex',[[1,'1','1','1','1','1','1',1],[2,'1','1','1','1','1','1',1]]);self.assertEqual(self.h.diagnostics()[0]['last_committed_open_time'],1)
 if __name__=='__main__':unittest.main()
-

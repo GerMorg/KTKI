@@ -28,4 +28,3 @@ class Tests(unittest.TestCase):
  def test_empty_watchlist_paper_engine_does_not_crash(self):
   from paper_engine import PaperEngine
   e=PaperEngine(self.db);self.assertEqual(e.run(),[])
-

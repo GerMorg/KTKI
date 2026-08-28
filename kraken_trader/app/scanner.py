@@ -62,4 +62,3 @@ class MarketScanner:
    with self.db.con() as c:c.execute('INSERT INTO scanner_runs(created_at,symbols_requested,symbols_valid,buy_count,hold_count,avoid_count,quality) VALUES(?,?,?,?,?,?,?)',(stamp,len(symbols),counts['valid'],counts['buy'],counts['hold'],counts['avoid'],quality))
    self.db.audit('SCANNER_RUN',json.dumps({'requested':len(symbols),**counts,'quality':quality}));return {'status':'COMPLETED','processed':len(symbols),'batch_start':start,'results':self.db.rows('SELECT * FROM scanner_results ORDER BY CAST(score AS REAL) DESC')}
   finally:self.lock.release()
-

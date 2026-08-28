@@ -18,4 +18,3 @@ class Dev45LearningFamilyFilterTests(unittest.TestCase):
   candidate_ids={x['id'] for x in self.learning.candidates('forex')}
   metric_ids={x['candidate_id'] for x in self.learning.metrics(family='forex')}
   self.assertTrue(metric_ids);self.assertTrue(metric_ids.issubset(candidate_ids))
-

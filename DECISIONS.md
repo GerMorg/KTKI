@@ -195,3 +195,6 @@ Die Mindeststichprobe wird nicht abgesenkt und es werden keine synthetischen Erg
 
 ## 2026-08-28 D051
 Dev.48 ist ein Integritäts- und Konsistenzrelease. Historische Funktionen bleiben erhalten; Realhandel und automatische Parameteraktivierung bleiben hart deaktiviert.
+
+## 2026-08-28 D067
+Dev.49 modularisiert Monitoring als Blueprint. Audit-Exporte werden vor Ausgabe schlüsselbasiert redigiert; Realhandel und automatische Parameteraktivierung bleiben ausgeschlossen.

@@ -20,4 +20,3 @@ class Dev9Tests(unittest.TestCase):
  def test_avoid_sells_existing_position(self):
   with self.db.con() as c:c.execute('INSERT INTO paper_positions VALUES(?,?,?,?)',('BTC/EUR','0.001','49000',now()))
   self.scanner('AVOID','VALID','20');self.e.run();self.assertFalse(self.db.rows('SELECT side FROM paper_trades'))
-

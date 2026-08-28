@@ -1,5 +1,5 @@
 name: Kraken Trader
-version: "0.1.0-dev.48"
+version: "0.1.0-dev.49"
 slug: kraken_trader
 description: Read-only Kraken Portfolio und lokales Paper-Trading
 arch: [amd64]
@@ -66,4 +66,3 @@ schema:
   learning_min_net_return_improvement: float
   learning_max_candidate_drawdown_pct: float
   learning_max_drawdown_degradation_pct: float
-

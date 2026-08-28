@@ -30,4 +30,3 @@ class Tests(unittest.TestCase):
   u=MarketUniverse(db,Client());u.set_categories({'xstocks','leveraged_spot'});u.sync();p=MarketPrefilter(db,Client(),News())
   first=p.run(8);second=p.run(8)
   for rid in (first['run_id'],second['run_id']):self.assertEqual(len(db.rows('SELECT symbol FROM prefilter_results WHERE run_id=?',(rid,))),1)
-

@@ -13,4 +13,3 @@ class WebSocketTests(unittest.TestCase):
  def test_symbol_filter_and_health(self):
   self.stream.set_symbols(['BTC/EUR','BTC/EUR','ETH/USD']);self.assertEqual(self.stream.symbols,['BTC/EUR','ETH/USD']);self.assertTrue(self.stream.status()['stale'])
 if __name__=='__main__':unittest.main()
-

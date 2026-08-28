@@ -340,3 +340,11 @@ release_0_1_0_dev_48:
   public_websocket_usd_quotes: {required: true, status: implemented}
   automatic_activation: {required: false, status: prohibited}
   real_trading: {required: false, status: hard_disabled}
+
+release_0_1_0_dev_49:
+  monitoring_blueprint: {required: true, status: implemented}
+  event_dashboard: {required: true, status: implemented}
+  redacted_audit_export: {required: true, status: implemented_json_csv}
+  websocket_test_isolation: {required: true, status: implemented}
+  automatic_activation: {required: false, status: prohibited}
+  real_trading: {required: false, status: hard_disabled}

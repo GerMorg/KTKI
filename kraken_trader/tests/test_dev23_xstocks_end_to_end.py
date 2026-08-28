@@ -37,4 +37,3 @@ class Tests(unittest.TestCase):
   self.scan.run(['AAPLx/USD'],60,1,0)
   with self.db.con() as c:c.execute("UPDATE research_watchlist SET status='ANALYZED'");c.execute("UPDATE market_universe SET ordermin='100' WHERE symbol='AAPLx/USD'")
   self.db.set_setting('automation_enabled','true');e=PaperEngine(self.db,1000,40,10,10,25);e.run();self.assertFalse(self.db.rows('SELECT * FROM paper_trades'));self.assertIn('Mindestmenge',self.db.rows('SELECT reason FROM paper_decisions ORDER BY id DESC LIMIT 1')[0]['reason'])
-

@@ -226,4 +226,3 @@ class FeeProfile:
     def latest(self):
         rows = self.db.rows('SELECT * FROM account_fee_snapshots ORDER BY id DESC LIMIT 1')
         return rows[0] if rows else None
-
