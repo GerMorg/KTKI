@@ -19,6 +19,7 @@ class KrakenClient:
   except Exception as exc:raise KrakenError("Verbindungsfehler: "+type(exc).__name__) from exc
   if payload.get("error"):raise KrakenError("; ".join(payload["error"]))
   return payload.get("result",{})
+ def add_order(self,**data):return self.call("/0/private/AddOrder",data,private=True)
  def status(self):return self.call("/0/public/SystemStatus")
  def pairs(self,asset_class="currency"):
   requested=asset_class
@@ -48,6 +49,9 @@ class KrakenClient:
   if since is not None:data['since']=int(since)
   if asset_class=='tokenized_asset':data['asset_class']=asset_class
   return self.call('/0/public/OHLC',data)
+
+
+
 
 
 

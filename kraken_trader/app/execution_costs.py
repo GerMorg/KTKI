@@ -37,3 +37,6 @@ def choose_execution_pair(alternatives,tickers,trade_fee_bps=40,fx_fee_bps=10,sl
 
 
 
+
+
+

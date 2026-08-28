@@ -76,7 +76,7 @@ class ControlledLearning:
         with self.db.con() as c:
             c.execute('UPDATE parameter_family_versions SET parameters_json=?,source=?,reason=? WHERE id=?',
                       (json.dumps(params, sort_keys=True), 'LEGACY_MIGRATION',
-                       'Übernahme der vorhandenen xStock-Parameter', current['id']))
+                       'Ãœbernahme der vorhandenen xStock-Parameter', current['id']))
 
     def _wilson(self, successes, n, z=1.96):
         if not n:
@@ -285,7 +285,7 @@ class ControlledLearning:
         policy = self.gate_policy()
         gate_results = self._gate_results(metrics, improvement, min_improvement, policy)
         status = 'PENDING' if self._gates_pass(gate_results) else 'REJECTED_GATE'
-        reason = 'Alle robusten Freigabe-Gates erfüllt; keine automatische Aktivierung' if status == 'PENDING' else 'Mindestens ein robustes Freigabe-Gate wurde nicht erfüllt'
+        reason = 'Alle robusten Freigabe-Gates erfÃ¼llt; keine automatische Aktivierung' if status == 'PENDING' else 'Mindestens ein robustes Freigabe-Gate wurde nicht erfÃ¼llt'
         with self.db.con() as c:
             cur = c.execute('INSERT INTO learning_candidates(created_at,family,status,base_version,sample_count,active_accuracy,candidate_accuracy,improvement,ci_low,ci_high,parameters_json,reason,decided_at,gate_policy_json,gate_results_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
                             (now(), family, status, active['version'], n, str(active_accuracy),
@@ -343,7 +343,7 @@ class ControlledLearning:
             with self.db.con() as c:
                 c.execute("UPDATE learning_candidates SET status='REJECTED_RECHECK',decided_at=?,gate_policy_json=?,gate_results_json=?,reason=? WHERE id=?",
                           (now(), json.dumps(policy, sort_keys=True), json.dumps(gate_results, sort_keys=True),
-                           'Freigabe bei erneuter Gate-Prüfung blockiert', candidate_id))
+                           'Freigabe bei erneuter Gate-PrÃ¼fung blockiert', candidate_id))
             self.db.audit('CONTROLLED_LEARNING_APPROVAL_BLOCKED', json.dumps({'candidate_id': candidate_id,
                           'stored_policy': stored_policy, 'current_policy': policy, 'gates': gate_results}, sort_keys=True), 'warning')
             return {'status': 'REJECTED_RECHECK', 'gate_results': gate_results}
@@ -352,7 +352,7 @@ class ControlledLearning:
             c.execute("UPDATE parameter_family_versions SET status='SUPERSEDED' WHERE family=? AND status='ACTIVE'", (proposal['family'],))
             c.execute('INSERT INTO parameter_family_versions(created_at,family,version,status,parameters_json,parent_version,source,reason) VALUES(?,?,?,?,?,?,?,?)',
                       (now(), proposal['family'], new_version, 'ACTIVE', proposal['parameters_json'],
-                       current['version'], f'APPROVED_CANDIDATE_{candidate_id}', 'Explizite Benutzerfreigabe nach erneuter Gate-Prüfung'))
+                       current['version'], f'APPROVED_CANDIDATE_{candidate_id}', 'Explizite Benutzerfreigabe nach erneuter Gate-PrÃ¼fung'))
             c.execute("UPDATE learning_candidates SET status='APPROVED',decided_at=?,gate_policy_json=?,gate_results_json=? WHERE id=?",
                       (now(), json.dumps(policy, sort_keys=True), json.dumps(gate_results, sort_keys=True), candidate_id))
         self.db.audit('CONTROLLED_LEARNING_APPROVED', json.dumps({'candidate_id': candidate_id,
@@ -369,7 +369,7 @@ class ControlledLearning:
             c.execute("UPDATE parameter_family_versions SET status='SUPERSEDED' WHERE family=? AND status='ACTIVE'", (family,))
             c.execute('INSERT INTO parameter_family_versions(created_at,family,version,status,parameters_json,parent_version,source,reason) VALUES(?,?,?,?,?,?,?,?)',
                       (now(), family, next_version, 'ACTIVE', target[0]['parameters_json'], current['version'],
-                       f'ROLLBACK_TO_{target_version}', 'Vollständiger kontrollierter Rollback'))
+                       f'ROLLBACK_TO_{target_version}', 'VollstÃ¤ndiger kontrollierter Rollback'))
         self.db.audit('CONTROLLED_LEARNING_ROLLBACK', json.dumps({'family': family,
                       'target_version': target_version, 'new_version': next_version}))
         return {'status': 'ROLLED_BACK', 'version': next_version}
@@ -390,6 +390,9 @@ class ControlledLearning:
         if family is None:
             return self.db.rows('SELECT * FROM parameter_family_versions ORDER BY family,version DESC')
         return self.db.rows('SELECT * FROM parameter_family_versions WHERE family=? ORDER BY version DESC', (family,))
+
+
+
 
 
 

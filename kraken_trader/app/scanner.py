@@ -28,7 +28,7 @@ class MarketScanner:
    news_rows=self.db.rows('SELECT relevance FROM news_market_links WHERE symbol=?',(symbol,));news_score=min(10,sum(float(x['relevance']) for x in news_rows))
   features={'momentum_pct':momentum,'trend_pct':trend,'volatility_pct':volatility,'spread_pct':spread,'news_score':news_score}
   score,signal=score_features(features,params);buy=signal=='BUY';avoid=signal=='AVOID';model=f'{family}-controlled-v{version}'
-  score=max(0,min(100,score));signal='BUY' if buy else ('AVOID' if avoid else 'HOLD');aliases={'xstocks':f'xstocks-v1 / xstocks-approved-v{version}','forex':'forex-v1','crypto_spot':'crypto-v1'};reasons=[f'Modell {aliases.get(family,family)} / {model}',f'24h-Momentum {momentum:.2f} %',f'Trend SMA10/SMA30 {trend:.2f} %',f'Volatilität {volatility:.2f} %',f'Spread {spread:.3f} %',f'24h-Quotevolumen ca. {volume_quote:.2f} {quote}']
+  score=max(0,min(100,score));signal='BUY' if buy else ('AVOID' if avoid else 'HOLD');aliases={'xstocks':f'xstocks-v1 / xstocks-approved-v{version}','forex':'forex-v1','crypto_spot':'crypto-v1'};reasons=[f'Modell {aliases.get(family,family)} / {model}',f'24h-Momentum {momentum:.2f} %',f'Trend SMA10/SMA30 {trend:.2f} %',f'VolatilitÃ¤t {volatility:.2f} %',f'Spread {spread:.3f} %',f'24h-Quotevolumen ca. {volume_quote:.2f} {quote}']
   return {'symbol':symbol,'score':round(score,4),'signal':signal,'momentum_pct':round(momentum,6),'volatility_pct':round(volatility,6),'trend_pct':round(trend,6),'spread_pct':round(spread,6),'volume_quote':round(volume_quote,4),'data_points':len(closes),'quality':'VALID','reasons':reasons}
  def run(self,symbols,interval=60,limit=None,delay_seconds=None):
   if not self.lock.acquire(False):return {'status':'BUSY','processed':0}
@@ -62,6 +62,9 @@ class MarketScanner:
    with self.db.con() as c:c.execute('INSERT INTO scanner_runs(created_at,symbols_requested,symbols_valid,buy_count,hold_count,avoid_count,quality) VALUES(?,?,?,?,?,?,?)',(stamp,len(symbols),counts['valid'],counts['buy'],counts['hold'],counts['avoid'],quality))
    self.db.audit('SCANNER_RUN',json.dumps({'requested':len(symbols),**counts,'quality':quality}));return {'status':'COMPLETED','processed':len(symbols),'batch_start':start,'results':self.db.rows('SELECT * FROM scanner_results ORDER BY CAST(score AS REAL) DESC')}
   finally:self.lock.release()
+
+
+
 
 
 

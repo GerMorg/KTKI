@@ -26,7 +26,10 @@ class Tests(unittest.TestCase):
   for path in root.rglob('*'):
    if path.is_file() and path.suffix in ('','.py','.md','.yaml','.txt'):
     text=path.read_text('utf-8');self.assertFalse(any(x in text for x in bad),str(path))
-  main=(root/'kraken_trader/app/main.py').read_text('utf-8');self.assertIn('Übersicht',main);self.assertIn('Gebühr',main)
+  main=(root/'kraken_trader/app/main.py').read_text('utf-8');self.assertIn('Ãœbersicht',main);self.assertIn('GebÃ¼hr',main)
+
+
+
 
 
 

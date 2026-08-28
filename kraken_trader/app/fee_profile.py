@@ -143,7 +143,7 @@ class FeeProfile:
         stamp = now()
         resolved, skipped = self._resolve(symbols)
         if not resolved:
-            error = 'Keine von TradeVolume unterstützten Währungspaare'
+            error = 'Keine von TradeVolume unterstÃ¼tzten WÃ¤hrungspaare'
             self._save_failure(stamp, error, skipped)
             return {'status': 'FALLBACK', 'saved': 0, 'skipped': skipped,
                     'error': 'NO_SUPPORTED_PAIRS'}
@@ -226,6 +226,9 @@ class FeeProfile:
     def latest(self):
         rows = self.db.rows('SELECT * FROM account_fee_snapshots ORDER BY id DESC LIMIT 1')
         return rows[0] if rows else None
+
+
+
 
 
 

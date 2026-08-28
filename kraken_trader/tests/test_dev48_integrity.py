@@ -6,7 +6,7 @@ from version import APP_VERSION
 from ws_market import MarketStream
 
 def test_version_sources_are_synchronized():
- assert APP_VERSION == "0.1.0-dev.50"
+ assert APP_VERSION == "0.1.0-dev.51"
  assert f'version: "{APP_VERSION}"' in (ROOT/'config.yaml').read_text('utf-8')
  assert f'version: {APP_VERSION}' in (ROOT.parent/'repository.yaml').read_text('utf-8')
 
@@ -23,6 +23,9 @@ def test_public_websocket_keeps_eur_and_usd_quotes():
  stream=MarketStream(DB(),enabled=False)
  stream.set_symbols(['BTC/EUR','AAPL/USD','EUR/USD','INVALID'])
  assert stream.symbols == ['AAPL/USD','BTC/EUR','EUR/USD']
+
+
+
 
 
 

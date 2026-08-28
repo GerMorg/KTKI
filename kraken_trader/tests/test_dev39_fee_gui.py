@@ -29,8 +29,11 @@ class Dev39GuiTests(unittest.TestCase):
  def test_guided_dashboard_and_safety_banner(self):
   body=self.client.get('/').data.decode('utf-8');self.assertIn('Empfohlener Ablauf',body);self.assertIn('REALHANDEL DEAKTIVIERT',body)
  def test_learning_page_explains_activation(self):
-  body=self.client.get('/controlled-learning').data.decode('utf-8');self.assertIn('ausdrücklichen Freigabe',body);self.assertIn('Aktive Version',body);self.assertIn('Freigaberegeln',body)
+  body=self.client.get('/controlled-learning').data.decode('utf-8');self.assertIn('ausdrÃ¼cklichen Freigabe',body);self.assertIn('Aktive Version',body);self.assertIn('Freigaberegeln',body)
 if __name__=='__main__':unittest.main()
+
+
+
 
 
 

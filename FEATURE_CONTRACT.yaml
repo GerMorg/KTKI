@@ -353,3 +353,10 @@ release_0_1_0_dev_50:
   paper_real_separation: {required: true, status: enforced}
   tax_csv_export: {required: true, status: implemented}
   real_trading: {required: false, status: hard_disabled}
+release_0_1_0_dev_51:
+  paper_real_storage_separation: {required: true, status: implemented}
+  kraken_validate_only_default: {required: true, status: implemented}
+  live_default_disabled: {required: true, status: implemented}
+  live_short_lived_approval: {required: true, status: implemented}
+  idempotent_client_order_id: {required: true, status: implemented}
+  positive_order_limit_required: {required: true, status: implemented}
