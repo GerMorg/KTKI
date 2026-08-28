@@ -1,3 +1,11 @@
+## 0.1.0-dev.54
+- GUI zentral vereinheitlicht und Zahlen kontextschonend gerundet; keine unlesbaren endlosen Nachkommastellen mehr.
+- Neue Seite „Ablauf & Systeme“ erklärt den implementierten Weg von Information, Analyse und Lernen bis zur realen Order.
+- Systemmatrix trennt Kernpfad, indirekte Lernwirkung, Qualitätssicherung, Live-Ausführung und Begleitsysteme.
+- Health-Endpunkt zeigt den tatsächlichen Realhandelszustand statt eines festen Wertes.
+- Responsive Ablaufkarten, kompaktere Detailausgaben und besser lesbare Tabellen ergänzt.
+- Regressionstests für Zahlenformatierung und unveränderte JSON-Rohdaten ergänzt.
+
 ## 0.1.0-dev.52
 - Realhandel technisch aktivierbar, standardmäßig aus, mit Kill-Switch, Allowlist, Volumen- und Notional-Limits, Kraken-Validierung, Arming und Einmal-Token.
 - Beide Lernloops durchsuchen Kandidaten automatisch per mehrpassiger Koordinatensuche.
@@ -20,13 +28,21 @@
 - ÃƒÂ¶ffentlicher Markt-WebSocket akzeptiert neben EUR auch USD-notierte MÃƒÂ¤rkte
 - neue dev.48-IntegritÃƒÂ¤tsregressionen; Realhandel bleibt hart deaktiviert
 ## 0.1.0-dev.47
-- Kontrolliertes Lernen repariert und Nachrichten-Lernen mit transparenter Datenbereitschaft stabilisiert
-- Realhandel bleibt hart deaktiviert
+- Laufzeitfehler der Seite Kontrolliertes Lernen durch fehlenden FAMILIES-Import behoben
+- Nachrichten-Lernen zeigt Datenbestand, gÃƒÂ¼ltige, ungÃƒÂ¼ltige und unverarbeitete AI-Auswertungen
+- Vergleich bleibt bis zur erforderlichen gÃƒÂ¼ltigen Stichprobe gesperrt und erklÃƒÂ¤rt den konkreten Grund
+- separate Aktion "AI auswerten" ergÃƒÂ¤nzt; keine automatische Parameteraktivierung
+- neue Regressions- und Diagnosetests; Realhandel bleibt hart deaktiviert
 ## 0.1.0-dev.46
-- StatusÃƒÂ¼bersicht und robuste Familienauswahl im kontrollierten Lernen ergÃƒÂ¤nzt
-- Realhandel bleibt hart deaktiviert
+- LernfamilienÃƒÂ¼bersicht zeigt aktive Version, offene Kandidaten und letzten Kandidatenstatus je Familie
+- Familiennavigation bleibt direkt auswÃƒÂ¤hlbar und Detaildaten bleiben gefiltert
+- unbekannte Familienparameter fallen kontrolliert auf Forex zurÃƒÂ¼ck
+- vier neue Regressionstests; Realhandel bleibt hart deaktiviert
 ## 0.1.0-dev.45
-- LernfamilienÃƒÂ¼bersicht und konsistente Familienfilterung ergÃƒÂ¤nzt
+- Aktuelle Lernversionen zeigen Forex, xStocks und Krypto Spot gleichzeitig
+- Familiennamen sind direkt auswÃƒÂ¤hlbar
+- Kandidaten, Versionshistorie und Horizontmetriken werden auf die gewÃƒÂ¤hlte Familie gefiltert
+- Regressionstests fÃƒÂ¼r FamilienÃƒÂ¼bersicht und Filterung ergÃƒÂ¤nzt
 - Realhandel bleibt hart deaktiviert
 ## 0.1.0-dev.40
 - externe Nachrichten-AI dient als versionierte Vergleichsinstanz fÃƒÂ¼r die lokale Auswertung
@@ -185,3 +201,17 @@
 - Gemini-REST-Transport unterstÃƒÂ¼tzt JSON-Ausgaben, API-Key-Header, Modell und Timeout
 - AI-Verarbeitung erzwingt das konfigurierte Lauf-Limit
 - Realhandel bleibt hart deaktiviert
+## 0.1.0-dev.51
+- Steuerinfo Ãƒâ€“sterreich mit Jahresbericht, CSV, Audit und Fail-closed-PrÃƒÂ¼fhinweisen
+- UTF-8- und Versionskonsistenz korrigiert; Realhandel bleibt hart deaktiviert
+## 0.1.0-dev.51
+- Realhandel-Grundstufe strikt getrennt vom Paper-Handel
+- Kraken-Validierungsmodus, kurzzeitige manuelle Aktivierung, Auftragslimit, Idempotenz und Audit
+- Live-AusfÃ¼hrung bleibt standardmÃ¤ÃŸig deaktiviert und fail-closed
+
+## 0.1.0-dev.53
+- Kontrolliertes Lernen trennt Parametersuche und Bewertung jetzt strikt zeitlich in Training und ungesehenes Holdout.
+- Freigabe-Gates und Trefferquote werden ausschließlich auf dem Holdout berechnet.
+- Mindestgröße des Holdouts ist konfigurierbar und blockiert zu kleine Vergleiche transparent.
+- Market-Orders sind im Realhandel separat und standardmäßig gesperrt.
+- Zusätzliches tägliches Limit für tatsächlich übermittelte Realaufträge.

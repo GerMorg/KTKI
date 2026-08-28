@@ -10,14 +10,14 @@ class DecisionMatrix:
  def evaluate(self,symbol,action,context):
   cid=context.get('canonical_id') or symbol;checks=[]
   def add(key,passed,reason,details=None):checks.append({'rule_key':key,'passed':bool(passed),'reason':reason,'details':details or {}})
-  add('SIGNAL_CONFIRMED',context.get('confirmation_count',0)>=context.get('confirmation_required',1),f"BestÃƒÂ¤tigung {context.get('confirmation_count',0)}/{context.get('confirmation_required',1)}")
-  add('MINIMUM_HOLD',context.get('minimum_hold_ok',True),'Mindesthaltedauer erfÃƒÂ¼llt' if context.get('minimum_hold_ok',True) else 'Mindesthaltedauer aktiv')
+  add('SIGNAL_CONFIRMED',context.get('confirmation_count',0)>=context.get('confirmation_required',1),f"Bestätigung {context.get('confirmation_count',0)}/{context.get('confirmation_required',1)}")
+  add('MINIMUM_HOLD',context.get('minimum_hold_ok',True),'Mindesthaltedauer erfüllt' if context.get('minimum_hold_ok',True) else 'Mindesthaltedauer aktiv')
   add('COOLDOWN',context.get('cooldown_ok',True),'Cooldown beendet' if context.get('cooldown_ok',True) else 'Wiederkauf-Cooldown aktiv')
-  add('DAILY_LIMIT',context.get('daily_limit_ok',True),'Tageslimit verfÃƒÂ¼gbar' if context.get('daily_limit_ok',True) else 'TÃƒÂ¤gliches Umschichtungslimit erreicht')
-  add('POSITIVE_AFTER_COSTS',D(context.get('improvement_after_costs'))>0,'Erwarteter Vorteil nach Kosten positiv' if D(context.get('improvement_after_costs'))>0 else 'Kein positiver Vorteil nach vollstÃƒÂ¤ndigen Kosten',{'eur':str(context.get('improvement_after_costs',0))})
+  add('DAILY_LIMIT',context.get('daily_limit_ok',True),'Tageslimit verfügbar' if context.get('daily_limit_ok',True) else 'Tägliches Umschichtungslimit erreicht')
+  add('POSITIVE_AFTER_COSTS',D(context.get('improvement_after_costs'))>0,'Erwarteter Vorteil nach Kosten positiv' if D(context.get('improvement_after_costs'))>0 else 'Kein positiver Vorteil nach vollständigen Kosten',{'eur':str(context.get('improvement_after_costs',0))})
   add('TAX_AND_LOSS',context.get('tax_loss_ok',True),'Steuer- und Verlustwirkung akzeptabel' if context.get('tax_loss_ok',True) else 'Steuer- oder Verlustwirkung blockiert')
-  add('DATA_FRESHNESS',context.get('data_fresh',False),'Daten vollstÃƒÂ¤ndig und aktuell' if context.get('data_fresh',False) else 'Daten fehlen oder sind veraltet')
-  allowed=all(x['passed'] for x in checks);blocker=next((x['reason'] for x in checks if not x['passed']),'Alle Regeln erfÃƒÂ¼llt')
+  add('DATA_FRESHNESS',context.get('data_fresh',False),'Daten vollständig und aktuell' if context.get('data_fresh',False) else 'Daten fehlen oder sind veraltet')
+  allowed=all(x['passed'] for x in checks);blocker=next((x['reason'] for x in checks if not x['passed']),'Alle Regeln erfüllt')
   with self.db.con() as c:
    for x in checks:c.execute('INSERT INTO decision_rule_evaluations(created_at,symbol,canonical_id,action,rule_key,passed,reason,details_json,decision_id) VALUES(?,?,?,?,?,?,?,?,?)',(now(),symbol,cid,action,x['rule_key'],1 if x['passed'] else 0,x['reason'],json.dumps(x['details'],sort_keys=True),context.get('decision_id')))
   return {'allowed':allowed,'blocker':blocker,'checks':checks}

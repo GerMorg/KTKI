@@ -1,3 +1,11 @@
+## 0.1.0-dev.54
+- GUI zentral vereinheitlicht und Zahlen kontextschonend gerundet; keine unlesbaren endlosen Nachkommastellen mehr.
+- Neue Seite „Ablauf & Systeme“ erklärt den implementierten Weg von Information, Analyse und Lernen bis zur realen Order.
+- Systemmatrix trennt Kernpfad, indirekte Lernwirkung, Qualitätssicherung, Live-Ausführung und Begleitsysteme.
+- Health-Endpunkt zeigt den tatsächlichen Realhandelszustand statt eines festen Wertes.
+- Responsive Ablaufkarten, kompaktere Detailausgaben und besser lesbare Tabellen ergänzt.
+- Regressionstests für Zahlenformatierung und unveränderte JSON-Rohdaten ergänzt.
+
 ## 0.1.0-dev.52
 - Realhandel technisch aktivierbar, standardmäßig aus, mit Kill-Switch, Allowlist, Volumen- und Notional-Limits, Kraken-Validierung, Arming und Einmal-Token.
 - Beide Lernloops durchsuchen Kandidaten automatisch per mehrpassiger Koordinatensuche.
@@ -200,3 +208,10 @@
 - Realhandel-Grundstufe strikt getrennt vom Paper-Handel
 - Kraken-Validierungsmodus, kurzzeitige manuelle Aktivierung, Auftragslimit, Idempotenz und Audit
 - Live-AusfÃ¼hrung bleibt standardmÃ¤ÃŸig deaktiviert und fail-closed
+
+## 0.1.0-dev.53
+- Kontrolliertes Lernen trennt Parametersuche und Bewertung jetzt strikt zeitlich in Training und ungesehenes Holdout.
+- Freigabe-Gates und Trefferquote werden ausschließlich auf dem Holdout berechnet.
+- Mindestgröße des Holdouts ist konfigurierbar und blockiert zu kleine Vergleiche transparent.
+- Market-Orders sind im Realhandel separat und standardmäßig gesperrt.
+- Zusätzliches tägliches Limit für tatsächlich übermittelte Realaufträge.

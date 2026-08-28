@@ -76,7 +76,7 @@ class ControlledLearning:
         with self.db.con() as c:
             c.execute('UPDATE parameter_family_versions SET parameters_json=?,source=?,reason=? WHERE id=?',
                       (json.dumps(params, sort_keys=True), 'LEGACY_MIGRATION',
-                       'ÃƒÅ“bernahme der vorhandenen xStock-Parameter', current['id']))
+                       'Übernahme der vorhandenen xStock-Parameter', current['id']))
 
     def _wilson(self, successes, n, z=1.96):
         if not n:
@@ -259,14 +259,19 @@ class ControlledLearning:
         if family not in FAMILIES:
             return {'status': 'UNKNOWN_FAMILY'}
         rows = self._evaluations(family)
-        n = len(rows)
-        if n < min_sample:
-            return {'status': 'INSUFFICIENT_DATA', 'sample_count': n, 'required': min_sample}
+        total_sample_count = len(rows)
+        if total_sample_count < min_sample:
+            return {'status': 'INSUFFICIENT_DATA', 'sample_count': total_sample_count, 'required': min_sample}
         active = self.active(family)
         params = json.loads(active['parameters_json'])
-        candidate = self._candidate(family, params, rows)
+        split = max(2, int(total_sample_count * .70))
+        training_rows, validation_rows = rows[:split], rows[split:]
+        minimum_validation = max(3, int(self.db.value('learning_min_validation_samples','5')))
+        if len(validation_rows) < minimum_validation:
+            return {'status':'INSUFFICIENT_VALIDATION','sample_count':total_sample_count,'training_count':len(training_rows),'validation_count':len(validation_rows),'required_validation':minimum_validation}
+        candidate = self._candidate(family, params, training_rows)
         shadow = []
-        for row in rows:
+        for row in validation_rows:
             try:
                 features = json.loads(row.get('features_json') or '{}')
             except Exception:
@@ -291,6 +296,7 @@ class ControlledLearning:
                        'active_return_after_costs_pct': self._strategy_return(active_signal, actual, cost_rate),
                        'candidate_return_after_costs_pct': self._strategy_return(candidate_signal, actual, cost_rate)}
             shadow.append((row['id'], a, c, details))
+        n = len(validation_rows)
         metrics = self._metrics(shadow)
         active_decisions = sum(x[3]['active_signal'] != 'HOLD' for x in shadow)
         candidate_decisions = sum(x[3]['candidate_signal'] != 'HOLD' for x in shadow)
@@ -303,7 +309,7 @@ class ControlledLearning:
         policy = self.gate_policy()
         gate_results = self._gate_results(metrics, improvement, min_improvement, policy)
         status = 'PENDING' if self._gates_pass(gate_results) else 'REJECTED_GATE'
-        reason = 'Alle robusten Freigabe-Gates erfÃƒÂ¼llt; keine automatische Aktivierung' if status == 'PENDING' else 'Mindestens ein robustes Freigabe-Gate wurde nicht erfÃƒÂ¼llt'
+        reason = 'Alle robusten Freigabe-Gates erfüllt; keine automatische Aktivierung' if status == 'PENDING' else 'Mindestens ein robustes Freigabe-Gate wurde nicht erfüllt'
         with self.db.con() as c:
             cur = c.execute('INSERT INTO learning_candidates(created_at,family,status,base_version,sample_count,active_accuracy,candidate_accuracy,improvement,ci_low,ci_high,parameters_json,reason,decided_at,gate_policy_json,gate_results_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
                             (now(), family, status, active['version'], n, str(active_accuracy),
@@ -322,7 +328,7 @@ class ControlledLearning:
         self.db.audit('CONTROLLED_LEARNING_CANDIDATE', json.dumps({'candidate_id': candidate_id,
                       'family': family, 'status': status, 'sample_count': n,
                       'improvement': improvement, 'gates': gate_results}, sort_keys=True))
-        return {'status': status, 'candidate_id': candidate_id, 'sample_count': n,
+        return {'status': status, 'candidate_id': candidate_id, 'sample_count': n, 'total_sample_count': total_sample_count, 'training_count': len(training_rows), 'validation_count': len(validation_rows),
                 'improvement': improvement, 'ci': [low, high], 'metrics': metrics,
                 'gate_policy': policy, 'gate_results': gate_results}
 
@@ -364,7 +370,7 @@ class ControlledLearning:
             with self.db.con() as c:
                 c.execute("UPDATE learning_candidates SET status='REJECTED_RECHECK',decided_at=?,gate_policy_json=?,gate_results_json=?,reason=? WHERE id=?",
                           (now(), json.dumps(policy, sort_keys=True), json.dumps(gate_results, sort_keys=True),
-                           'Freigabe bei erneuter Gate-PrÃƒÂ¼fung blockiert', candidate_id))
+                           'Freigabe bei erneuter Gate-Prüfung blockiert', candidate_id))
             self.db.audit('CONTROLLED_LEARNING_APPROVAL_BLOCKED', json.dumps({'candidate_id': candidate_id,
                           'stored_policy': stored_policy, 'current_policy': policy, 'gates': gate_results}, sort_keys=True), 'warning')
             return {'status': 'REJECTED_RECHECK', 'gate_results': gate_results}
@@ -373,7 +379,7 @@ class ControlledLearning:
             c.execute("UPDATE parameter_family_versions SET status='SUPERSEDED' WHERE family=? AND status='ACTIVE'", (proposal['family'],))
             c.execute('INSERT INTO parameter_family_versions(created_at,family,version,status,parameters_json,parent_version,source,reason) VALUES(?,?,?,?,?,?,?,?)',
                       (now(), proposal['family'], new_version, 'ACTIVE', proposal['parameters_json'],
-                       current['version'], f'APPROVED_CANDIDATE_{candidate_id}', 'Explizite Benutzerfreigabe nach erneuter Gate-PrÃƒÂ¼fung'))
+                       current['version'], f'APPROVED_CANDIDATE_{candidate_id}', 'Explizite Benutzerfreigabe nach erneuter Gate-Prüfung'))
             c.execute("UPDATE learning_candidates SET status='APPROVED',decided_at=?,gate_policy_json=?,gate_results_json=? WHERE id=?",
                       (now(), json.dumps(policy, sort_keys=True), json.dumps(gate_results, sort_keys=True), candidate_id))
         self.db.audit('CONTROLLED_LEARNING_APPROVED', json.dumps({'candidate_id': candidate_id,
@@ -390,7 +396,7 @@ class ControlledLearning:
             c.execute("UPDATE parameter_family_versions SET status='SUPERSEDED' WHERE family=? AND status='ACTIVE'", (family,))
             c.execute('INSERT INTO parameter_family_versions(created_at,family,version,status,parameters_json,parent_version,source,reason) VALUES(?,?,?,?,?,?,?,?)',
                       (now(), family, next_version, 'ACTIVE', target[0]['parameters_json'], current['version'],
-                       f'ROLLBACK_TO_{target_version}', 'VollstÃƒÂ¤ndiger kontrollierter Rollback'))
+                       f'ROLLBACK_TO_{target_version}', 'Vollständiger kontrollierter Rollback'))
         self.db.audit('CONTROLLED_LEARNING_ROLLBACK', json.dumps({'family': family,
                       'target_version': target_version, 'new_version': next_version}))
         return {'status': 'ROLLED_BACK', 'version': next_version}

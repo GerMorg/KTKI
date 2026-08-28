@@ -203,3 +203,6 @@ UTF-8- und Versionsinkonsistenzen des dev.47-Snapshots sind behoben. Der ÃƒÂ�
 
 ## ÃƒÅ“bergabe dev.49
 Monitoring ist als erster Blueprint ausgelagert. Ereignis-Dashboard und redigierter Audit-Export sind implementiert. WebSockets kÃƒÂ¶nnen in isolierten Tests ÃƒÂ¼ber APP_DISABLE_WEBSOCKETS=1 unterdrÃƒÂ¼ckt werden. Alle bestehenden Funktionen und Sicherheitsgrenzen bleiben erhalten.
+
+
+V54: Zentrale kompakte Zahlenanzeige, übersichtlichere GUI sowie dokumentierter Informations-, Lern- und Realorderpfad mit ehrlicher Systemmatrix.

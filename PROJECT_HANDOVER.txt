@@ -207,3 +207,8 @@ DEV.50: Steuerinfo Ãƒâ€“sterreich ergÃƒÂ¤nzt. Echte Ledger-Daten blei
 DEV.51: Realhandel technisch getrennt ergÃ¤nzt. Vor produktiver Nutzung sind Order-Reconciliation, Cancel/Replace, AssetPairs-PrÃ¤zisionsprÃ¼fung und Praxistests mit kleinsten BetrÃ¤gen weiter auszubauen.
 
 V52: Automatische Kandidatensuche in beiden Lernloops, robuste Forex-Trefferquote und sicher aktivierbarer Realhandel.
+
+V53: Strikte zeitliche Holdout-Bewertung für kontrolliertes Lernen; Market-Orders standardmäßig gesperrt; tägliches Realorder-Limit ergänzt.
+
+
+V54: Zentrale kompakte Zahlenanzeige, übersichtlichere GUI sowie dokumentierter Informations-, Lern- und Realorderpfad mit ehrlicher Systemmatrix.
