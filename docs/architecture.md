@@ -1,6 +1,6 @@
 # Architektur
 
-`kraken_trader/app` enthält die Python-Fachmodule. `templates` und `static` enthalten die zentralen GUI-Ressourcen. Die Tests liegen ausschließlich unter `kraken_trader/tests`.
+`kraken_trader/app` enthält die Python-Fachmodule. `kraken_trader/app/templates` und `kraken_trader/app/static` enthalten die zentralen GUI-Ressourcen. Die Tests liegen ausschließlich unter `kraken_trader/tests`.
 
 ## Grenzen
 

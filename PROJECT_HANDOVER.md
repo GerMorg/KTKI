@@ -208,3 +208,4 @@ Monitoring ist als erster Blueprint ausgelagert. Ereignis-Dashboard und redigier
 V54: Zentrale kompakte Zahlenanzeige, übersichtlichere GUI sowie dokumentierter Informations-, Lern- und Realorderpfad mit ehrlicher Systemmatrix.
 
 V57: GUI-Grundlayout und Styles wurden zentralisiert, der fehlerhafte Sicherheitstext und repositoryweite Zeichenkodierungsfehler wurden repariert. Die Dokumentation ist unter `docs/` gegliedert; Projektverträge und append-only-Protokolle bleiben im Stamm. Versionsquellen sind auf 0.1.0-dev.57 synchronisiert. Bestehende Fachfunktionen und Sicherheitsgrenzen wurden beibehalten. Die automatischen Prüfungen umfassen Kompilierung, Regression, UTF-8, YAML, GUI-Struktur und Versionskonsistenz.
+V57 Hotfix 1: Template und Stylesheet befinden sich nun korrekt unter `kraken_trader/app/templates` und `kraken_trader/app/static`, relativ zu `app/main.py`. Der GUI-Startfehler aus der ersten v57-Ausgabe ist damit behoben.

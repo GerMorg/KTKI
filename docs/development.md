@@ -13,5 +13,5 @@ python -m compileall -q app tests
 1. Keine bestehende Funktion ungefragt entfernen.
 2. UTF-8 und LF verwenden.
 3. Versionsnummern in `version.py`, `config.yaml` und `repository.yaml` synchron halten.
-4. GUI-Stile nur in `app/static/style.css` pflegen.
+4. GUI-Stile nur in `kraken_trader/app/static/style.css` pflegen.
 5. Änderungen in Changelog, Testmatrix, Handover und append-only-Protokollen dokumentieren.

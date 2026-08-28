@@ -229,3 +229,7 @@
 - Konfigurierbar: Intervall, Positionslimit, Cashreserve, Mindest-/Maximalbetrag, No-Trade-Band, Aktionen pro Lauf/Tag, Cooldown, Mindestscore, Allowlist und Limitpreisabstand.
 - Automatische Live-Ausführung benötigt zusätzlich eine getrennte Automation-Berechtigung; UI-Arming-Tokens werden nicht wiederverwendet.
 - Jeder Lauf und jede Aktion wird in eigenen REAL-Tabellen sowie im REAL-Audit gespeichert.
+## 0.1.0-dev.57-hotfix.1
+- Kritischen GUI-Startfehler behoben: Flask-Template und Stylesheet lagen außerhalb des Flask-Anwendungsverzeichnisses.
+- Qualitätstest auf die tatsächlichen Flask-Ressourcenpfade korrigiert.
+

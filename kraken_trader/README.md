@@ -12,4 +12,4 @@
 ./run_tests.sh
 ```
 
-Die Projektdokumentation liegt im übergeordneten Ordner `docs`. GUI-Ressourcen liegen zentral unter `app/templates` und `app/static`.
+Die Projektdokumentation liegt im übergeordneten Ordner `docs`. GUI-Ressourcen liegen zentral unter `app/app/templates` und `app/app/static`.
