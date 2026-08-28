@@ -18,5 +18,5 @@ class Dev43Tests(unittest.TestCase):
  def test_dashboard_uses_available_data_despite_stream_error(self):
   import main
   with main.db.con() as c:c.execute("UPDATE stream_state SET state='ERROR' WHERE id=1");c.execute("UPDATE private_stream_state SET state='ERROR' WHERE id=1");c.execute("INSERT OR REPLACE INTO live_prices VALUES('BTC/EUR','1',NULL,NULL,NULL,?)",(now(),));c.execute("INSERT INTO portfolio_snapshots(created_at,total_eur,priced_asset_count,unpriced_asset_count,quality) VALUES(?,100,1,0,'COMPLETE')",(now(),))
-  body=main.app.test_client().get('/').data.decode('utf-8');self.assertIn('DATEN VERFÜGBAR',body);self.assertIn('KONTODATEN VERFÜGBAR',body)
+  body=main.app.test_client().get('/').data.decode('utf-8');self.assertIn('DATEN VERFÃœGBAR',body);self.assertIn('KONTODATEN VERFÃœGBAR',body)
 if __name__=='__main__':unittest.main()

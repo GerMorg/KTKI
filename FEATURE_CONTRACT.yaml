@@ -307,3 +307,9 @@ release_0_1_0_dev_43:
   gemini_news_ai_provider: {required: true, status: implemented}
   ai_direct_trading: {required: false, status: prohibited}
   real_trading: {required: false, status: hard_disabled}
+
+release_0_1_0_dev_44:
+  controlled_learning_current_versions:
+    families: [forex, xstocks, crypto_spot]
+    selected_family_controls_details: true
+    automatic_activation: false

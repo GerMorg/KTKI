@@ -23,7 +23,7 @@ class Tests(unittest.TestCase):
   db=DB(tempfile.mktemp());db.init();db.set_setting('utf8_data_migration_v1','done')
   broken='Geb'+chr(0xc3)+chr(0xbc)+'hr und '+chr(0xc3)+chr(0x153)+'bersicht'
   with db.con() as c:c.execute("INSERT INTO audit(created_at,event,level,details) VALUES('x','OLD','info',?)",(broken,))
-  result=repair_database(db);self.assertEqual(result['status'],'DONE');self.assertEqual(db.rows("SELECT details FROM audit WHERE event='OLD'")[0]['details'],'Gebühr und Übersicht');self.assertEqual(repair_database(db)['status'],'ALREADY_DONE')
+  result=repair_database(db);self.assertEqual(result['status'],'DONE');self.assertEqual(db.rows("SELECT details FROM audit WHERE event='OLD'")[0]['details'],'GebÃ¼hr und Ãœbersicht');self.assertEqual(repair_database(db)['status'],'ALREADY_DONE')
  def test_multicategory_prefilter_is_unique_across_repeated_runs(self):
   db=DB(tempfile.mktemp());db.init();
   with db.con() as c:c.execute('CREATE TABLE news_market_links(news_id TEXT,symbol TEXT,relevance TEXT,reason TEXT,PRIMARY KEY(news_id,symbol))')

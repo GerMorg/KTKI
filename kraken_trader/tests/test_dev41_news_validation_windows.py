@@ -29,7 +29,7 @@ class Dev41NewsWindows(unittest.TestCase):
   self.assertEqual(json.loads(row['window_policy_json'])['kind'],'EXPANDING_TIME_SPLIT')
  def test_approval_rejects_changed_sample(self):
   result=self.nl.propose(min_sample=10,min_improvement=0)
-  if result['status']!='PENDING':self.skipTest('Deterministischer Kandidat erfüllt Vergleichsgate nicht')
+  if result['status']!='PENDING':self.skipTest('Deterministischer Kandidat erfÃ¼llt Vergleichsgate nicht')
   with self.db.con() as c:
    c.execute("INSERT INTO news_items VALUES('new','gain','','primary','2026-02-01T00:00:00+00:00','2026-02-01T00:00:00+00:00')")
    c.execute("INSERT INTO external_news_ai_results VALUES('new','2026-02-01T00:00:00+00:00','VALID',?,NULL)",(json.dumps({'relevance':1,'sentiment':'positive','expected_impact':'medium','confidence':1,'priced_in':False}),))
