@@ -126,3 +126,6 @@ Gemini fehlte in der Add-on-Konfiguration und im Nachrichten-AI-Transport. Dev.4
 
 ## 2026-08-28 I047 - gelöst in 0.1.0-dev.45
 Die Lernseite zeigte nur Forex als aktuelle Version und mischte Kandidaten, Historien und Metriken aller Familien. Dev.45 zeigt alle Familienversionen und filtert die Detailbereiche konsistent.
+
+## 2026-08-28 I048 - gelöst in 0.1.0-dev.46
+Die Familienübersicht zeigte Versionen, aber nicht offene Freigaben oder den letzten Kandidatenstatus. Außerdem war ein unbekannter Familienparameter nicht explizit abgesichert. Dev.46 ergänzt Übersicht und Fail-closed-Auswahl.

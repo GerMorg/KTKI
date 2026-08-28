@@ -20,5 +20,3 @@ def build_rows(balances,ledger_assets,assets,pairs,tickers):
   rows.append({'asset':code,'display_name':name,'amount':str(amount),'eur_price':str(price) if price is not None else None,'eur_value':str(value) if value is not None else None,'classification':'HELD' if amount!=0 else 'HISTORICAL_ZERO','ever_held':1 if code in ledger_assets or amount!=0 else 0})
  quality='VALID' if all(x['eur_value'] is not None or dec(x['amount'])==0 for x in rows) else 'INCOMPLETE'
  return rows,str(total),quality
-
-

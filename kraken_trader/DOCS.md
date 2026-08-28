@@ -1,4 +1,4 @@
-# Kraken Trader 0.1.0-dev.45
+# Kraken Trader 0.1.0-dev.46
 
 ## Dauerhafte UTF-8-Strategie
 1. Alle Repository-Texte sind UTF-8 mit LF.
@@ -14,5 +14,3 @@ Die Migration verÃ¤ndert einen Wert nur, wenn die RÃ¼ckwandlung die Anzahl b
 
 ## dev.28 DatenqualitÃ¤t und Backtest
 Ticker- und OHLC-Status werden getrennt persistiert. Die letzte, noch laufende REST-OHLC-Kerze wird nicht als abgeschlossen gewertet. Der lokale OHLCVT-Speicher ist die Grundlage fÃ¼r reproduzierbare Walk-forward-Benchmarks.
-
-

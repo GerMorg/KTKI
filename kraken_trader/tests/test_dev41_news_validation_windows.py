@@ -39,5 +39,3 @@ class Dev41NewsWindows(unittest.TestCase):
   self.assertIn('validation_start_at',cols);self.assertIn('window_policy_json',cols)
 
 if __name__=='__main__':unittest.main()
-
-

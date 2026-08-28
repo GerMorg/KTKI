@@ -315,3 +315,10 @@ release_0_1_0_dev_45:
     overview_families: [forex, xstocks, crypto_spot]
     filtered_details: [candidates, versions, metrics]
     automatic_activation: false
+
+release_0_1_0_dev_46:
+  learning_family_overview:
+    fields: [active_version, pending_count, latest_candidate_status]
+    allowed_families: [forex, xstocks, crypto_spot]
+    invalid_family_fallback: forex
+    automatic_activation: false

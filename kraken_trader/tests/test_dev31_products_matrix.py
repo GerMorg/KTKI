@@ -16,5 +16,3 @@ class T(unittest.TestCase):
  def test_data_freshness_is_hard_gate(self):
   r=DecisionMatrix(self.db).evaluate('EUR/USD','BUY',{'confirmation_count':1,'confirmation_required':1,'improvement_after_costs':'1','data_fresh':False});self.assertFalse(r['allowed']);self.assertEqual(r['checks'][-1]['rule_key'],'DATA_FRESHNESS')
 if __name__=='__main__':unittest.main()
-
-

@@ -122,3 +122,6 @@ Mehrfenster-Walk-forward-StabilitÃ¤tsprÃ¼fung fÃ¼r Nachrichtenkandidaten m
 
 ## 0.1.0-dev.45 - 2026-08-28
 Vollständige Lernversionsübersicht mit familienbezogener Navigation und konsistent gefilterten Detaildaten.
+
+## 0.1.0-dev.46 - 2026-08-28
+Lernfamilien-Dashboard mit aktiver Version, offenen Kandidaten, letztem Status und abgesicherter Familienauswahl.

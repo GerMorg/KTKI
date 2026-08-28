@@ -190,3 +190,6 @@ Die StartÃ¼bersicht unterscheidet nun DatenverfÃ¼gbarkeit vom Zustand der op
 
 ## Dev.45
 Kontrolliertes Lernen zeigt Forex, xStocks und Krypto Spot gemeinsam. Auswahl einer Familie filtert Kandidaten, Versionshistorie und Horizontmetriken; Parameterfreigaben bleiben manuell und atomar.
+
+## Dev.46
+Die Lernseite zeigt je Familie aktive Version, offene Kandidaten und letzten Kandidatenstatus. Unbekannte Familienwerte werden fail-closed auf Forex normalisiert. Nächster Hauptschritt bleibt die mehrfenstrige Walk-forward-Stabilität.

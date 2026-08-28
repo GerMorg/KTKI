@@ -111,5 +111,3 @@ class NewsPrefilter:
      direct=any(x in specific for x in hits);rel=float(item['weight'])*(1.0 if direct else .25)*(1.0+min(1.0,abs(float(item.get('local_score') or 0))));links.append((item['id'],symbol,str(rel),('Direkter Marktbezug: ' if direct else 'Kategorietrend: ')+', '.join(hits[:4])))
   with self.db.con() as c:c.execute('DELETE FROM news_market_links');c.executemany('INSERT OR REPLACE INTO news_market_links VALUES(?,?,?,?)',links)
   return len(links)
-
-

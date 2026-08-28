@@ -1,4 +1,9 @@
 # Changelog
+## 0.1.0-dev.46
+- Lernfamilienübersicht zeigt aktive Version, offene Kandidaten und letzten Kandidatenstatus je Familie
+- Familiennavigation bleibt direkt auswählbar und Detaildaten bleiben gefiltert
+- unbekannte Familienparameter fallen kontrolliert auf Forex zurück
+- vier neue Regressionstests; Realhandel bleibt hart deaktiviert
 ## 0.1.0-dev.45
 - Aktuelle Lernversionen zeigen Forex, xStocks und Krypto Spot gleichzeitig
 - Familiennamen sind direkt auswählbar
@@ -162,5 +167,3 @@
 - Gemini-REST-Transport unterstÃ¼tzt JSON-Ausgaben, API-Key-Header, Modell und Timeout
 - AI-Verarbeitung erzwingt das konfigurierte Lauf-Limit
 - Realhandel bleibt hart deaktiviert
-
-

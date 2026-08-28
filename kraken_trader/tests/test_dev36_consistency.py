@@ -31,5 +31,3 @@ class Dev36ConsistencyTests(unittest.TestCase):
         self.assertFalse(main.app.test_client().get("/health").json["real_trading"])
 
 if __name__ == "__main__": unittest.main()
-
-

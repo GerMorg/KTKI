@@ -186,3 +186,6 @@ Gemini wird als zusÃ¤tzlicher externer Nachrichten-AI-Anbieter Ã¼ber den off
 
 ## 2026-08-28 D045 - Familienbezogene Lernansicht
 Die Übersicht zeigt alle aktiven Familienversionen. Detaildaten werden ausschließlich für die ausgewählte Familie geladen, um Fehlinterpretationen zu vermeiden.
+
+## 2026-08-28 D046 - Lernfamilienstatus in der Übersicht
+Die Familienübersicht zeigt nur kompakte, abgeleitete Statuswerte. Detaildaten und Aktionen bleiben auf die bewusst ausgewählte gültige Familie beschränkt.

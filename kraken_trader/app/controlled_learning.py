@@ -95,6 +95,31 @@ class ControlledLearning:
         """Return exactly one active version for every supported family."""
         return [active for family in FAMILIES if (active := self.active(family))]
 
+    def family_overview(self):
+        """Summarize active version and candidate state for every family."""
+        result = []
+        for family in FAMILIES:
+            active = self.active(family)
+            counts = {row['status']: row['n'] for row in self.db.rows(
+                'SELECT status,COUNT(*) AS n FROM learning_candidates WHERE family=? GROUP BY status',
+                (family,))}
+            latest = self.db.rows(
+                'SELECT id,status,created_at,decided_at FROM learning_candidates WHERE family=? ORDER BY id DESC LIMIT 1',
+                (family,))
+            item = {
+                'family': family,
+                'active_version': active['version'] if active else None,
+                'pending_count': int(counts.get('PENDING', 0)),
+                'approved_count': int(counts.get('APPROVED', 0)),
+                'rejected_count': int(counts.get('REJECTED', 0)),
+                'latest_candidate_id': latest[0]['id'] if latest else None,
+                'latest_status': latest[0]['status'] if latest else 'NONE',
+                'latest_created_at': latest[0]['created_at'] if latest else None,
+                'latest_decided_at': latest[0]['decided_at'] if latest else None,
+            }
+            result.append(item)
+        return result
+
     def _required_horizons(self):
         raw = self.db.value('learning_required_horizons', '24,168')
         try:
@@ -365,5 +390,3 @@ class ControlledLearning:
         if family is None:
             return self.db.rows('SELECT * FROM parameter_family_versions ORDER BY family,version DESC')
         return self.db.rows('SELECT * FROM parameter_family_versions WHERE family=? ORDER BY version DESC', (family,))
-
-

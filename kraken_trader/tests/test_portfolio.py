@@ -14,5 +14,3 @@ class PortfolioTests(unittest.TestCase):
   sid=db.store_portfolio([{'asset':'ZEUR','display_name':'EUR','amount':'5','eur_price':'1','eur_value':'5','classification':'HELD','ever_held':1}],'5','VALID')
   self.assertEqual(sid,1);self.assertEqual(db.rows('SELECT quality FROM portfolio_snapshots')[0]['quality'],'VALID')
 if __name__=='__main__':unittest.main()
-
-

@@ -36,5 +36,3 @@ class LearningApproval:
    for name,value in params.items():c.execute('UPDATE strategy_parameters SET value=?,version=?,updated_at=?,source=? WHERE name=?',(str(value),new_version,now(),f'APPROVED_PROPOSAL_{p["id"]}',name))
    c.execute("UPDATE learning_proposals SET status='APPROVED',approved_at=? WHERE id=?",(now(),p['id']))
   self.db.audit('LEARNING_PROPOSAL_APPROVED',json.dumps({'proposal_id':p['id'],'version':new_version,'parameter_count':9}));return {'status':'APPROVED','version':new_version,'parameter_count':9}
-
-

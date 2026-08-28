@@ -456,3 +456,8 @@ release_0_1_0_dev_45:
   learning_current_versions: [forex, xstocks, crypto_spot]
   family_filtered_details: [candidates, versions, metrics]
   real_trading: hard_disabled
+
+release_0_1_0_dev_46:
+  learning_family_overview: [active_version, pending_count, latest_candidate_status]
+  unknown_family_fallback: forex
+  real_trading: hard_disabled

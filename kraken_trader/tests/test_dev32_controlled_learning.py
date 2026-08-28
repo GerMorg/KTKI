@@ -21,5 +21,3 @@ class T(unittest.TestCase):
  def test_reject_and_full_rollback(self):
   self.seed();r=self.l.propose('forex',10,0);self.assertEqual(self.l.decide(r['candidate_id'],'reject')['status'],'REJECTED');self.assertEqual(self.l.rollback('forex',1)['status'],'ROLLED_BACK')
 if __name__=='__main__':unittest.main()
-
-

@@ -17,5 +17,3 @@ class Tests(unittest.TestCase):
   self.u.set_categories({'leveraged_spot'});self.u.sync();self.assertEqual(self.u.symbols('EUR'),['ETH/EUR'])
  def test_settings_utf8(self):
   labels=' '.join(x['label'] for x in self.u.categories());self.assertIn('KryptowÃ¤hrungen',labels);self.assertIn('HebelfÃ¤hige',labels)
-
-

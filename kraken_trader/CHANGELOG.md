@@ -1,4 +1,7 @@
 # Changelog
+## 0.1.0-dev.46
+- Statusübersicht und robuste Familienauswahl im kontrollierten Lernen ergänzt
+- Realhandel bleibt hart deaktiviert
 ## 0.1.0-dev.45
 - Lernfamilienübersicht und konsistente Familienfilterung ergänzt
 - Realhandel bleibt hart deaktiviert
@@ -159,5 +162,3 @@
 - Gemini-REST-Transport unterstÃ¼tzt JSON-Ausgaben, API-Key-Header, Modell und Timeout
 - AI-Verarbeitung erzwingt das konfigurierte Lauf-Limit
 - Realhandel bleibt hart deaktiviert
-
-

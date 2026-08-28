@@ -48,5 +48,3 @@ class KrakenClient:
   if since is not None:data['since']=int(since)
   if asset_class=='tokenized_asset':data['asset_class']=asset_class
   return self.call('/0/public/OHLC',data)
-
-

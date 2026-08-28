@@ -253,5 +253,3 @@ class NewsLearning:
 
     def candidates(self):return self.db.rows('SELECT * FROM news_model_candidates ORDER BY id DESC LIMIT 100')
     def versions(self):return self.db.rows('SELECT * FROM news_model_versions ORDER BY version DESC')
-
-

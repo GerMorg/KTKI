@@ -293,3 +293,10 @@ release_0_1_0_dev_45:
     - {id: T-D45-001, expectation: Kandidaten werden nach Lernfamilie gefiltert, status: passed}
     - {id: T-D45-002, expectation: Versionshistorie wird nach Lernfamilie gefiltert, status: passed}
     - {id: T-D45-003, expectation: Horizontmetriken werden nach Lernfamilie gefiltert, status: passed}
+
+release_0_1_0_dev_46:
+  automated:
+    - {id: T-D46-001, expectation: Übersicht enthält jede Lernfamilie samt aktiver Version, status: passed}
+    - {id: T-D46-002, expectation: Offene Kandidaten und letzter Status werden korrekt aggregiert, status: passed}
+    - {id: T-D46-003, expectation: Unbekannte Familie fällt kontrolliert auf Forex zurück, status: passed}
+    - {id: T-D46-004, expectation: GUI zeigt offene und letzte Kandidaten, status: passed}

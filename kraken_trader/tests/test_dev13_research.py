@@ -28,5 +28,3 @@ class Tests(unittest.TestCase):
    time.sleep(.01)
   self.assertEqual(j['status'],'COMPLETED')
  def test_weights_are_controlled(self):self.assertEqual(self.db.rows("SELECT status FROM model_weights WHERE version='rules-v1'")[0]['status'],'ACTIVE')
-
-
