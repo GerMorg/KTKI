@@ -1,4 +1,4 @@
-version: 0.1.0-dev.43
+version: 0.1.0-dev.57
 compatibility_rule: Implementierte Funktionen duerfen nur nach ausdruecklicher Entscheidung mit dokumentierter Migration entfernt werden.
 features:
   ingress_gui: {required: true, status: implemented}
@@ -360,3 +360,10 @@ release_0_1_0_dev_51:
   live_short_lived_approval: {required: true, status: implemented}
   idempotent_client_order_id: {required: true, status: implemented}
   positive_order_limit_required: {required: true, status: implemented}
+
+release_0_1_0_dev_57:
+  central_gui_template: {required: true, status: implemented}
+  external_gui_stylesheet: {required: true, status: implemented}
+  utf8_repository_gate: {required: true, status: implemented}
+  version_consistency_gate: {required: true, status: implemented}
+  existing_features_preserved: {required: true, status: verified}

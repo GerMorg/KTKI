@@ -13,7 +13,7 @@ class ExternalNewsAI:
  def ensure(self):
   with self.db.con() as c:c.execute('CREATE TABLE IF NOT EXISTS external_news_ai_results(news_id TEXT PRIMARY KEY,created_at TEXT NOT NULL,status TEXT NOT NULL,result_json TEXT NOT NULL,error TEXT)')
  def _prompt(self,row):
-  return ('Bewerte die Nachricht ausschlieÃŸlich als JSON mit den Feldern relevance, sentiment, expected_impact, horizon, confidence, fact_status, priced_in, topics, affected_assets, summary, counterarguments. '
+  return ('Bewerte die Nachricht ausschließlich als JSON mit den Feldern relevance, sentiment, expected_impact, horizon, confidence, fact_status, priced_in, topics, affected_assets, summary, counterarguments. '
           'Keine Handelsanweisung. Nachricht: '+str(row.get('title') or '')+'\n'+str(row.get('summary') or ''))
  def _http_transport(self,request):
   provider=str(self.options.get('ai_provider') or 'openai').lower()

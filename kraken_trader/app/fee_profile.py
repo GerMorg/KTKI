@@ -143,7 +143,7 @@ class FeeProfile:
         stamp = now()
         resolved, skipped = self._resolve(symbols)
         if not resolved:
-            error = 'Keine von TradeVolume unterstÃ¼tzten WÃ¤hrungspaare'
+            error = 'Keine von TradeVolume unterstützten Währungspaare'
             self._save_failure(stamp, error, skipped)
             return {'status': 'FALLBACK', 'saved': 0, 'skipped': skipped,
                     'error': 'NO_SUPPORTED_PAIRS'}

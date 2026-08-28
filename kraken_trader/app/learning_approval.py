@@ -2,7 +2,7 @@ import json
 from db import now
 PARAMETERS={
 'xstocks_base_score':(50.,40.,60.),'xstocks_momentum_weight':(4.,2.,6.),'xstocks_trend_weight':(10.,6.,14.),'xstocks_volatility_penalty':(1.2,.6,2.),'xstocks_spread_penalty':(18.,10.,28.),'xstocks_buy_threshold':(62.,55.,75.),'xstocks_buy_max_spread_pct':(1.2,.4,2.),'xstocks_avoid_threshold':(32.,20.,45.),'xstocks_avoid_spread_pct':(2.5,1.,4.)}
-LABELS={'xstocks_base_score':'Basiswert','xstocks_momentum_weight':'Momentum-Gewicht','xstocks_trend_weight':'Trend-Gewicht','xstocks_volatility_penalty':'VolatilitÃ¤tsabzug','xstocks_spread_penalty':'Spread-Abzug','xstocks_buy_threshold':'BUY-Schwelle','xstocks_buy_max_spread_pct':'Maximaler BUY-Spread %','xstocks_avoid_threshold':'AVOID-Schwelle','xstocks_avoid_spread_pct':'AVOID-Spread %'}
+LABELS={'xstocks_base_score':'Basiswert','xstocks_momentum_weight':'Momentum-Gewicht','xstocks_trend_weight':'Trend-Gewicht','xstocks_volatility_penalty':'Volatilitätsabzug','xstocks_spread_penalty':'Spread-Abzug','xstocks_buy_threshold':'BUY-Schwelle','xstocks_buy_max_spread_pct':'Maximaler BUY-Spread %','xstocks_avoid_threshold':'AVOID-Schwelle','xstocks_avoid_spread_pct':'AVOID-Spread %'}
 class LearningApproval:
  def __init__(self,db):self.db=db;self.ensure()
  def ensure(self):
