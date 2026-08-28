@@ -12,7 +12,7 @@ non_negotiable_rules:
   - Bei fehlenden oder widerspruechlichen Daten keine reale Order.
   - Realhandel und Margin bleiben getrennt, mehrstufig und standardmaessig deaktiviert.
 current_release:
-  version: 0.1.0-dev.38
+  version: 0.1.0-dev.41
   status: Zielzeitgenaue historische Prognoseauswertung und quellenbezogene Kostenkette; 119 Tests erfolgreich
 implemented:
   - Ingress-GUI mit Uebersicht, API, Portfolio, Musterdepot, Audit, Einstellungen und Export
@@ -431,9 +431,11 @@ release_0_1_0_dev_38:
   next_recommended_release: dev.39 Walk-forward-Validierung mit Teilfenster-Gates
 
   - date: 2026-08-27
-    version: 0.1.0-dev.40
+    version: 0.1.0-dev.41
     decision: Gebührenauflösung kanonisch und teilfehlertolerant; GUI durchgängig geführt und responsive; vollständiges Repository bei jeder Weiterentwicklung ausgeben.
-
-
-## dev.40
-Die Lern-GUI zeigt alle drei aktiven Parameterfamilien parallel und erklärt PENDING als einzige Freigabestufe. Google AI Studio/Gemini ist als optionaler kostenloser Schattenprovider integriert. Externe Themen und betroffene Assets werden mit der lokalen Taxonomie verglichen; Abweichungen sind nur Kalibrierhinweise und ändern nichts automatisch. Vollständige Regression: 123 Tests erfolgreich.
+release_0_1_0_dev_41:
+  date: 2026-08-28
+  base: 0.1.0-dev.40 user-provided repository snapshot
+  purpose: Zeitlich getrennte Validierung für kontrolliertes Nachrichten-Lernen
+  added: [chronologischer Trainingssplit, disjunktes Validierungsfenster, Fensterprovenienz, Fingerprint-Recheck]
+  safety: [keine automatische Aktivierung, manuelle atomare Freigabe, Realhandel hart deaktiviert]

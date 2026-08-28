@@ -158,12 +158,21 @@ Dev.38 baut vollständig auf dev.37 auf. Prognoseauswertungen verwenden keine ve
 ### Nächster empfohlener Schritt
 Dev.39 sollte eine echte zeitlich getrennte Walk-forward-Validierung für Lernkandidaten mit stabilen Teilfenster-Gates ergänzen.
 
-## Stand 0.1.0-dev.40
+## Stand 0.1.0-dev.41
 Dev.39 basiert ausschließlich auf dem gelieferten dev.38-Snapshot. Alle erkannten UTF-8-Schäden wurden repariert. Der Gebührenabruf verwendet nun kanonische Kraken-Paaridentitäten, lässt nicht unterstützte Assetklassen beim sicheren Konfigurations-Fallback und isoliert ungültige Paare. Die GUI besitzt eine neue responsive Navigation, eine geführte Übersicht sowie eine verständliche kontrollierte Lernfreigabe mit aktiver Version, Parametervergleich und Gate-Details. Die vollständige Regression umfasst 124 erfolgreiche Tests. Realhandel bleibt hart deaktiviert.
 
 ### Nächster Schritt
 Praktischer Home-Assistant-OS-Test des Gebührenabrufs mit dem realen Marktuniversum sowie schrittweise Modularisierung der großen main.py in Blueprints ohne Funktionsverlust.
 
 
-## dev.40
-Die Lern-GUI zeigt alle drei aktiven Parameterfamilien parallel und erklärt PENDING als einzige Freigabestufe. Google AI Studio/Gemini ist als optionaler kostenloser Schattenprovider integriert. Externe Themen und betroffene Assets werden mit der lokalen Taxonomie verglichen; Abweichungen sind nur Kalibrierhinweise und ändern nichts automatisch. Vollständige Regression: 123 Tests erfolgreich.
+## Stand 0.1.0-dev.41
+Die externe Nachrichten-AI kann nun automatisch mit der aktiven lokalen Nachrichtenbewertung verglichen werden. Ein begrenzter lokaler Kandidat wird nur bei geringerem Fehler und mindestens gleich guter Richtungsübereinstimmung PENDING. Aktivierung erfolgt ausschließlich manuell, nach erneuter Prüfung und als vollständige neue Version.
+
+### Nächster Schritt
+Zeitlich getrennte Trainings- und Validierungsfenster für Nachrichtenkandidaten sowie eine spätere Prüfung gegen tatsächlich eingetretene Marktrenditen statt ausschließlich gegen AI-Lehrergebnisse.
+
+## Stand 0.1.0-dev.41
+Dev.41 baut vollständig auf dev.40 auf und entfernt keine Funktionen. Nachrichtenkandidaten werden auf dem älteren Teil der chronologisch sortierten AI-Vergleiche optimiert. Nur der spätere, disjunkte Teil entscheidet über Verlustverbesserung und Richtungsübereinstimmung. Fenstergrenzen, Anzahlen und Policy werden gespeichert. Vor einer manuellen Aktivierung werden Datenfingerprint und Validierung erneut geprüft. Realhandel bleibt hart deaktiviert.
+
+### Nächster empfohlener Schritt
+Mehrere aufeinanderfolgende Walk-forward-Teilfenster einführen und Stabilitätsgates je Teilfenster ergänzen.

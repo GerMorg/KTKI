@@ -35,7 +35,7 @@ class NewsPrefilter:
  def __init__(self,db,timeout=15):self.db,self.timeout=db,timeout;self.ensure()
  def ensure(self):
   with self.db.con() as c:
-   c.executescript("""CREATE TABLE IF NOT EXISTS news_sources(name TEXT PRIMARY KEY,url TEXT NOT NULL,kind TEXT NOT NULL,source_class TEXT NOT NULL DEFAULT 'unknown',weight TEXT NOT NULL DEFAULT '0.5',enabled INTEGER NOT NULL DEFAULT 1,last_status TEXT,last_checked_at TEXT);CREATE TABLE IF NOT EXISTS news_items(id TEXT PRIMARY KEY,source_name TEXT NOT NULL,title TEXT NOT NULL,url TEXT,published_at TEXT,fetched_at TEXT NOT NULL,summary TEXT NOT NULL,topics_json TEXT NOT NULL DEFAULT '[\"general_market\"]',event_types_json TEXT NOT NULL DEFAULT '[\"unspecified\"]',raw_json TEXT NOT NULL DEFAULT '{}');CREATE TABLE IF NOT EXISTS news_market_links(news_id TEXT NOT NULL,symbol TEXT NOT NULL,relevance TEXT NOT NULL,reason TEXT NOT NULL,PRIMARY KEY(news_id,symbol));""")
+   c.executescript("""CREATE TABLE IF NOT EXISTS news_sources(name TEXT PRIMARY KEY,url TEXT NOT NULL,kind TEXT NOT NULL,source_class TEXT NOT NULL DEFAULT 'unknown',weight TEXT NOT NULL DEFAULT '0.5',enabled INTEGER NOT NULL DEFAULT 1,last_status TEXT,last_checked_at TEXT);CREATE TABLE IF NOT EXISTS news_items(id TEXT PRIMARY KEY,source_name TEXT NOT NULL,title TEXT NOT NULL,url TEXT,published_at TEXT,fetched_at TEXT NOT NULL,summary TEXT NOT NULL,topics_json TEXT NOT NULL DEFAULT '[\"general_market\"]',event_types_json TEXT NOT NULL DEFAULT '[\"unspecified\"]',raw_json TEXT NOT NULL DEFAULT '{}');CREATE TABLE IF NOT EXISTS news_local_evaluations(news_id TEXT PRIMARY KEY,evaluated_at TEXT NOT NULL,model_version INTEGER NOT NULL,score TEXT NOT NULL,details_json TEXT NOT NULL);CREATE TABLE IF NOT EXISTS news_market_links(news_id TEXT NOT NULL,symbol TEXT NOT NULL,relevance TEXT NOT NULL,reason TEXT NOT NULL,PRIMARY KEY(news_id,symbol));""")
    source_cols={x['name'] for x in self.db.rows('PRAGMA table_info(news_sources)')}
    for name,definition in [('source_class',"TEXT NOT NULL DEFAULT 'unknown'"),('weight',"TEXT NOT NULL DEFAULT '0.5'")]:
     if name not in source_cols:c.execute(f'ALTER TABLE news_sources ADD COLUMN {name} {definition}')
@@ -100,14 +100,14 @@ class NewsPrefilter:
     code=getattr(exc,'code',None);reason=str(getattr(exc,'reason',exc))[:240];label=f'HTTP {code}' if code else type(exc).__name__;errors.append({'source':src['name'],'error':label,'detail':reason})
     is_tls='handshake operation timed out' in reason.lower();cooldown=(datetime.now(timezone.utc)+timedelta(hours=6)).isoformat() if is_tls else None
     with self.db.con() as c:c.execute('UPDATE news_sources SET last_status=?,last_checked_at=?,last_error=?,consecutive_failures=COALESCE(consecutive_failures,0)+1,cooldown_until=? WHERE name=?',(('DEGRADED TLS COOLDOWN' if is_tls else f'ERROR {label}'),now(),reason,cooldown,src['name']))
-  ai=self.external_ai.analyze_pending() if getattr(self,'external_ai',None) else {'status':'DISABLED'};self.db.audit('NEWS_COLLECT',json.dumps({'saved':saved,'errors':errors,'ai':ai},ensure_ascii=False),'warning' if errors else 'info');return {'saved':saved,'errors':errors,'ai':ai}
+  ai=self.external_ai.analyze_pending() if getattr(self,'external_ai',None) else {'status':'DISABLED'};local=self.news_learning.refresh_local() if getattr(self,'news_learning',None) else {'status':'DISABLED'};self.db.audit('NEWS_COLLECT',json.dumps({'saved':saved,'errors':errors,'ai':ai,'local':local},ensure_ascii=False),'warning' if errors else 'info');return {'saved':saved,'errors':errors,'ai':ai,'local':local}
  def link_markets(self,markets,limit=500):
-  items=self.db.rows('SELECT n.id,n.title,n.summary,s.weight FROM news_items n JOIN news_sources s ON s.name=n.source_name ORDER BY n.fetched_at DESC LIMIT ?',(limit,));links=[]
+  items=self.db.rows("SELECT n.id,n.title,n.summary,s.weight,COALESCE(l.score,'0') local_score FROM news_items n JOIN news_sources s ON s.name=n.source_name LEFT JOIN news_local_evaluations l ON l.news_id=n.id ORDER BY n.fetched_at DESC LIMIT ?",(limit,));links=[]
   for m in markets:
    symbol=m['symbol'];base=(m.get('base_asset') or symbol.split('/')[0]).replace('XBT','BTC');terms=ALIASES.get(base.upper(),[base.lower()])+CATEGORY_TERMS.get(m.get('category') or '',[]);specific=set(ALIASES.get(base.upper(),[base.lower()]))
    for item in items:
     h=norm(item['title']+' '+item['summary']);hits=[t for t in terms if t and re.search(r'\b'+re.escape(t)+r'\b',h)]
     if hits:
-     direct=any(x in specific for x in hits);rel=float(item['weight'])*(1.0 if direct else .25);links.append((item['id'],symbol,str(rel),('Direkter Marktbezug: ' if direct else 'Kategorietrend: ')+', '.join(hits[:4])))
+     direct=any(x in specific for x in hits);rel=float(item['weight'])*(1.0 if direct else .25)*(1.0+min(1.0,abs(float(item.get('local_score') or 0))));links.append((item['id'],symbol,str(rel),('Direkter Marktbezug: ' if direct else 'Kategorietrend: ')+', '.join(hits[:4])))
   with self.db.con() as c:c.execute('DELETE FROM news_market_links');c.executemany('INSERT OR REPLACE INTO news_market_links VALUES(?,?,?,?)',links)
   return len(links)

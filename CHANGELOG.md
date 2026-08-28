@@ -1,13 +1,15 @@
 # Changelog
-## 0.1.0-dev.40
-- Lernoberfläche zeigt Forex, xStocks und Krypto Spot gleichzeitig mit eigener aktiver Version und neun Parametern
-- Freigabeknopf und seine PENDING-Voraussetzung eindeutig erklärt
-- altes Lernsystem endgültig aus Anwendung, Route und Tests entfernt
-- Google AI Studio als direkt nutzbarer Gemini-Provider ergänzt
-- externe Nachrichtenbewertungen werden mit lokaler Taxonomie verglichen und als Kalibrierhinweise gespeichert
-- externe AI darf lokale Regeln oder Handelsparameter weiterhin nicht automatisch verändern
+## 0.1.0-dev.41
+- externe Nachrichten-AI dient als versionierte Vergleichsinstanz für die lokale Auswertung
+- nach erfolgreichen AI-Auswertungen wird automatisch ein deduplizierter Schattenvergleich gestartet
+- neun begrenzte lokale Nachrichtenparameter werden per deterministischer Koordinatensuche vorgeschlagen
+- Fehlermaß und Richtungsübereinstimmung sind harte Vergleichsgates
+- neue lokale Parameter werden niemals automatisch aktiviert, sondern nur nach ausdrücklicher Freigabe
+- Freigabe wiederholt den Vergleich und aktiviert alle Parameter atomar als neue Version
+- aktive lokale Nachrichtenbewertung wird mit Modellversion persistent gespeichert und beeinflusst die Relevanzgewichtung
+- neue Ingress-Seite „Nachrichten-Lernen“ mit Kandidaten, Vergleichswerten und Versionshistorie
 - Realhandel bleibt hart deaktiviert
-## 0.1.0-dev.40
+## 0.1.0-dev.41
 - Repository und sichtbare GUI-Texte vollständig als echtes UTF-8 repariert
 - Gebührenabruf löst interne Symbole vor TradeVolume gegen Kraken-Quellschlüssel und Aliasse auf
 - nicht unterstützte Assetklassen werden mit dokumentiertem Konfigurations-Fallback übersprungen
@@ -131,3 +133,10 @@
 
 ## 0.1.0-dev.24
 - realen xStock-Detailscore durch korrekten Kraken-API-Vertrag repariert
+
+## 0.1.0-dev.41 - 2026-08-28
+- Nachrichtenkandidaten werden ausschließlich auf einem älteren Trainingsfenster optimiert und auf einem späteren, disjunkten Validierungsfenster geprüft
+- Fenstergrenzen, Stichprobenzahlen, Policy und Vergleichsmetriken werden persistent gespeichert und auditiert
+- Freigaben prüfen Datenfingerprint und Validierung erneut; geänderte Stichproben blockieren fail-closed
+- idempotente Schemaerweiterung und neue Regressionstests
+- keine automatische Aktivierung; Realhandel bleibt hart deaktiviert

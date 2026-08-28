@@ -1,4 +1,4 @@
-version: 0.1.0-dev.40
+version: 0.1.0-dev.41
 compatibility_rule: Implementierte Funktionen duerfen nur nach ausdruecklicher Entscheidung mit dokumentierter Migration entfernt werden.
 features:
   ingress_gui: {required: true, status: implemented}
@@ -279,10 +279,18 @@ release_0_1_0_dev_39:
   repository_utf8_source_gate: {required: true, status: enforced}
   real_trading: {required: false, status: hard_disabled}
 
+
 release_0_1_0_dev_40:
-  three_learning_families_visible: {required: true, status: implemented}
-  pending_only_approval_ui: {required: true, status: enforced}
-  google_ai_studio_provider: {required: true, status: implemented_optional}
-  news_ai_calibration_shadow: {required: true, status: implemented}
-  automatic_news_model_changes: {required: false, status: prohibited}
+  automatic_news_ai_shadow_comparison: {required: true, status: implemented}
+  bounded_local_news_candidate: {required: true, status: implemented}
+  manual_news_model_approval: {required: true, status: enforced}
+  approval_recheck: {required: true, status: atomic_fail_closed}
+  automatic_activation: {required: false, status: prohibited}
+  real_trading: {required: false, status: hard_disabled}
+release_0_1_0_dev_41:
+  chronological_news_training_validation_split: {required: true, status: enforced}
+  disjoint_news_validation_window: {required: true, status: enforced}
+  persisted_window_provenance: {required: true, status: implemented}
+  approval_sample_fingerprint_recheck: {required: true, status: atomic_fail_closed}
+  automatic_activation: {required: false, status: prohibited}
   real_trading: {required: false, status: hard_disabled}

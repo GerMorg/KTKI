@@ -167,8 +167,9 @@ Gebührenpaare werden vor TradeVolume aus der kanonischen Marktidentität gegen 
 ## 2026-08-27 D065
 Die Ingress-GUI erhält eine durchgängige responsive Navigation, eine geführte Startseite und verständliche Sicherheits- und Freigabehinweise. Bestehende Funktionen bleiben erhalten.
 
-## 2026-08-28 D066
-Alle drei kontrollierten Parameterfamilien werden gleichzeitig sichtbar gemacht. Nur PENDING-Kandidaten können nach erneuter Gate-Prüfung freigegeben werden.
 
-## 2026-08-28 D067
-Google AI Studio/Gemini ist ein optionaler externer Schattenbewerter. Ergebnisse dienen ausschließlich der nachvollziehbaren Kalibrierprüfung; lokale Regeln werden niemals automatisch geändert.
+## 2026-08-28 D064
+Die externe Nachrichten-AI darf lokale Nachrichtenparameter nur als Vergleichsinstanz anregen. Automatische Vergleiche sind zulässig; die Aktivierung bleibt eine ausdrückliche Benutzeraktion mit erneuter Prüfung und atomarer Versionierung.
+
+## 2026-08-28 D066
+Nachrichtenparameter dürfen nur auf älteren Beobachtungen optimiert werden. Freigabemetriken stammen ausschließlich aus einem späteren, disjunkten Validierungsfenster. Jede Freigabe wiederholt Fingerprint und Gates; veränderte Daten blockieren die Aktivierung.
