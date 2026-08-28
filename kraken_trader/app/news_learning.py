@@ -195,15 +195,16 @@ class NewsLearning:
         return {'loss':loss,'agreement':agreement,'samples':len(rows)}
 
     def _optimize(self, rows, active):
-        candidate=dict(active)
-        steps={'positive_weight':.1,'negative_weight':.1,'uncertainty_penalty':.05,'primary_source_bonus':.05,
-               'issuer_source_bonus':.05,'relevance_floor':.05,'confidence_floor':.05,'priced_in_penalty':.05,'impact_weight':.1}
-        best=self._evaluate(rows,candidate)['loss']
-        for name,step in steps.items():
-            for direction in (-1,1):
-                trial=dict(candidate);lo,hi=BOUNDS[name];trial[name]=round(max(lo,min(hi,trial[name]+step*direction)),4)
-                loss=self._evaluate(rows,trial)['loss']
-                if loss < best: candidate,best=trial,loss
+        candidate=dict(active);steps={'positive_weight':.1,'negative_weight':.1,'uncertainty_penalty':.05,'primary_source_bonus':.05,'issuer_source_bonus':.05,'relevance_floor':.05,'confidence_floor':.05,'priced_in_penalty':.05,'impact_weight':.1}
+        best=self._evaluate(rows,candidate)['loss'];evaluated=1
+        for _ in range(8):
+            improved=False
+            for name,step in steps.items():
+                for direction in (-1,1):
+                    trial=dict(candidate);lo,hi=BOUNDS[name];trial[name]=round(max(lo,min(hi,trial[name]+step*direction)),4);loss=self._evaluate(rows,trial)['loss'];evaluated+=1
+                    if loss<best-1e-12:candidate,best,improved=trial,loss,True
+            if not improved:break
+        self._last_search_details={'algorithm':'coordinate_search_v52','evaluated':evaluated,'training_count':len(rows),'best_loss':best}
         return candidate
 
     def propose(self, min_sample=10, min_improvement=.01, automatic=False, validation_ratio=.30, minimum_validation=3, walk_forward_windows=3, required_stable_windows=2):
@@ -229,7 +230,7 @@ class NewsLearning:
         status='PENDING' if passed else 'REJECTED_GATE'
         comparison={'training':{'active':train_old,'candidate':train_new},'validation':{'active':old,'candidate':new},
                     'minimum_validation_improvement':min_improvement,'automatic_comparison':bool(automatic),'window_policy':policy,'walk_forward':walk,'required_stable_windows':required_stable}
-        reason='Zeitlich getrennte Validierung bestanden; ausdrÃ¼ckliche Freigabe erforderlich' if passed else 'Validierungs- oder Vergleichsgate nicht erfÃ¼llt'
+        reason='Zeitlich getrennte Validierung bestanden; ausdrÃƒÂ¼ckliche Freigabe erforderlich' if passed else 'Validierungs- oder Vergleichsgate nicht erfÃƒÂ¼llt'
         values=(now(),status,active['version'],n,fingerprint,str(old['loss']),str(new['loss']),str(improvement),str(old['agreement']),str(new['agreement']),json.dumps(candidate,sort_keys=True),json.dumps(comparison,sort_keys=True),reason,None if passed else now(),len(training),len(validation),policy['training_start_at'],policy['training_end_at'],policy['validation_start_at'],policy['validation_end_at'],json.dumps(policy,sort_keys=True),json.dumps(walk,sort_keys=True),walk.get('stable_window_count',0),required_stable)
         with self.db.con() as c:
             cur=c.execute('INSERT INTO news_model_candidates(created_at,status,base_version,sample_count,sample_fingerprint,active_loss,candidate_loss,improvement,agreement_active,agreement_candidate,parameters_json,comparison_json,reason,decided_at,training_count,validation_count,training_start_at,training_end_at,validation_start_at,validation_end_at,window_policy_json,walk_forward_json,stable_window_count,required_stable_windows) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',values);candidate_id=cur.lastrowid
@@ -288,9 +289,3 @@ class NewsLearning:
 
     def candidates(self):return self.db.rows('SELECT * FROM news_model_candidates ORDER BY id DESC LIMIT 100')
     def versions(self):return self.db.rows('SELECT * FROM news_model_versions ORDER BY version DESC')
-
-
-
-
-
-

@@ -76,7 +76,7 @@ class ControlledLearning:
         with self.db.con() as c:
             c.execute('UPDATE parameter_family_versions SET parameters_json=?,source=?,reason=? WHERE id=?',
                       (json.dumps(params, sort_keys=True), 'LEGACY_MIGRATION',
-                       'Ãœbernahme der vorhandenen xStock-Parameter', current['id']))
+                       'ÃƒÅ“bernahme der vorhandenen xStock-Parameter', current['id']))
 
     def _wilson(self, successes, n, z=1.96):
         if not n:
@@ -225,19 +225,35 @@ class ControlledLearning:
             })
         return out
 
+    def _score_parameter_set(self, params, rows):
+        """Cost-aware objective. HOLD is abstention, never a hit."""
+        returns=[]; decided=hits=0
+        for row in rows:
+            try: features=json.loads(row.get('features_json') or '{}')
+            except Exception: features={}
+            if not isinstance(features,dict): features={}
+            if not {'momentum_pct','trend_pct','volatility_pct','spread_pct'}.issubset(features):
+                up=row.get('direction')=='UP';features={'momentum_pct':1 if up else -1,'trend_pct':1 if up else -1,'volatility_pct':0,'spread_pct':0}
+            _,signal=score_features(features,params);actual=float(row.get('actual_return_pct') or 0);cost=float(features.get('estimated_roundtrip_cost_pct') or features.get('estimated_cost_pct') or 0)
+            returns.append(self._strategy_return(signal,actual,cost))
+            if signal!='HOLD': decided+=1;hits+=int((signal=='BUY' and actual>0) or (signal=='AVOID' and actual<0))
+        coverage=decided/max(1,len(rows));low=self._wilson(hits,decided)[0] if decided else 0.0
+        return {'objective':sum(returns)+5*low+min(1.0,coverage),'net_return':sum(returns),'decisions':decided,'hits':hits,'coverage':coverage,'hit_rate_raw':hits/decided if decided else None,'hit_rate_robust':low}
+
     def _candidate(self, family, params, rows):
-        avg = sum(float(x.get('actual_return_pct') or 0) for x in rows) / len(rows)
-        accuracy = sum(int(x['direction_correct']) for x in rows) / len(rows)
-        direction = 1 if accuracy >= .55 and avg >= 0 else -1
-        out = dict(params)
-        steps = {'base_score': .25, 'momentum_weight': .1, 'trend_weight': .25,
-                 'volatility_penalty': -.05, 'spread_penalty': -.5,
-                 'buy_threshold': -.5, 'buy_max_spread_pct': .025,
-                 'avoid_threshold': -.25, 'avoid_spread_pct': .05}
-        for name, step in steps.items():
-            lo, hi = BOUNDS[family][name]
-            out[name] = round(max(lo, min(hi, out[name] + step * direction)), 4)
-        return out
+        """Automatic deterministic search across every family parameter."""
+        ordered=list(rows);cut=max(2,int(len(ordered)*.70));training=ordered[:cut]
+        steps={'base_score':.5,'momentum_weight':.2,'trend_weight':.5,'volatility_penalty':.1,'spread_penalty':1.0,'buy_threshold':1.0,'buy_max_spread_pct':.05,'avoid_threshold':.5,'avoid_spread_pct':.1}
+        best=dict(params);best_eval=self._score_parameter_set(best,training);evaluated=1
+        for _ in range(8):
+            improved=False
+            for name,step in steps.items():
+                for direction in (-1,1):
+                    trial=dict(best);lo,hi=BOUNDS[family][name];trial[name]=round(max(lo,min(hi,float(best[name])+step*direction)),4);ev=self._score_parameter_set(trial,training);evaluated+=1
+                    if ev['objective']>best_eval['objective']+1e-12:best,best_eval,improved=trial,ev,True
+            if not improved:break
+        self._last_search_details={'algorithm':'coordinate_search_v52','evaluated':evaluated,'training_count':len(training),'validation_count':len(ordered)-len(training),'best':best_eval}
+        return best
 
     def propose(self, family, min_sample=10, min_improvement=.02):
         if family not in FAMILIES:
@@ -276,16 +292,18 @@ class ControlledLearning:
                        'candidate_return_after_costs_pct': self._strategy_return(candidate_signal, actual, cost_rate)}
             shadow.append((row['id'], a, c, details))
         metrics = self._metrics(shadow)
-        active_correct = sum(x[1] for x in shadow)
-        candidate_correct = sum(x[2] for x in shadow)
-        active_accuracy = active_correct / n
-        candidate_accuracy = candidate_correct / n
+        active_decisions = sum(x[3]['active_signal'] != 'HOLD' for x in shadow)
+        candidate_decisions = sum(x[3]['candidate_signal'] != 'HOLD' for x in shadow)
+        active_correct = sum(x[1] for x in shadow if x[3]['active_signal'] != 'HOLD')
+        candidate_correct = sum(x[2] for x in shadow if x[3]['candidate_signal'] != 'HOLD')
+        active_accuracy = self._wilson(active_correct, active_decisions)[0] if active_decisions else 0.0
+        candidate_accuracy = self._wilson(candidate_correct, candidate_decisions)[0] if candidate_decisions else 0.0
         improvement = candidate_accuracy - active_accuracy
-        low, high = self._wilson(candidate_correct, n)
+        low, high = self._wilson(candidate_correct, candidate_decisions) if candidate_decisions else (0.0, 0.0)
         policy = self.gate_policy()
         gate_results = self._gate_results(metrics, improvement, min_improvement, policy)
         status = 'PENDING' if self._gates_pass(gate_results) else 'REJECTED_GATE'
-        reason = 'Alle robusten Freigabe-Gates erfÃ¼llt; keine automatische Aktivierung' if status == 'PENDING' else 'Mindestens ein robustes Freigabe-Gate wurde nicht erfÃ¼llt'
+        reason = 'Alle robusten Freigabe-Gates erfÃƒÂ¼llt; keine automatische Aktivierung' if status == 'PENDING' else 'Mindestens ein robustes Freigabe-Gate wurde nicht erfÃƒÂ¼llt'
         with self.db.con() as c:
             cur = c.execute('INSERT INTO learning_candidates(created_at,family,status,base_version,sample_count,active_accuracy,candidate_accuracy,improvement,ci_low,ci_high,parameters_json,reason,decided_at,gate_policy_json,gate_results_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
                             (now(), family, status, active['version'], n, str(active_accuracy),
@@ -307,6 +325,9 @@ class ControlledLearning:
         return {'status': status, 'candidate_id': candidate_id, 'sample_count': n,
                 'improvement': improvement, 'ci': [low, high], 'metrics': metrics,
                 'gate_policy': policy, 'gate_results': gate_results}
+
+    def propose_all(self, automatic=True, min_sample=10, min_improvement=.02):
+        return {'status':'COMPLETED','automatic':bool(automatic),'families':{family:self.propose(family,min_sample,min_improvement) for family in FAMILIES}}
 
     def decide(self, candidate_id, action):
         rows = self.db.rows('SELECT * FROM learning_candidates WHERE id=?', (candidate_id,))
@@ -343,7 +364,7 @@ class ControlledLearning:
             with self.db.con() as c:
                 c.execute("UPDATE learning_candidates SET status='REJECTED_RECHECK',decided_at=?,gate_policy_json=?,gate_results_json=?,reason=? WHERE id=?",
                           (now(), json.dumps(policy, sort_keys=True), json.dumps(gate_results, sort_keys=True),
-                           'Freigabe bei erneuter Gate-PrÃ¼fung blockiert', candidate_id))
+                           'Freigabe bei erneuter Gate-PrÃƒÂ¼fung blockiert', candidate_id))
             self.db.audit('CONTROLLED_LEARNING_APPROVAL_BLOCKED', json.dumps({'candidate_id': candidate_id,
                           'stored_policy': stored_policy, 'current_policy': policy, 'gates': gate_results}, sort_keys=True), 'warning')
             return {'status': 'REJECTED_RECHECK', 'gate_results': gate_results}
@@ -352,7 +373,7 @@ class ControlledLearning:
             c.execute("UPDATE parameter_family_versions SET status='SUPERSEDED' WHERE family=? AND status='ACTIVE'", (proposal['family'],))
             c.execute('INSERT INTO parameter_family_versions(created_at,family,version,status,parameters_json,parent_version,source,reason) VALUES(?,?,?,?,?,?,?,?)',
                       (now(), proposal['family'], new_version, 'ACTIVE', proposal['parameters_json'],
-                       current['version'], f'APPROVED_CANDIDATE_{candidate_id}', 'Explizite Benutzerfreigabe nach erneuter Gate-PrÃ¼fung'))
+                       current['version'], f'APPROVED_CANDIDATE_{candidate_id}', 'Explizite Benutzerfreigabe nach erneuter Gate-PrÃƒÂ¼fung'))
             c.execute("UPDATE learning_candidates SET status='APPROVED',decided_at=?,gate_policy_json=?,gate_results_json=? WHERE id=?",
                       (now(), json.dumps(policy, sort_keys=True), json.dumps(gate_results, sort_keys=True), candidate_id))
         self.db.audit('CONTROLLED_LEARNING_APPROVED', json.dumps({'candidate_id': candidate_id,
@@ -369,7 +390,7 @@ class ControlledLearning:
             c.execute("UPDATE parameter_family_versions SET status='SUPERSEDED' WHERE family=? AND status='ACTIVE'", (family,))
             c.execute('INSERT INTO parameter_family_versions(created_at,family,version,status,parameters_json,parent_version,source,reason) VALUES(?,?,?,?,?,?,?,?)',
                       (now(), family, next_version, 'ACTIVE', target[0]['parameters_json'], current['version'],
-                       f'ROLLBACK_TO_{target_version}', 'VollstÃ¤ndiger kontrollierter Rollback'))
+                       f'ROLLBACK_TO_{target_version}', 'VollstÃƒÂ¤ndiger kontrollierter Rollback'))
         self.db.audit('CONTROLLED_LEARNING_ROLLBACK', json.dumps({'family': family,
                       'target_version': target_version, 'new_version': next_version}))
         return {'status': 'ROLLED_BACK', 'version': next_version}
@@ -390,9 +411,3 @@ class ControlledLearning:
         if family is None:
             return self.db.rows('SELECT * FROM parameter_family_versions ORDER BY family,version DESC')
         return self.db.rows('SELECT * FROM parameter_family_versions WHERE family=? ORDER BY version DESC', (family,))
-
-
-
-
-
-

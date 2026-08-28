@@ -15,9 +15,3 @@ def product_kind(asset_class,category=None):
 
 def canonical_product_id(asset_class,base_asset,category=None):return product_kind(asset_class,category)+':'+normalized_asset(base_asset)
 def is_traditional_stock(asset_class):return str(asset_class or '') in TRADITIONAL_ASSET_CLASSES
-
-
-
-
-
-

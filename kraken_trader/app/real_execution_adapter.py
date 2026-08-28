@@ -1,13 +1,11 @@
-class RealExecutionDisabled(RuntimeError):pass
+class RealExecutionDisabled(RuntimeError): pass
 class RealExecutionAdapter:
- enabled=False
+ def __init__(self,engine):self.engine=engine
+ @property
+ def enabled(self):return self.engine.enabled()
  def prepare(self,plan):
-  required=('symbol','action','confidence','leverage','target_exposure_eur');missing=[x for x in required if x not in plan]
-  return {'status':'REJECTED' if missing else 'PREPARED_ONLY','missing':missing,'real_execution':False,'plan':plan}
- def execute(self,plan):raise RealExecutionDisabled('Real execution is hard disabled')
-
-
-
-
-
-
+  missing=[x for x in ('symbol','action','volume') if x not in plan]
+  return {'status':'REJECTED' if missing else 'PREPARED','missing':missing,'real_execution':False,'plan':dict(plan)}
+ def execute(self,plan,approval_token,validate_only=True):
+  if not validate_only and not plan.get('explicit_live_confirmation'):raise RealExecutionDisabled('Explizite Live-Bestätigung fehlt')
+  return self.engine.submit(plan['symbol'],plan['action'],plan['volume'],plan.get('order_type','limit'),plan.get('limit_price'),plan.get('client_order_id'),approval_token,validate_only)

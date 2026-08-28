@@ -32,9 +32,3 @@ def score_features(features,params):
  score=params['base_score']+max(-25,min(25,momentum*params['momentum_weight']))+max(-18,min(18,trend*params['trend_weight']))-max(0,min(22,vol*params['volatility_penalty']))-max(0,min(30,spread*params['spread_penalty']))+news
  score=max(0,min(100,score));buy=score>=params['buy_threshold'] and momentum>0 and trend>0 and spread<=params['buy_max_spread_pct'];avoid=score<params['avoid_threshold'] or spread>params['avoid_spread_pct']
  return score,'BUY' if buy else ('AVOID' if avoid else 'HOLD')
-
-
-
-
-
-

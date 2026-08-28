@@ -24,9 +24,3 @@ class MarketHistory:
    c.execute('INSERT INTO history_imports(created_at,source,symbol,interval_min,rows_seen,rows_saved,status,details_json) VALUES(?,?,?,?,?,?,?,?)',(now(),source,symbol,int(interval_min),seen,saved,'VALID' if saved else 'ERROR',json.dumps({'format':'Kraken OHLCVT CSV'})))
   return {'status':'VALID' if saved else 'ERROR','rows_seen':seen,'rows_saved':saved}
  def diagnostics(self):return self.db.rows('SELECT * FROM market_data_diagnostics ORDER BY asset_class,symbol')
-
-
-
-
-
-
