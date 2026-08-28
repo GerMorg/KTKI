@@ -189,3 +189,6 @@ Die Übersicht zeigt alle aktiven Familienversionen. Detaildaten werden ausschli
 
 ## 2026-08-28 D046 - Lernfamilienstatus in der Übersicht
 Die Familienübersicht zeigt nur kompakte, abgeleitete Statuswerte. Detaildaten und Aktionen bleiben auf die bewusst ausgewählte gültige Familie beschränkt.
+
+## 2026-08-28 D047 - Nachrichtenvergleich bleibt datenbasiert
+Die Mindeststichprobe wird nicht abgesenkt und es werden keine synthetischen Ergebnisse erzeugt. Stattdessen zeigt die GUI die Datenbereitschaft und ermöglicht die vorgelagerte AI-Auswertung.

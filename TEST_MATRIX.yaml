@@ -300,3 +300,10 @@ release_0_1_0_dev_46:
     - {id: T-D46-002, expectation: Offene Kandidaten und letzter Status werden korrekt aggregiert, status: passed}
     - {id: T-D46-003, expectation: Unbekannte Familie fällt kontrolliert auf Forex zurück, status: passed}
     - {id: T-D46-004, expectation: GUI zeigt offene und letzte Kandidaten, status: passed}
+
+release_0_1_0_dev_47:
+  automated:
+    - {id: T-D47-001, expectation: Kontrolliertes Lernen importiert zentrale Familienquelle, status: passed}
+    - {id: T-D47-002, expectation: Leere Nachrichtendatenbank liefert konkrete Diagnose, status: passed}
+    - {id: T-D47-003, expectation: Unzureichende Stichprobe enthält vollständigen Datenstatus, status: passed}
+    - {id: T-D47-004, expectation: Zehn gültige AI-Auswertungen machen Vergleich bereit, status: passed}

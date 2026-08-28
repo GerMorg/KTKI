@@ -97,10 +97,41 @@ class NewsLearning:
         if result.get('priced_in') is True: raw *= 1 - params['priced_in_penalty']
         return max(-1.0, min(1.0, raw * params['impact_weight']))
 
+    def data_status(self, required=10):
+        """Return transparent, non-trading diagnostics for the comparison sample."""
+        def count(sql):
+            try:
+                rows = self.db.rows(sql)
+            except Exception:
+                return 0
+            return int(rows[0]['n']) if rows else 0
+        news_items = count('SELECT COUNT(*) AS n FROM news_items')
+        ai_total = count('SELECT COUNT(*) AS n FROM external_news_ai_results')
+        ai_valid = count("SELECT COUNT(*) AS n FROM external_news_ai_results WHERE status='VALID'")
+        ai_invalid = count("SELECT COUNT(*) AS n FROM external_news_ai_results WHERE status!='VALID'")
+        sample_count = len(self._samples())
+        missing = max(0, int(required) - sample_count)
+        if news_items == 0:
+            reason = 'NO_NEWS_ITEMS'
+        elif ai_valid == 0:
+            reason = 'NO_VALID_AI_RESULTS'
+        elif missing:
+            reason = 'INSUFFICIENT_VALID_AI_RESULTS'
+        else:
+            reason = 'READY'
+        return {'status': reason, 'news_items': news_items, 'ai_total': ai_total,
+                'ai_valid': ai_valid, 'ai_invalid': ai_invalid,
+                'ai_unprocessed': max(0, news_items - ai_total),
+                'sample_count': sample_count, 'required': int(required),
+                'missing': missing, 'ready': missing == 0}
+
     def _samples(self):
         cols = {x['name'] for x in self.db.rows('PRAGMA table_info(news_items)')}
         time_expr = "COALESCE(n.published_at,n.fetched_at,a.created_at)" if {'published_at','fetched_at'}.issubset(cols) else 'a.created_at'
-        rows = self.db.rows(f"SELECT n.id,n.title,n.summary,s.source_class,a.result_json,{time_expr} AS observed_at FROM news_items n JOIN news_sources s ON s.name=n.source_name JOIN external_news_ai_results a ON a.news_id=n.id WHERE a.status='VALID' ORDER BY observed_at,n.id")
+        try:
+            rows = self.db.rows(f"SELECT n.id,n.title,n.summary,s.source_class,a.result_json,{time_expr} AS observed_at FROM news_items n JOIN news_sources s ON s.name=n.source_name JOIN external_news_ai_results a ON a.news_id=n.id WHERE a.status='VALID' ORDER BY observed_at,n.id")
+        except Exception:
+            return []
         out=[]
         for row in rows:
             try: teacher=json.loads(row.pop('result_json') or '{}')
@@ -177,7 +208,11 @@ class NewsLearning:
 
     def propose(self, min_sample=10, min_improvement=.01, automatic=False, validation_ratio=.30, minimum_validation=3, walk_forward_windows=3, required_stable_windows=2):
         rows=self._samples();n=len(rows)
-        if n < min_sample:return {'status':'INSUFFICIENT_DATA','sample_count':n,'required':min_sample}
+        if n < min_sample:
+            diagnostic = self.data_status(min_sample)
+            return {'status': 'INSUFFICIENT_DATA', 'sample_count': n,
+                    'required': min_sample, 'missing': diagnostic['missing'],
+                    'reason': diagnostic['status'], 'data_status': diagnostic}
         training,validation,policy=self._split(rows,validation_ratio,minimum_validation)
         if len(training)<2 or len(validation)<minimum_validation:
             return {'status':'INSUFFICIENT_VALIDATION','sample_count':n,'training_count':len(training),'validation_count':len(validation)}

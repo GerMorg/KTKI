@@ -129,3 +129,9 @@ Die Lernseite zeigte nur Forex als aktuelle Version und mischte Kandidaten, Hist
 
 ## 2026-08-28 I048 - gelöst in 0.1.0-dev.46
 Die Familienübersicht zeigte Versionen, aber nicht offene Freigaben oder den letzten Kandidatenstatus. Außerdem war ein unbekannter Familienparameter nicht explizit abgesichert. Dev.46 ergänzt Übersicht und Fail-closed-Auswahl.
+
+## 2026-08-28 I049 - gelöst in 0.1.0-dev.47
+Die Seite Kontrolliertes Lernen referenzierte FAMILIES ohne Import und konnte daher nicht geöffnet werden. Dev.47 importiert die zentrale Familienquelle.
+
+## 2026-08-28 I050 - gelöst in 0.1.0-dev.47
+Nachrichten-Lernen meldete nur INSUFFICIENT_DATA ohne Datenpfad. Dev.47 zeigt Nachrichtenzahl, AI-Status, fehlende Stichprobe und bietet die AI-Auswertung als getrennte Aktion an.

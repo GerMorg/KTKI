@@ -461,3 +461,9 @@ release_0_1_0_dev_46:
   learning_family_overview: [active_version, pending_count, latest_candidate_status]
   unknown_family_fallback: forex
   real_trading: hard_disabled
+
+release_0_1_0_dev_47:
+  controlled_learning_route_repaired: true
+  news_learning_data_diagnostics: true
+  minimum_sample_unchanged: 10
+  real_trading: hard_disabled

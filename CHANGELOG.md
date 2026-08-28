@@ -1,4 +1,10 @@
 # Changelog
+## 0.1.0-dev.47
+- Laufzeitfehler der Seite Kontrolliertes Lernen durch fehlenden FAMILIES-Import behoben
+- Nachrichten-Lernen zeigt Datenbestand, gültige, ungültige und unverarbeitete AI-Auswertungen
+- Vergleich bleibt bis zur erforderlichen gültigen Stichprobe gesperrt und erklärt den konkreten Grund
+- separate Aktion „AI auswerten“ ergänzt; keine automatische Parameteraktivierung
+- neue Regressions- und Diagnosetests; Realhandel bleibt hart deaktiviert
 ## 0.1.0-dev.46
 - Lernfamilienübersicht zeigt aktive Version, offene Kandidaten und letzten Kandidatenstatus je Familie
 - Familiennavigation bleibt direkt auswählbar und Detaildaten bleiben gefiltert

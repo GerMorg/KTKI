@@ -125,3 +125,6 @@ Vollständige Lernversionsübersicht mit familienbezogener Navigation und konsis
 
 ## 0.1.0-dev.46 - 2026-08-28
 Lernfamilien-Dashboard mit aktiver Version, offenen Kandidaten, letztem Status und abgesicherter Familienauswahl.
+
+## 0.1.0-dev.47 - 2026-08-28
+Stabilitätsrelease für kontrolliertes Lernen und Nachrichten-Lernen mit transparenten Datenstatus- und Wiederherstellungswegen.

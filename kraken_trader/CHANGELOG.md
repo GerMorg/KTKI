@@ -1,4 +1,7 @@
 # Changelog
+## 0.1.0-dev.47
+- Kontrolliertes Lernen repariert und Nachrichten-Lernen mit transparenter Datenbereitschaft stabilisiert
+- Realhandel bleibt hart deaktiviert
 ## 0.1.0-dev.46
 - Statusübersicht und robuste Familienauswahl im kontrollierten Lernen ergänzt
 - Realhandel bleibt hart deaktiviert

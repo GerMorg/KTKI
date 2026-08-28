@@ -193,3 +193,6 @@ Kontrolliertes Lernen zeigt Forex, xStocks und Krypto Spot gemeinsam. Auswahl ei
 
 ## Dev.46
 Die Lernseite zeigt je Familie aktive Version, offene Kandidaten und letzten Kandidatenstatus. Unbekannte Familienwerte werden fail-closed auf Forex normalisiert. Nächster Hauptschritt bleibt die mehrfenstrige Walk-forward-Stabilität.
+
+## Dev.47
+Kontrolliertes Lernen ist durch den fehlenden FAMILIES-Import wieder erreichbar. Nachrichten-Lernen unterscheidet fehlende Nachrichten, fehlende gültige AI-Ergebnisse und eine zu kleine Stichprobe. Die Mindeststichprobe bleibt unverändert und fail-closed.

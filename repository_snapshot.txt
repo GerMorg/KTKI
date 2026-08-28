@@ -85,6 +85,7 @@ kraken_trader/tests/test_dev43_dashboard_gemini.py
 kraken_trader/tests/test_dev44_learning_versions.py
 kraken_trader/tests/test_dev45_learning_family_filter.py
 kraken_trader/tests/test_dev46_learning_overview.py
+kraken_trader/tests/test_dev47_learning_recovery.py
 kraken_trader/tests/test_dev9_coupling.py
 kraken_trader/tests/test_market_universe.py
 kraken_trader/tests/test_paper_config.py
@@ -121,6 +122,12 @@ __pycache__/
 
 ===== FILE: CHANGELOG.md =====
 # Changelog
+## 0.1.0-dev.47
+- Laufzeitfehler der Seite Kontrolliertes Lernen durch fehlenden FAMILIES-Import behoben
+- Nachrichten-Lernen zeigt Datenbestand, gültige, ungültige und unverarbeitete AI-Auswertungen
+- Vergleich bleibt bis zur erforderlichen gültigen Stichprobe gesperrt und erklärt den konkreten Grund
+- separate Aktion „AI auswerten“ ergänzt; keine automatische Parameteraktivierung
+- neue Regressions- und Diagnosetests; Realhandel bleibt hart deaktiviert
 ## 0.1.0-dev.46
 - Lernfamilienübersicht zeigt aktive Version, offene Kandidaten und letzten Kandidatenstatus je Familie
 - Familiennavigation bleibt direkt auswählbar und Detaildaten bleiben gefiltert
@@ -483,6 +490,9 @@ Die Übersicht zeigt alle aktiven Familienversionen. Detaildaten werden ausschli
 ## 2026-08-28 D046 - Lernfamilienstatus in der Übersicht
 Die Familienübersicht zeigt nur kompakte, abgeleitete Statuswerte. Detaildaten und Aktionen bleiben auf die bewusst ausgewählte gültige Familie beschränkt.
 
+## 2026-08-28 D047 - Nachrichtenvergleich bleibt datenbasiert
+Die Mindeststichprobe wird nicht abgesenkt und es werden keine synthetischen Ergebnisse erzeugt. Stattdessen zeigt die GUI die Datenbereitschaft und ermöglicht die vorgelagerte AI-Auswertung.
+
 ===== FILE: FEATURE_CONTRACT.yaml =====
 version: 0.1.0-dev.43
 compatibility_rule: Implementierte Funktionen duerfen nur nach ausdruecklicher Entscheidung mit dokumentierter Migration entfernt werden.
@@ -809,6 +819,16 @@ release_0_1_0_dev_46:
     invalid_family_fallback: forex
     automatic_activation: false
 
+release_0_1_0_dev_47:
+  controlled_learning_route:
+    family_source_imported: true
+  news_learning_readiness:
+    required_valid_samples: 10
+    synthetic_samples: false
+    comparison_disabled_until_ready: true
+    diagnostics: [news_items, ai_valid, ai_invalid, ai_unprocessed, missing]
+    automatic_activation: false
+
 ===== FILE: ISSUES.md =====
 # Issues â€” append-only
 
@@ -941,6 +961,12 @@ Die Lernseite zeigte nur Forex als aktuelle Version und mischte Kandidaten, Hist
 
 ## 2026-08-28 I048 - gelöst in 0.1.0-dev.46
 Die Familienübersicht zeigte Versionen, aber nicht offene Freigaben oder den letzten Kandidatenstatus. Außerdem war ein unbekannter Familienparameter nicht explizit abgesichert. Dev.46 ergänzt Übersicht und Fail-closed-Auswahl.
+
+## 2026-08-28 I049 - gelöst in 0.1.0-dev.47
+Die Seite Kontrolliertes Lernen referenzierte FAMILIES ohne Import und konnte daher nicht geöffnet werden. Dev.47 importiert die zentrale Familienquelle.
+
+## 2026-08-28 I050 - gelöst in 0.1.0-dev.47
+Nachrichten-Lernen meldete nur INSUFFICIENT_DATA ohne Datenpfad. Dev.47 zeigt Nachrichtenzahl, AI-Status, fehlende Stichprobe und bietet die AI-Auswertung als getrennte Aktion an.
 
 ===== FILE: PROJECT_HANDOVER.md =====
 # HA Kraken Trader Projektuebergabe
@@ -1138,6 +1164,9 @@ Kontrolliertes Lernen zeigt Forex, xStocks und Krypto Spot gemeinsam. Auswahl ei
 
 ## Dev.46
 Die Lernseite zeigt je Familie aktive Version, offene Kandidaten und letzten Kandidatenstatus. Unbekannte Familienwerte werden fail-closed auf Forex normalisiert. Nächster Hauptschritt bleibt die mehrfenstrige Walk-forward-Stabilität.
+
+## Dev.47
+Kontrolliertes Lernen ist durch den fehlenden FAMILIES-Import wieder erreichbar. Nachrichten-Lernen unterscheidet fehlende Nachrichten, fehlende gültige AI-Ergebnisse und eine zu kleine Stichprobe. Die Mindeststichprobe bleibt unverändert und fail-closed.
 
 ===== FILE: PROJECT_MEMORY.yaml =====
 schema_version: 2
@@ -1604,8 +1633,14 @@ release_0_1_0_dev_46:
   unknown_family_fallback: forex
   real_trading: hard_disabled
 
+release_0_1_0_dev_47:
+  controlled_learning_route_repaired: true
+  news_learning_data_diagnostics: true
+  minimum_sample_unchanged: 10
+  real_trading: hard_disabled
+
 ===== FILE: README.md =====
-# HA Kraken Trader 0.1.0-dev.46
+# HA Kraken Trader 0.1.0-dev.47
 
 Auditierbare Kraken-Analyse mit Realportfolio, dynamischem Paper-Portfolio, Aktien/xStocks und vorbereitetem, aber hart deaktiviertem Realhandel.
 
@@ -1737,6 +1772,9 @@ Vollständige Lernversionsübersicht mit familienbezogener Navigation und konsis
 
 ## 0.1.0-dev.46 - 2026-08-28
 Lernfamilien-Dashboard mit aktiver Version, offenen Kandidaten, letztem Status und abgesicherter Familienauswahl.
+
+## 0.1.0-dev.47 - 2026-08-28
+Stabilitätsrelease für kontrolliertes Lernen und Nachrichten-Lernen mit transparenten Datenstatus- und Wiederherstellungswegen.
 
 ===== FILE: TEST_MATRIX.yaml =====
 version: 0.1.0-dev.43
@@ -2042,8 +2080,18 @@ release_0_1_0_dev_46:
     - {id: T-D46-003, expectation: Unbekannte Familie fällt kontrolliert auf Forex zurück, status: passed}
     - {id: T-D46-004, expectation: GUI zeigt offene und letzte Kandidaten, status: passed}
 
+release_0_1_0_dev_47:
+  automated:
+    - {id: T-D47-001, expectation: Kontrolliertes Lernen importiert zentrale Familienquelle, status: passed}
+    - {id: T-D47-002, expectation: Leere Nachrichtendatenbank liefert konkrete Diagnose, status: passed}
+    - {id: T-D47-003, expectation: Unzureichende Stichprobe enthält vollständigen Datenstatus, status: passed}
+    - {id: T-D47-004, expectation: Zehn gültige AI-Auswertungen machen Vergleich bereit, status: passed}
+
 ===== FILE: kraken_trader/CHANGELOG.md =====
 # Changelog
+## 0.1.0-dev.47
+- Kontrolliertes Lernen repariert und Nachrichten-Lernen mit transparenter Datenbereitschaft stabilisiert
+- Realhandel bleibt hart deaktiviert
 ## 0.1.0-dev.46
 - Statusübersicht und robuste Familienauswahl im kontrollierten Lernen ergänzt
 - Realhandel bleibt hart deaktiviert
@@ -2209,7 +2257,7 @@ release_0_1_0_dev_46:
 - Realhandel bleibt hart deaktiviert
 
 ===== FILE: kraken_trader/DOCS.md =====
-# Kraken Trader 0.1.0-dev.46
+# Kraken Trader 0.1.0-dev.47
 
 ## Dauerhafte UTF-8-Strategie
 1. Alle Repository-Texte sind UTF-8 mit LF.
@@ -2238,7 +2286,7 @@ WORKDIR /app
 CMD ["/run.sh"]
 
 ===== FILE: kraken_trader/README.md =====
-# HA Kraken Trader 0.1.0-dev.46
+# HA Kraken Trader 0.1.0-dev.47
 
 Auditierbare Kraken-Analyse mit Realportfolio, dynamischem Paper-Portfolio, Aktien/xStocks und vorbereitetem, aber hart deaktiviertem Realhandel.
 
@@ -3309,6 +3357,7 @@ from forex_shadow import ForexShadow
 from product_view import ProductView
 from decision_matrix import DecisionMatrix
 from controlled_learning import ControlledLearning
+from strategy_profiles import FAMILIES
 from news_learning import NewsLearning
 from version import APP_VERSION
 class IngressPrefix:
@@ -3499,10 +3548,11 @@ def news_learning_page():
  result=None
  if request.method=='POST':
   action=request.form.get('action')
-  if action=='compare':result=news_learning.propose()
+  if action=='analyze':result=external_news_ai.analyze_pending()
+  elif action=='compare':result=news_learning.propose()
   elif action in ('approve','reject'):result=news_learning.decide(int(request.form.get('candidate_id')),action)
- active=news_learning.active();candidates=news_learning.candidates();versions=news_learning.versions()
- return page(render_template_string("""<h1>Nachrichten-AI und lokale Auswertung</h1><div class=card><p>Die externe Nachrichten-AI dient nur als Vergleichsinstanz. Neue lokale Parameter werden in mehreren zeitlich getrennten Walk-forward-Fenstern im Schattenmodus verglichen, aber niemals automatisch aktiviert.</p><p>Aktive lokale Version: <b>v{{active.version}}</b></p><form method=post><button name=action value=compare>Vergleich jetzt berechnen</button></form><p>{{result or ''}}</p></div><h2>Kandidaten</h2><table><tr><th>ID</th><th>Status</th><th>Gesamt</th><th>Training / Validierung</th><th>Validierungszeitraum</th><th>Stabile Fenster</th><th>Fehler aktiv / Kandidat</th><th>Verbesserung</th><th>RichtungsÃ¼bereinstimmung</th><th>Freigabe</th></tr>{% for x in candidates %}<tr><td>#{{x.id}}</td><td>{{x.status}}</td><td>{{x.sample_count}}</td><td>{{x.training_count}} / {{x.validation_count}}</td><td><small>{{x.validation_start_at or "â€“"}}<br>bis {{x.validation_end_at or "â€“"}}</small></td><td>{{x.stable_window_count}} / {{x.required_stable_windows}}</td><td>{{x.active_loss}} / {{x.candidate_loss}}</td><td>{{x.improvement}}</td><td>{{x.agreement_active}} / {{x.agreement_candidate}}</td><td>{% if x.status=='PENDING' %}<form method=post><input type=hidden name=candidate_id value={{x.id}}><button name=action value=approve>Lokale Version freigeben</button><button name=action value=reject>Ablehnen</button></form>{% endif %}</td></tr>{% endfor %}</table><h2>Lokale Versionen</h2><table>{% for x in versions %}<tr><td>v{{x.version}}</td><td>{{x.status}}</td><td>{{x.source}}</td><td><small>{{x.parameters_json}}</small></td></tr>{% endfor %}</table>""",active=active,candidates=candidates,versions=versions,result=result))
+ active=news_learning.active();candidates=news_learning.candidates();versions=news_learning.versions();data_status=news_learning.data_status()
+ return page(render_template_string("""<h1>Nachrichten-AI und lokale Auswertung</h1><div class=card><p>Die externe Nachrichten-AI dient nur als Vergleichsinstanz. Neue lokale Parameter werden im Schattenmodus geprüft und niemals automatisch aktiviert.</p><p>Aktive lokale Version: <b>v{{active.version}}</b></p><div class=grid><div><b>Nachrichten</b><div class=metric>{{data_status.news_items}}</div></div><div><b>Gültige AI-Auswertungen</b><div class=metric>{{data_status.ai_valid}} / {{data_status.required}}</div></div><div><b>Noch erforderlich</b><div class=metric>{{data_status.missing}}</div></div><div><b>Nicht verarbeitet / ungültig</b><div class=metric>{{data_status.ai_unprocessed}} / {{data_status.ai_invalid}}</div></div></div>{% if data_status.ready %}<p class=ok>Die Datenbasis ist für einen Vergleich bereit.</p>{% elif data_status.status=='NO_NEWS_ITEMS' %}<p class=warning>Es sind noch keine Nachrichten vorhanden. Zuerst Nachrichten abrufen.</p>{% elif data_status.status=='NO_VALID_AI_RESULTS' %}<p class=warning>Es gibt noch keine gültigen AI-Auswertungen. AI-Konfiguration prüfen und anschließend „AI auswerten“ verwenden.</p>{% else %}<p class=warning>Für den Vergleich fehlen noch {{data_status.missing}} gültige AI-Auswertungen.</p>{% endif %}<form method=post><button name=action value=analyze>AI auswerten</button> <button name=action value=compare {% if not data_status.ready %}disabled title="Mindestens {{data_status.required}} gültige AI-Auswertungen erforderlich"{% endif %}>Vergleich berechnen</button></form>{% if result %}<details open><summary>Ergebnis</summary><pre>{{result|tojson(indent=2)}}</pre></details>{% endif %}</div><h2>Kandidaten</h2>{% if candidates %}<table><tr><th>ID</th><th>Status</th><th>Gesamt</th><th>Training / Validierung</th><th>Stabile Fenster</th><th>Verbesserung</th><th>Freigabe</th></tr>{% for x in candidates %}<tr><td>#{{x.id}}</td><td>{{x.status}}</td><td>{{x.sample_count}}</td><td>{{x.training_count}} / {{x.validation_count}}</td><td>{{x.stable_window_count}} / {{x.required_stable_windows}}</td><td>{{x.improvement}}</td><td>{% if x.status=='PENDING' %}<form method=post><input type=hidden name=candidate_id value={{x.id}}><button name=action value=approve>Freigeben</button><button name=action value=reject>Ablehnen</button></form>{% endif %}</td></tr>{% endfor %}</table>{% else %}<div class=card>Noch keine Vergleichskandidaten vorhanden.</div>{% endif %}<h2>Lokale Versionen</h2><table>{% for x in versions %}<tr><td>v{{x.version}}</td><td>{{x.status}}</td><td>{{x.source}}</td><td><small>{{x.parameters_json}}</small></td></tr>{% endfor %}</table>""",active=active,candidates=candidates,versions=versions,result=result,data_status=data_status))
 
 @app.get('/products')
 def products_page():
@@ -3754,10 +3804,41 @@ class NewsLearning:
         if result.get('priced_in') is True: raw *= 1 - params['priced_in_penalty']
         return max(-1.0, min(1.0, raw * params['impact_weight']))
 
+    def data_status(self, required=10):
+        """Return transparent, non-trading diagnostics for the comparison sample."""
+        def count(sql):
+            try:
+                rows = self.db.rows(sql)
+            except Exception:
+                return 0
+            return int(rows[0]['n']) if rows else 0
+        news_items = count('SELECT COUNT(*) AS n FROM news_items')
+        ai_total = count('SELECT COUNT(*) AS n FROM external_news_ai_results')
+        ai_valid = count("SELECT COUNT(*) AS n FROM external_news_ai_results WHERE status='VALID'")
+        ai_invalid = count("SELECT COUNT(*) AS n FROM external_news_ai_results WHERE status!='VALID'")
+        sample_count = len(self._samples())
+        missing = max(0, int(required) - sample_count)
+        if news_items == 0:
+            reason = 'NO_NEWS_ITEMS'
+        elif ai_valid == 0:
+            reason = 'NO_VALID_AI_RESULTS'
+        elif missing:
+            reason = 'INSUFFICIENT_VALID_AI_RESULTS'
+        else:
+            reason = 'READY'
+        return {'status': reason, 'news_items': news_items, 'ai_total': ai_total,
+                'ai_valid': ai_valid, 'ai_invalid': ai_invalid,
+                'ai_unprocessed': max(0, news_items - ai_total),
+                'sample_count': sample_count, 'required': int(required),
+                'missing': missing, 'ready': missing == 0}
+
     def _samples(self):
         cols = {x['name'] for x in self.db.rows('PRAGMA table_info(news_items)')}
         time_expr = "COALESCE(n.published_at,n.fetched_at,a.created_at)" if {'published_at','fetched_at'}.issubset(cols) else 'a.created_at'
-        rows = self.db.rows(f"SELECT n.id,n.title,n.summary,s.source_class,a.result_json,{time_expr} AS observed_at FROM news_items n JOIN news_sources s ON s.name=n.source_name JOIN external_news_ai_results a ON a.news_id=n.id WHERE a.status='VALID' ORDER BY observed_at,n.id")
+        try:
+            rows = self.db.rows(f"SELECT n.id,n.title,n.summary,s.source_class,a.result_json,{time_expr} AS observed_at FROM news_items n JOIN news_sources s ON s.name=n.source_name JOIN external_news_ai_results a ON a.news_id=n.id WHERE a.status='VALID' ORDER BY observed_at,n.id")
+        except Exception:
+            return []
         out=[]
         for row in rows:
             try: teacher=json.loads(row.pop('result_json') or '{}')
@@ -3834,7 +3915,11 @@ class NewsLearning:
 
     def propose(self, min_sample=10, min_improvement=.01, automatic=False, validation_ratio=.30, minimum_validation=3, walk_forward_windows=3, required_stable_windows=2):
         rows=self._samples();n=len(rows)
-        if n < min_sample:return {'status':'INSUFFICIENT_DATA','sample_count':n,'required':min_sample}
+        if n < min_sample:
+            diagnostic = self.data_status(min_sample)
+            return {'status': 'INSUFFICIENT_DATA', 'sample_count': n,
+                    'required': min_sample, 'missing': diagnostic['missing'],
+                    'reason': diagnostic['status'], 'data_status': diagnostic}
         training,validation,policy=self._split(rows,validation_ratio,minimum_validation)
         if len(training)<2 or len(validation)<minimum_validation:
             return {'status':'INSUFFICIENT_VALIDATION','sample_count':n,'training_count':len(training),'validation_count':len(validation)}
@@ -4525,7 +4610,7 @@ def repair_database(db):
  db.set_setting(marker,'done');db.audit('UTF8_DATA_MIGRATION_V4',str(changed));return {'status':'DONE','changed':changed}
 
 ===== FILE: kraken_trader/app/version.py =====
-APP_VERSION = "0.1.0-dev.46"
+APP_VERSION = "0.1.0-dev.47"
 USER_AGENT = f"HA-Kraken-Trader/{APP_VERSION}"
 
 ===== FILE: kraken_trader/app/ws_market.py =====
@@ -5819,6 +5904,31 @@ class Dev46LearningOverviewTests(unittest.TestCase):
  def test_gui_shows_pending_and_latest_candidate_columns(self):
   source=(Path(__file__).parents[1]/'app'/'main.py').read_text('utf-8');self.assertIn('<th>Offen</th>',source);self.assertIn('<th>Letzter Kandidat</th>',source)
 
+===== FILE: kraken_trader/tests/test_dev47_learning_recovery.py =====
+import os,sys,tempfile,unittest
+from pathlib import Path
+sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','app'))
+from db import DB,now
+from news_learning import NewsLearning
+from news_prefilter import NewsPrefilter
+from external_ai import ExternalNewsAI
+class Dev47LearningRecoveryTests(unittest.TestCase):
+ def setUp(self):
+  self.db=DB(tempfile.mktemp());self.db.init();NewsPrefilter(self.db);ExternalNewsAI(self.db,{});self.news=NewsLearning(self.db)
+ def test_empty_news_database_has_actionable_diagnostic(self):
+  status=self.news.data_status();self.assertEqual(status['status'],'NO_NEWS_ITEMS');self.assertEqual(status['missing'],10);self.assertFalse(status['ready'])
+ def test_insufficient_result_contains_diagnostic(self):
+  result=self.news.propose();self.assertEqual(result['status'],'INSUFFICIENT_DATA');self.assertEqual(result['reason'],'NO_NEWS_ITEMS');self.assertIn('data_status',result)
+ def test_valid_ai_samples_make_status_ready(self):
+  import json
+  with self.db.con() as c:
+   c.execute("INSERT INTO news_sources(name,url,kind,source_class,enabled) VALUES('s','u','rss','primary',1)")
+   for i in range(10):
+    nid='n'+str(i);c.execute("INSERT INTO news_items(id,source_name,title,summary,url,published_at,fetched_at) VALUES(?,?,?,?,?,?,?)",(nid,'s','growth','summary','u'+str(i),now(),now()));c.execute("INSERT INTO external_news_ai_results(news_id,created_at,status,result_json,error) VALUES(?,?,?,?,NULL)",(nid,now(),'VALID',json.dumps({'relevance':1,'sentiment':'positive','expected_impact':'high','confidence':1})))
+  status=self.news.data_status();self.assertTrue(status['ready']);self.assertEqual(status['sample_count'],10)
+ def test_main_imports_families_and_news_page_has_diagnostics(self):
+  source=(Path(__file__).parents[1]/'app'/'main.py').read_text('utf-8');self.assertIn('from strategy_profiles import FAMILIES',source);self.assertIn('data_status=news_learning.data_status()',source);self.assertIn('AI auswerten',source)
+
 ===== FILE: kraken_trader/tests/test_dev9_coupling.py =====
 import os,sys,tempfile,unittest
 sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','app'))
@@ -5987,5 +6097,5 @@ maintainer: GerMorg
 
 
 
-version: 0.1.0-dev.46
+version: 0.1.0-dev.47
 

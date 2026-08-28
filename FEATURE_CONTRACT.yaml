@@ -322,3 +322,13 @@ release_0_1_0_dev_46:
     allowed_families: [forex, xstocks, crypto_spot]
     invalid_family_fallback: forex
     automatic_activation: false
+
+release_0_1_0_dev_47:
+  controlled_learning_route:
+    family_source_imported: true
+  news_learning_readiness:
+    required_valid_samples: 10
+    synthetic_samples: false
+    comparison_disabled_until_ready: true
+    diagnostics: [news_items, ai_valid, ai_invalid, ai_unprocessed, missing]
+    automatic_activation: false
