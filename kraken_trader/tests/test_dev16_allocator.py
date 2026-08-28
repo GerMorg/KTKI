@@ -14,3 +14,4 @@ class Tests(unittest.TestCase):
   self.db.set_setting('paper_leverage_enabled','true');self.db.set_setting('paper_max_leverage','3');p=PortfolioAllocator(self.db).plans(1000)[0];self.assertIn(p['leverage'],(1,2,3));self.assertLessEqual(p['leverage'],3)
  def test_real_execution_is_disabled(self):
   with self.assertRaises(RealExecutionDisabled):RealExecutionAdapter().execute({'symbol':'BTC/EUR','action':'BUY','amount':'1'})
+

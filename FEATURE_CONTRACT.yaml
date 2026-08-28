@@ -332,3 +332,11 @@ release_0_1_0_dev_47:
     comparison_disabled_until_ready: true
     diagnostics: [news_items, ai_valid, ai_invalid, ai_unprocessed, missing]
     automatic_activation: false
+
+release_0_1_0_dev_48:
+  repository_utf8: {required: true, status: enforced}
+  synchronized_runtime_metadata: {required: true, status: implemented}
+  controlled_learning_active_version_label: {required: true, status: implemented}
+  public_websocket_usd_quotes: {required: true, status: implemented}
+  automatic_activation: {required: false, status: prohibited}
+  real_trading: {required: false, status: hard_disabled}

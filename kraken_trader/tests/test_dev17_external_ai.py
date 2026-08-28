@@ -13,3 +13,4 @@ class T(unittest.TestCase):
  def test_invalid_fails_closed(self):
   a=ExternalNewsAI(self.db,{'ai_news_enabled':True,'ai_api_key':'secret','ai_model':'test'},lambda p:{'choices':[{'message':{'content':'{}'}}]});self.assertEqual(a.analyze_pending()['failed'],1)
  def test_disabled_without_key(self):self.assertEqual(ExternalNewsAI(self.db,{'ai_news_enabled':True}).analyze_pending()['status'],'DISABLED')
+

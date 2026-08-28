@@ -2,7 +2,7 @@ import json
 from db import now
 from product_identity import canonical_product_id,is_traditional_stock
 FIAT={'EUR','USD','GBP','CHF','JPY','CAD','AUD','NZD'}
-CATEGORIES={'crypto_spot':('KryptowÃ¤hrungen (Spot)','currency'),'xstocks':('xStocks / tokenisierte Aktien und ETFs','tokenized_asset'),'forex':('Devisen (Forex)','forex'),'leveraged_spot':('HebelfÃ¤hige Spot-Produkte','derived')}
+CATEGORIES={'crypto_spot':('Kryptowährungen (Spot)','currency'),'xstocks':('xStocks / tokenisierte Aktien und ETFs','tokenized_asset'),'forex':('Devisen (Forex)','forex'),'leveraged_spot':('Hebelfähige Spot-Produkte','derived')}
 def classify(pair,ac):
  if ac=='tokenized_asset':return 'xstocks'
  if ac=='forex' or (str(pair.get('base')) in FIAT and str(pair.get('quote')) in FIAT):return 'forex'
@@ -64,3 +64,4 @@ class MarketUniverse:
   if not enabled:return []
   marks=','.join('?'*len(enabled));rows=self.db.rows(f"SELECT DISTINCT u.symbol FROM market_universe u JOIN market_category_members m ON m.symbol=u.symbol AND m.asset_class=u.asset_class WHERE m.category IN ({marks}) AND LOWER(COALESCE(u.status,'online')) IN ('online','post_only','limit_only')",list(enabled));symbols=[x['symbol'] for x in rows]
   return sorted(x for x in set(symbols) if not quote or x.rsplit('/',1)[-1]==quote)
+

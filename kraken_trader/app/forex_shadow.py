@@ -21,7 +21,7 @@ class ForexShadow:
    score=50+max(-18,min(18,hvalue*(4 if horizon=='short' else 8)))+max(-15,min(15,relative*3))+risk_regime*4-max(0,min(16,vol))-max(0,min(22,spread*28))+min(8,news_relevance)
    score=max(0,min(100,score));signal='BUY' if score>=65 and spread<=.7 else ('AVOID' if score<35 or spread>1.3 else 'HOLD');quality='VALID' if active.get('quality')=='VALID' and spread<999 else 'INCOMPLETE'
    features={'schema_version':1,'base_currency':base,'quote_currency':quote,'relative_strength':relative,'base_strength':bs,'quote_strength':qs,'momentum_pct':momentum,'trend_pct':trend,'volatility_pct':vol,'spread_pct':spread,'risk_safe_haven_regime':risk_regime,'linked_news_count':news_count,'linked_news_relevance':news_relevance,'interest_differential':None,'inflation_growth_differential':None,'central_bank_surprise':None,'missing_features':['interest_differential','inflation_growth_differential','central_bank_surprise']}
-   why=['forex-v2 shadow, keine Handelswirkung',f'Relative WÃ¤hrungsstÃ¤rke {relative:.4f}',f'Risiko-/Safe-Haven-Regime {risk_regime:.2f}',f'Zeithorizont {horizon}',f'Paarbezogene Nachrichten {news_count}']
+   why=['forex-v2 shadow, keine Handelswirkung',f'Relative Währungsstärke {relative:.4f}',f'Risiko-/Safe-Haven-Regime {risk_regime:.2f}',f'Zeithorizont {horizon}',f'Paarbezogene Nachrichten {news_count}']
    with self.db.con() as c:
     cur=c.execute('INSERT INTO forex_feature_snapshots(created_at,symbol,model_version,horizon,features_json,score,signal,quality,reasons_json) VALUES(?,?,?,?,?,?,?,?,?)',(now(),symbol,'forex-v2-shadow',horizon,json.dumps(features,sort_keys=True),str(round(score,4)),signal,quality,json.dumps(why,ensure_ascii=False)));sid=cur.lastrowid
     c.execute('INSERT INTO forex_shadow_comparisons(created_at,symbol,active_model,active_score,active_signal,candidate_model,candidate_score,candidate_signal,disagrees,snapshot_id) VALUES(?,?,?,?,?,?,?,?,?,?)',(now(),symbol,'forex-v1',str(active.get('score') or 0),active.get('signal') or 'AVOID','forex-v2-shadow',str(round(score,4)),signal,1 if signal!=(active.get('signal') or 'AVOID') else 0,sid))
@@ -35,3 +35,4 @@ class ForexShadow:
    results.extend([dict(x,symbol=row['symbol']) for x in self.score(row['symbol'],row)])
   self.db.audit('FOREX_V2_SHADOW_RUN',json.dumps({'snapshots':len(results),'symbols':len(set(x['symbol'] for x in results))}));return {'status':'SHADOW_ONLY','snapshots':len(results),'symbols':len(set(x['symbol'] for x in results))}
  def comparisons(self):return self.db.rows('SELECT * FROM forex_shadow_comparisons ORDER BY id DESC LIMIT 200')
+

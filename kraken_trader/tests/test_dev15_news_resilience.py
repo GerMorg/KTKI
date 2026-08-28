@@ -30,3 +30,4 @@ class Tests(unittest.TestCase):
   with patch.object(n,'_read',side_effect=error):r=n.collect()
   row=db.rows("SELECT last_status,last_error,consecutive_failures FROM news_sources WHERE name='GDELT Wirtschaft'")[0]
   self.assertEqual(row['last_status'],'ERROR HTTP 429');self.assertGreater(row['consecutive_failures'],0);self.assertTrue(r['errors'])
+

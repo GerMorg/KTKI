@@ -16,3 +16,4 @@ class T(unittest.TestCase):
   candles=[[i,'99','101','98',str(100+i*.1),'100','1000',2] for i in range(40)]
   r=s.analyze('EUR/USD',candles,{'b':['1.1'],'a':['1.101']},'forex','USD');self.assertIn('forex-v1',' '.join(r['reasons']))
 if __name__=='__main__':unittest.main()
+

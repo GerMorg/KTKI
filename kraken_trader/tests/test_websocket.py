@@ -11,5 +11,6 @@ class WebSocketTests(unittest.TestCase):
  def test_subscription_error_is_fail_visible(self):
   self.stream.handle(json.dumps({'method':'subscribe','success':False,'error':'bad symbol'}));self.assertEqual(self.db.stream_status()['state'],'ERROR')
  def test_symbol_filter_and_health(self):
-  self.stream.set_symbols(['BTC/EUR','BTC/EUR','ETH/USD']);self.assertEqual(self.stream.symbols,['BTC/EUR']);self.assertTrue(self.stream.status()['stale'])
+  self.stream.set_symbols(['BTC/EUR','BTC/EUR','ETH/USD']);self.assertEqual(self.stream.symbols,['BTC/EUR','ETH/USD']);self.assertTrue(self.stream.status()['stale'])
 if __name__=='__main__':unittest.main()
+

@@ -44,3 +44,4 @@ def test_active_local_model_is_persisted(tmp_path):
     out=nl.refresh_local()
     assert out['evaluated']==12
     assert len(db.rows('SELECT * FROM news_local_evaluations'))==12
+

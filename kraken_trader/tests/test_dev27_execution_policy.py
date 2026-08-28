@@ -40,5 +40,6 @@ class Tests(unittest.TestCase):
   e=PaperEngine(db,1000);tid=e.execute('AAPLx/USD','BUY',100,'test',{'leverage':1});d=json.loads(db.rows('SELECT decision_json FROM paper_trades WHERE id=?',(tid,))[0]['decision_json'])
   for key in ('fx_fee_eur','fx_spread_eur','product_spread_eur','slippage_eur','trade_fee_eur'):self.assertIn(key,d)
  def test_utf8_repairs_real_mojibake(self):
-  broken='Geb'+chr(0xc3)+chr(0xbc)+'hr und '+chr(0xc3)+chr(0x153)+'bersicht';self.assertEqual(repair_text(broken),'GebÃ¼hr und Ãœbersicht')
+  broken='Geb'+chr(0xc3)+chr(0xbc)+'hr und '+chr(0xc3)+chr(0x153)+'bersicht';self.assertEqual(repair_text(broken),'Gebühr und Übersicht')
 if __name__=='__main__':unittest.main()
+
