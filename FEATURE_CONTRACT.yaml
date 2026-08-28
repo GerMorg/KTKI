@@ -348,3 +348,8 @@ release_0_1_0_dev_49:
   websocket_test_isolation: {required: true, status: implemented}
   automatic_activation: {required: false, status: prohibited}
   real_trading: {required: false, status: hard_disabled}
+release_0_1_0_dev_50:
+  at_tax_information: {required: true, status: implemented}
+  paper_real_separation: {required: true, status: enforced}
+  tax_csv_export: {required: true, status: implemented}
+  real_trading: {required: false, status: hard_disabled}

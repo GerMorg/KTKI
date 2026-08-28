@@ -20,3 +20,6 @@ class Tests(unittest.TestCase):
   db=DB(tempfile.mktemp());db.init();l=LearningApproval(db);before=l.values()
   with db.con() as c:c.executescript("CREATE TABLE research_forecasts(id INTEGER PRIMARY KEY,symbol TEXT,scanner_score TEXT);CREATE TABLE forecast_evaluations(forecast_id INTEGER PRIMARY KEY,direction_correct INTEGER,actual_return_pct TEXT);CREATE TABLE market_universe(symbol TEXT,category TEXT);")
   self.assertEqual(l.create_proposal()['status'],'INSUFFICIENT_DATA');self.assertEqual(before,l.values())
+
+
+

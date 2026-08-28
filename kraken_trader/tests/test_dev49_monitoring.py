@@ -29,3 +29,6 @@ class Dev49MonitoringTests(unittest.TestCase):
   self.assertEqual(row["event"],"USER_NOTIFICATION:PENDING");self.assertNotIn("secret",row["details"])
  def test_real_trading_disabled(self):self.assertFalse(self.client.get("/health").get_json()["real_trading"])
 if __name__=="__main__":unittest.main()
+
+
+

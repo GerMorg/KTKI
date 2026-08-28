@@ -42,3 +42,6 @@ class Tests(unittest.TestCase):
  def test_utf8_repairs_real_mojibake(self):
   broken='Geb'+chr(0xc3)+chr(0xbc)+'hr und '+chr(0xc3)+chr(0x153)+'bersicht';self.assertEqual(repair_text(broken),'Gebühr und Übersicht')
 if __name__=='__main__':unittest.main()
+
+
+

@@ -17,3 +17,6 @@ class PaperTests(unittest.TestCase):
   self.db.set_setting('automation_enabled','true')
   for _ in range(10):self.e.run()
   cash,pv,total,_=self.e.equity();self.assertLessEqual(pv,total*__import__('decimal').Decimal('0.11'))
+
+
+

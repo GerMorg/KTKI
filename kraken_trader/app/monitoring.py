@@ -34,3 +34,6 @@ def create_monitoring_blueprint(db,page_renderer):
   if fmt!="json":return jsonify({"status":"INVALID_FORMAT","allowed":["json","csv"]}),400
   return jsonify({"count":len(rows),"events":rows})
  return bp
+
+
+

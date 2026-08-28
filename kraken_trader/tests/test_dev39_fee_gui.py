@@ -31,3 +31,6 @@ class Dev39GuiTests(unittest.TestCase):
  def test_learning_page_explains_activation(self):
   body=self.client.get('/controlled-learning').data.decode('utf-8');self.assertIn('ausdrücklichen Freigabe',body);self.assertIn('Aktive Version',body);self.assertIn('Freigaberegeln',body)
 if __name__=='__main__':unittest.main()
+
+
+

@@ -198,3 +198,5 @@ Dev.48 ist ein Integritäts- und Konsistenzrelease. Historische Funktionen bleib
 
 ## 2026-08-28 D067
 Dev.49 modularisiert Monitoring als Blueprint. Audit-Exporte werden vor Ausgabe schlüsselbasiert redigiert; Realhandel und automatische Parameteraktivierung bleiben ausgeschlossen.
+## 2026-08-28 D069
+Dev.50 trennt Paper-Steuerinformationen strikt von realen Vorgängen und befüllt keine Formular-Kennzahlen automatisch.

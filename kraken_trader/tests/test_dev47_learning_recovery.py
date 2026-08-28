@@ -21,3 +21,6 @@ class Dev47LearningRecoveryTests(unittest.TestCase):
   status=self.news.data_status();self.assertTrue(status['ready']);self.assertEqual(status['sample_count'],10)
  def test_main_imports_families_and_news_page_has_diagnostics(self):
   source=(Path(__file__).parents[1]/'app'/'main.py').read_text('utf-8');self.assertIn('from strategy_profiles import FAMILIES',source);self.assertIn('data_status=news_learning.data_status()',source);self.assertIn('AI auswerten',source)
+
+
+

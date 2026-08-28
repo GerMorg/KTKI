@@ -9,3 +9,6 @@ class ProductView:
    reason='Niedrigste vollständige erwartete Ausführungskosten' if selected else 'Noch keine Paarwahl nach aktuellem Tickerlauf'
    out.append(dict(p,alternatives=alts,ranking=ranking,eur_cost=(eur or {}).get('total_cost_rate'),usd_cost=(usd or {}).get('total_cost_rate'),selection_reason=reason,position_symbol=position.get('symbol') if position else None,position_quantity=position.get('quantity') if position else None))
   return out
+
+
+

@@ -136,12 +136,14 @@ Die Seite Kontrolliertes Lernen referenzierte FAMILIES ohne Import und konnte da
 ## 2026-08-28 I050 - gelöst in 0.1.0-dev.47
 Nachrichten-Lernen meldete nur INSUFFICIENT_DATA ohne Datenpfad. Dev.47 zeigt Nachrichtenzahl, AI-Status, fehlende Stichprobe und bietet die AI-Auswertung als getrennte Aktion an.
 
-## 2026-08-28 I051 - gelöst in 0.1.0-dev.49
+## 2026-08-28 I051 - gelöst in 0.1.0-dev.50
 Der Snapshot enthielt direkt gespeicherte Mojibake-Texte in Code, Tests und Dokumentation. Alle Textquellen wurden repariert und repositoryweit geprüft.
-## 2026-08-28 I052 - gelöst in 0.1.0-dev.49
+## 2026-08-28 I052 - gelöst in 0.1.0-dev.50
 Add-on-Metadaten und ein Konsistenztest verwiesen noch auf dev.42. Alle aktiven Versionsquellen sind auf dev.48 synchronisiert.
-## 2026-08-28 I053 - gelöst in 0.1.0-dev.49
+## 2026-08-28 I053 - gelöst in 0.1.0-dev.50
 Der öffentliche WebSocket filterte USD-notierte Märkte trotz vorhandener USD-Unterstützung aus. Zulässig sind nun EUR- und USD-Quote-Währungen.
 
-## 2026-08-28 I049 - gelöst in 0.1.0-dev.49
+## 2026-08-28 I049 - gelöst in 0.1.0-dev.50
 Der Snapshot enthielt erneut sichtbare Mojibake-Texte. Dev.49 normalisiert alle ausgelieferten Texte und ergänzt eine isolierbare Startgrenze für WebSockets.
+## 2026-08-28 I054 - gelöst in 0.1.0-dev.50
+Fehlende Steuerinfo durch auditierbaren Paper-Jahresbericht mit gleitendem Durchschnitt und CSV behoben.

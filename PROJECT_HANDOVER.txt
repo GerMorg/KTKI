@@ -203,3 +203,4 @@ UTF-8- und Versionsinkonsistenzen des dev.47-Snapshots sind behoben. Der öffent
 
 ## Übergabe dev.49
 Monitoring ist als erster Blueprint ausgelagert. Ereignis-Dashboard und redigierter Audit-Export sind implementiert. WebSockets können in isolierten Tests über APP_DISABLE_WEBSOCKETS=1 unterdrückt werden. Alle bestehenden Funktionen und Sicherheitsgrenzen bleiben erhalten.
+DEV.50: Steuerinfo Österreich ergänzt. Echte Ledger-Daten bleiben von der Ausfüllhilfe ausgeschlossen.

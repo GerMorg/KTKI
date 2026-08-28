@@ -24,3 +24,6 @@ class Tests(unittest.TestCase):
     text=p.read_text('utf-8');self.assertFalse(any(x in text for x in bad),str(p))
  def test_visible_german_text_is_correct(self):
   text=(Path(__file__).parents[1]/'app'/'main.py').read_text('utf-8');self.assertIn('Übersicht',text);self.assertIn('Gebühr',text);self.assertIn('Qualität',text)
+
+
+

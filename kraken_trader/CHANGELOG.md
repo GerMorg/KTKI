@@ -1,12 +1,12 @@
 # Changelog
-## 0.1.0-dev.49
+## 0.1.0-dev.50
 - sichtbare UTF-8-Beschädigungen in Quelltexten, Tests und Dokumentation vollständig repariert
 - Monitoring als erster Flask-Blueprint modularisiert
 - neues filterbares Ereignis-Dashboard für Fehler, Warnungen und Benutzernachrichten
 - Audit-Export als redigierte JSON- oder CSV-API ergänzt
 - WebSocket-Start für isolierte Tests explizit deaktivierbar gemacht
 - neue Sicherheits- und Regressionstests; Realhandel bleibt hart deaktiviert
-## 0.1.0-dev.49
+## 0.1.0-dev.50
 - sichtbare Mojibake-Reste in Quelltexten, Tests und Projektdokumentation vollständig repariert
 - Laufzeit-, Add-on- und Repository-Version zentral auf dev.48 synchronisiert
 - kontrolliertes Lernen bezeichnet aktive Versionen wieder konsistent
@@ -178,3 +178,6 @@
 - Gemini-REST-Transport unterstützt JSON-Ausgaben, API-Key-Header, Modell und Timeout
 - AI-Verarbeitung erzwingt das konfigurierte Lauf-Limit
 - Realhandel bleibt hart deaktiviert
+
+
+

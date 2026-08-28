@@ -129,8 +129,10 @@ Lernfamilien-Dashboard mit aktiver Version, offenen Kandidaten, letztem Status u
 ## 0.1.0-dev.47 - 2026-08-28
 Stabilitätsrelease für kontrolliertes Lernen und Nachrichten-Lernen mit transparenten Datenstatus- und Wiederherstellungswegen.
 
-## 0.1.0-dev.49 - 2026-08-28
+## 0.1.0-dev.50 - 2026-08-28
 Integritätsrelease: UTF-8-Quellen bereinigt, Versionsmetadaten synchronisiert, GUI-Bezeichnung konsistent und USD-WebSocket-Abdeckung repariert. Realhandel bleibt hart deaktiviert.
 
-## 0.1.0-dev.49
+## 0.1.0-dev.50
 Monitoring-Blueprint, Ereignis-Dashboard, redigierter Audit-Export und vollständige UTF-8-Reparatur.
+## 0.1.0-dev.50
+Steuerinfo Österreich; Realhandel bleibt hart deaktiviert.

@@ -176,3 +176,6 @@ def configure_engine(engine):
  engine.maxpct=D(value('paper_max_position_pct',10))/100
  engine.trade_eur=D(value('paper_trade_eur',25))
  return engine
+
+
+

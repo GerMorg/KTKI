@@ -32,3 +32,6 @@ def repair_database(db):
     set_sql=','.join(f'"{k}"=?' for k in updates);where=' AND '.join(f'"{k}"=?' for k in pk)
     c.execute(f'UPDATE "{table}" SET {set_sql} WHERE {where}',list(updates.values())+[row[k] for k in pk]);changed+=len(updates)
  db.set_setting(marker,'done');db.audit('UTF8_DATA_MIGRATION_V4',str(changed));return {'status':'DONE','changed':changed}
+
+
+
