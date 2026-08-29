@@ -29,6 +29,6 @@ class DecisionMatrix:
    add('REAL_BALANCE',context.get('real_balance_ok',False),'Realer Saldo bestätigt' if context.get('real_balance_ok',False) else 'Realer Saldo fehlt')
   allowed=all(x['passed'] for x in checks);blocker=next((x['reason'] for x in checks if not x['passed']),'Alle Regeln erfüllt')
   with self.db.con() as c:
-   for x in checks:c.execute('INSERT INTO decision_rule_evaluations(created_at,symbol,canonical_id,action,rule_key,passed,reason,details_json,decision_id) VALUES(?,?,?,?,?,?,?,?,?)',(now(),symbol,cid,action,x['rule_key'],1 if x['passed'] else 0,x['reason'],json.dumps(x['details'],sort_keys=True),context.get('decision_id')))
+   for x in checks:c.execute('INSERT INTO decision_rule_evaluations(created_at,symbol,canonical_id,action,rule_key,passed,reason,details_json,decision_id) VALUES(?,?,?,?,?,?,?,?,?)',(now(),symbol,cid,action,x['rule_key'],1 if x['passed'] else 0,x['reason'],json.dumps(x['details'],sort_keys=True,default=str),context.get('decision_id')))
   return {'allowed':allowed,'blocker':blocker,'checks':checks}
  def recent(self):return self.db.rows('SELECT * FROM decision_rule_evaluations ORDER BY id DESC LIMIT 500')
