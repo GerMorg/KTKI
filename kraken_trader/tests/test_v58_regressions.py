@@ -6,6 +6,8 @@ import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'app'))
 
+from jinja2 import Template
+
 from controlled_learning import ControlledLearning
 from display_format import DisplayFloat, display_tree
 from learning_approval import LearningApproval
@@ -19,6 +21,11 @@ class V38DisplayRegressionTests(unittest.TestCase):
         self.assertIsInstance(values['active'], DisplayFloat)
         self.assertAlmostEqual(values['candidate'] - values['active'], 0.05, places=8)
         self.assertEqual(str(values['active']), '0,1375')
+
+    def test_jinja_float_filter_can_calculate_with_localized_values(self):
+        values = display_tree({'active': 0.1375, 'candidate': 0.1875})
+        rendered = Template('{{ "%.2f"|format((candidate-active)*100) }}').render(**values)
+        self.assertEqual(rendered, '5.00')
 
     def test_integer_display_remains_numeric(self):
         values = display_tree({'n': 5})
@@ -65,6 +72,25 @@ class V38ControlledLearningTests(unittest.TestCase):
         self.learning._evaluations = lambda family: []
         result = self.learning.propose('forex', min_sample=10)
         self.assertEqual(result['status'], 'INSUFFICIENT_DATA')
+
+    def test_approval_blocks_changed_validation_sample(self):
+        rows = self._rows(1)
+        self.learning._evaluations = lambda family: rows
+        active = self.learning.active('forex')
+        params = json.loads(active['parameters_json'])
+        params['base_score'] = min(65.0, params['base_score'] + .5)
+        with self.db.con() as c:
+            cur = c.execute(
+                'INSERT INTO learning_candidates(created_at,family,status,base_version,sample_count,active_accuracy,candidate_accuracy,improvement,ci_low,ci_high,parameters_json,reason,decided_at,gate_policy_json,gate_results_json,validation_fingerprint) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                ('2026-01-01T00:00:00+00:00', 'forex', 'PENDING', active['version'], 1, '0.5', '0.6', '0.1',
+                 '0.5', '0.8', json.dumps(params, sort_keys=True), 'test', None, json.dumps(self.learning.gate_policy()), '[]', 'changed'))
+            candidate_id = cur.lastrowid
+            c.execute('INSERT INTO learning_shadow_results(created_at,candidate_id,forecast_id,active_correct,candidate_correct,details_json) VALUES(?,?,?,?,?,?)',
+                      ('2026-01-01T00:00:00+00:00', candidate_id, 1, 1, 1, '{}'))
+        result = self.learning.decide(candidate_id, 'approve')
+        self.assertEqual(result['status'], 'REJECTED_RECHECK')
+        self.assertEqual(result['reason'], 'VALIDATION_SAMPLE_CHANGED')
+        self.assertEqual(self.learning.candidates('forex')[0]['status'], 'REJECTED_RECHECK')
 
     def test_legacy_learning_facade_uses_same_active_xstock_version(self):
         facade = LearningApproval(self.db)
