@@ -45,31 +45,26 @@ class V38ControlledLearningTests(unittest.TestCase):
         self.tmp.cleanup()
 
     def _rows(self, count=20):
-        rows = []
-        for i in range(count):
-            rows.append({'id': i + 1, 'direction': 'UP' if i % 2 == 0 else 'DOWN',
-                         'scanner_score': 50, 'features_json': json.dumps({
-                             'momentum_pct': 1 if i % 2 == 0 else -1,
-                             'trend_pct': 1 if i % 2 == 0 else -1,
-                             'volatility_pct': .2, 'spread_pct': .02,
-                         }), 'horizon_hours': 24 if i < count // 2 else 168,
-                         'direction_correct': 1, 'actual_return_pct': .5 if i % 2 == 0 else -.5})
-        return rows
+        return [{'id': i + 1, 'direction': 'UP' if i % 2 == 0 else 'DOWN', 'scanner_score': 50,
+                 'features_json': json.dumps({'momentum_pct': 1 if i % 2 == 0 else -1,
+                                               'trend_pct': 1 if i % 2 == 0 else -1,
+                                               'volatility_pct': .2, 'spread_pct': .02}),
+                 'horizon_hours': 24 if i < count // 2 else 168, 'direction_correct': 1,
+                 'actual_return_pct': .5 if i % 2 == 0 else -.5} for i in range(count)]
 
     def test_candidate_search_uses_exact_training_rows_once(self):
         rows = self._rows(20)
-        params = dict(FAMILIES['forex'])
-        self.learning._candidate('forex', params, rows)
+        self.learning._candidate('forex', dict(FAMILIES['forex']), rows)
         self.assertEqual(self.learning._last_search_details['training_count'], len(rows))
-        self.assertNotEqual(self.learning._last_search_details['training_count'], 9)
 
     def test_horizon_policy_requires_enough_validation_observations(self):
         self.db.set_setting('learning_min_validation_samples', 3)
         self.db.set_setting('learning_min_horizon_samples', 5)
         policy = self.learning.gate_policy()
         self.assertEqual(policy['required_horizons'], [24, 168])
+        self.learning._evaluations = lambda family: []
         result = self.learning.propose('forex', min_sample=10)
-        self.assertIn(result['status'], {'INSUFFICIENT_DATA', 'INSUFFICIENT_TRAINING'})
+        self.assertEqual(result['status'], 'INSUFFICIENT_DATA')
 
     def test_legacy_learning_facade_uses_same_active_xstock_version(self):
         facade = LearningApproval(self.db)
@@ -92,11 +87,10 @@ class V38NewsLearningTests(unittest.TestCase):
     def test_candidate_identity_changes_with_teacher_content(self):
         rows = [{'id': '1', 'observed_at': '2026-01-01T00:00:00+00:00', 'title': 'a', 'summary': 'b',
                  'source_class': 'primary', 'teacher': {'sentiment': 'positive', 'relevance': .8, 'confidence': .8,
-                 'expected_impact': 'medium'}}]
-        a = self.learning._fingerprint(rows)
+                                                        'expected_impact': 'medium'}}]
+        first = self.learning._fingerprint(rows)
         rows[0]['teacher']['confidence'] = .9
-        b = self.learning._fingerprint(rows)
-        self.assertNotEqual(a, b)
+        self.assertNotEqual(first, self.learning._fingerprint(rows))
 
     def test_active_version_is_part_of_automatic_candidate_dedupe_contract(self):
         cols = {x['name'] for x in self.db.rows('PRAGMA table_info(news_model_candidates)')}
