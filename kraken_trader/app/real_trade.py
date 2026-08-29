@@ -47,16 +47,18 @@ class RealTradeEngine:
   if p<=0:raise ValueError('Ungültiger Marktpreis')
   return p,r
  def submit(self,symbol,side,volume,order_type='limit',limit_price=None,client_order_id=None,approval_token=None,validate_only=True,automation_secret=None):
-  symbol=str(symbol).upper().strip();side=str(side).lower();order_type=str(order_type).lower();volume=D(volume)
+  symbol=str(symbol).upper().strip();side=str(side).lower();order_type=str(order_type).lower();volume=D(volume);live=not bool(validate_only)
   if side not in ('buy','sell') or order_type not in ('limit','market') or volume<=0:raise ValueError('Ungültiger Auftrag')
   if order_type=='market' and self.db.value('real_allow_market_orders','false').lower()!='true':raise PermissionError('Market-Orders sind nicht freigegeben')
   row=self._pair(symbol);quote=str(row.get('quote_asset') or symbol.rsplit('/',1)[-1]).upper();base=str(row.get('base_asset') or symbol.split('/',1)[0]).upper()
   if quote not in ('EUR','USD'):raise PermissionError('Nur EUR/USD-Quoten sind für Realhandel freigegeben')
-  price=D(limit_price) if order_type=='limit' else self._live_price(symbol,side)[0]
-  if price<=0:raise ValueError('Preis fehlt')
-  if order_type=='limit':
-   live_price,_=self._live_price(symbol,side);max_dev=D(self.db.value('real_max_price_deviation_pct','1'))/100
-   if live_price>0 and abs(price/live_price-1)>max_dev:raise ValueError('Limitpreis weicht zu stark vom Livepreis ab')
+  if order_type=='market':price=self._live_price(symbol,side)[0]
+  else:
+   price=D(limit_price)
+   if price<=0:raise ValueError('Preis fehlt')
+   if live:
+    live_price,_=self._live_price(symbol,side);max_dev=D(self.db.value('real_max_price_deviation_pct','1'))/100
+    if live_price>0 and abs(price/live_price-1)>max_dev:raise ValueError('Limitpreis weicht zu stark vom Livepreis ab')
   cid=client_order_id or secrets.token_hex(16)
   prior=self.db.rows('SELECT * FROM real_trade_intents WHERE client_order_id=?',(cid,))
   if prior:return {'duplicate':True,'status':prior[0]['status'],'client_order_id':cid}
@@ -70,7 +72,6 @@ class RealTradeEngine:
   ordermin=D(row.get('ordermin'));costmin=D(row.get('costmin'))
   if ordermin>0 and volume<ordermin:raise ValueError(f'Mindestmenge {ordermin} unterschritten')
   if costmin>0 and D(volume)*price<costmin:raise ValueError(f'Mindestkosten {costmin} unterschritten')
-  live=not bool(validate_only)
   if live:
    if side=='buy':
     fee_bps=D(self.db.value('real_fee_bps','40'));required_quote=D(volume)*price*(1+fee_bps/10000);balance=self._quote_balance(quote)
@@ -78,11 +79,10 @@ class RealTradeEngine:
    else:
     balance=self._base_balance(base)
     if balance<volume:raise PermissionError(f'Nicht genügend {base}-Saldo; benötigt {volume}, vorhanden {balance}')
-  automation_ok=False
-  if automation_secret:
-   wanted=self.db.value('real_balancing_automation_secret_hash','');automation_ok=bool(wanted) and hmac.compare_digest(hashlib.sha256(str(automation_secret).encode()).hexdigest(),wanted)
-  if live and (not self.enabled() or not (self._armed(approval_token) or automation_ok)):raise PermissionError('Realhandel ist nicht freigegeben oder nicht aktiv bestätigt')
-  if live:
+   automation_ok=False
+   if automation_secret:
+    wanted=self.db.value('real_balancing_automation_secret_hash','');automation_ok=bool(wanted) and hmac.compare_digest(hashlib.sha256(str(automation_secret).encode()).hexdigest(),wanted)
+   if not self.enabled() or not (self._armed(approval_token) or automation_ok):raise PermissionError('Realhandel ist nicht freigegeben oder nicht aktiv bestätigt')
    cap=max(1,int(float(self.db.value('real_max_orders_per_day','1'))));used=self.db.rows("SELECT COUNT(*) AS n FROM real_trade_intents WHERE validate_only=0 AND status='SUBMITTED' AND date(created_at)=date('now')")[0]['n']
    if int(used)>=cap:raise PermissionError('Tageslimit für Realaufträge erreicht')
   data={'pair':symbol.replace('/',''),'type':side,'ordertype':order_type,'volume':str(volume),'cl_ord_id':cid,'validate':'false' if live else 'true'}
@@ -93,8 +93,7 @@ class RealTradeEngine:
    if live:
     with self.db.con() as c:c.execute('UPDATE real_trade_control SET armed_until=NULL,token_hash=NULL,updated_at=? WHERE id=1',(now(),))
    with self.db.con() as c:c.execute('UPDATE real_trade_intents SET status=?,response_json=? WHERE client_order_id=?',(status,json.dumps(result,sort_keys=True),cid))
-   self.db.audit('REAL_ORDER_'+status,json.dumps({'client_order_id':cid,'symbol':symbol,'side':side,'validate_only':not live,'eur_notional':str(eur_notional)}),'warning' if live else 'info','REAL')
-   return {'duplicate':False,'status':status,'client_order_id':cid,'result':result,'eur_notional':str(eur_notional)}
+   self.db.audit('REAL_ORDER_'+status,json.dumps({'client_order_id':cid,'symbol':symbol,'side':side,'validate_only':not live,'eur_notional':str(eur_notional)}),'warning' if live else 'info','REAL');return {'duplicate':False,'status':status,'client_order_id':cid,'result':result,'eur_notional':str(eur_notional)}
   except Exception as exc:
    with self.db.con() as c:c.execute('UPDATE real_trade_intents SET status=?,error=? WHERE client_order_id=?',('FAILED',type(exc).__name__,cid))
    self.db.audit('REAL_ORDER_FAILED',json.dumps({'client_order_id':cid,'error':type(exc).__name__}),'error','REAL');raise
