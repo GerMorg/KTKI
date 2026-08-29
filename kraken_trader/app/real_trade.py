@@ -22,7 +22,9 @@ class RealTradeEngine:
  def _armed(self,token):
   r=self.db.rows('SELECT * FROM real_trade_control WHERE id=1')[0];h=hashlib.sha256(str(token or '').encode()).hexdigest();return bool(r['token_hash']) and hmac.compare_digest(h,r['token_hash']) and D(r['armed_until'])>=D(datetime.now(timezone.utc).timestamp())
  def _pair(self,symbol):
-  rows=self.db.rows('SELECT * FROM market_universe WHERE symbol=? ORDER BY CASE WHEN asset_class=\'currency\' THEN 0 ELSE 1 END LIMIT 1',(symbol,));return rows[0] if rows else {}
+  try:rows=self.db.rows("SELECT * FROM market_universe WHERE symbol=? ORDER BY CASE WHEN asset_class='currency' THEN 0 ELSE 1 END LIMIT 1",(symbol))
+  except Exception:rows=[]
+  return rows[0] if rows else {}
  def _fx(self):
   rows=self.db.rows("SELECT bid,ask,last,received_at FROM live_prices WHERE symbol='EUR/USD' LIMIT 1");return rows[0] if rows else None
  def _eur_notional(self,symbol,volume,price):
@@ -34,13 +36,11 @@ class RealTradeEngine:
    return notional/rate
   raise ValueError('Nur EUR- und USD-Quote sind für Realhandel freigegeben')
  def _quote_balance(self,quote):
-  aliases={quote,'Z'+quote,'X'+quote};rows=self.db.rows('SELECT balance FROM private_balances WHERE asset IN ('+','.join('?' for _ in aliases)+')',(tuple(aliases))) if False else []
-  rows=self.db.rows('SELECT asset,balance FROM private_balances')
-  return sum((D(x['balance']) for x in rows if str(x['asset']).upper() in aliases),D(0))
+  aliases={quote,'Z'+quote,'X'+quote};rows=self.db.rows('SELECT asset,balance FROM private_balances');return sum((D(x['balance']) for x in rows if str(x['asset']).upper() in aliases),D(0))
  def _base_balance(self,base):
   aliases={base,'X'+base,'Z'+base};rows=self.db.rows('SELECT asset,balance FROM private_balances');return sum((D(x['balance']) for x in rows if str(x['asset']).upper() in aliases),D(0))
  def _live_price(self,symbol,side):
-  rows=self.db.rows('SELECT last,bid,ask,received_at FROM live_prices WHERE symbol=? LIMIT 1',(symbol,));
+  rows=self.db.rows('SELECT last,bid,ask,received_at FROM live_prices WHERE symbol=? LIMIT 1',(symbol,))
   if not rows:raise ValueError('Kein aktueller Marktpreis')
   r=rows[0];p=D(r.get('ask') if side=='buy' else r.get('bid') or r.get('last'))
   if p<=0:p=D(r.get('last'))
@@ -49,9 +49,9 @@ class RealTradeEngine:
  def submit(self,symbol,side,volume,order_type='limit',limit_price=None,client_order_id=None,approval_token=None,validate_only=True,automation_secret=None):
   symbol=str(symbol).upper().strip();side=str(side).lower();order_type=str(order_type).lower();volume=D(volume)
   if side not in ('buy','sell') or order_type not in ('limit','market') or volume<=0:raise ValueError('Ungültiger Auftrag')
+  if order_type=='market' and self.db.value('real_allow_market_orders','false').lower()!='true':raise PermissionError('Market-Orders sind nicht freigegeben')
   row=self._pair(symbol);quote=str(row.get('quote_asset') or symbol.rsplit('/',1)[-1]).upper();base=str(row.get('base_asset') or symbol.split('/',1)[0]).upper()
   if quote not in ('EUR','USD'):raise PermissionError('Nur EUR/USD-Quoten sind für Realhandel freigegeben')
-  if order_type=='market' and self.db.value('real_allow_market_orders','false').lower()!='true':raise PermissionError('Market-Orders sind nicht freigegeben')
   price=D(limit_price) if order_type=='limit' else self._live_price(symbol,side)[0]
   if price<=0:raise ValueError('Preis fehlt')
   if order_type=='limit':
@@ -63,18 +63,22 @@ class RealTradeEngine:
   allowed=[x.strip().upper() for x in self.db.value('real_allowed_symbols','').split(',') if x.strip()]
   if symbol=='EUR/USD' and self.db.value('real_allow_fx_conversion','true').lower()=='true':allowed=allowed+['EUR/USD']
   if allowed and symbol not in allowed:raise PermissionError('Symbol ist nicht für Realhandel freigegeben')
+  max_volume=D(self.db.value('real_max_order_volume','0'))
+  if max_volume<=0 or volume>max_volume:raise ValueError('Real-Auftragsvolumen nicht konfiguriert oder überschritten')
   eur_notional=self._eur_notional(symbol,volume,price);max_notional=D(self.db.value('real_max_order_notional_eur','0'))
   if max_notional<=0 or eur_notional>max_notional:raise ValueError('Real-Auftragswert nicht konfiguriert oder überschritten')
   ordermin=D(row.get('ordermin'));costmin=D(row.get('costmin'))
   if ordermin>0 and volume<ordermin:raise ValueError(f'Mindestmenge {ordermin} unterschritten')
   if costmin>0 and D(volume)*price<costmin:raise ValueError(f'Mindestkosten {costmin} unterschritten')
-  if side=='buy':
-   fee_bps=D(self.db.value('real_fee_bps','40'));required_quote=D(volume)*price*(1+fee_bps/10000);balance=self._quote_balance(quote)
-   if balance<required_quote:raise PermissionError(f'Nicht genügend {quote}-Saldo; benötigt {required_quote}, vorhanden {balance}')
-  else:
-   balance=self._base_balance(base)
-   if balance<volume:raise PermissionError(f'Nicht genügend {base}-Saldo; benötigt {volume}, vorhanden {balance}')
-  live=not bool(validate_only);automation_ok=False
+  live=not bool(validate_only)
+  if live:
+   if side=='buy':
+    fee_bps=D(self.db.value('real_fee_bps','40'));required_quote=D(volume)*price*(1+fee_bps/10000);balance=self._quote_balance(quote)
+    if balance<required_quote:raise PermissionError(f'Nicht genügend {quote}-Saldo; benötigt {required_quote}, vorhanden {balance}')
+   else:
+    balance=self._base_balance(base)
+    if balance<volume:raise PermissionError(f'Nicht genügend {base}-Saldo; benötigt {volume}, vorhanden {balance}')
+  automation_ok=False
   if automation_secret:
    wanted=self.db.value('real_balancing_automation_secret_hash','');automation_ok=bool(wanted) and hmac.compare_digest(hashlib.sha256(str(automation_secret).encode()).hexdigest(),wanted)
   if live and (not self.enabled() or not (self._armed(approval_token) or automation_ok)):raise PermissionError('Realhandel ist nicht freigegeben oder nicht aktiv bestätigt')
