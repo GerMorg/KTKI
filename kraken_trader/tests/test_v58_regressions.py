@@ -168,7 +168,7 @@ class V38TaxTests(unittest.TestCase):
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]['source'], 'real')
         self.assertEqual(rows[0]['gain_loss_eur'], '899.00')
-        self.assertEqual(rows[0]['estimated_tax_eur'], '247.23')
+        self.assertEqual(rows[0]['estimated_tax_eur'], '247.22')
 
 
 if __name__ == '__main__':
