@@ -13,11 +13,12 @@ class T(unittest.TestCase):
   self.a=RealPortfolioAllocator(self.db,Engine())
  def tearDown(self):self.tmp.cleanup()
  def set(self,k,v):self.db.set_setting(k,v)
+ def diag(self,r):return (r,self.db.rows("SELECT event,details FROM audit ORDER BY id DESC LIMIT 3"),self.db.rows("SELECT status,error FROM real_allocation_runs ORDER BY id DESC LIMIT 1"))
  def test_automatic_is_disabled_by_default(self):self.assertEqual(self.a.run(True)['status'],'DISABLED')
  def test_dry_run_is_automatic_but_never_submits(self):
-  self.set('real_balancing_enabled','true');self.set('real_trading_enabled','true');self.set('real_kill_switch','false');r=self.a.run(True);self.assertIn('actions',r,r);self.assertEqual(r['actions'][0]['status'],'DRY_RUN')
+  self.set('real_balancing_enabled','true');self.set('real_trading_enabled','true');self.set('real_kill_switch','false');r=self.a.run(True);self.assertIn('actions',r,self.diag(r));self.assertEqual(r['actions'][0]['status'],'DRY_RUN')
  def test_execution_requires_separate_secret(self):
-  self.set('real_balancing_enabled','true');self.set('real_trading_enabled','true');self.set('real_kill_switch','false');self.set('real_balancing_execute_enabled','true');self.set('real_balancing_dry_run','false');r=self.a.run(True);self.assertIn('actions',r,r);self.assertEqual(r['actions'][0]['status'],'BLOCKED_AUTOMATION_SECRET')
+  self.set('real_balancing_enabled','true');self.set('real_trading_enabled','true');self.set('real_kill_switch','false');self.set('real_balancing_execute_enabled','true');self.set('real_balancing_dry_run','false');r=self.a.run(True);self.assertIn('actions',r,self.diag(r));self.assertEqual(r['actions'][0]['status'],'BLOCKED_AUTOMATION_SECRET')
  def test_all_settings_are_bounded(self):
   self.set('real_balancing_interval_minutes','1');self.set('real_balancing_max_position_pct','999');s=self.a.settings();self.assertEqual(s['interval_minutes'],5);self.assertEqual(s['max_position_pct'],100)
 if __name__=='__main__':unittest.main()
