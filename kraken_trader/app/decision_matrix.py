@@ -1,5 +1,4 @@
 import json
-from datetime import datetime,timezone,timedelta
 from decimal import Decimal
 from db import now
 D=lambda x:Decimal(str(x or 0))
@@ -14,10 +13,16 @@ class DecisionMatrix:
   add('MINIMUM_HOLD',context.get('minimum_hold_ok',True),'Mindesthaltedauer erfüllt' if context.get('minimum_hold_ok',True) else 'Mindesthaltedauer aktiv')
   add('COOLDOWN',context.get('cooldown_ok',True),'Cooldown beendet' if context.get('cooldown_ok',True) else 'Wiederkauf-Cooldown aktiv')
   add('DAILY_LIMIT',context.get('daily_limit_ok',True),'Tageslimit verfügbar' if context.get('daily_limit_ok',True) else 'Tägliches Umschichtungslimit erreicht')
-  add('POSITIVE_AFTER_COSTS',D(context.get('improvement_after_costs'))>0,'Erwarteter Vorteil nach Kosten positiv' if D(context.get('improvement_after_costs'))>0 else 'Kein positiver Vorteil nach vollständigen Kosten',{'eur':str(context.get('improvement_after_costs',0))})
+  improvement=D(context.get('improvement_after_costs'))
+  add('POSITIVE_AFTER_COSTS',improvement>0,'Erwarteter Vorteil nach Kosten positiv' if improvement>0 else 'Kein positiver Vorteil nach vollständigen Kosten',{'eur':str(improvement)})
   add('TAX_AND_LOSS',context.get('tax_loss_ok',True),'Steuer- und Verlustwirkung akzeptabel' if context.get('tax_loss_ok',True) else 'Steuer- oder Verlustwirkung blockiert')
   add('DATA_FRESHNESS',context.get('data_fresh',False),'Daten vollständig und aktuell' if context.get('data_fresh',False) else 'Daten fehlen oder sind veraltet')
   if str(trade_context).upper()=='REAL':
+   add('MODEL_HEALTH',context.get('model_health_ok',False),'Modell ist für autonomen Betrieb validiert' if context.get('model_health_ok',False) else 'Modell hat die autonome Eignungsprüfung nicht bestanden',context.get('model_health_details'))
+   add('ROUTE_COST',context.get('route_cost_ok',False),'Günstigste EUR/USD-Ausführung ausgewählt' if context.get('route_cost_ok',False) else 'Ausführungsroute ist nicht ausreichend validiert',context.get('route_cost_details'))
+   add('QUOTE_FUNDING',context.get('quote_funding_ok',False),'Quote-Währung verfügbar bzw. Funding-Leg bestätigt' if context.get('quote_funding_ok',False) else 'Quote-Währung fehlt oder Funding-Leg nicht bestätigt',context.get('quote_funding_details'))
+   add('PORTFOLIO_RISK',context.get('portfolio_risk_ok',False),'Portfolio-Risikolimits eingehalten' if context.get('portfolio_risk_ok',False) else 'Portfolio-Risikolimit blockiert',context.get('portfolio_risk_details'))
+   add('ORDER_CONSTRAINTS',context.get('order_constraints_ok',False),'Ordergröße und Kraken-Marktregeln eingehalten' if context.get('order_constraints_ok',False) else 'Ordergröße/Mindestwerte nicht erfüllt',context.get('order_constraints_details'))
    add('REAL_TRADING_ENABLED',context.get('real_trading_enabled',False),'Realhandel aktiviert' if context.get('real_trading_enabled',False) else 'Realhandel deaktiviert')
    add('REAL_KILL_SWITCH',context.get('real_kill_switch_clear',False),'Kill-Switch frei' if context.get('real_kill_switch_clear',False) else 'Kill-Switch aktiv')
    add('REAL_LIMITS',context.get('real_limits_ok',False),'Realhandelslimits eingehalten' if context.get('real_limits_ok',False) else 'Realhandelslimits blockieren')
