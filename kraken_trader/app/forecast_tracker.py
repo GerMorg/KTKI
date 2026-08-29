@@ -23,14 +23,14 @@ class ForecastTracker:
    fee=self.db.rows('SELECT taker_bps,source,effective_at FROM account_pair_fees WHERE symbol=?',(symbol,))
    if fee:fee_bps=float(fee[0]['taker_bps']);fee_source=fee[0]['source'];fee_effective_at=fee[0]['effective_at']
   except Exception:pass
-  trade_fee=fee_bps/100;slippage=float(self.db.value('paper_slippage_bps','10'))/100
-  fx_required=symbol.endswith('/USD');fx_fee=float(self.db.value('paper_fx_fee_bps','10'))/100 if fx_required else 0.0;fx_spread=0.0
+  trade_fee=fee_bps/10000;slippage=float(self.db.value('paper_slippage_bps','10'))/10000
+  fx_required=symbol.endswith('/USD');fx_fee=float(self.db.value('paper_fx_fee_bps','10'))/10000 if fx_required else 0.0;fx_spread=0.0
   if fx_required:
    fx=self.db.rows("SELECT bid,ask,last,received_at FROM live_prices WHERE symbol='EUR/USD'")
    if fx:
     bid=float(fx[0].get('bid') or fx[0].get('last') or 0);ask=float(fx[0].get('ask') or fx[0].get('last') or 0);mid=(bid+ask)/2
-    fx_spread=(ask-bid)/mid*100 if mid and ask>=bid else 0.0
-  entry={'product_spread':spread_pct/2,'trade_fee':trade_fee,'slippage':slippage,'fx_spread':fx_spread/2,'fx_fee':fx_fee}
+    fx_spread=(ask-bid)/mid if mid and ask>=bid else 0.0
+  entry={'product_spread':spread_pct/2,'trade_fee':trade_fee*100,'slippage':slippage*100,'fx_spread':fx_spread/2*100,'fx_fee':fx_fee*100}
   exit_cost=dict(entry);entry_total=sum(entry.values());exit_total=sum(exit_cost.values());roundtrip=entry_total+exit_total
   return {'entry_cost_pct':round(entry_total,8),'exit_cost_pct':round(exit_total,8),'roundtrip_cost_pct':round(roundtrip,8),'components_pct':{'entry':entry,'exit':exit_cost},'provenance':{'trade_fee_source':fee_source,'trade_fee_effective_at':fee_effective_at,'trade_fee_bps':fee_bps,'fx_required':fx_required,'captured_at':now()}}
 
@@ -42,10 +42,12 @@ class ForecastTracker:
     try:u=self.db.rows('SELECT category FROM market_universe WHERE symbol=? LIMIT 1',(symbol,))
     except Exception:u=[]
     if not p or not s or s[0]['quality']!='VALID':continue
-    family=family_for_category(u[0]['category'] if u else 'crypto_spot');version,parameters=active_profile(self.db,family);features={k:s[0].get(k) for k in ('momentum_pct','trend_pct','volatility_pct','spread_pct')};costs=self._cost_snapshot(symbol,float(s[0].get('spread_pct') or 0));features.update({'schema_version':3,'entry_cost_pct':costs['entry_cost_pct'],'exit_cost_pct':costs['exit_cost_pct'],'estimated_roundtrip_cost_pct':costs['roundtrip_cost_pct'],'cost_components_pct':costs['components_pct'],'cost_provenance':costs['provenance']})
-    direction='UP' if s[0]['signal']=='BUY' else ('DOWN' if s[0]['signal']=='AVOID' else 'FLAT');confidence=str(min(1,max(0,float(s[0]['score'])/100)));model=f'{family}-controlled-v{version}'
+    family=family_for_category(u[0]['category'] if u else 'crypto_spot');version,parameters=active_profile(self.db,family);features={k:s[0].get(k) for k in ('momentum_pct','trend_pct','volatility_pct','spread_pct')};costs=self._cost_snapshot(symbol,float(s[0].get('spread_pct') or 0));features.update({'schema_version':4,'entry_cost_pct':costs['entry_cost_pct'],'exit_cost_pct':costs['exit_cost_pct'],'estimated_roundtrip_cost_pct':costs['roundtrip_cost_pct'],'cost_components_pct':costs['components_pct'],'cost_provenance':costs['provenance']})
+    # AVOID means "do not take a long position"; it is not a forecast of a
+    # negative return.  Treating it as DOWN contaminated model evaluation.
+    direction='UP' if s[0]['signal']=='BUY' else 'FLAT';confidence=str(min(1,max(0,float(s[0]['score'])/100)));model=f'{family}-controlled-v{version}'
     for h in (24,168):
-     c.execute('INSERT INTO research_forecasts(created_at,symbol,watchlist_version_id,model_version,horizon_hours,direction,baseline_price,scanner_score,confidence,status,features_json,family,parameter_version,parameters_json,feature_schema_version) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(now(),symbol,vid,model,h,direction,p[0]['last'],s[0]['score'],confidence,'OPEN',json.dumps(features,sort_keys=True),family,version,json.dumps(parameters,sort_keys=True),3));saved+=1
+     c.execute('INSERT INTO research_forecasts(created_at,symbol,watchlist_version_id,model_version,horizon_hours,direction,baseline_price,scanner_score,confidence,status,features_json,family,parameter_version,parameters_json,feature_schema_version) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(now(),symbol,vid,model,h,direction,p[0]['last'],s[0]['score'],confidence,'OPEN',json.dumps(features,sort_keys=True),family,version,json.dumps(parameters,sort_keys=True),4));saved+=1
   return saved
 
  def _target_candle(self,symbol,target,current):
@@ -60,8 +62,13 @@ class ForecastTracker:
    if current<target:continue
    candle=self._target_candle(f['symbol'],target,current)
    if not candle:continue
-   base=float(f['baseline_price']);actual=float(candle['close']);ret=(actual/base-1)*100 if base else 0;correct=(f['direction']=='UP' and ret>0) or (f['direction']=='DOWN' and ret<0) or (f['direction']=='FLAT' and abs(ret)<1);source_time=int(candle['open_time']);timing_error=source_time-int(target.timestamp())
-   details={'direction':f['direction'],'family':f.get('family'),'parameter_version':f.get('parameter_version'),'target_at':target.isoformat(),'price_source':'OHLC_CACHE_FIRST_CLOSED_AT_OR_AFTER_TARGET','source_open_time':source_time,'interval_min':int(candle['interval_min']),'timing_error_seconds':timing_error}
+   base=float(f['baseline_price']);actual=float(candle['close']);ret=(actual/base-1)*100 if base else 0
+   try:features=json.loads(f.get('features_json') or '{}')
+   except Exception:features={}
+   cost=float(features.get('estimated_roundtrip_cost_pct') or 0)
+   correct=(f['direction']=='UP' and ret>cost) or (f['direction']=='FLAT' and abs(ret)<=cost)
+   source_time=int(candle['open_time']);timing_error=source_time-int(target.timestamp())
+   details={'direction':f['direction'],'family':f.get('family'),'parameter_version':f.get('parameter_version'),'target_at':target.isoformat(),'price_source':'OHLC_CACHE_FIRST_CLOSED_AT_OR_AFTER_TARGET','source_open_time':source_time,'interval_min':int(candle['interval_min']),'timing_error_seconds':timing_error,'roundtrip_cost_pct':cost,'cost_adjusted_return_pct':ret-cost if f['direction']=='UP' else 0.0}
    with self.db.con() as c:
     c.execute('INSERT OR REPLACE INTO forecast_evaluations(forecast_id,evaluated_at,actual_price,actual_return_pct,direction_correct,details_json,target_at,price_source,source_open_time,timing_error_seconds) VALUES(?,?,?,?,?,?,?,?,?,?)',(f['id'],now(),str(actual),str(ret),1 if correct else 0,json.dumps(details,sort_keys=True),target.isoformat(),details['price_source'],source_time,timing_error));c.execute("UPDATE research_forecasts SET status='EVALUATED' WHERE id=?",(f['id'],));done+=1
   return done

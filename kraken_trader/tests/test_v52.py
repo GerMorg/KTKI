@@ -1,4 +1,5 @@
 import os,sys,tempfile,unittest
+from decimal import Decimal
 sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..','app'))
 from db import DB
 import types
@@ -23,6 +24,8 @@ class Tests(unittest.TestCase):
  def test_live_guards_and_one_use_token(self):
   c=FakeClient();e=RealTradeEngine(self.db,c);self.db.set_setting('real_max_order_volume','1');self.db.set_setting('real_max_order_notional_eur','100')
   with self.assertRaises(PermissionError):e.submit('BTC/EUR','buy','.001','limit','50000',validate_only=False)
+  e._live_price=lambda symbol,side:(Decimal('50000'),{'last':'50000','bid':'49999','ask':'50001'})
+  with self.db.con() as con:con.execute("INSERT OR REPLACE INTO private_balances(asset,balance,wallets_json,sequence,received_at) VALUES('EUR','1000','[]',1,CURRENT_TIMESTAMP)")
   self.db.set_setting('real_trading_enabled','true');self.db.set_setting('real_kill_switch','false');token=e.arm('REALHANDEL AKTIVIEREN');self.assertEqual(e.submit('BTC/EUR','buy','.001','limit','50000',approval_token=token,validate_only=False)['status'],'SUBMITTED')
   with self.assertRaises(PermissionError):e.submit('BTC/EUR','buy','.001','limit','50000',approval_token=token,validate_only=False)
 if __name__=='__main__':unittest.main()
@@ -30,9 +33,7 @@ if __name__=='__main__':unittest.main()
 class V54DisplayTests(unittest.TestCase):
  def test_display_number_removes_endless_decimals(self):
   from display_format import display_number
-  self.assertEqual(display_number('62.123456789'), '62,12')
-  self.assertEqual(display_number('0.123456789'), '0,1235')
-  self.assertEqual(display_number('0.0000123456789'), '0,00001235')
+  self.assertEqual(display_number('62.123456789'), '62,12');self.assertEqual(display_number('0.123456789'), '0,1235');self.assertEqual(display_number('0.0000123456789'), '0,00001235')
  def test_display_tree_does_not_modify_json_text(self):
   from display_format import display_tree
   self.assertEqual(display_tree({'parameters_json':'{"x":1.23456789}'})['parameters_json'],'{"x":1.23456789}')

@@ -1,7 +1,7 @@
 name: Kraken Trader
-version: 0.1.0-dev.58
+version: 0.1.0-dev.60
 slug: kraken_trader
-description: Read-only Kraken Portfolio und lokales Paper-Trading
+description: Read-only Kraken Portfolio und lokales Paper-Trading; Realhandel optional, strikt gated
 arch:
 - amd64
 startup: application
@@ -58,11 +58,17 @@ options:
   learning_max_drawdown_degradation_pct: 2
   real_trading_enabled: false
   real_kill_switch: true
+  real_fee_bps: 40
+  real_fx_fee_bps: 10
+  real_slippage_bps: 10
+  real_max_price_deviation_pct: 1
+  real_allow_fx_conversion: true
   real_max_order_volume: 0
   real_max_order_notional_eur: 0
   real_allowed_symbols: ''
   real_allow_market_orders: false
-  real_max_orders_per_day: 1
+  real_max_orders_per_day: 2
+  real_max_fx_orders_per_day: 2
   learning_min_validation_samples: 5
   real_balancing_enabled: false
   real_balancing_execute_enabled: false
@@ -127,11 +133,17 @@ schema:
   learning_max_drawdown_degradation_pct: float
   real_trading_enabled: bool
   real_kill_switch: bool
+  real_fee_bps: int(0,500)
+  real_fx_fee_bps: int(0,500)
+  real_slippage_bps: int(0,500)
+  real_max_price_deviation_pct: float
+  real_allow_fx_conversion: bool
   real_max_order_volume: float
   real_max_order_notional_eur: float
   real_allowed_symbols: str?
   real_allow_market_orders: bool
   real_max_orders_per_day: int(1,100)
+  real_max_fx_orders_per_day: int(1,100)
   learning_min_validation_samples: int(3,10000)
   real_balancing_enabled: bool
   real_balancing_execute_enabled: bool
