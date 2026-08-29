@@ -15,7 +15,7 @@ This is the complete repair pass requested for the Kraken Trader application. Th
 - News-learning candidate identity includes the full comparison sample content as well as the active base version, preventing stale deduplication after data or model changes.
 - News-learning approval rechecks the exact time-split sample and walk-forward gates before activating a new version.
 - Regression coverage was expanded for all of the above.
-- A GitHub Actions regression workflow was added for every branch push and pull request.
+- A GitHub Actions regression workflow was added for every branch push and pull request. The workflow invokes `sh run_tests.sh`, so it does not depend on the repository executable bit.
 
 ## Safety
 
@@ -23,4 +23,4 @@ Real trading remains disabled by default. No learning path activates a new param
 
 ## Verification
 
-The release branch contains automated regression tests and CI configuration. GitHub Actions execution status must be green before merging.
+The release branch contains automated regression tests and CI configuration. The final merge should be accepted only with a green GitHub Actions test job.
