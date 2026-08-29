@@ -25,6 +25,7 @@ class Tests(unittest.TestCase):
   c=FakeClient();e=RealTradeEngine(self.db,c);self.db.set_setting('real_max_order_volume','1');self.db.set_setting('real_max_order_notional_eur','100')
   with self.assertRaises(PermissionError):e.submit('BTC/EUR','buy','.001','limit','50000',validate_only=False)
   e._live_price=lambda symbol,side:(Decimal('50000'),{'last':'50000','bid':'49999','ask':'50001'})
+  with self.db.con() as con:con.execute("INSERT OR REPLACE INTO private_balances(asset,balance,wallets_json,sequence,received_at) VALUES('EUR','1000','[]',1,CURRENT_TIMESTAMP)")
   self.db.set_setting('real_trading_enabled','true');self.db.set_setting('real_kill_switch','false');token=e.arm('REALHANDEL AKTIVIEREN');self.assertEqual(e.submit('BTC/EUR','buy','.001','limit','50000',approval_token=token,validate_only=False)['status'],'SUBMITTED')
   with self.assertRaises(PermissionError):e.submit('BTC/EUR','buy','.001','limit','50000',approval_token=token,validate_only=False)
 if __name__=='__main__':unittest.main()
