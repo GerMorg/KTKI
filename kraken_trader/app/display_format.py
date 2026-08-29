@@ -13,7 +13,7 @@ def display_number(value, decimals=None):
         return str(value)
     absolute = abs(number)
     places = decimals if decimals is not None else (
-        6 if absolute and absolute < Decimal('0.01')
+        8 if absolute and absolute < Decimal('0.01')
         else 4 if absolute < 1
         else 2
     )
@@ -25,13 +25,10 @@ def display_number(value, decimals=None):
 
 class DisplayFloat(float):
     """Numeric template value that keeps arithmetic semantics and localized output."""
-
     def __new__(cls, value):
         return super().__new__(cls, float(value))
-
     def __str__(self):
         return display_number(float(self))
-
     def __repr__(self):
         return str(self)
 
