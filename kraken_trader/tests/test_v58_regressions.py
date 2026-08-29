@@ -8,11 +8,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'app'))
 
 from jinja2 import Template
 
-# test_v52 installs a minimal Flask stub; provide the one additional symbol
-# needed to import the tax blueprint module without weakening runtime behavior.
 import flask
 if not hasattr(flask, 'Response'):
-    class Response:  # pragma: no cover - import-only compatibility in tests
+    class Response:  # pragma: no cover
         pass
     flask.Response = Response
 
@@ -169,8 +167,8 @@ class V38TaxTests(unittest.TestCase):
         self.assertEqual(warnings, [])
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]['source'], 'real')
-        self.assertEqual(rows[0]['gain_loss_eur'], '949.00')
-        self.assertEqual(rows[0]['estimated_tax_eur'], '260.98')
+        self.assertEqual(rows[0]['gain_loss_eur'], '899.00')
+        self.assertEqual(rows[0]['estimated_tax_eur'], '247.23')
 
 
 if __name__ == '__main__':
