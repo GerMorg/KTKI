@@ -23,7 +23,7 @@ class RealPortfolioAllocator:
  def balances(self):return self.db.rows('SELECT asset,balance FROM private_balances ORDER BY asset')
  @staticmethod
  def _asset(code):return str(code or '').upper().replace('XBT','BTC').replace('Z','').replace('X','')
- def _tickers(self):return {x['symbol']:{'b':[x.get('bid') or x.get('last')],'a':[x.get('ask') or x.get('last')],'c':[x.get('last')]} for x in self.db.rows('SELECT symbol,last,bid,ask FROM live_prices')}
+ def _tickers(self):return {x['symbol']:{'b':[x['bid'] or x['last']],'a':[x['ask'] or x['last']],'c':[x['last']]} for x in self.db.rows('SELECT symbol,last,bid,ask FROM live_prices')}
  def _current_eur(self):
   tickers=self._tickers();fx=tickers.get('EUR/USD');fx_mid=D((fx or {}).get('c',[0])[0]);out={};total=D(0)
   for b in self.balances():
@@ -50,7 +50,7 @@ class RealPortfolioAllocator:
   cid=rows[0]['canonical_id'] if rows else symbol
   try:alts=self.db.rows("SELECT symbol,asset_class,category,base_asset,quote_asset,source_key,ordermin,costmin FROM market_universe WHERE canonical_id=? AND quote_asset IN ('EUR','USD')",(cid,))
   except Exception:alts=[]
-  if alts:return alts
+  if alts:return [dict(x) for x in alts]
   base,quote=(symbol.split('/',1)+['EUR'])[:2] if '/' in symbol else (symbol,'EUR')
   return [{'symbol':symbol,'asset_class':'crypto','category':'crypto_spot','base_asset':base,'quote_asset':quote,'source_key':symbol,'ordermin':'0','costmin':'0'}]
  def _candidates(self,cfg):
@@ -69,14 +69,14 @@ class RealPortfolioAllocator:
    except Exception:version,params=1,{'buy_threshold':cfg['minimum_score']}
    selected,route=choose_route(alts,tickers,100,self.db.value('real_fee_bps',self.db.value('paper_fee_bps','40')),self.db.value('real_fx_fee_bps',self.db.value('paper_fx_fee_bps','10')),self.db.value('real_slippage_bps',self.db.value('paper_slippage_bps','10')),'buy')
    if not selected:continue
-   out.append({'symbol':row['symbol'],'score':row['score'],'volatility_pct':row.get('volatility_pct') or 0,'roundtrip_cost_pct':str(route['selected']['total_cost_pct'] if route.get('selected') else 999),'buy_threshold':params.get('buy_threshold',cfg['minimum_score']),'family':family,'model_version':version})
+   out.append({'symbol':row['symbol'],'score':row['score'],'volatility_pct':row['volatility_pct'] or 0,'roundtrip_cost_pct':str(route['selected']['total_cost_pct'] if route.get('selected') else 999),'buy_threshold':params.get('buy_threshold',cfg['minimum_score']),'family':family,'model_version':version})
   return out
  def _volume(self,symbol,trade_eur,side,route):
-  rows=self.db.rows('SELECT ask,bid,last FROM live_prices WHERE symbol=? LIMIT 1',(symbol,));r=rows[0] if rows else {};price=D(r.get('ask' if side=='buy' else 'bid') or r.get('last'))
+  rows=self.db.rows('SELECT ask,bid,last FROM live_prices WHERE symbol=? LIMIT 1',(symbol,));r=rows[0] if rows else {};price=D(r['ask' if side=='buy' else 'bid'] or r['last'])
   if price<=0:raise ValueError('Kein Ausführungspreis')
   quote=str(route.get('selected',{}).get('quote_currency') or 'EUR')
   if quote=='USD':
-   fx=self.db.rows("SELECT bid,ask,last FROM live_prices WHERE symbol='EUR/USD' LIMIT 1");rate=D((fx[0].get('bid' if side=='buy' else 'ask') or fx[0].get('last')) if fx else 0)
+   fx=self.db.rows("SELECT bid,ask,last FROM live_prices WHERE symbol='EUR/USD' LIMIT 1");rate=D((fx[0]['bid' if side=='buy' else 'ask'] or fx[0]['last']) if fx else 0)
    if rate<=0:raise ValueError('EUR/USD fehlt')
    return D(trade_eur)*rate/price,price
   return D(trade_eur)/price,price
@@ -98,7 +98,7 @@ class RealPortfolioAllocator:
      fx=self.db.rows("SELECT bid,ask,last FROM live_prices WHERE symbol='EUR/USD' LIMIT 1")
      if not fx:fx_ok=False
      else:
-      bid=D(fx[0].get('bid') or fx[0].get('last'));needed_usd=trade_eur*bid*(1+D(self.db.value('real_fee_bps','40'))/10000+D(self.db.value('real_slippage_bps','10'))/10000);needed_eur=needed_usd/bid;funding={'required':usd_balance<needed_usd,'needed_usd':str(needed_usd),'needed_eur':str(needed_eur),'available_usd':str(usd_balance)}
+      bid=D(fx[0]['bid'] or fx[0]['last']);needed_usd=trade_eur*bid*(1+D(self.db.value('real_fee_bps','40'))/10000+D(self.db.value('real_slippage_bps','10'))/10000);needed_eur=needed_usd/bid;funding={'required':usd_balance<needed_usd,'needed_usd':str(needed_usd),'needed_eur':str(needed_eur),'available_usd':str(usd_balance)}
     volume,price=self._volume(selected['symbol'],trade_eur,side,route);meta=next((x for x in alts if x.get('symbol')==selected['symbol']),{});order_ok=(not meta.get('ordermin') or volume>=D(meta.get('ordermin'))) and (not meta.get('costmin') or volume*price>=D(meta.get('costmin')));risk_ok=target_eur<=total*cfg['max_position_pct']/100 and target_eur<=total*(1-cfg['cash_reserve_pct']/100)
     ctx={'canonical_id':symbol,'confirmation_count':1,'confirmation_required':1,'minimum_hold_ok':True,'cooldown_ok':True,'daily_limit_ok':True,'improvement_after_costs':str(max(D(0),edge_after_cost)*trade_eur/100),'tax_loss_ok':True,'data_fresh':True,'model_health_ok':h.get('status')=='READY','model_health_details':h,'route_cost_ok':route.get('status')=='VALID','route_cost_details':route,'quote_funding_ok':fx_ok,'quote_funding_details':funding,'portfolio_risk_ok':risk_ok,'portfolio_risk_details':{'target_eur':str(target_eur),'total_eur':str(total)},'order_constraints_ok':order_ok,'order_constraints_details':{'volume':str(volume),'price':str(price),'ordermin':meta.get('ordermin'),'costmin':meta.get('costmin')},'real_trading_enabled':self.trade_engine.enabled(),'real_kill_switch_clear':self.db.value('real_kill_switch','true').lower()!='true','real_limits_ok':trade_eur<=cfg['max_trade_eur'],'real_balance_ok':True}
     decision=DecisionMatrix(self.db).evaluate(symbol,side.upper(),ctx,'REAL');status='BLOCKED';intent=None;secret=self.db.value('real_balancing_automation_secret','');execute=automatic and cfg['automatic_execution'] and not cfg['dry_run'] and decision['allowed']
