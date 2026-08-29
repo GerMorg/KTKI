@@ -8,6 +8,7 @@ from portfolio_target import build_targets
 from strategy_profiles import active_profile,family_for_category
 D=lambda x:Decimal(str(x or 0))
 def _bool(db,key,default='false'):return db.value(key,default).lower()=='true'
+def safe_json(value):return json.dumps(value,sort_keys=True,default=str)
 class RealPortfolioAllocator:
  def __init__(self,db,trade_engine):self.db=db;self.trade_engine=trade_engine;self.lock=threading.Lock();self.ensure()
  def ensure(self):
@@ -86,7 +87,7 @@ class RealPortfolioAllocator:
   try:
    if automatic and not cfg['enabled']:return {'status':'DISABLED'}
    current,total=self._current_eur();payload={k:(str(v) if isinstance(v,Decimal) else v) for k,v in cfg.items()};tickers=self._tickers();health=ModelHealth(self.db);health_by_family={family:health.evaluate(family) for family in ('crypto_spot','xstocks','forex')};candidates=self._candidates(cfg);targets=build_targets(candidates,total,cfg['cash_reserve_pct'],cfg['max_position_pct'],cfg['minimum_score'],cfg['min_trade_eur'])
-   with self.db.con() as con:cur=con.execute('INSERT INTO real_allocation_runs(created_at,status,automatic,settings_json,details_json) VALUES(?,?,?,?,?)',(now(),'RUNNING',1 if automatic else 0,json.dumps(payload,sort_keys=True),'{}'));rid=cur.lastrowid
+   with self.db.con() as con:cur=con.execute('INSERT INTO real_allocation_runs(created_at,status,automatic,settings_json,details_json) VALUES(?,?,?,?,?)',(now(),'RUNNING',1 if automatic else 0,safe_json(payload),'{}'));rid=cur.lastrowid
    actions=[];today=self.db.rows("SELECT COUNT(*) n FROM real_allocation_actions WHERE status='SUBMITTED' AND date(created_at)=date('now')")[0]['n'];room=max(0,cfg['max_actions_per_day']-int(today))
    for target in targets[:min(cfg['max_actions_per_run'],room)]:
     symbol=target['symbol'];asset=self._asset(symbol.split('/')[0]);present=D(current.get(asset,0));target_eur=D(target['target_exposure_eur']);diff=target_eur-present
@@ -102,7 +103,8 @@ class RealPortfolioAllocator:
     volume,price=self._volume(selected['symbol'],trade_eur,side,route);meta=next((x for x in alts if x.get('symbol')==selected['symbol']),{});order_ok=(not meta.get('ordermin') or volume>=D(meta.get('ordermin'))) and (not meta.get('costmin') or volume*price>=D(meta.get('costmin')));risk_ok=target_eur<=total*cfg['max_position_pct']/100 and target_eur<=total*(1-cfg['cash_reserve_pct']/100)
     ctx={'canonical_id':symbol,'confirmation_count':1,'confirmation_required':1,'minimum_hold_ok':True,'cooldown_ok':True,'daily_limit_ok':True,'improvement_after_costs':str(max(D(0),edge_after_cost)*trade_eur/100),'tax_loss_ok':True,'data_fresh':True,'model_health_ok':h.get('status')=='READY','model_health_details':h,'route_cost_ok':route.get('status')=='VALID','route_cost_details':route,'quote_funding_ok':fx_ok,'quote_funding_details':funding,'portfolio_risk_ok':risk_ok,'portfolio_risk_details':{'target_eur':str(target_eur),'total_eur':str(total)},'order_constraints_ok':order_ok,'order_constraints_details':{'volume':str(volume),'price':str(price),'ordermin':meta.get('ordermin'),'costmin':meta.get('costmin')},'real_trading_enabled':self.trade_engine.enabled(),'real_kill_switch_clear':self.db.value('real_kill_switch','true').lower()!='true','real_limits_ok':trade_eur<=cfg['max_trade_eur'],'real_balance_ok':True}
     decision=DecisionMatrix(self.db).evaluate(symbol,side.upper(),ctx,'REAL');status='BLOCKED';intent=None;secret=self.db.value('real_balancing_automation_secret','');execute=automatic and cfg['automatic_execution'] and not cfg['dry_run'] and decision['allowed']
-    if automatic and cfg['automatic_execution'] and not cfg['dry_run'] and not self.db.value('real_balancing_automation_secret_hash',''):status='BLOCKED_AUTOMATION_SECRET'
+    if automatic and cfg['dry_run']:status='DRY_RUN'
+    elif automatic and cfg['automatic_execution'] and not self.db.value('real_balancing_automation_secret_hash',''):status='BLOCKED_AUTOMATION_SECRET'
     elif execute and funding['required']:
      funding_result=self.trade_engine.convert_eur_to_usd(funding['needed_eur'],secret,approval_token,False);funding['result']=funding_result
      if funding_result.get('status') in ('SUBMITTED','VALIDATED'):
@@ -114,11 +116,11 @@ class RealPortfolioAllocator:
     elif execute:
      result=self.trade_engine.submit(selected['symbol'],side,str(volume),'limit',str(price),secrets.token_hex(16),approval_token,False,secret);status=result['status'];intent=result.get('client_order_id')
     elif decision['allowed']:status='DRY_RUN' if cfg['dry_run'] or automatic else 'PROPOSED'
-    with self.db.con() as con:con.execute('INSERT INTO real_allocation_actions(run_id,created_at,symbol,side,current_eur,target_eur,difference_eur,status,decision_json,order_intent_id,error) VALUES(?,?,?,?,?,?,?,?,?,?,?)',(rid,now(),symbol,side,str(present),str(target_eur),str(diff),status,json.dumps({'decision':decision,'route':route,'funding':funding,'model_health':h},sort_keys=True),intent,None))
+    with self.db.con() as con:con.execute('INSERT INTO real_allocation_actions(run_id,created_at,symbol,side,current_eur,target_eur,difference_eur,status,decision_json,order_intent_id,error) VALUES(?,?,?,?,?,?,?,?,?,?,?)',(rid,now(),symbol,side,str(present),str(target_eur),str(diff),status,safe_json({'decision':decision,'route':route,'funding':funding,'model_health':h}),intent,None))
     actions.append({'symbol':symbol,'side':side,'trade_eur':str(trade_eur),'status':status,'route':selected['symbol'],'quote':quote,'funding':funding})
    final='COMPLETED' if all(x['status'] not in ('FAILED','FUNDING_FAILED','FUNDING_RECHECK_FAILED') for x in actions) else 'PARTIAL'
-   with self.db.con() as con:con.execute('UPDATE real_allocation_runs SET finished_at=?,status=?,details_json=? WHERE id=?',(now(),final,json.dumps({'total_eur':str(total),'actions':actions,'model_health':health_by_family},sort_keys=True),rid))
-   self.db.audit('REAL_BALANCING_RUN',json.dumps({'run_id':rid,'status':final,'automatic':automatic,'actions':len(actions)}),'warning' if automatic else 'info','REAL');return {'status':final,'run_id':rid,'total_eur':str(total),'actions':actions,'settings':payload,'model_health':health_by_family}
+   with self.db.con() as con:con.execute('UPDATE real_allocation_runs SET finished_at=?,status=?,details_json=? WHERE id=?',(now(),final,safe_json({'total_eur':str(total),'actions':actions,'model_health':health_by_family}),rid))
+   self.db.audit('REAL_BALANCING_RUN',safe_json({'run_id':rid,'status':final,'automatic':automatic,'actions':len(actions)}),'warning' if automatic else 'info','REAL');return {'status':final,'run_id':rid,'total_eur':str(total),'actions':actions,'settings':payload,'model_health':health_by_family}
   except Exception as exc:
    if rid:
     with self.db.con() as con:con.execute('UPDATE real_allocation_runs SET finished_at=?,status=?,error=? WHERE id=?',(now(),'FAILED',type(exc).__name__+': '+str(exc),rid))
