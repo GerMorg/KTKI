@@ -67,7 +67,8 @@ options:
   real_max_order_notional_eur: 0
   real_allowed_symbols: ''
   real_allow_market_orders: false
-  real_max_orders_per_day: 1
+  real_max_orders_per_day: 2
+  real_max_fx_orders_per_day: 2
   learning_min_validation_samples: 5
   real_balancing_enabled: false
   real_balancing_execute_enabled: false
@@ -142,6 +143,7 @@ schema:
   real_allowed_symbols: str?
   real_allow_market_orders: bool
   real_max_orders_per_day: int(1,100)
+  real_max_fx_orders_per_day: int(1,100)
   learning_min_validation_samples: int(3,10000)
   real_balancing_enabled: bool
   real_balancing_execute_enabled: bool
