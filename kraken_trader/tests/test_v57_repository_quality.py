@@ -21,7 +21,7 @@ class RepositoryQualityTests(unittest.TestCase):
         self.assertEqual(failures, [])
 
     def test_active_versions_are_synchronized(self):
-        version = "0.1.0-dev.58"
+        version = "0.1.0-dev.59"
         self.assertIn(version, (ADDON / "app/version.py").read_text(encoding="utf-8"))
         self.assertIn(f"version: {version}", (ADDON / "config.yaml").read_text(encoding="utf-8"))
         self.assertIn(f"version: {version}", (ROOT / "repository.yaml").read_text(encoding="utf-8"))

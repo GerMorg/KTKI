@@ -1,21 +1,23 @@
 # v38 Repair Release
 
-This is the complete repair pass requested for the Kraken Trader application. The repository's historical semantic development version `0.1.0-dev.38` already exists, so this repair uses the next monotonic runtime version `0.1.0-dev.58` while retaining the user-facing repair designation `v38`.
+This is the complete repair pass requested for the Kraken Trader application. The repository already contains a historical `0.1.0-dev.38`; the repaired runtime is therefore versioned monotonically as `0.1.0-dev.59` while retaining the repair designation `v38`.
 
 ## Fixed
 
-- Numeric GUI values remain real numeric objects during template rendering, so localized German output no longer corrupts arithmetic, comparisons, or Jinja float filters.
-- Raw JSON/text values are preserved exactly.
-- Controlled learning performs exactly one time-ordered training/validation split; the optimizer never re-splits its supplied training set.
-- Validation size is large enough to satisfy all required horizon gates instead of allowing a 24h/168h gate configuration with too few validation observations.
-- Active-vs-candidate comparisons persist per-horizon coverage, decision count, raw accuracy, Wilson lower bounds, net return and drawdown, making the shadow result auditable and meaningful.
-- Approval re-runs the shadow evaluation against the exact persisted validation forecast IDs and blocks activation if the sample changed, the active version changed, parameters are invalid, or any gate fails.
-- Legacy xStock learning is now a compatibility facade over `parameter_family_versions`; it no longer maintains a second independent activation/version system.
-- Legacy xStock migration runs only once against the default version and cannot overwrite an already evolved active version on application restart.
-- News-learning candidate identity includes the full comparison sample content as well as the active base version, preventing stale deduplication after data or model changes.
-- News-learning approval rechecks the exact time-split sample and walk-forward gates before activating a new version.
-- Regression coverage was expanded for all of the above.
-- A GitHub Actions regression workflow was added for every branch push and pull request. The workflow invokes `sh run_tests.sh`, so it does not depend on the repository executable bit.
+- Active/candidate learning displays are no longer self-comparisons after promotion. Actionable candidate views show only pending candidates; promoted versions remain in version history.
+- Numeric GUI values remain arithmetic-safe while German output uses fewer unnecessary decimal places.
+- Controlled learning performs exactly one time-ordered train/validation split and persists the validation sample for approval rechecks.
+- Per-horizon active-vs-candidate metrics include coverage, decisions, raw/robust accuracy, net return, improvement and drawdown.
+- News-learning approval validates the frozen validation sample instead of fingerprinting the continuously changing full news set, preventing false `REJECTED_RECHECK` results caused by newly arriving news.
+- News candidate identity still includes the full teacher/sample content and active base version for correct automatic deduplication.
+- Austrian tax reporting is now real-trading first: Kraken trade history is imported when private API credentials are available, with Realhandel / Paper / Beide as explicit sources.
+- Real-trade tax calculations use EUR acquisition/proceeds with average cost inventory handling and explicitly flag non-EUR pairs or incomplete holdings for manual review rather than inventing FX/basis values.
+- Regression tests cover all newly reported defects.
+- GitHub Actions runs the complete regression suite with `sh run_tests.sh`.
+
+## Austrian tax basis
+
+For private crypto assets, the BMF states a special rate of 27.5% and describes the moving-average method for crypto of the same type held in the same wallet/address for realizations after 31 December 2022. Foreign capital income and other capital gains can likewise be subject to the 27.5% special rate depending on their classification. The application therefore presents the report as a verification aid, not as a filing decision. citeturn984252search0turn984252search1turn984252search8
 
 ## Safety
 
@@ -23,4 +25,4 @@ Real trading remains disabled by default. No learning path activates a new param
 
 ## Verification
 
-The release branch contains automated regression tests and CI configuration. The final merge should be accepted only with a green GitHub Actions test job.
+The final repair must only be merged from a branch whose GitHub Actions test job is green.
