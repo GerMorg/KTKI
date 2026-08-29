@@ -14,6 +14,7 @@ def display_number(value, decimals=None):
     absolute = abs(number)
     places = decimals if decimals is not None else (
         8 if absolute and absolute < Decimal('0.01')
+        else 6 if absolute < Decimal('0.1')
         else 4 if absolute < 1
         else 2
     )
