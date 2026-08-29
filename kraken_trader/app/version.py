@@ -1,2 +1,2 @@
-APP_VERSION='0.1.0-dev.57'
-USER_AGENT='HA-Kraken-Trader/0.1.0-dev.57'
+APP_VERSION='0.1.0-dev.58'
+USER_AGENT='HA-Kraken-Trader/0.1.0-dev.58'
