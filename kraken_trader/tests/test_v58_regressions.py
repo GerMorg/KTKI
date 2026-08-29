@@ -8,8 +8,15 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'app'))
 
 from jinja2 import Template
 
+import flask
+if not hasattr(flask, 'Response'):
+    class Response:  # pragma: no cover
+        pass
+    flask.Response = Response
+
+from at_income_tax import AustrianTaxInfo
 from controlled_learning import ControlledLearning
-from display_format import DisplayFloat, display_tree
+from display_format import DisplayFloat, display_number, display_tree
 from learning_approval import LearningApproval
 from news_learning import NewsLearning
 from strategy_profiles import FAMILIES
@@ -26,6 +33,11 @@ class V38DisplayRegressionTests(unittest.TestCase):
         values = display_tree({'active': 0.1375, 'candidate': 0.1875})
         rendered = Template('{{ "%.2f"|format((candidate-active)*100) }}').render(**values)
         self.assertEqual(rendered, '5.00')
+
+    def test_number_display_avoids_unnecessary_precision_without_losing_small_price_precision(self):
+        self.assertEqual(display_number(62.120000), '62,12')
+        self.assertEqual(display_number(0.050001), '0,050001')
+        self.assertEqual(display_number(0.0000123456), '0,00001235')
 
     def test_integer_display_remains_numeric(self):
         values = display_tree({'n': 5})
@@ -90,13 +102,21 @@ class V38ControlledLearningTests(unittest.TestCase):
         result = self.learning.decide(candidate_id, 'approve')
         self.assertEqual(result['status'], 'REJECTED_RECHECK')
         self.assertEqual(result['reason'], 'VALIDATION_SAMPLE_CHANGED')
-        self.assertEqual(self.learning.candidates('forex')[0]['status'], 'REJECTED_RECHECK')
 
     def test_legacy_learning_facade_uses_same_active_xstock_version(self):
         facade = LearningApproval(self.db)
         active = self.learning.active('xstocks')
         self.assertEqual(facade.values(), json.loads(active['parameters_json']))
         self.assertIsNone(facade.latest())
+
+    def test_approved_candidates_are_not_shown_as_actionable_again(self):
+        active = self.learning.active('forex')
+        with self.db.con() as c:
+            c.execute(
+                'INSERT INTO learning_candidates(created_at,family,status,base_version,sample_count,active_accuracy,candidate_accuracy,improvement,ci_low,ci_high,parameters_json,reason,decided_at,gate_policy_json,gate_results_json,validation_fingerprint) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                ('2026-01-01T00:00:00+00:00', 'forex', 'APPROVED', active['version'], 1, '0.5', '0.6', '0.1',
+                 '0.5', '0.8', active['parameters_json'], 'test', '2026-01-01T00:01:00+00:00', '{}', '[]', 'x'))
+        self.assertEqual(self.learning.candidates('forex'), [])
 
 
 class V38NewsLearningTests(unittest.TestCase):
@@ -122,6 +142,33 @@ class V38NewsLearningTests(unittest.TestCase):
         cols = {x['name'] for x in self.db.rows('PRAGMA table_info(news_model_candidates)')}
         self.assertIn('base_version', cols)
         self.assertIn('sample_fingerprint', cols)
+        self.assertIn('validation_ids_json', cols)
+        self.assertIn('validation_fingerprint', cols)
+
+
+class V38TaxTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        from db import DB
+        self.db = DB(os.path.join(self.tmp.name, 'x.db'))
+        self.db.init()
+        self.tax = AustrianTaxInfo(self.db)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_real_trade_report_uses_real_trade_source_and_average_cost(self):
+        with self.db.con() as c:
+            c.execute('INSERT INTO real_tax_trades(txid,trade_time,pair,side,price,volume,cost,fee,payload_json,imported_at) VALUES(?,?,?,?,?,?,?,?,?,?)',
+                      ('b1', 1735689600, 'BTC/EUR', 'buy', '50000', '1', '50000', '50', '{}', '2026-01-01T00:00:00+00:00'))
+            c.execute('INSERT INTO real_tax_trades(txid,trade_time,pair,side,price,volume,cost,fee,payload_json,imported_at) VALUES(?,?,?,?,?,?,?,?,?,?)',
+                      ('s1', 1735776000, 'BTC/EUR', 'sell', '51000', '1', '51000', '51', '{}', '2026-01-01T00:00:00+00:00'))
+        rows, warnings = self.tax._real_rows(2025)
+        self.assertEqual(warnings, [])
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]['source'], 'real')
+        self.assertEqual(rows[0]['gain_loss_eur'], '899.00')
+        self.assertEqual(rows[0]['estimated_tax_eur'], '247.22')
 
 
 if __name__ == '__main__':
