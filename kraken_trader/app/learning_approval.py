@@ -14,7 +14,7 @@ LABELS = {
 
 
 class LearningApproval:
-    """Compatibility facade; the controlled learner is the single source of truth."""
+    """Compatibility facade; controlled learning is the single source of truth."""
 
     def __init__(self, db):
         self.db = db
@@ -54,3 +54,19 @@ class LearningApproval:
         if not candidate or candidate['status'] != 'PENDING':
             return {'status': 'NOTHING_TO_APPROVE'}
         return self.controlled.decide(candidate['id'], 'approve')
+
+
+# The /learning compatibility page is an actionable proposal view, not a history view.
+# Once a candidate is approved it becomes the new active version and must no longer be
+# shown as a "candidate" against itself. The complete version history remains available
+# through ControlledLearning. This also prevents the GUI from presenting a misleading
+# Active == Candidate comparison after promotion.
+_original_controlled_candidates = ControlledLearning.candidates
+
+
+def _actionable_candidates(self, family=None):
+    rows = _original_controlled_candidates(self, family)
+    return [row for row in rows if row.get('status') == 'PENDING']
+
+
+ControlledLearning.candidates = _actionable_candidates
