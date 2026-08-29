@@ -8,6 +8,14 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'app'))
 
 from jinja2 import Template
 
+# test_v52 installs a minimal Flask stub; provide the one additional symbol
+# needed to import the tax blueprint module without weakening runtime behavior.
+import flask
+if not hasattr(flask, 'Response'):
+    class Response:  # pragma: no cover - import-only compatibility in tests
+        pass
+    flask.Response = Response
+
 from at_income_tax import AustrianTaxInfo
 from controlled_learning import ControlledLearning
 from display_format import DisplayFloat, display_number, display_tree
@@ -28,10 +36,10 @@ class V38DisplayRegressionTests(unittest.TestCase):
         rendered = Template('{{ "%.2f"|format((candidate-active)*100) }}').render(**values)
         self.assertEqual(rendered, '5.00')
 
-    def test_number_display_avoids_unnecessary_precision(self):
+    def test_number_display_avoids_unnecessary_precision_without_losing_small_price_precision(self):
         self.assertEqual(display_number(62.120000), '62,12')
         self.assertEqual(display_number(0.050001), '0,050001')
-        self.assertEqual(display_number(0.0000123456), '0,000012')
+        self.assertEqual(display_number(0.0000123456), '0,00001235')
 
     def test_integer_display_remains_numeric(self):
         values = display_tree({'n': 5})
