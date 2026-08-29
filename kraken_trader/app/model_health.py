@@ -13,7 +13,9 @@ class ModelHealth:
    equity*=max(1e-9,1+float(value)/100);peak=max(peak,equity);worst=min(worst,equity/peak-1)
   return worst*100
  def evaluate(self,family,min_samples=20,min_net_return_pct=0.0,max_drawdown_pct=-25.0):
-  rows=self.db.rows("SELECT f.horizon_hours,f.direction,f.features_json,e.actual_return_pct,e.direction_correct FROM research_forecasts f JOIN forecast_evaluations e ON e.forecast_id=f.id WHERE f.family=? ORDER BY f.id",(family,));details={'family':family,'samples':len(rows),'horizons':{},'gates':[]}
+  try:rows=self.db.rows("SELECT f.horizon_hours,f.direction,f.features_json,e.actual_return_pct,e.direction_correct FROM research_forecasts f JOIN forecast_evaluations e ON e.forecast_id=f.id WHERE f.family=? ORDER BY f.id",(family,))
+  except Exception:rows=[]
+  details={'family':family,'samples':len(rows),'horizons':{},'gates':[]}
   for horizon in self.REQUIRED_HORIZONS:
    subset=[r for r in rows if int(r['horizon_hours'])==horizon];cost_adjusted=[];raw_edges=[];net_edges=[]
    for r in subset:
@@ -21,7 +23,7 @@ class ModelHealth:
     except Exception:features={}
     cost=float(features.get('estimated_roundtrip_cost_pct') or 0);direction=str(r.get('direction') or 'FLAT');actual=float(r.get('actual_return_pct') or 0);strategy=actual-cost if direction=='UP' else 0.0;cost_adjusted.append(strategy)
     if direction=='UP':raw_edges.append(actual);net_edges.append(strategy)
-   hit=sum(int(r['direction_correct']) for r in subset);n=len(subset);model_net=sum(cost_adjusted);buy_hold=sum(float(r['actual_return_pct'] or 0) for r in subset);dd=self._drawdown(cost_adjusted) if cost_adjusted else None
+   hit=sum(int(r['direction_correct']) for r in subset);n=len(subset);model_net=sum(cost_adjusted);buy_hold=sum(float(r.get('actual_return_pct') or 0) for r in subset);dd=self._drawdown(cost_adjusted) if cost_adjusted else None
    details['horizons'][str(horizon)]={'samples':n,'hit_rate':hit/n if n else None,'model_net_return_pct':model_net,'no_position_return_pct':0.0,'buy_hold_return_sum_pct':buy_hold,'excess_vs_no_position_pct':model_net,'expected_up_edge_raw_pct':sum(raw_edges)/len(raw_edges) if raw_edges else None,'expected_up_edge_after_costs_pct':sum(net_edges)/len(net_edges) if net_edges else None,'max_drawdown_pct':dd}
    details['gates'] += [{'name':f'H{horizon}_SAMPLES','passed':n>=min_samples,'actual':n,'required':min_samples},{'name':f'H{horizon}_NET_RETURN','passed':model_net>=min_net_return_pct,'actual':model_net,'required':min_net_return_pct},{'name':f'H{horizon}_DRAWDOWN','passed':dd is None or dd>=max_drawdown_pct,'actual':dd,'required':max_drawdown_pct}]
   hard=all(g['passed'] for g in details['gates']);horizons=[x for x in details['horizons'].values() if x['samples']];benchmark_ok=bool(horizons) and any(x['excess_vs_no_position_pct']>0 for x in horizons);details['gates'].append({'name':'POSITIVE_VS_NO_POSITION','passed':benchmark_ok,'actual':max((x['excess_vs_no_position_pct'] for x in horizons),default=None),'required':'> 0'})
