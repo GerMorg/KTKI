@@ -1,35 +1,56 @@
 import unittest
+
 from kraken_trader.app.autonomous_orchestrator_v66 import AutonomousOrchestratorV66, ModelInput
 
-class Optimizer:
-    def optimize(self, assets, portfolio):
-        return assets
-
-class Twin:
-    def simulate(self, actions, portfolio):
-        return {"status": "OK", "actions": actions}
-
-class Matrix:
-    def evaluate(self, *args):
-        return {"allowed": True, "blocker": "Alle Regeln erfüllt", "checks": []}
 
 class TestV66(unittest.TestCase):
     def setUp(self):
-        self.o = AutonomousOrchestratorV66(Optimizer(), object(), Twin(), Matrix())
-        self.base = {"positions": {}, "data_fresh": True, "portfolio_risk_ok": True}
+        self.o = AutonomousOrchestratorV66()
+        self.base = {
+            "total_eur": 1000,
+            "holdings": [],
+            "data_fresh": True,
+            "eur_balance": 1000,
+        }
+
+    @staticmethod
+    def model(valid=True, status="VALID", assets=None):
+        return ModelInput(
+            "m", valid, 2.0, 10.0, .9, status,
+            assets if assets is not None else [{
+                "symbol": "BTC/EUR", "score": 90,
+                "expected_return_pct": 2.0,
+                "volatility_pct": 10.0,
+                "currency": "EUR",
+            }],
+        )
 
     def test_invalid_models_block(self):
-        r = self.o.decide([ModelInput("m", False, .2, .1, .9, {"BTC/EUR": 1})], self.base)
+        r = self.o.decide([self.model(valid=False)], self.base)
         self.assertEqual(r.status, "BLOCKED")
 
-    def test_positive_valid_model_reaches_twin(self):
-        r = self.o.decide([ModelInput("m", True, .2, .1, .9, {"BTC/EUR": 1})], self.base)
-        self.assertEqual(r.status, "READY")
-        self.assertIsNotNone(r.twin)
+    def test_non_validated_models_block(self):
+        r = self.o.decide([self.model(status="NOT_ROBUST")], self.base)
+        self.assertEqual(r.status, "BLOCKED")
 
     def test_no_assets_blocks(self):
-        r = self.o.decide([ModelInput("m", True, .2, .1, .9, {})], self.base)
+        r = self.o.decide([self.model(assets=[])], self.base)
         self.assertEqual(r.status, "BLOCKED")
+
+    def test_malformed_model_dictionary_is_ignored(self):
+        r = self.o.decide([{"valid": True, "validation_status": "VALID", "confidence": "bad"}], self.base)
+        self.assertEqual(r.status, "BLOCKED")
+
+    def test_ready_path_uses_real_v65_engine(self):
+        r = self.o.decide(
+            [self.model()],
+            self.base,
+            route_options={"BTC/EUR": [{"symbol": "BTC/EUR", "quote_asset": "EUR"}]},
+            tickers={"BTC/EUR": {"b": ["50000"], "a": ["50010"], "c": ["50005"]}},
+        )
+        self.assertEqual(r.status, "READY")
+        self.assertEqual(r.twin["status"], "SIMULATED")
+
 
 if __name__ == "__main__":
     unittest.main()
