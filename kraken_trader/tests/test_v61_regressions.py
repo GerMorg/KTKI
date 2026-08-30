@@ -14,28 +14,26 @@ class V61Regressions(unittest.TestCase):
         self.assertEqual(values['id'], '123')
         self.assertEqual(display_number(72.123456789), '72,12')
 
-    def test_no_free_chosen_name_in_python_sources(self):
+    def test_no_module_free_chosen_name(self):
         root = pathlib.Path(__file__).resolve().parents[1] / 'app'
         offenders = []
         for path in root.glob('*.py'):
             tree = ast.parse(path.read_text(encoding='utf-8'), filename=str(path))
-            assigned = {'chosen'}
+            assigned = set()
+            loaded = []
             for node in ast.walk(tree):
-                if isinstance(node, (ast.Assign, ast.AnnAssign, ast.NamedExpr)):
-                    targets = node.targets if isinstance(node, ast.Assign) else [node.target]
-                    for target in targets:
-                        if isinstance(target, ast.Name):
-                            assigned.add(target.id)
-                elif isinstance(node, (ast.For, ast.comprehension)) and isinstance(node.target, ast.Name):
-                    assigned.add(node.target.id)
+                if isinstance(node, ast.Name):
+                    if isinstance(node.ctx, ast.Load) and node.id == 'chosen':
+                        loaded.append(node.lineno)
+                    elif isinstance(node.ctx, (ast.Store, ast.Del)):
+                        assigned.add(node.id)
                 elif isinstance(node, ast.Import):
-                    assigned.update((a.asname or a.name.split('.')[0]) for a in node.names)
+                    assigned.update(a.asname or a.name.split('.')[0] for a in node.names)
                 elif isinstance(node, ast.ImportFrom):
-                    assigned.update((a.asname or a.name) for a in node.names)
-            for node in ast.walk(tree):
-                if isinstance(node, ast.Name) and node.id == 'chosen' and isinstance(node.ctx, ast.Load) and node.id not in assigned:
-                    offenders.append(f'{path}:{node.lineno}')
-        self.assertEqual(offenders, [], 'free chosen reference(s): ' + ', '.join(offenders))
+                    assigned.update(a.asname or a.name for a in node.names)
+            if loaded and 'chosen' not in assigned:
+                offenders.append(f'{path}:{loaded}')
+        self.assertEqual(offenders, [], 'module-level free chosen reference(s): ' + ', '.join(offenders))
 
 
 if __name__ == '__main__':
