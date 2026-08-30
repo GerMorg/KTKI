@@ -14,7 +14,7 @@ def display_number(value,decimals=None):
   elif a>=Decimal('.01'):p=6
   elif a>=Decimal('.001'):p=7
   elif a>=Decimal('.0001'):p=8
-  else:p=10
+  else:p=8
  else:p=max(0,int(decimals))
  text=f'{number:.{p}f}'.rstrip('0').rstrip('.')
  if text in ('-0',''):text='0'
