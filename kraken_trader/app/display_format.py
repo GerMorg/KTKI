@@ -1,4 +1,7 @@
 from decimal import Decimal, InvalidOperation
+import re
+
+_NUMERIC_TEXT = re.compile(r'^[-+]?\d+(?:\.\d+)?$')
 
 
 def display_number(value, decimals=None):
@@ -12,12 +15,21 @@ def display_number(value, decimals=None):
     if not number.is_finite():
         return str(value)
     absolute = abs(number)
-    places = decimals if decimals is not None else (
-        8 if absolute and absolute < Decimal('0.01')
-        else 6 if absolute < Decimal('0.1')
-        else 4 if absolute < 1
-        else 2
-    )
+    if decimals is None:
+        if absolute == 0:
+            places = 0
+        elif absolute >= Decimal('1'):
+            places = 2
+        elif absolute >= Decimal('0.1'):
+            places = 3
+        elif absolute >= Decimal('0.01'):
+            places = 4
+        elif absolute >= Decimal('0.001'):
+            places = 5
+        else:
+            places = 6
+    else:
+        places = max(0, int(decimals))
     text = f'{number:.{places}f}'.rstrip('0').rstrip('.')
     if text in ('-0', ''):
         text = '0'
@@ -34,8 +46,18 @@ class DisplayFloat(float):
         return str(self)
 
 
+class DisplayNumberText(str):
+    """Numeric database text with compact presentation but unchanged numeric value."""
+    def __new__(cls, value):
+        return super().__new__(cls, value)
+    def __str__(self):
+        return display_number(super().__str__())
+    def __repr__(self):
+        return str(self)
+
+
 def display_tree(value):
-    """Localize actual numeric values while preserving raw database/JSON strings."""
+    """Format display-only numeric strings while preserving arbitrary text/JSON."""
     if isinstance(value, dict):
         return {key: display_tree(item) for key, item in value.items()}
     if isinstance(value, list):
@@ -48,4 +70,8 @@ def display_tree(value):
         return DisplayFloat(value)
     if isinstance(value, Decimal):
         return DisplayFloat(value)
+    if isinstance(value, str) and _NUMERIC_TEXT.fullmatch(value.strip()):
+        text = value.strip()
+        if '.' in text and len(text.rsplit('.', 1)[1]) > 2:
+            return DisplayNumberText(text)
     return value
