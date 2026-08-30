@@ -1,4 +1,4 @@
-# Kraken Trader Add-on 0.1.0-dev.57
+# Kraken Trader Add-on 0.1.0-dev.66
 
 ## Start
 

@@ -1,4 +1,4 @@
-# HA Kraken Trader 0.1.0-dev.57
+# HA Kraken Trader 0.1.0-dev.66
 
 Home-Assistant-Add-on für auditierbare Kraken-Analyse, Portfolioansicht, Paper-Handel und kontrollierte Realhandelsfunktionen.
 
