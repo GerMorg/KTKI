@@ -2,7 +2,12 @@ name: Kraken Trader tests
 
 on:
   push:
-    branches: [main, 'repair/**', 'fix/**']
+    branches:
+      - main
+      - 'repair/**'
+      - 'fix/**'
+      - 'v[0-9]*'
+      - 'v*-*'
   pull_request:
     branches: [main]
 
