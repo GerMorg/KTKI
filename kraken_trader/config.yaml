@@ -1,5 +1,5 @@
 name: Kraken Trader
-version: 0.1.0-dev.66
+version: 0.1.0-dev.67
 slug: kraken_trader
 description: Read-only Kraken Portfolio und lokales Paper-Trading; Realhandel optional, strikt gated
 arch:
@@ -86,6 +86,27 @@ options:
   real_balancing_limit_offset_pct: 0.2
   real_balancing_automation_secret: ''
   real_balancing_automation_secret_hash: ''
+  automation_master_enabled: false
+  automation_analysis_enabled: false
+  automation_news_enabled: false
+  automation_learning_enabled: false
+  automation_learning_auto_approve_enabled: false
+  automation_paper_enabled: false
+  automation_real_enabled: false
+  automation_real_execute_enabled: false
+  automation_tick_minutes: 5
+  automation_analysis_interval_minutes: 60
+  automation_news_interval_minutes: 30
+  automation_learning_interval_minutes: 60
+  automation_paper_interval_minutes: 15
+  automation_real_interval_minutes: 60
+  analysis_top_per_category: 5
+  analysis_max_symbols: 20
+  analysis_max_delay_seconds: 0.35
+  learning_max_evaluations: 600
+  news_learning_max_samples: 600
+  news_local_eval_max_items: 1000
+  forecast_due_batch_limit: 1000
 schema:
   kraken_api_key: password?
   kraken_api_secret: password?
@@ -161,3 +182,24 @@ schema:
   real_balancing_limit_offset_pct: float
   real_balancing_automation_secret: password?
   real_balancing_automation_secret_hash: password?
+  automation_master_enabled: bool
+  automation_analysis_enabled: bool
+  automation_news_enabled: bool
+  automation_learning_enabled: bool
+  automation_learning_auto_approve_enabled: bool
+  automation_paper_enabled: bool
+  automation_real_enabled: bool
+  automation_real_execute_enabled: bool
+  automation_tick_minutes: int(1,60)
+  automation_analysis_interval_minutes: int(5,1440)
+  automation_news_interval_minutes: int(5,1440)
+  automation_learning_interval_minutes: int(5,1440)
+  automation_paper_interval_minutes: int(1,1440)
+  automation_real_interval_minutes: int(5,1440)
+  analysis_top_per_category: int(1,25)
+  analysis_max_symbols: int(1,100)
+  analysis_max_delay_seconds: float(0,10)
+  learning_max_evaluations: int(50,5000)
+  news_learning_max_samples: int(50,5000)
+  news_local_eval_max_items: int(100,10000)
+  forecast_due_batch_limit: int(100,5000)
