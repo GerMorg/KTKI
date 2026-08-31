@@ -9,7 +9,8 @@ D=lambda value:Decimal(str(value or 0))
 class ExecutionRouteError(ValueError): pass
 
 def _ticker(item):
- if not item:return None
+ if isinstance(item,list): item=next((x for x in item if isinstance(x,dict)),None)
+ if not isinstance(item,dict):return None
  bid=D((item.get('b') or [0])[0]);ask=D((item.get('a') or [0])[0]);last=D((item.get('c') or [0])[0])
  if bid<=0 or ask<=0:
   if last<=0:return None
@@ -17,14 +18,16 @@ def _ticker(item):
  return {'bid':bid,'ask':ask,'mid':(bid+ask)/2}
 
 def _find(tickers,*keys):
+ if not isinstance(tickers,dict):return None
  wanted={str(x or '').upper().replace('/','') for x in keys if x}
  normalized={x.replace('XBT','BTC') for x in wanted}
- for key,value in (tickers or {}).items():
+ for key,value in tickers.items():
   compact=str(key).upper().replace('/','')
   if compact in wanted or compact.replace('XBT','BTC') in normalized:return value
  return None
 
 def route_cost(alternative,tickers,notional_eur,trade_fee_bps,fx_fee_bps,slippage_bps,side='buy'):
+ if not isinstance(alternative,dict):return {'valid':False,'reason':'INVALID_ROUTE_DEFINITION'}
  market=_ticker(_find(tickers,alternative.get('source_key'),alternative.get('symbol')))
  if not market:return {'valid':False,'reason':'NO_PRODUCT_TICKER'}
  fx_required=str(alternative.get('quote_asset') or '').upper()=='USD' or str(alternative.get('symbol') or '').upper().endswith('/USD')
@@ -38,19 +41,11 @@ def route_cost(alternative,tickers,notional_eur,trade_fee_bps,fx_fee_bps,slippag
  if not fx_required:
   total=product_spread_cost+trade_fee_cost+slippage_cost
   return {'valid':True,'symbol':alternative.get('symbol'),'quote_currency':'EUR','fx_required':False,'fx_rate':D(1),'product_notional_eur':eur,'fx_notional_eur':D(0),'product_spread_cost_eur':product_spread_cost,'trade_fee_eur':trade_fee_cost,'slippage_eur':slippage_cost,'fx_cost_eur':D(0),'total_cost_eur':total,'total_cost_pct':total/eur*100}
- # A EUR/USD quote converts the intended EUR exposure into USD at mid for
- # comparison. The actual conversion uses bid when buying USD and ask when
- # converting USD proceeds back to EUR.
- fx_rate=fx['bid'] if buy else fx['ask'];mid=fx['mid']
- usd_notional=eur*mid
- ideal_eur=usd_notional/mid
- actual_eur=usd_notional/fx_rate
- fx_spread_cost=abs(actual_eur-ideal_eur)
- fx_fee_cost=eur*fx_fee
- total=product_spread_cost+trade_fee_cost+slippage_cost+fx_spread_cost+fx_fee_cost
+ fx_rate=fx['bid'] if buy else fx['ask'];mid=fx['mid'];usd_notional=eur*mid;ideal_eur=usd_notional/mid;actual_eur=usd_notional/fx_rate;fx_spread_cost=abs(actual_eur-ideal_eur);fx_fee_cost=eur*fx_fee;total=product_spread_cost+trade_fee_cost+slippage_cost+fx_spread_cost+fx_fee_cost
  return {'valid':True,'symbol':alternative.get('symbol'),'quote_currency':'USD','fx_required':True,'fx_rate':fx_rate,'product_notional_eur':eur,'product_notional_usd':usd_notional,'fx_notional_eur':actual_eur,'product_spread_cost_eur':product_spread_cost,'trade_fee_eur':trade_fee_cost,'slippage_eur':slippage_cost,'fx_spread_cost_eur':fx_spread_cost,'fx_fee_eur':fx_fee_cost,'fx_cost_eur':fx_spread_cost+fx_fee_cost,'total_cost_eur':total,'total_cost_pct':total/eur*100}
 
 def choose_route(alternatives,tickers,notional_eur,trade_fee_bps=40,fx_fee_bps=10,slippage_bps=10,side='buy'):
+ alternatives=[x for x in (alternatives or []) if isinstance(x,dict)]
  ranked=[]
  for market in alternatives:
   cost=route_cost(market,tickers,notional_eur,trade_fee_bps,fx_fee_bps,slippage_bps,side);ranked.append((cost.get('total_cost_eur',D('999999999')),cost.get('symbol',market.get('symbol')),market,cost))
