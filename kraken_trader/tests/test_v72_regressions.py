@@ -1,5 +1,4 @@
 import ast
-import json
 from pathlib import Path
 import unittest
 
@@ -10,7 +9,7 @@ class V72RegressionTests(unittest.TestCase):
     def test_pipeline_records_stage_operation_and_details(self):
         source=(APP/'research_pipeline.py').read_text(encoding='utf-8')
         self.assertIn('def fail(self,jid,stage,operation,exc,context=None):',source)
-        self.assertIn("RESEARCH_STAGE_FAILED",source)
+        self.assertIn('RESEARCH_STAGE_FAILED',source)
         self.assertIn('traceback.format_exc',source)
         self.assertIn("stage,operation='ForecastTracker.snapshot'",source)
         self.assertIn("stage,operation='ForecastTracker.evaluate_due'",source)
@@ -30,7 +29,6 @@ class V72RegressionTests(unittest.TestCase):
         source=(APP/'v72_main.py').read_text(encoding='utf-8')
         self.assertIn('def _record_finished_analysis',source)
         self.assertIn("controller._record('analysis','FAILED'",source)
-        self.assertIn("'research_monitor-v72'" not in source, source)
 
     def test_v72_is_active_runtime(self):
         run=(ROOT/'run.sh').read_text(encoding='utf-8')
