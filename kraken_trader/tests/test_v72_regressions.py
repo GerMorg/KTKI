@@ -25,6 +25,15 @@ class V72RegressionTests(unittest.TestCase):
         self.assertIn("FORECAST_EVALUATION_FAILED",source)
         self.assertIn("FORECAST_EVALUATION_COMPLETED_WITH_ERRORS",source)
 
+    def test_all_active_paper_boundaries_normalize_mapping_payloads(self):
+        source=(APP/'v72_main.py').read_text(encoding='utf-8')
+        self.assertIn('def _mapping(value, default=None):',source)
+        self.assertIn('def _mapping_list(value):',source)
+        self.assertIn('PaperEngine.execute = _paper_execute_v72',source)
+        self.assertIn('PortfolioAllocator.plans = _allocator_plans_v72',source)
+        self.assertIn('DecisionMatrix.evaluate = _decision_evaluate_v72',source)
+        self.assertIn('execution_router_module._find = _router_find_v72',source)
+
     def test_analysis_failure_is_recorded_in_automation_history(self):
         source=(APP/'v72_main.py').read_text(encoding='utf-8')
         self.assertIn('def _record_finished_analysis',source)
@@ -44,5 +53,4 @@ class V72RegressionTests(unittest.TestCase):
         for name in ('research_pipeline.py','forecast_tracker.py','v71_main.py','v72_main.py'):
             ast.parse((APP/name).read_text(encoding='utf-8'),filename=name)
 
-if __name__=='__main__':
-    unittest.main()
+if __name__=='__main__':unittest.main()
