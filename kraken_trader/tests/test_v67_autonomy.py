@@ -7,13 +7,13 @@ APP=ROOT/'app'
 
 class V67RepositoryTests(unittest.TestCase):
  def test_new_modules_compile(self):
-  for name in ('automation_v67.py','v67_main.py','v68_main.py','v69_main.py','v70_main.py','v71_main.py','at_income_tax_v68.py'):
+  for name in ('automation_v67.py','v67_main.py','v68_main.py','v69_main.py','v70_main.py','v71_main.py','v72_main.py','at_income_tax_v68.py'):
    ast.parse((APP/name).read_text(encoding='utf-8'),filename=name)
  def test_runtime_uses_latest_entrypoint(self):
-  run=(ROOT/'run.sh').read_text(encoding='utf-8');self.assertIn('v71_main:app',run)
+  run=(ROOT/'run.sh').read_text(encoding='utf-8');self.assertIn('v72_main:app',run)
  def test_versions_and_new_controls(self):
   version=(APP/'version.py').read_text(encoding='utf-8');config=(ROOT/'config.yaml').read_text(encoding='utf-8')
-  self.assertIn("APP_VERSION='0.1.0-dev.71'",version);self.assertIn('version: 0.1.0-dev.71',config)
+  self.assertIn("APP_VERSION='0.1.0-dev.72'",version);self.assertIn('version: 0.1.0-dev.72',config)
   for key in ('automation_master_enabled','automation_analysis_enabled','automation_news_enabled','automation_learning_enabled','automation_paper_enabled','automation_real_enabled','automation_real_execute_enabled','learning_max_evaluations','news_learning_max_samples','analysis_max_symbols'):
    self.assertIn(key+':',config)
  def test_process_navigation_and_portfolio_graph(self):
