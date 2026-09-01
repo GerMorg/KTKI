@@ -1,0 +1,36 @@
+/* v70 visual layer: high-contrast portfolio charts and clearer process cards. */
+:root{
+  --v70-bg:#07111d;
+  --v70-panel:#102033;
+  --v70-panel-strong:#142a40;
+  --v70-border:#3b5970;
+  --v70-text:#f7fbff;
+  --v70-muted:#c3d0dc;
+  --v70-chart-bg:#06101b;
+  --v70-chart-grid:#49657a;
+  --v70-line:#7dd3fc;
+  --v70-area:#38bdf8;
+  --v70-accent:#a5e6ff;
+}
+body{background:linear-gradient(180deg,var(--v70-bg),#0a1725);color:var(--v70-text)}
+.card,.summary,.automation-card,.learning-card,.chart-card{background:var(--v70-panel);border-color:var(--v70-border);box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.lead,small,.muted,.summary span,.summary small,.automation-card small,.learning-card small{color:var(--v70-muted)}
+.nav a{color:var(--v70-muted)}
+.nav a.active,.nav a:hover{background:var(--v70-panel-strong);color:var(--v70-text)}
+.chart-card{padding:18px}
+.chart{width:100%;height:auto;display:block;margin-top:12px}
+.chart-bg{fill:var(--v70-chart-bg);stroke:var(--v70-border);stroke-width:1}
+.chart-gridline{stroke:var(--v70-chart-grid);stroke-width:1;stroke-dasharray:4 6;opacity:.9}
+.chart-line{stroke:var(--v70-line);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 2px 4px rgba(125,211,252,.28))}
+.chart-area{fill:var(--v70-area);opacity:.12}
+.chart-dot{fill:var(--v70-line);stroke:#fff;stroke-width:2}
+.chart-title,.chart-value{fill:var(--v70-text);font-weight:750;font-size:14px}
+.chart-axis-label{fill:var(--v70-muted);font-size:12px;font-weight:600}
+.chart-empty-label{fill:var(--v70-muted);font-size:16px;font-weight:650}
+.process-node{background:var(--v70-panel);border-color:var(--v70-border)}
+.process-node span,.timeline-item>span{background:#1a405c;color:#e0f7ff}
+.timeline-item{background:var(--v70-panel);border-color:var(--v70-border)}
+th{background:#17324a;color:#f2f8fc;border-bottom-color:var(--v70-border)}
+td{border-bottom-color:#2a455c}
+input,select,textarea{background:#081522;border-color:var(--v70-border);color:var(--v70-text)}
+button,.button{box-shadow:0 3px 10px rgba(0,0,0,.2)}

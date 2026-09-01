@@ -1,4 +1,4 @@
 <!doctype html>
 <html lang="de">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title>Kraken Trader</title><link rel="stylesheet" href="{{url_for('static',filename='style.css')}}"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title>Kraken Trader</title><link rel="stylesheet" href="{{url_for('static',filename='style.css')}}"><link rel="stylesheet" href="{{url_for('static',filename='v70.css')}}"></head>
 <body><div class="shell"><header class="top"><div class="brand"><div><strong>Kraken Trader</strong> <small>v{{app_version}}</small></div><span class="safety">REALHANDEL STANDARDMÄSSIG DEAKTIVIERT</span></div><nav class="nav" aria-label="Hauptprozess">{% for href,label in nav %}<a href="{{href}}" class="{% if current_path==href %}active{% endif %}" {% if current_path==href %}aria-current="page"{% endif %}>{{label}}</a>{% endfor %}</nav></header><main>{{body|safe}}</main></div></body></html>
