@@ -1,9 +1,10 @@
-"""v69 runtime wrapper: harden Paper automation, expose tax GUI, and render real charts."""
+"""v69 runtime wrapper kept as a compatibility baseline for older deployments/tests."""
 import v68_main as wrapper
 from flask import redirect, url_for
 
 app = wrapper.app
 core = wrapper.base
+legacy = core.legacy
 
 
 def _normalize_ticker_payload(payload):
@@ -19,22 +20,22 @@ def _normalize_ticker_payload(payload):
 
 
 def refresh_allowed_prices_v69():
-    symbols = list(core.current_market_batch())
+    symbols = list(legacy.current_market_batch())
     if any(x.endswith('/USD') for x in symbols) and 'EUR/USD' not in symbols:
         symbols.append('EUR/USD')
     if not symbols:
         return 0
     received = __import__('db').now(); saved = 0; groups = {}
     for symbol in symbols:
-        row = core.db.rows('SELECT asset_class FROM market_universe WHERE symbol=? LIMIT 1', (symbol,))
+        row = legacy.db.rows('SELECT asset_class FROM market_universe WHERE symbol=? LIMIT 1', (symbol,))
         groups.setdefault(row[0]['asset_class'] if row else 'currency', []).append(symbol)
     for asset_class, batch in groups.items():
         try:
-            try: payload = core.client.ticker(batch, asset_class)
-            except TypeError: payload = core.client.ticker(batch)
+            try: payload = legacy.client.ticker(batch, asset_class)
+            except TypeError: payload = legacy.client.ticker(batch)
             payload = _normalize_ticker_payload(payload)
         except Exception as exc:
-            core.db.audit('PAPER_PRICE_REFRESH_FAILED', asset_class + ': ' + type(exc).__name__, 'error'); continue
+            legacy.db.audit('PAPER_PRICE_REFRESH_FAILED', asset_class + ': ' + type(exc).__name__, 'error'); continue
         for requested in batch:
             wanted = requested.replace('BTC/', 'XBT/').replace('/', ''); item = None
             for key, value in payload.items():
@@ -48,13 +49,13 @@ def refresh_allowed_prices_v69():
             bid_v = str(bid[0] if isinstance(bid, (list, tuple)) and bid else item.get('bid') or '')
             ask_v = str(ask[0] if isinstance(ask, (list, tuple)) and ask else item.get('ask') or '')
             if not last: continue
-            openp = core.D(item.get('o')); change = str(((core.D(last) - openp) / openp * 100) if openp else core.D(0))
-            core.db.upsert_live_price({'symbol': requested, 'last': last, 'bid': bid_v, 'ask': ask_v, 'change_pct': change, 'received_at': received}); saved += 1
-    core.stream.set_symbols(symbols); core.stream.start(); return saved
+            openp = legacy.D(item.get('o')); change = str(((legacy.D(last) - openp) / openp * 100) if openp else legacy.D(0))
+            legacy.db.upsert_live_price({'symbol': requested, 'last': last, 'bid': bid_v, 'ask': ask_v, 'change_pct': change, 'received_at': received}); saved += 1
+    legacy.stream.set_symbols(symbols); legacy.stream.start(); return saved
 
 
 def run_paper_cycle_v69():
-    refresh_allowed_prices_v69(); core.configure_engine(core.paper_engine); core.forecasts.evaluate_due(); result = core.paper_engine.run()
+    refresh_allowed_prices_v69(); legacy.configure_engine(legacy.paper_engine); legacy.forecasts.evaluate_due(); result = legacy.paper_engine.run()
     return {'status': 'COMPLETED', 'actions': result} if isinstance(result, list) else (result or {'status': 'COMPLETED'})
 
 

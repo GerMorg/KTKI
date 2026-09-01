@@ -13,6 +13,15 @@ DEFAULTS={
  'learning_max_evaluations':'600','news_learning_max_samples':'600','news_local_eval_max_items':'1000',
  'forecast_due_batch_limit':'1000'}
 
+
+def as_mapping(value, default=None):
+ if isinstance(value,dict): return value
+ if isinstance(value,list):
+  mappings=[x for x in value if isinstance(x,dict)]
+  return mappings[0] if len(mappings)==1 else {'status':'COMPLETED','items':mappings}
+ if value is None:return dict(default or {'status':'COMPLETED'})
+ return {'status':'COMPLETED','value':value}
+
 class AutomationControllerV67:
  def __init__(self,db,pipeline,news_prefilter,controlled_learning,news_learning,run_paper_cycle,real_allocator):
   self.db=db;self.pipeline=pipeline;self.news_prefilter=news_prefilter;self.controlled_learning=controlled_learning;self.news_learning=news_learning;self.run_paper_cycle=run_paper_cycle;self.real_allocator=real_allocator;self.lock=threading.Lock();self.stop_event=threading.Event();self.ensure()
@@ -46,9 +55,9 @@ class AutomationControllerV67:
   out=[]
   for active in self.controlled_learning.active_versions():
    for c in self.controlled_learning.candidates(active['family']):
-    if c.get('status')=='PENDING':out.append({'kind':'strategy','family':active['family'],'candidate_id':int(c['id']),'result':self.controlled_learning.decide(int(c['id']),'approve')})
+    if isinstance(c,dict) and c.get('status')=='PENDING':out.append({'kind':'strategy','family':active['family'],'candidate_id':int(c['id']),'result':self.controlled_learning.decide(int(c['id']),'approve')})
   for c in self.news_learning.candidates():
-   if c.get('status')=='PENDING':out.append({'kind':'news','candidate_id':int(c['id']),'result':self.news_learning.decide(int(c['id']),'approve')})
+   if isinstance(c,dict) and c.get('status')=='PENDING':out.append({'kind':'news','candidate_id':int(c['id']),'result':self.news_learning.decide(int(c['id']),'approve')})
   return out
  def run_once(self,force=False):
   with self.lock:
@@ -67,7 +76,9 @@ class AutomationControllerV67:
       if self.boolean(s['automation_learning_auto_approve_enabled']):result['auto_approved']=self._approve()
      elif subsystem=='paper':result={'cycle':self.run_paper_cycle()}
      else:result=self.real_allocator.run(automatic=True)
-     results[subsystem]=result;self._record(subsystem,'QUEUED' if subsystem=='analysis' and result.get('status')=='QUEUED' else 'COMPLETED',result)
+     result=as_mapping(result)
+     results[subsystem]=result
+     self._record(subsystem,'QUEUED' if subsystem=='analysis' and result.get('status')=='QUEUED' else 'COMPLETED',result)
     except Exception as exc:
      error=type(exc).__name__+': '+str(exc)[:500];results[subsystem]={'status':'FAILED','error':error};self._record(subsystem,'FAILED',results[subsystem],error);self.db.audit('AUTOMATION_V67_FAILED',json.dumps({'subsystem':subsystem,'error':error},sort_keys=True),'error')
    return {'status':'COMPLETED','results':results}
