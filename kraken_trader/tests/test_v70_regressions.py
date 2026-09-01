@@ -23,9 +23,9 @@ class V70RegressionTests(unittest.TestCase):
     def test_v70_kraken_payload_boundary_is_hardened(self):
         source=(APP/'v70_main.py').read_text(encoding='utf-8')
         self.assertIn('def normalize_kraken_payload',source)
-        self.assertIn('payload=normalize_kraken_payload(payload)',source)
-        self.assertIn('if isinstance(item,list)',source)
-        self.assertIn('if not isinstance(item,dict)',source)
+        self.assertIn('normalize_kraken_payload(payload)',source)
+        self.assertIn('if isinstance(item, list)',source)
+        self.assertIn('if not isinstance(item, dict)',source)
 
     def test_v70_chart_has_readable_visual_layers(self):
         source=(APP/'v70_main.py').read_text(encoding='utf-8')
