@@ -6,9 +6,10 @@ ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / 'app'
 
 class V69RegressionTests(unittest.TestCase):
-    def test_runtime_entrypoint_is_v69(self):
+    def test_runtime_entrypoint_keeps_v69_baseline_and_uses_v71(self):
         run = (ROOT / 'run.sh').read_text(encoding='utf-8')
-        self.assertIn('v69_main:app', run)
+        self.assertIn('v69_main remains a preserved compatibility baseline', run)
+        self.assertIn('v71_main:app', run)
 
     def test_paper_payload_normalizer_accepts_list_and_dict(self):
         source = (APP / 'v69_main.py').read_text(encoding='utf-8')
