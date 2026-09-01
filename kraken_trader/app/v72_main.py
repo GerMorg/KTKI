@@ -7,7 +7,7 @@ import v71_main as base
 from paper_engine import PaperEngine
 from portfolio_allocator import PortfolioAllocator
 from decision_matrix import DecisionMatrix
-from execution_router import _find as _router_find
+import execution_router as execution_router_module
 
 app = base.app
 controller = base.base.controller
@@ -41,13 +41,13 @@ def _mapping_list(value):
     return []
 
 
-# Final defensive payload boundary for the paper stack. These wrappers are intentionally
-# installed in the v72 runtime so every possible paper caller receives mappings even
-# when a legacy/third-party component unexpectedly returns a list.
+# Final defensive payload boundary for all active trading/decision consumers.
+# Legacy or third-party components may unexpectedly return a one-element list;
+# normalize before any downstream .get(), indexing, or mapping operations.
 _original_paper_execute = PaperEngine.execute
 _original_allocator_plans = PortfolioAllocator.plans
 _original_decision_evaluate = DecisionMatrix.evaluate
-_original_router_find = _router_find
+_original_router_find = execution_router_module._find
 
 
 def _paper_execute_v72(self, symbol, side, gross, reason, decision):
@@ -55,8 +55,7 @@ def _paper_execute_v72(self, symbol, side, gross, reason, decision):
 
 
 def _allocator_plans_v72(self, total):
-    raw = _original_allocator_plans(self, total)
-    return _mapping_list(raw)
+    return _mapping_list(_original_allocator_plans(self, total))
 
 
 def _decision_evaluate_v72(self, symbol, action, context, trade_context='PAPER'):
@@ -70,6 +69,7 @@ def _router_find_v72(tickers, *keys):
 PaperEngine.execute = _paper_execute_v72
 PortfolioAllocator.plans = _allocator_plans_v72
 DecisionMatrix.evaluate = _decision_evaluate_v72
+execution_router_module._find = _router_find_v72
 
 _original_pipeline_start = controller.pipeline.start
 
@@ -96,8 +96,7 @@ def _record_finished_analysis(job_id):
 
 
 def start_pipeline_v72(*args, **kwargs):
-    result = _original_pipeline_start(*args, **kwargs)
-    result = _mapping(result)
+    result = _mapping(_original_pipeline_start(*args, **kwargs))
     if result.get('job_id'):
         threading.Thread(target=_record_finished_analysis,args=(int(result['job_id']),),daemon=True,name='research-monitor-v72').start()
     return result
