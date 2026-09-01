@@ -18,15 +18,13 @@ class V71RegressionTests(unittest.TestCase):
         self.assertIn('symbols = list(legacy.current_market_batch())',source)
         self.assertNotIn('core.current_market_batch()',source)
 
-    def test_v71_is_active_runtime(self):
-        run=(ROOT/'run.sh').read_text(encoding='utf-8')
-        runtime=(APP/'v71_main.py').read_text(encoding='utf-8')
-        self.assertIn('v71_main:app',run)
-        self.assertIn("'version': '0.1.0-dev.71'",runtime)
-        self.assertIn("'paper_market_batch_source': 'legacy.current_market_batch'",runtime)
+    def test_v71_remains_available_as_compatibility_runtime(self):
+        source=(APP/'v71_main.py').read_text(encoding='utf-8')
+        self.assertIn("'runtime': 'v71_main'",source)
+        self.assertIn("'paper_market_batch_source': 'legacy.current_market_batch'",source)
 
     def test_all_runtime_modules_compile(self):
-        for name in ('automation_v67.py','v67_main.py','v68_main.py','v69_main.py','v70_main.py','v71_main.py'):
+        for name in ('automation_v67.py','v67_main.py','v68_main.py','v69_main.py','v70_main.py','v71_main.py','v72_main.py'):
             ast.parse((APP/name).read_text(encoding='utf-8'),filename=name)
 
 if __name__=='__main__':
