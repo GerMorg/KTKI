@@ -1,5 +1,5 @@
 name: Kraken Trader
-version: 0.1.0-dev.71
+version: 0.1.0-dev.72
 slug: kraken_trader
 description: Read-only Kraken Portfolio und lokales Paper-Trading; Realhandel optional, strikt gated
 arch:
@@ -173,6 +173,7 @@ schema:
   real_balancing_max_position_pct: float
   real_balancing_cash_reserve_pct: float
   real_balancing_min_trade_eur: float
+  real_balancing_max_trade_eur: float
   real_balancing_no_trade_band_pct: float
   real_balancing_max_actions_per_run: int(1,100)
   real_balancing_max_actions_per_day: int(1,100)
