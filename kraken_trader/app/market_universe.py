@@ -1,6 +1,7 @@
 import json
 from db import now
 from product_identity import canonical_product_id,is_traditional_stock
+from payload_utils import as_pair_mapping
 FIAT={'EUR','USD','GBP','CHF','JPY','CAD','AUD','NZD'}
 CATEGORIES={'crypto_spot':('Kryptowährungen (Spot)','currency'),'xstocks':('xStocks / tokenisierte Aktien und ETFs','tokenized_asset'),'forex':('Devisen (Forex)','forex'),'leveraged_spot':('Hebelfähige Spot-Produkte','derived')}
 def classify(pair,ac):
@@ -21,18 +22,15 @@ class MarketUniverse:
  def categories(self):return self.db.rows('SELECT * FROM product_categories ORDER BY category')
  def set_categories(self,enabled):
   with self.db.con() as c:
-   cols={x['name'] for x in self.db.rows('PRAGMA table_info(market_universe)')}
-   for name,definition in [('canonical_id','TEXT'),('product_kind','TEXT'),('metadata_json',"TEXT NOT NULL DEFAULT '{}'")]:
-    if name not in cols:c.execute(f'ALTER TABLE market_universe ADD COLUMN {name} {definition}')
-   c.executescript("""CREATE TABLE IF NOT EXISTS canonical_products(canonical_id TEXT PRIMARY KEY,asset_class TEXT NOT NULL,base_asset TEXT,category TEXT NOT NULL,selected_symbol TEXT,alternatives_json TEXT NOT NULL,updated_at TEXT NOT NULL);CREATE TABLE IF NOT EXISTS universe_api_metadata(id INTEGER PRIMARY KEY AUTOINCREMENT,created_at TEXT NOT NULL,asset_class TEXT NOT NULL,source_key TEXT NOT NULL,payload_json TEXT NOT NULL);""")
    for key,(label,_) in CATEGORIES.items():c.execute('INSERT OR REPLACE INTO product_categories VALUES(?,?,?,?)',(key,label,1 if key in enabled else 0,now()))
  def enabled(self):return {x['category'] for x in self.categories() if x['enabled']}
  def sync(self):
   rows=[];members=[];errors=[];stamp=now()
   for ac in ('currency','tokenized_asset','forex'):
-   try:pairs=self.client.pairs(ac)
+   try:pairs=as_pair_mapping(self.client.pairs(ac))
    except Exception as exc:errors.append({'asset_class':ac,'error':type(exc).__name__});continue
    for source,pair in pairs.items():
+    if not isinstance(pair,dict):continue
     if ac=='currency' and classify(pair,ac)=='forex':continue
     symbol=pair.get('wsname') or pair.get('altname')
     if not symbol:continue
@@ -47,11 +45,7 @@ class MarketUniverse:
     rows.append((symbol,ac,cat,pair.get('base'),pair.get('quote'),pair.get('status'),str(pair.get('ordermin')) if pair.get('ordermin') is not None else None,str(pair.get('costmin')) if pair.get('costmin') is not None else None,pair.get('lot_decimals'),pair.get('pair_decimals'),json.dumps(pair.get('leverage_buy') or []),json.dumps(pair.get('leverage_sell') or []),source,stamp,cid,kind,json.dumps(pair,ensure_ascii=False,sort_keys=True)))
   if rows:
    with self.db.con() as c:
-    c.execute("DELETE FROM market_universe WHERE asset_class IN ('currency','tokenized_asset','forex')")
-    c.execute('DELETE FROM universe_api_metadata')
-    c.executemany('INSERT INTO universe_api_metadata(created_at,asset_class,source_key,payload_json) VALUES(?,?,?,?)',[(stamp,r[1],r[12],r[16]) for r in rows])
-    c.executemany('INSERT OR REPLACE INTO market_universe(symbol,asset_class,category,base_asset,quote_asset,status,ordermin,costmin,lot_decimals,pair_decimals,leverage_buy_json,leverage_sell_json,source_key,updated_at,canonical_id,product_kind,metadata_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',rows)
-    c.execute('DELETE FROM market_category_members');c.executemany('INSERT OR REPLACE INTO market_category_members VALUES(?,?,?)',members);c.execute('DELETE FROM canonical_products')
+    c.execute("DELETE FROM market_universe WHERE asset_class IN ('currency','tokenized_asset','forex')");c.execute('DELETE FROM universe_api_metadata');c.executemany('INSERT INTO universe_api_metadata(created_at,asset_class,source_key,payload_json) VALUES(?,?,?,?)',[(stamp,r[1],r[12],r[16]) for r in rows]);c.executemany('INSERT OR REPLACE INTO market_universe(symbol,asset_class,category,base_asset,quote_asset,status,ordermin,costmin,lot_decimals,pair_decimals,leverage_buy_json,leverage_sell_json,source_key,updated_at,canonical_id,product_kind,metadata_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',rows);c.execute('DELETE FROM market_category_members');c.executemany('INSERT OR REPLACE INTO market_category_members VALUES(?,?,?)',members);c.execute('DELETE FROM canonical_products')
     grouped={}
     for r in rows:grouped.setdefault(r[14],[]).append({'symbol':r[0],'quote_asset':r[4],'source_key':r[12],'asset_class':r[1],'category':r[2]})
     for cid,alts in grouped.items():
