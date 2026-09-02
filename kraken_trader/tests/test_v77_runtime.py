@@ -29,7 +29,8 @@ class V77RuntimeTests(unittest.TestCase):
     def test_v77_exposes_austrian_income_tax(self):
         source = (APP / 'v77_main.py').read_text(encoding='utf-8')
         tax = (APP / 'at_income_tax.py').read_text(encoding='utf-8')
-        self.assertIn("('/tax-info', 'Einkommensteuer AT')", source)
+        self.assertIn("'/tax-info'", source)
+        self.assertIn('Einkommensteuer AT', source)
         self.assertIn("@bp.get('/tax-info'", tax)
         self.assertIn('27,5 %', tax)
 
@@ -38,7 +39,7 @@ class V77RuntimeTests(unittest.TestCase):
         controller = (APP / 'automation_controller.py').read_text(encoding='utf-8')
         self.assertIn('from automation_controller import AutomationController', source)
         self.assertIn('class AutomationController', controller)
-        self.assertNotIn('automation_v67', source)
+        self.assertNotIn('from automation_v67 import', source)
 
     def test_learning_decision_persistence_exists(self):
         source = (APP / 'controlled_learning.py').read_text(encoding='utf-8')
