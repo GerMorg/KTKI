@@ -1,5 +1,5 @@
 name: Kraken Trader
-version: 0.1.0-dev.76
+version: 0.1.0-dev.77
 slug: kraken_trader
 description: Read-only Kraken Portfolio und lokales Paper-Trading; Realhandel optional, strikt gated
 arch:
@@ -161,11 +161,11 @@ schema:
   real_allow_fx_conversion: bool
   real_max_order_volume: float
   real_max_order_notional_eur: float
-  real_allowed_symbols: str?
+  real_allowed_symbols: str
   real_allow_market_orders: bool
-  real_max_orders_per_day: int(1,100)
-  real_max_fx_orders_per_day: int(1,100)
-  learning_min_validation_samples: int(3,10000)
+  real_max_orders_per_day: int(0,100)
+  real_max_fx_orders_per_day: int(0,100)
+  learning_min_validation_samples: int(1,10000)
   real_balancing_enabled: bool
   real_balancing_execute_enabled: bool
   real_balancing_dry_run: bool
@@ -175,13 +175,13 @@ schema:
   real_balancing_min_trade_eur: float
   real_balancing_max_trade_eur: float
   real_balancing_no_trade_band_pct: float
-  real_balancing_max_actions_per_run: int(1,100)
+  real_balancing_max_actions_per_run: int(1,20)
   real_balancing_max_actions_per_day: int(1,100)
-  real_balancing_cooldown_hours: float
+  real_balancing_cooldown_hours: int(0,720)
   real_balancing_minimum_score: float
   real_balancing_limit_offset_pct: float
   real_balancing_automation_secret: password?
-  real_balancing_automation_secret_hash: password?
+  real_balancing_automation_secret_hash: str?
   automation_master_enabled: bool
   automation_analysis_enabled: bool
   automation_news_enabled: bool
@@ -190,7 +190,7 @@ schema:
   automation_paper_enabled: bool
   automation_real_enabled: bool
   automation_real_execute_enabled: bool
-  automation_tick_minutes: int(1,60)
+  automation_tick_minutes: int(1,1440)
   automation_analysis_interval_minutes: int(5,1440)
   automation_news_interval_minutes: int(5,1440)
   automation_learning_interval_minutes: int(5,1440)
@@ -198,7 +198,7 @@ schema:
   automation_real_interval_minutes: int(5,1440)
   analysis_top_per_category: int(1,25)
   analysis_max_symbols: int(1,100)
-  analysis_max_delay_seconds: float(0,10)
+  analysis_max_delay_seconds: float
   learning_max_evaluations: int(50,5000)
   news_learning_max_samples: int(50,5000)
   news_local_eval_max_items: int(100,10000)
