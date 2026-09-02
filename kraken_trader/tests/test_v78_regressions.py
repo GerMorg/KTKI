@@ -4,7 +4,7 @@ import unittest
 ROOT=Path(__file__).resolve().parents[1];APP=ROOT/'app'
 class V78RegressionTests(unittest.TestCase):
  def test_runtime_shell_is_v78(self):
-  run=(ROOT/'run.sh').read_text(encoding='utf-8');runtime=(APP/'v78_main.py').read_text(encoding='utf-8');self.assertIn('v78_main:app',run);self.assertIn("app.view_functions['index'] = _dashboard",runtime);self.assertIn("@app.get('/v78-health')",runtime)
+  run=(ROOT/'run.sh').read_text(encoding='utf-8');runtime=(APP/'v78_main.py').read_text(encoding='utf-8');self.assertIn('v78_main:app',run);self.assertIn("app.view_functions['index']=_dashboard",runtime);self.assertIn("@app.get('/v78-health')",runtime)
  def test_gui_root_is_defensive_and_uses_template_string(self):
   source=(APP/'v78_main.py').read_text(encoding='utf-8');self.assertIn('def _safe(fn, default=None):',source);self.assertIn('portfolio, public, private, research = _status_snapshot()',source);self.assertIn('render_template_string(html',source);self.assertNotIn('render_template(html',source.split("def _dashboard():",1)[1].split("app.view_functions",1)[0])
  def test_analysis_has_candidate_recovery(self):
