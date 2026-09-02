@@ -51,7 +51,7 @@ class V77KrakenDataflowTests(unittest.TestCase):
         self.assertEqual(quality, 'VALID')
         by_name = {row['display_name']: row for row in rows}
         self.assertEqual(by_name['EUR']['eur_value'], '1250.50')
-        self.assertEqual(by_name['XBT']['eur_value'], '6000.0')
+        self.assertEqual(by_name['BT']['eur_value'], '6000.0')
 
 
 if __name__ == '__main__':
