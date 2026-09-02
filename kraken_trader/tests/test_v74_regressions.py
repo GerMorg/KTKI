@@ -14,13 +14,17 @@ class V74RegressionTests(unittest.TestCase):
   source=(APP/'research_pipeline.py').read_text(encoding='utf-8');self.assertIn('def _is_payload_shape_error',source);self.assertIn('def _shape_guard',source);self.assertIn('RESEARCH_STAGE_DEGRADED',source);self.assertIn("'quality':'DEGRADED' if degraded else 'VALID'",source);self.assertIn('shadow_obj=self.shadow or ForexShadow(self.db)',source);self.assertNotIn('ForexShadow(self.db).run(symbols)',source)
  def test_active_runtime_does_not_use_unprotected_ticker_update(self):
   source=(APP/'prefilter.py').read_text(encoding='utf-8');self.assertNotIn('tickers.update(self.client.ticker(block,ac))',source);self.assertNotIn('tickers[ac].update(single if isinstance(single,dict) else {})',source)
- def test_payload_shape_assignments_are_not_directly_unpacked(self):
-  names=('scanner.py','prefilter.py','execution_costs.py','execution_router.py','market_universe.py','payload_utils.py','forex_shadow.py','research_pipeline.py')
-  for name in names:
+ def test_external_payload_iterators_are_not_directly_tuple_unpacked(self):
+  external_calls={'ticker','ohlc','pairs','collect','fetch','request','json'}
+  for name in ('scanner.py','prefilter.py','execution_costs.py','execution_router.py','market_universe.py','payload_utils.py','forex_shadow.py','research_pipeline.py'):
    tree=ast.parse((APP/name).read_text(encoding='utf-8'),filename=name)
    for node in ast.walk(tree):
-    if isinstance(node,ast.Assign) and isinstance(node.targets[0],ast.Tuple) and isinstance(node.value,ast.Call): self.fail(f'direct call tuple unpacking in {name}')
-    if isinstance(node,ast.For) and isinstance(node.target,ast.Tuple) and isinstance(node.iter,ast.Name) and node.iter.id in {'payload','response','result','raw','items','rows'}: self.fail(f'unsafe iterable tuple unpacking in {name}')
+    if isinstance(node,ast.For) and isinstance(node.target,ast.Tuple):
+     if isinstance(node.iter,ast.Call) and isinstance(node.iter.func,ast.Attribute) and node.iter.func.attr in {'items','keys','values'}:continue
+     if isinstance(node.iter,ast.Name) and node.iter.id in {'payload','response','result','raw','items'}:self.fail(f'unsafe external iterable tuple unpacking in {name}')
+    if isinstance(node,ast.Assign) and isinstance(node.targets[0],ast.Tuple) and isinstance(node.value,ast.Call):
+     func=node.value.func;called=func.attr if isinstance(func,ast.Attribute) else func.id if isinstance(func,ast.Name) else ''
+     if called in external_calls:self.fail(f'external call tuple unpacking in {name}: {called}')
  def test_premarket_external_payload_boundaries_are_explicit(self):
   for name in ('prefilter.py','market_universe.py','scanner.py','forex_shadow.py','research_pipeline.py'):
    source=(APP/name).read_text(encoding='utf-8');self.assertIn('isinstance(',source,name)
