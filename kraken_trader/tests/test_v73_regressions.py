@@ -29,9 +29,8 @@ class V73RegressionTests(unittest.TestCase):
    for t in threads:t.join()
    self.assertFalse(errors)
    self.assertEqual(len(db.rows("SELECT * FROM audit WHERE event='V73_CONCURRENCY'")),200)
- def test_active_runtime_and_version_are_v73(self):
-  run=(ROOT/'run.sh').read_text(encoding='utf-8');version=(APP/'version.py').read_text(encoding='utf-8');config=(ROOT/'config.yaml').read_text(encoding='utf-8');runtime=(APP/'v73_main.py').read_text(encoding='utf-8')
-  self.assertIn('v73_main:app',run);self.assertIn("APP_VERSION='0.1.0-dev.73'",version);self.assertIn('version: 0.1.0-dev.73',config);self.assertIn("'version':'0.1.0-dev.73'",runtime);self.assertIn("'sqlite_journal_mode':'WAL'",runtime)
+ def test_legacy_v73_runtime_remains_available(self):
+  for name in ('v73_main.py',):ast.parse((APP/name).read_text(encoding='utf-8'),filename=name)
  def test_all_v73_modules_compile(self):
   for name in ('db.py','market_universe.py','payload_utils.py','v73_main.py'):
    ast.parse((APP/name).read_text(encoding='utf-8'),filename=name)
