@@ -14,7 +14,8 @@ class MarketScanner:
  def match(payload,symbol,source_key=None):
   if not isinstance(payload,dict): return None
   wants={str(symbol).replace('/','').upper(),str(source_key or '').replace('/','').upper()};wants|={x.replace('BTC','XBT').replace('X','') for x in list(wants)}
-  for key,value in payload.items():
+  for entry in payload.items():
+   key,value=entry[0],entry[1]
    compact=str(key).replace('/','').upper();variants={compact,compact.replace('X','').replace('Z','')}
    if any(w and (w in variants or w.replace('X','') in variants) for w in wants):return value if isinstance(value,dict) else None
   return next((v for v in payload.values() if isinstance(v,dict)),None) if len(payload)==1 else None
@@ -44,10 +45,9 @@ class MarketScanner:
    value=t.get(key,['0']) if isinstance(t,dict) else ['0'];return value[0] if isinstance(value,(list,tuple)) and value else value
   try:bid=float(first('b') or 0);ask=float(first('a') or 0)
   except (TypeError,ValueError):bid=ask=0
-  mid=(bid+ask)/2;spread=(ask-bid)/mid*100 if mid else 999;volume_quote=sum(v*p for v,p in zip(volumes[-24:],closes[-24:]))
-  family=family_for_category(category);version,params=active_profile(self.db,family);news_score=0.0
+  mid=(bid+ask)/2;spread=(ask-bid)/mid*100 if mid else 999;volume_quote=sum(v*p for v,p in zip(volumes[-24:],closes[-24:]));family=family_for_category(category);profile_data=active_profile(self.db,family);version=profile_data[0] if isinstance(profile_data,(list,tuple)) and len(profile_data)>0 else 1;params=profile_data[1] if isinstance(profile_data,(list,tuple)) and len(profile_data)>1 and isinstance(profile_data[1],dict) else {};news_score=0.0
   if family=='forex':news_rows=self.db.rows('SELECT relevance FROM news_market_links WHERE symbol=?',(symbol,));news_score=min(10,sum(float(x['relevance']) for x in news_rows))
-  features={'momentum_pct':momentum,'trend_pct':trend,'volatility_pct':volatility,'spread_pct':spread,'news_score':news_score};score,signal=score_features(features,params);score=max(0,min(100,score));signal='BUY' if signal=='BUY' else ('AVOID' if signal=='AVOID' else 'HOLD');model=f'{family}-controlled-v{version}';aliases={'xstocks':f'xstocks-v1 / xstocks-approved-v{version}','forex':'forex-v1','crypto_spot':'crypto-v1'};reasons=[f'Modell {aliases.get(family,family)} / {model}',f'24h-Momentum {momentum:.2f} %',f'Trend SMA10/SMA30 {trend:.2f} %',f'Volatilität {volatility:.2f} %',f'Spread {spread:.3f} %',f'24h-Quotevolumen ca. {volume_quote:.2f} {quote}']
+  features={'momentum_pct':momentum,'trend_pct':trend,'volatility_pct':volatility,'spread_pct':spread,'news_score':news_score};scored=score_features(features,params);score=scored[0] if isinstance(scored,(list,tuple)) and len(scored)>0 else 0;signal=scored[1] if isinstance(scored,(list,tuple)) and len(scored)>1 else 'HOLD';score=max(0,min(100,score));signal='BUY' if signal=='BUY' else ('AVOID' if signal=='AVOID' else 'HOLD');model=f'{family}-controlled-v{version}';aliases={'xstocks':f'xstocks-v1 / xstocks-approved-v{version}','forex':'forex-v1','crypto_spot':'crypto-v1'};reasons=[f'Modell {aliases.get(family,family)} / {model}',f'24h-Momentum {momentum:.2f} %',f'Trend SMA10/SMA30 {trend:.2f} %',f'Volatilität {volatility:.2f} %',f'Spread {spread:.3f} %',f'24h-Quotevolumen ca. {volume_quote:.2f} {quote}']
   return {'symbol':symbol,'score':round(score,4),'signal':signal,'momentum_pct':round(momentum,6),'volatility_pct':round(volatility,6),'trend_pct':round(trend,6),'spread_pct':round(spread,6),'volume_quote':round(volume_quote,4),'data_points':len(closes),'quality':'VALID','reasons':reasons}
  def run(self,symbols,interval=60,limit=None,delay_seconds=None):
   if not self.lock.acquire(False):return {'status':'BUSY','processed':0}
@@ -56,9 +56,10 @@ class MarketScanner:
    profiles={s:self.profile(s) for s in symbols};groups={}
    for s,p in profiles.items():groups.setdefault(p['asset_class'],[]).append(s)
    tickers={}
-   for ac,batch in groups.items():
+   for entry in groups.items():
+    ac,batch=entry[0],entry[1]
     try:payload=self.client.ticker(batch,ac);tickers[ac]=payload if isinstance(payload,dict) else {}
-    except Exception as exc:
+    except Exception:
      tickers[ac]={}
      for symbol in batch:
       try:single=self.client.ticker([symbol],ac);tickers[ac].update(single if isinstance(single,dict) else {})
