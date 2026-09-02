@@ -5,13 +5,13 @@ ROOT=Path(__file__).resolve().parents[1]
 APP=ROOT/'app'
 REPO=ROOT.parent
 class V74RegressionTests(unittest.TestCase):
- def test_active_runtime_and_version_are_v75(self):
-  run=(ROOT/'run.sh').read_text(encoding='utf-8');version=(APP/'version.py').read_text(encoding='utf-8');config=(ROOT/'config.yaml').read_text(encoding='utf-8');runtime=(APP/'v75_main.py').read_text(encoding='utf-8');repo=(REPO/'repository.yaml').read_text(encoding='utf-8')
-  self.assertIn('v75_main:app',run);self.assertIn("APP_VERSION='0.1.0-dev.75'",version);self.assertIn('version: 0.1.0-dev.75',config);self.assertIn('version: 0.1.0-dev.75',repo);self.assertIn("'research_payload_isolation': True",runtime)
+ def test_active_runtime_and_version_are_v76(self):
+  run=(ROOT/'run.sh').read_text(encoding='utf-8');version=(APP/'version.py').read_text(encoding='utf-8');config=(ROOT/'config.yaml').read_text(encoding='utf-8');runtime=(APP/'v76_main.py').read_text(encoding='utf-8');repo=(REPO/'repository.yaml').read_text(encoding='utf-8')
+  self.assertIn('v76_main:app',run);self.assertIn("APP_VERSION='0.1.0-dev.76'",version);self.assertIn('version: 0.1.0-dev.76',config);self.assertIn('version: 0.1.0-dev.76',repo);self.assertIn("'research_shape_error_quarantine': True",runtime)
  def test_deep_scan_is_fail_soft_at_runtime_boundary(self):
   source=(APP/'v74_main.py').read_text(encoding='utf-8');self.assertIn('_original_scanner_run = MarketScanner.run',source);self.assertIn('def _scanner_run_v74',source);self.assertIn("'DEEP_SCAN_DEGRADED'",source);self.assertIn("'status': 'DEGRADED'",source);self.assertIn('_original_shadow_run = ForexShadow.run',source);self.assertIn("'FOREX_SHADOW_DEGRADED'",source)
- def test_research_pipeline_has_final_shape_error_boundary(self):
-  source=(APP/'research_pipeline.py').read_text(encoding='utf-8');self.assertIn('def _is_payload_shape_error',source);self.assertIn('def _shape_guard',source);self.assertIn('RESEARCH_STAGE_DEGRADED',source);self.assertIn("'quality':'DEGRADED' if degraded else 'VALID'",source);self.assertIn('shadow_obj=self.shadow or ForexShadow(self.db)',source);self.assertNotIn('ForexShadow(self.db).run(symbols)',source)
+ def test_research_pipeline_has_final_shape_error_quarantine(self):
+  source=(APP/'research_pipeline.py').read_text(encoding='utf-8');self.assertIn('def _is_payload_shape_error',source);self.assertIn('def _shape_guard',source);self.assertIn('def _complete_degraded',source);self.assertIn('RESEARCH_PIPELINE_SHAPE_ERROR_QUARANTINED',source);self.assertIn('self._complete_degraded(jid,stage,operation,exc,context)',source);self.assertNotIn('ForexShadow(self.db).run(symbols)',source)
  def test_active_runtime_does_not_use_unprotected_ticker_update(self):
   source=(APP/'prefilter.py').read_text(encoding='utf-8');self.assertNotIn('tickers.update(self.client.ticker(block,ac))',source);self.assertNotIn('tickers[ac].update(single if isinstance(single,dict) else {})',source)
  def test_external_payload_iterators_are_not_directly_tuple_unpacked(self):
@@ -28,7 +28,7 @@ class V74RegressionTests(unittest.TestCase):
  def test_premarket_external_payload_boundaries_are_explicit(self):
   for name in ('prefilter.py','market_universe.py','scanner.py','forex_shadow.py','research_pipeline.py'):
    source=(APP/name).read_text(encoding='utf-8');self.assertIn('isinstance(',source,name)
- def test_all_v75_modules_compile(self):
-  for name in ('v75_main.py','research_pipeline.py','scanner.py','forex_shadow.py','prefilter.py','market_universe.py','payload_utils.py'):
+ def test_all_v76_modules_compile(self):
+  for name in ('v76_main.py','v75_main.py','v74_main.py','research_pipeline.py','scanner.py','forex_shadow.py','prefilter.py','market_universe.py','payload_utils.py'):
    ast.parse((APP/name).read_text(encoding='utf-8'),filename=name)
 if __name__=='__main__':unittest.main()
