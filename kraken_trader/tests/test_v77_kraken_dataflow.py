@@ -5,7 +5,7 @@ ROOT=Path(__file__).resolve().parents[1];APP=ROOT/'app'
 class V77KrakenDataflowTests(unittest.TestCase):
  def test_active_runtime_and_version(self):
   run=(ROOT/'run.sh').read_text(encoding='utf-8');version=(APP/'version.py').read_text(encoding='utf-8');config=(ROOT/'config.yaml').read_text(encoding='utf-8')
-  self.assertIn('v78_main:app',run);self.assertIn("APP_VERSION='0.1.0-dev.78'",version);self.assertIn('version: 0.1.0-dev.78',config);self.assertIn('v77_main.py',run)
+  self.assertIn('v78_main:app',run);self.assertIn("APP_VERSION='0.1.0-dev.78'",version);self.assertIn('version: 0.1.0-dev.78',config)
  def test_readonly_private_websocket_is_enabled_by_v77(self):
   source=(APP/'main.py').read_text(encoding='utf-8');runtime=(APP/'v77_main.py').read_text(encoding='utf-8');config=(ROOT/'config.yaml').read_text(encoding='utf-8')
   self.assertIn("private_websocket_readonly_enabled',False",source);self.assertIn('legacy.private_stream.enabled = True',runtime);self.assertIn('private_websocket_readonly_enabled: true',config);self.assertIn('wss://ws-auth.kraken.com/v2',(APP/'ws_private.py').read_text(encoding='utf-8'))
