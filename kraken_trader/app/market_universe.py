@@ -18,12 +18,14 @@ class MarketUniverse:
    for name,definition in [('canonical_id','TEXT'),('product_kind','TEXT'),('metadata_json',"TEXT NOT NULL DEFAULT '{}'")]:
     if name not in cols:c.execute(f'ALTER TABLE market_universe ADD COLUMN {name} {definition}')
    c.executescript("""CREATE TABLE IF NOT EXISTS canonical_products(canonical_id TEXT PRIMARY KEY,asset_class TEXT NOT NULL,base_asset TEXT,category TEXT NOT NULL,selected_symbol TEXT,alternatives_json TEXT NOT NULL,updated_at TEXT NOT NULL);CREATE TABLE IF NOT EXISTS universe_api_metadata(id INTEGER PRIMARY KEY AUTOINCREMENT,created_at TEXT NOT NULL,asset_class TEXT NOT NULL,source_key TEXT NOT NULL,payload_json TEXT NOT NULL);""")
-   for key,(label,_) in CATEGORIES.items():c.execute('INSERT OR IGNORE INTO product_categories VALUES(?,?,0,?)',(key,label,now()))
+   for key,(label,_) in CATEGORIES.items():c.execute('INSERT OR IGNORE INTO product_categories VALUES(?,?,1,?)',(key,label,now()))
  def categories(self):return self.db.rows('SELECT * FROM product_categories ORDER BY category')
  def set_categories(self,enabled):
   with self.db.con() as c:
    for key,(label,_) in CATEGORIES.items():c.execute('INSERT OR REPLACE INTO product_categories VALUES(?,?,?,?)',(key,label,1 if key in enabled else 0,now()))
- def enabled(self):return {x['category'] for x in self.categories() if x['enabled']}
+ def enabled(self):
+  rows=self.categories();enabled={x['category'] for x in rows if x['enabled']}
+  return enabled or set(CATEGORIES)
  def sync(self):
   rows=[];members=[];errors=[];stamp=now()
   for ac in ('currency','tokenized_asset','forex'):
@@ -55,6 +57,5 @@ class MarketUniverse:
   return {'total':len(rows),'enabled':count,'quality':quality,'errors':errors}
  def symbols(self,quote='EUR'):
   enabled=self.enabled()
-  if not enabled:return []
   marks=','.join('?'*len(enabled));rows=self.db.rows(f"SELECT DISTINCT u.symbol FROM market_universe u JOIN market_category_members m ON m.symbol=u.symbol AND m.asset_class=u.asset_class WHERE m.category IN ({marks}) AND LOWER(COALESCE(u.status,'online')) IN ('online','post_only','limit_only')",list(enabled));symbols=[x['symbol'] for x in rows]
   return sorted(x for x in set(symbols) if not quote or x.rsplit('/',1)[-1]==quote)
