@@ -15,7 +15,6 @@ import execution_router as execution_router_module
 app = base.app
 controller = base.base.controller
 legacy = base.base.legacy
-
 _original_paper_execute = PaperEngine.execute
 _original_allocator_plans = PortfolioAllocator.plans
 _original_decision_evaluate = DecisionMatrix.evaluate
@@ -36,24 +35,25 @@ def _router_find_v74(tickers, *keys):
     return _original_router_find(as_mapping(tickers, {}), *keys)
 
 def _scanner_run_v74(self, symbols, interval=60, limit=None, delay_seconds=None):
+    safe_symbols = list(symbols or [])
     try:
-        result = _original_scanner_run(self, symbols, interval, limit, delay_seconds)
-        return as_mapping(result, {'status': 'COMPLETED', 'processed': 0})
+        return as_mapping(_original_scanner_run(self, safe_symbols, interval, limit, delay_seconds), {'status': 'COMPLETED', 'processed': 0})
     except Exception as exc:
         error = type(exc).__name__ + ': ' + str(exc)[:500]
         try:
-            self.db.audit('DEEP_SCAN_DEGRADED', json.dumps({'error': error, 'symbols': len(list(symbols or []))}, sort_keys=True), 'error')
+            self.db.audit('DEEP_SCAN_DEGRADED', json.dumps({'error': error, 'symbols': len(safe_symbols)}, sort_keys=True), 'error')
         except Exception:
             pass
         return {'status': 'DEGRADED', 'processed': 0, 'error': error, 'results': []}
 
 def _shadow_run_v74(self, symbols=None):
+    safe_symbols = list(symbols or [])
     try:
-        return as_mapping(_original_shadow_run(self, symbols), {'status': 'SHADOW_ONLY', 'snapshots': 0, 'symbols': 0})
+        return as_mapping(_original_shadow_run(self, safe_symbols), {'status': 'SHADOW_ONLY', 'snapshots': 0, 'symbols': 0})
     except Exception as exc:
         error = type(exc).__name__ + ': ' + str(exc)[:500]
         try:
-            self.db.audit('FOREX_SHADOW_DEGRADED', json.dumps({'error': error, 'symbols': len(list(symbols or []))}, sort_keys=True), 'error')
+            self.db.audit('FOREX_SHADOW_DEGRADED', json.dumps({'error': error, 'symbols': len(safe_symbols)}, sort_keys=True), 'error')
         except Exception:
             pass
         return {'status': 'DEGRADED', 'snapshots': 0, 'symbols': 0, 'error': error}
@@ -64,7 +64,6 @@ DecisionMatrix.evaluate = _decision_evaluate_v74
 execution_router_module._find = _router_find_v74
 MarketScanner.run = _scanner_run_v74
 ForexShadow.run = _shadow_run_v74
-
 _original_pipeline_start = controller.pipeline.start
 
 def _record_finished_analysis(job_id):
