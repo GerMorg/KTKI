@@ -1,1 +1,0 @@
-v66 integrated orchestration: validated model -> portfolio -> cost-aware route -> decision matrix -> digital twin -> gated real execution.
