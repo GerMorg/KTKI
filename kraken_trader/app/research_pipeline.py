@@ -59,11 +59,11 @@ class ResearchPipeline:
    stage,operation='LEARNING_CANDIDATES';self.step(jid,stage,5,{'forecasts':forecast_count,'evaluated':evaluated})
    from controlled_learning import ControlledLearning
    from news_learning import NewsLearning
-   stage,operation='ControlledLearning.propose_all';controlled,was=self._shape_guard(jid,stage,operation,lambda:ControlledLearning(self.db).propose_all(automatic=True),{'status':'DEGRADED','families':{} });degraded+= [operation] if was else []
+   stage,operation='ControlledLearning.propose_all';controlled,was=self._shape_guard(jid,stage,operation,lambda:ControlledLearning(self.db).propose_all(automatic=True),{'status':'DEGRADED','families':{}});degraded+= [operation] if was else []
    stage,operation='NewsLearning.propose';news,was=self._shape_guard(jid,stage,operation,lambda:NewsLearning(self.db).propose(automatic=True),{'status':'DEGRADED'});degraded+= [operation] if was else []
-   learning={'controlled':controlled,'news':news};final_status='COMPLETED_DEGRADED' if degraded else 'COMPLETED';details={'universe':u,'prefilter':p,'scanner':s,'forex_shadow':shadow,'forecasts':forecast_count,'evaluated':evaluated,'learning':learning,'degraded_stages':degraded}
-   with self.db.con() as c:c.execute('UPDATE research_jobs SET status=?,stage=?,progress_current=?,finished_at=?,error=?,details_json=? WHERE id=?',(final_status,'DONE',6,now(),None,json.dumps(details,ensure_ascii=False,default=str),jid))
-   self.db.audit('RESEARCH_PIPELINE_COMPLETED',json.dumps({'job_id':jid,'status':final_status,'degraded_stages':degraded},ensure_ascii=False,sort_keys=True))
+   learning={'controlled':controlled,'news':news};details={'universe':u,'prefilter':p,'scanner':s,'forex_shadow':shadow,'forecasts':forecast_count,'evaluated':evaluated,'learning':learning,'degraded_stages':degraded,'quality':'DEGRADED' if degraded else 'VALID'}
+   with self.db.con() as c:c.execute('UPDATE research_jobs SET status=?,stage=?,progress_current=?,finished_at=?,error=?,details_json=? WHERE id=?',('COMPLETED','DONE',6,now(),None,json.dumps(details,ensure_ascii=False,default=str),jid))
+   self.db.audit('RESEARCH_PIPELINE_COMPLETED',json.dumps({'job_id':jid,'status':'COMPLETED','quality':details['quality'],'degraded_stages':degraded},ensure_ascii=False,sort_keys=True))
   except Exception as exc:self.fail(jid,stage,operation,exc,{'traceback':traceback.format_exc(limit=8)})
   finally:self.lock.release()
  def latest(self):
