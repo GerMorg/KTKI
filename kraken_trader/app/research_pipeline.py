@@ -1,7 +1,6 @@
 import json,threading,traceback
 from forex_shadow import ForexShadow
 from db import now
-from payload_utils import as_mapping
 
 
 def _is_payload_shape_error(exc):
@@ -32,49 +31,38 @@ class ResearchPipeline:
   self.db.audit('RESEARCH_STAGE_DEGRADED',json.dumps(payload,ensure_ascii=False,sort_keys=True,default=str),'warning')
   return {'status':'DEGRADED','error':error}
  def _complete_degraded(self,jid,stage,operation,exc,context=None):
-  error=type(exc).__name__+': '+str(exc)[:500]
-  details={'stage':stage,'operation':operation,'error':error,'context':context or {},'quality':'DEGRADED','reason':'payload shape error isolated'}
+  error=type(exc).__name__+': '+str(exc)[:500];details={'stage':stage,'operation':operation,'error':error,'context':context or {},'quality':'DEGRADED','reason':'payload shape error isolated'}
   with self.db.con() as c:c.execute('UPDATE research_jobs SET status=?,stage=?,progress_current=?,finished_at=?,error=?,details_json=? WHERE id=?',('COMPLETED','DEGRADED',6,now(),None,json.dumps(details,ensure_ascii=False,sort_keys=True,default=str),jid))
-  self.db.audit('RESEARCH_PIPELINE_SHAPE_ERROR_QUARANTINED',json.dumps({'job_id':jid,**details},ensure_ascii=False,sort_keys=True,default=str),'warning')
-  return details
+  self.db.audit('RESEARCH_PIPELINE_SHAPE_ERROR_QUARANTINED',json.dumps({'job_id':jid,**details},ensure_ascii=False,sort_keys=True,default=str),'warning');return details
  def _shape_guard(self,jid,stage,operation,fn,fallback,context=None):
   try:return fn(),False
   except Exception as exc:
-   if _is_payload_shape_error(exc):return fallback,True if False else self._degrade(jid,stage,operation,exc,context)
+   if _is_payload_shape_error(exc):return self._degrade(jid,stage,operation,exc,context),True
    raise
  def _recover_watchlist(self,limit=20):
-  """Keep research useful when a non-critical prefilter payload is malformed."""
   try:
-   symbols=self.universe.symbols(None)
+   symbols=self.universe.symbols(None)[:max(1,int(limit))]
    if not symbols:return []
-   symbols=symbols[:max(1,int(limit))]
    stamp=now()
    with self.db.con() as c:
     for symbol in symbols:
-     row=c.execute('SELECT category FROM market_universe WHERE symbol=? ORDER BY category LIMIT 1',(symbol,)).fetchone()
-     category=row[0] if row else 'crypto_spot'
-     c.execute('INSERT OR REPLACE INTO research_watchlist(symbol,category,prefilter_score,status,selected_at,run_id,reasons_json) VALUES(?,?,?,?,?,?,?)',(symbol,category,'0','RECOVERED',stamp,0,json.dumps(['Vorfilter-Ausnahme: Kandidat für Detailanalyse wiederhergestellt'],ensure_ascii=False)))
-   self.db.audit('RESEARCH_WATCHLIST_RECOVERED',json.dumps({'candidates':len(symbols)}))
-   return symbols
+     rows=c.execute('SELECT category FROM market_universe WHERE symbol=? ORDER BY category LIMIT 1',(symbol,)).fetchall();category=(rows[0][0] if rows else 'crypto_spot') if rows else 'crypto_spot'
+     c.execute('INSERT OR REPLACE INTO research_watchlist(symbol,category,prefilter_score,status,selected_at,run_id,reasons_json) VALUES(?,?,?,?,?,?,?)',(symbol,category,'0','RECOVERED',stamp,0,json.dumps(['Vorfilter nicht verfügbar; Kandidat für Detailanalyse wiederhergestellt'],ensure_ascii=False)))
+   self.db.audit('RESEARCH_WATCHLIST_RECOVERED',json.dumps({'candidates':len(symbols)}));return symbols
   except Exception as exc:
-   self.db.audit('RESEARCH_WATCHLIST_RECOVERY_FAILED',type(exc).__name__+': '+str(exc),'error')
-   return []
+   self.db.audit('RESEARCH_WATCHLIST_RECOVERY_FAILED',type(exc).__name__+': '+str(exc),'error');return []
  def fail(self,jid,stage,operation,exc,context=None):
-  if _is_payload_shape_error(exc):
-   self._complete_degraded(jid,stage,operation,exc,context);return
-  error=type(exc).__name__+': '+str(exc)[:500]
-  details={'stage':stage,'operation':operation,'error':error,'context':context or {}}
+  if _is_payload_shape_error(exc):self._complete_degraded(jid,stage,operation,exc,context);return
+  error=type(exc).__name__+': '+str(exc)[:500];details={'stage':stage,'operation':operation,'error':error,'context':context or {}}
   with self.db.con() as c:c.execute('UPDATE research_jobs SET status=?,finished_at=?,error=?,details_json=? WHERE id=?',('FAILED',now(),error,json.dumps(details,ensure_ascii=False,sort_keys=True,default=str),jid))
-  self.db.audit('RESEARCH_STAGE_FAILED',json.dumps({'job_id':jid,**details},ensure_ascii=False,sort_keys=True,default=str),'error')
-  self.db.audit('RESEARCH_PIPELINE_FAILED',error,'error')
+  self.db.audit('RESEARCH_STAGE_FAILED',json.dumps({'job_id':jid,**details},ensure_ascii=False,sort_keys=True,default=str),'error');self.db.audit('RESEARCH_PIPELINE_FAILED',error,'error')
  def _run(self,jid):
   stage='UNIVERSE';operation='start';degraded=[]
   try:
    with self.db.con() as c:c.execute('UPDATE research_jobs SET status=?,started_at=? WHERE id=?',('RUNNING',now(),jid))
    stage,operation='UNIVERSE','universe.sync';self.step(jid,stage,1);u,was=self._shape_guard(jid,stage,operation,self.universe.sync,{'total':0,'enabled':0,'quality':'ERROR','errors':[]});degraded+= [operation] if was else []
    stage,operation='NEWS_AND_PREFILTER','prefilter.run';self.step(jid,stage,2,{'universe':u});p,was=self._shape_guard(jid,stage,operation,lambda:self.prefilter.run(int(float(self.db.value('prefilter_top_per_category','8')))),{'status':'DEGRADED'}, {'universe':u});degraded+= [operation] if was else []
-   symbols=list(self.prefilter.candidates() or [])
-   recovered=False
+   symbols=list(self.prefilter.candidates() or []);recovered=False
    if not symbols:
     symbols=self._recover_watchlist(int(float(self.db.value('analysis_max_symbols','20'))));recovered=bool(symbols)
     if recovered:degraded.append('prefilter.recovery')
@@ -90,12 +78,10 @@ class ResearchPipeline:
    from news_learning import NewsLearning
    stage,operation='ControlledLearning.propose_all';controlled,was=self._shape_guard(jid,stage,operation,lambda:ControlledLearning(self.db).propose_all(automatic=True),{'status':'DEGRADED','families':{}});degraded+= [operation] if was else []
    stage,operation='NewsLearning.propose';news,was=self._shape_guard(jid,stage,operation,lambda:NewsLearning(self.db).propose(automatic=True),{'status':'DEGRADED'});degraded+= [operation] if was else []
-   learning={'controlled':controlled,'news':news}
-   critical={'universe.sync','prefilter.run','prefilter.recovery','scanner.run'}
-   quality='DEGRADED' if any(x in critical for x in degraded) and not symbols else ('VALID_WITH_WARNINGS' if degraded else 'VALID')
+   learning={'controlled':controlled,'news':news};critical={'universe.sync','prefilter.run','prefilter.recovery','scanner.run'};quality='VALID_WITH_WARNINGS' if degraded and symbols and not any(x in critical for x in degraded) else ('DEGRADED' if degraded else 'VALID')
    details={'universe':u,'prefilter':p,'scanner':s,'forex_shadow':shadow,'forecasts':forecast_count,'evaluated':evaluated,'learning':learning,'degraded_stages':degraded,'quality':quality,'candidate_count':len(symbols)}
    with self.db.con() as c:c.execute('UPDATE research_jobs SET status=?,stage=?,progress_current=?,finished_at=?,error=?,details_json=? WHERE id=?',('COMPLETED','DONE',6,now(),None,json.dumps(details,ensure_ascii=False,default=str),jid))
-   self.db.audit('RESEARCH_PIPELINE_COMPLETED',json.dumps({'job_id':jid,'status':'COMPLETED','quality':details['quality'],'degraded_stages':degraded,'candidate_count':len(symbols)},ensure_ascii=False,sort_keys=True))
+   self.db.audit('RESEARCH_PIPELINE_COMPLETED',json.dumps({'job_id':jid,'status':'COMPLETED','quality':quality,'degraded_stages':degraded,'candidate_count':len(symbols)},ensure_ascii=False,sort_keys=True))
   except Exception as exc:self.fail(jid,stage,operation,exc,{'traceback':traceback.format_exc(limit=12)})
   finally:self.lock.release()
  def latest(self):
