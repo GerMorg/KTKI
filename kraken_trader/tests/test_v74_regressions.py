@@ -3,9 +3,10 @@ from pathlib import Path
 import unittest
 ROOT=Path(__file__).resolve().parents[1]
 APP=ROOT/'app'
+REPO=ROOT.parent
 class V74RegressionTests(unittest.TestCase):
  def test_active_runtime_and_version_are_v74(self):
-  run=(ROOT/'run.sh').read_text(encoding='utf-8');version=(APP/'version.py').read_text(encoding='utf-8');config=(ROOT/'config.yaml').read_text(encoding='utf-8');runtime=(APP/'v74_main.py').read_text(encoding='utf-8');repo=(ROOT/'repository.yaml').read_text(encoding='utf-8')
+  run=(ROOT/'run.sh').read_text(encoding='utf-8');version=(APP/'version.py').read_text(encoding='utf-8');config=(ROOT/'config.yaml').read_text(encoding='utf-8');runtime=(APP/'v74_main.py').read_text(encoding='utf-8');repo=(REPO/'repository.yaml').read_text(encoding='utf-8')
   self.assertIn('v74_main:app',run);self.assertIn("APP_VERSION='0.1.0-dev.74'",version);self.assertIn('version: 0.1.0-dev.74',config);self.assertIn('version: 0.1.0-dev.74',repo);self.assertIn("'deep_scan_fail_soft': True",runtime)
  def test_deep_scan_is_fail_soft_at_runtime_boundary(self):
   source=(APP/'v74_main.py').read_text(encoding='utf-8')
