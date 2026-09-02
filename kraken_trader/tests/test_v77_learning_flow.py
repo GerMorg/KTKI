@@ -16,6 +16,18 @@ class V77LearningFlowTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.db = DB(str(Path(self.tmp.name) / 'test.db'))
         self.db.init(1000)
+        with self.db.con() as c:
+            c.executescript('''
+              CREATE TABLE research_forecasts(
+                id INTEGER PRIMARY KEY, symbol TEXT, direction TEXT,
+                scanner_score TEXT, features_json TEXT, horizon_hours INTEGER
+              );
+              CREATE TABLE forecast_evaluations(
+                id INTEGER PRIMARY KEY, forecast_id INTEGER, evaluated_at TEXT,
+                direction_correct INTEGER, actual_return_pct TEXT
+              );
+              CREATE TABLE market_universe(symbol TEXT PRIMARY KEY, category TEXT);
+            ''')
         self.learning = ControlledLearning(self.db)
 
     def tearDown(self):
@@ -26,8 +38,7 @@ class V77LearningFlowTests(unittest.TestCase):
         self.assertEqual({x['family'] for x in families}, {'forex', 'xstocks', 'crypto_spot'})
         for row in families:
             self.assertEqual(row['status'], 'ACTIVE')
-            params = json.loads(row['parameters_json'])
-            self.assertTrue(params)
+            self.assertTrue(json.loads(row['parameters_json']))
 
     def test_gate_policy_is_explicit(self):
         policy = self.learning.gate_policy()
