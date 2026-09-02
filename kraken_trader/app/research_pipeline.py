@@ -31,12 +31,20 @@ class ResearchPipeline:
   error=type(exc).__name__+': '+str(exc)[:500];payload={'job_id':jid,'stage':stage,'operation':operation,'error':error,'context':context or {}}
   self.db.audit('RESEARCH_STAGE_DEGRADED',json.dumps(payload,ensure_ascii=False,sort_keys=True,default=str),'warning')
   return {'status':'DEGRADED','error':error}
+ def _complete_degraded(self,jid,stage,operation,exc,context=None):
+  error=type(exc).__name__+': '+str(exc)[:500]
+  details={'stage':stage,'operation':operation,'error':error,'context':context or {},'quality':'DEGRADED','reason':'payload shape error isolated'}
+  with self.db.con() as c:c.execute('UPDATE research_jobs SET status=?,stage=?,progress_current=?,finished_at=?,error=?,details_json=? WHERE id=?',('COMPLETED','DEGRADED',6,now(),None,json.dumps(details,ensure_ascii=False,sort_keys=True,default=str),jid))
+  self.db.audit('RESEARCH_PIPELINE_SHAPE_ERROR_QUARANTINED',json.dumps({'job_id':jid,**details},ensure_ascii=False,sort_keys=True,default=str),'warning')
+  return details
  def _shape_guard(self,jid,stage,operation,fn,fallback,context=None):
   try:return fn(),False
   except Exception as exc:
    if _is_payload_shape_error(exc):return self._degrade(jid,stage,operation,exc,context),True
    raise
  def fail(self,jid,stage,operation,exc,context=None):
+  if _is_payload_shape_error(exc):
+   self._complete_degraded(jid,stage,operation,exc,context);return
   error=type(exc).__name__+': '+str(exc)[:500]
   details={'stage':stage,'operation':operation,'error':error,'context':context or {}}
   with self.db.con() as c:c.execute('UPDATE research_jobs SET status=?,finished_at=?,error=?,details_json=? WHERE id=?',('FAILED',now(),error,json.dumps(details,ensure_ascii=False,sort_keys=True,default=str),jid))
@@ -64,7 +72,7 @@ class ResearchPipeline:
    learning={'controlled':controlled,'news':news};details={'universe':u,'prefilter':p,'scanner':s,'forex_shadow':shadow,'forecasts':forecast_count,'evaluated':evaluated,'learning':learning,'degraded_stages':degraded,'quality':'DEGRADED' if degraded else 'VALID'}
    with self.db.con() as c:c.execute('UPDATE research_jobs SET status=?,stage=?,progress_current=?,finished_at=?,error=?,details_json=? WHERE id=?',('COMPLETED','DONE',6,now(),None,json.dumps(details,ensure_ascii=False,default=str),jid))
    self.db.audit('RESEARCH_PIPELINE_COMPLETED',json.dumps({'job_id':jid,'status':'COMPLETED','quality':details['quality'],'degraded_stages':degraded},ensure_ascii=False,sort_keys=True))
-  except Exception as exc:self.fail(jid,stage,operation,exc,{'traceback':traceback.format_exc(limit=8)})
+  except Exception as exc:self.fail(jid,stage,operation,exc,{'traceback':traceback.format_exc(limit=12)})
   finally:self.lock.release()
  def latest(self):
   r=self.db.rows('SELECT * FROM research_jobs ORDER BY id DESC LIMIT 1');return r[0] if r else None
