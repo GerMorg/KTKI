@@ -11,7 +11,7 @@ class V74RegressionTests(unittest.TestCase):
  def test_deep_scan_is_fail_soft_at_runtime_boundary(self):
   source=(APP/'v74_main.py').read_text(encoding='utf-8');self.assertIn('_original_scanner_run = MarketScanner.run',source);self.assertIn('def _scanner_run_v74',source);self.assertIn("'DEEP_SCAN_DEGRADED'",source);self.assertIn("'status': 'DEGRADED'",source);self.assertIn('_original_shadow_run = ForexShadow.run',source);self.assertIn("'FOREX_SHADOW_DEGRADED'",source)
  def test_research_pipeline_has_final_shape_error_boundary(self):
-  source=(APP/'research_pipeline.py').read_text(encoding='utf-8');self.assertIn('def _is_payload_shape_error',source);self.assertIn('def _shape_guard',source);self.assertIn('RESEARCH_STAGE_DEGRADED',source);self.assertIn('COMPLETED_DEGRADED',source);self.assertIn('shadow_obj=self.shadow or ForexShadow(self.db)',source);self.assertNotIn('ForexShadow(self.db).run(symbols)',source)
+  source=(APP/'research_pipeline.py').read_text(encoding='utf-8');self.assertIn('def _is_payload_shape_error',source);self.assertIn('def _shape_guard',source);self.assertIn('RESEARCH_STAGE_DEGRADED',source);self.assertIn("'quality':'DEGRADED' if degraded else 'VALID'",source);self.assertIn('shadow_obj=self.shadow or ForexShadow(self.db)',source);self.assertNotIn('ForexShadow(self.db).run(symbols)',source)
  def test_active_runtime_does_not_use_unprotected_ticker_update(self):
   source=(APP/'prefilter.py').read_text(encoding='utf-8');self.assertNotIn('tickers.update(self.client.ticker(block,ac))',source);self.assertNotIn('tickers[ac].update(single if isinstance(single,dict) else {})',source)
  def test_payload_shape_assignments_are_not_directly_unpacked(self):
