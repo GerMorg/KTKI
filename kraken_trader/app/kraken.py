@@ -13,12 +13,21 @@ class KrakenClient:
   if private:
    if not self.key or not self.secret:raise KrakenError("API-Key oder Private Key fehlt")
    data["nonce"]=str(time.time_ns());headers.update({"API-Key":self.key,"API-Sign":self.sign(path,data,self.secret)})
-  req=urllib.request.Request(self.base+path,data=urllib.parse.urlencode(data).encode() if data else None,headers=headers)
-  try:
-   with urllib.request.urlopen(req,timeout=self.timeout) as r:payload=json.load(r)
-  except Exception as exc:raise KrakenError("Verbindungsfehler: "+type(exc).__name__) from exc
-  if payload.get("error"):raise KrakenError("; ".join(payload["error"]))
-  return payload.get("result",{})
+  attempts=1 if private else 4
+  last_exc=None
+  for attempt in range(attempts):
+   req=urllib.request.Request(self.base+path,data=urllib.parse.urlencode(data).encode() if data else None,headers=headers)
+   try:
+    with urllib.request.urlopen(req,timeout=self.timeout) as r:payload=json.load(r)
+    if payload.get("error"):raise KrakenError("; ".join(payload["error"]))
+    return payload.get("result",{})
+   except KrakenError as exc:
+    last_exc=exc
+    if private or 'API:' in str(exc):raise
+   except Exception as exc:
+    last_exc=exc
+   if attempt+1<attempts:time.sleep(0.75*(2**attempt))
+  raise KrakenError("Verbindungsfehler: "+type(last_exc).__name__) from last_exc
  def add_order(self,**data):return self.call("/0/private/AddOrder",data,private=True)
  def status(self):return self.call("/0/public/SystemStatus")
  def pairs(self,asset_class="currency"):
@@ -43,7 +52,6 @@ class KrakenClient:
  def balance_ex(self):return self.call("/0/private/BalanceEx",private=True)
  def ledgers(self,offset=0):return self.call("/0/private/Ledgers",{"type":"all","ofs":offset},private=True)
  def websocket_token(self):return self.call("/0/private/GetWebSocketsToken",private=True)
-
  def ohlc(self,pair,interval=60,asset_class='currency',since=None):
   data={'pair':pair,'interval':int(interval),'assetVersion':1}
   if since is not None:data['since']=int(since)
