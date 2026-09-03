@@ -1,5 +1,5 @@
 name: Kraken Trader
-version: 0.1.0-dev.78
+version: 0.1.0-dev.79
 slug: kraken_trader
 description: Read-only Kraken Portfolio und lokales Paper-Trading; Realhandel optional, strikt gated
 arch:
@@ -18,6 +18,7 @@ options:
   refresh_minutes: 15
   public_websocket_enabled: true
   websocket_stale_seconds: 30
+  websocket_symbol_limit: 100
   private_websocket_readonly_enabled: true
   v77_rest_fallback_minutes: 5
   paper_fee_bps: 40
@@ -115,6 +116,7 @@ schema:
   refresh_minutes: int(1,1440)
   public_websocket_enabled: bool
   websocket_stale_seconds: int(10,300)
+  websocket_symbol_limit: int(20,250)
   private_websocket_readonly_enabled: bool
   v77_rest_fallback_minutes: int(1,60)
   paper_fee_bps: int(0,500)
