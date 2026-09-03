@@ -65,15 +65,16 @@ class ResearchPipeline:
    stage,operation='DEEP_SCAN','research_watchlist.update'
    with self.db.con() as c:c.execute("UPDATE research_watchlist SET status='ANALYZED' WHERE symbol IN (SELECT symbol FROM scanner_results WHERE quality='VALID')")
    stage,operation='DEEP_SCAN','ForexShadow.run';shadow_obj=self.shadow or ForexShadow(self.db);shadow,was=self._shape_guard(jid,stage,operation,lambda:shadow_obj.run(symbols),{'status':'DEGRADED','snapshots':0,'symbols':0},{'symbols':len(symbols)});degraded += [operation] if was else []
-   stage,operation='FORECAST_SNAPSHOT';self.step(jid,stage,4,{'symbols':len(symbols)});stage,operation='ForecastTracker.snapshot';forecast_count,was=self._shape_guard(jid,stage,operation,lambda:self.forecasts.snapshot(symbols),0,{'symbols':len(symbols)});degraded += [operation] if was else []
-   stage,operation='ForecastTracker.evaluate_due';evaluated,was=self._shape_guard(jid,stage,operation,self.forecasts.evaluate_due,0);degraded += [operation] if was else []
-   stage,operation='LEARNING_CANDIDATES';self.step(jid,stage,5,{'forecasts':forecast_count,'evaluated':evaluated})
+   stage='FORECAST_SNAPSHOT';operation='ForecastTracker.snapshot';self.step(jid,stage,4,{'symbols':len(symbols)});forecast_count,was=self._shape_guard(jid,stage,operation,lambda:self.forecasts.snapshot(symbols),0,{'symbols':len(symbols)});degraded += [operation] if was else []
+   stage='FORECAST_SNAPSHOT';operation='ForecastTracker.evaluate_due';evaluated,was=self._shape_guard(jid,stage,operation,self.forecasts.evaluate_due,0);degraded += [operation] if was else []
+   stage='LEARNING_CANDIDATES';operation='learning';self.step(jid,stage,5,{'forecasts':forecast_count,'evaluated':evaluated})
    from controlled_learning import ControlledLearning
    from news_learning import NewsLearning
-   stage,operation='ControlledLearning.propose_all';controlled,was=self._shape_guard(jid,stage,operation,lambda:ControlledLearning(self.db).propose_all(automatic=True),{'status':'DEGRADED','families':{}});degraded += [operation] if was else []
-   stage,operation='NewsLearning.propose';news,was=self._shape_guard(jid,stage,operation,lambda:NewsLearning(self.db).propose(automatic=True),{'status':'DEGRADED'});degraded += [operation] if was else []
-   learning={'controlled':controlled,'news':news};quality='VALID_WITH_WARNINGS' if symbols and degraded else ('DEGRADED' if degraded else 'VALID')
-   details={'universe':u,'prefilter':p,'scanner':s,'forex_shadow':shadow,'forecasts':forecast_count,'evaluated':evaluated,'learning':learning,'degraded_stages':degraded,'quality':quality,'candidate_count':len(symbols)}
+   stage,operation='LEARNING_CANDIDATES','ControlledLearning.propose_all';controlled,was=self._shape_guard(jid,stage,operation,lambda:ControlledLearning(self.db).propose_all(automatic=True),{'status':'DEGRADED','families':{}});degraded += [operation] if was else []
+   stage,operation='LEARNING_CANDIDATES','NewsLearning.propose';news,was=self._shape_guard(jid,stage,operation,lambda:NewsLearning(self.db).propose(automatic=True),{'status':'DEGRADED'});degraded += [operation] if was else []
+   learning={'controlled':controlled,'news':news}
+   quality='VALID_WITH_WARNINGS' if degraded and symbols else ('DEGRADED' if degraded else 'VALID')
+   details={'universe':u,'prefilter':p,'scanner':s,'forex_shadow':shadow,'forecasts':forecast_count,'evaluated':evaluated,'learning':learning,'degraded_stages':degraded,'quality':quality,'candidate_count':len(symbols),'recovered_candidates':recovered}
    with self.db.con() as c:c.execute('UPDATE research_jobs SET status=?,stage=?,progress_current=?,finished_at=?,error=?,details_json=? WHERE id=?',('COMPLETED','DONE',6,now(),None,json.dumps(details,ensure_ascii=False,default=str),jid))
    self.db.audit('RESEARCH_PIPELINE_COMPLETED',json.dumps({'job_id':jid,'status':'COMPLETED','quality':quality,'degraded_stages':degraded,'candidate_count':len(symbols)},ensure_ascii=False,sort_keys=True))
   except Exception as exc:self.fail(jid,stage,operation,exc,{'traceback':traceback.format_exc(limit=12)})
