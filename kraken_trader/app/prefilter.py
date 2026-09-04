@@ -31,7 +31,7 @@ class MarketPrefilter:
   row=rows[0];last=float(row.get('last') or 0)
   if last<=0:return None
   bid=float(row.get('bid') or last);ask=float(row.get('ask') or last);change=float(row.get('change_pct') or 0);openp=last/(1+change/100) if 1+change/100 else last
-  return {'b':[str(bid)],'a':[str(ask)],'c':[str(last)],'o':str(openp),'v':['0', '0'],'_cached':True}
+  return {'b':[str(bid)],'a':[str(ask)],'c':[str(last)],'o':str(openp),'v':['0','0'],'_cached':True}
  def _canonical_markets(self,markets,tickers):
   groups={}
   for market in markets:groups.setdefault(market.get('canonical_id') or market['asset_class']+':'+str(market.get('base_asset')),[]).append(market)
@@ -62,20 +62,23 @@ class MarketPrefilter:
   for m in markets:
    symbol=m['symbol']
    if symbol in seen:continue
-   seen.add(symbol)
-   t=ticker_item(tickers,m) or self._cached_ticker(symbol)
-   cached=isinstance(t,dict) and bool(t.get('_cached'))
+   seen.add(symbol);t=ticker_item(tickers,m) or self._cached_ticker(symbol);cached=isinstance(t,dict) and bool(t.get('_cached'))
    liq=spread_s=mom=0.;quality='VALID' if isinstance(t,dict) else 'PENDING_TICKER';reasons=['Kanonisches Produkt; Alternativen: '+', '.join(m.get('alternatives',[]))]
    if isinstance(t,dict):
-    bid=float((t.get('b') or [0])[0] or 0);ask=float((t.get('a') or [0])[0] or 0);last=float((t.get('c') or [0])[0] or 0);op=float(t.get('o') or 0);vol=float((t.get('v') or [0,0])[-1] or 0);mid=(bid+ask)/2;sp=(ask-bid)/mid*100 if mid else 999;chg=(last/op-1)*100 if op else 0;turn=max(0,vol*last);spread_s=max(0,35-min(35,sp*35));mom=max(0,min(25,12.5+chg*2));liq=max(0,min(30,math.log10(turn+1)*5));costs=m.get('execution_costs') or {};quality='CACHED' if cached else 'VALID';reasons+=(['Verwendeter Preis stammt aus dem lokalen Live-Preis-Cache'] if cached else []);reasons+=['Ausführungskosten gesamt '+str(round(float(costs.get('total_rate',999))*100,4))+' %',f'Spread {sp:.3f} %',f'24h-Veränderung {chg:.2f} %',f'Umsatzindikator {turn:.2f}']
-   if not isinstance(t,dict):reasons.append('Kein aktueller Ticker verfügbar; Markt bleibt für Detailprüfung sichtbar')
-   nl=self.db.rows('SELECT relevance FROM news_market_links WHERE symbol=?',(symbol,));news=min(10,sum(float(x['relevance']) for x in nl));reasons.append(f'Nachrichten {news:.2f}/10 aus {len(nl)} Zuordnungen');score=liq+spread_s+mom+news;rows.append({'symbol':symbol,'category':m['category'],'score':round(score,4),'liq':liq,'spread':spread_s,'mom':mom,'news':news,'quality':quality,'reasons':reasons})
+    bid=float((t.get('b') or [0])[0] or 0);ask=float((t.get('a') or [0])[0] or 0);last=float((t.get('c') or [0])[0] or 0);op=float(t.get('o') or 0);vol=float((t.get('v') or [0,0])[-1] or 0);mid=(bid+ask)/2 if bid>0 and ask>0 else 0;valid_quote=last>0 and mid>0 and ask>=bid>0
+    sp=(ask-bid)/mid*100 if valid_quote else 999;chg=(last/op-1)*100 if op>0 and last>0 else 0;turn=max(0,vol*last);spread_s=max(0,min(35,35-max(0,sp)*35));mom=max(0,min(25,12.5+chg*2));liq=max(0,min(30,math.log10(turn+1)*5));costs=m.get('execution_costs') or {}
+    if not valid_quote:
+     quality='INVALID_QUOTE';spread_s=0;reasons.append('Ungültiger oder gekreuzter Bid/Ask-Quote verworfen')
+    else:quality='CACHED' if cached else 'VALID'
+    reasons+=(['Verwendeter Preis stammt aus dem lokalen Live-Preis-Cache'] if cached else []);reasons+=['Ausführungskosten gesamt '+str(round(float(costs.get('total_rate',999))*100,4))+' %',f'Spread {sp:.3f} %',f'24h-Veränderung {chg:.2f} %',f'Umsatzindikator {turn:.2f}']
+   if not isinstance(t,dict):reasons.append('Kein aktueller Ticker verfügbar; Markt bleibt sichtbar, wird aber nicht als echter Prefilter-Kandidat gewählt')
+   nl=self.db.rows('SELECT relevance FROM news_market_links WHERE symbol=?',(symbol,));news=max(0,min(10,sum(float(x['relevance']) for x in nl)));reasons.append(f'Nachrichten {news:.2f}/10 aus {len(nl)} Zuordnungen');score=max(0,min(100,liq+spread_s+mom+news));rows.append({'symbol':symbol,'category':m['category'],'score':round(score,4),'liq':liq,'spread':spread_s,'mom':mom,'news':news,'quality':quality,'reasons':reasons})
   valid=[x for x in rows if x['quality'] in ('VALID','CACHED')];chosen=[]
   for cat in sorted({x['category'] for x in rows}):
-   pool=sorted([x for x in rows if x['category']==cat],key=lambda x:(x['quality'] in ('VALID','CACHED'),x['score']),reverse=True);chosen+=pool[:top]
+   pool=sorted([x for x in rows if x['category']==cat and x['quality'] in ('VALID','CACHED')],key=lambda x:x['score'],reverse=True);chosen+=pool[:top]
   status='VALID' if valid and not errors else ('VALID_WITH_WARNINGS' if rows else 'INCOMPLETE')
   with self.db.con() as c:
    cur=c.execute('INSERT INTO prefilter_runs VALUES(NULL,?,?,?,?,?,?)',(stamp,status,len(markets),len(chosen),int(nr.get('saved',0) or 0),json.dumps({'errors':errors+list(nr.get('errors',[]) or [])},ensure_ascii=False)));rid=cur.lastrowid
    c.executemany('INSERT INTO prefilter_results(run_id,symbol,category,score,liquidity_score,spread_score,momentum_score,news_score,quality,reasons_json) VALUES(?,?,?,?,?,?,?,?,?,?) ON CONFLICT(run_id,symbol) DO UPDATE SET category=excluded.category,score=excluded.score,liquidity_score=excluded.liquidity_score,spread_score=excluded.spread_score,momentum_score=excluded.momentum_score,news_score=excluded.news_score,quality=excluded.quality,reasons_json=excluded.reasons_json',[(rid,x['symbol'],x['category'],str(x['score']),str(x['liq']),str(x['spread']),str(x['mom']),str(x['news']),x['quality'],json.dumps(x['reasons'],ensure_ascii=False)) for x in rows]);c.execute("UPDATE research_watchlist SET status='STALE'");c.executemany('INSERT OR REPLACE INTO research_watchlist VALUES(?,?,?,?,?,?,?)',[(x['symbol'],x['category'],str(x['score']),'PREFILTERED',stamp,rid,json.dumps(x['reasons'],ensure_ascii=False)) for x in chosen]);c.execute('INSERT INTO watchlist_versions VALUES(NULL,?,?,?,?,?)',(stamp,rid,'CREATED',len(chosen),json.dumps(chosen,ensure_ascii=False)))
-  return {'run_id':rid,'markets':len(markets),'valid':len(valid),'pending_ticker':sum(x['quality']=='PENDING_TICKER' for x in rows),'cached':sum(x['quality']=='CACHED' for x in rows),'candidates':len(chosen),'errors':errors+list(nr.get('errors',[]) or [])}
+  return {'run_id':rid,'markets':len(markets),'valid':len(valid),'pending_ticker':sum(x['quality']=='PENDING_TICKER' for x in rows),'invalid_quote':sum(x['quality']=='INVALID_QUOTE' for x in rows),'cached':sum(x['quality']=='CACHED' for x in rows),'candidates':len(chosen),'errors':errors+list(nr.get('errors',[]) or [])}
  def candidates(self):return [x['symbol'] for x in self.db.rows("SELECT symbol FROM research_watchlist WHERE status IN ('PREFILTERED','ANALYZED') ORDER BY CAST(prefilter_score AS REAL) DESC")]
