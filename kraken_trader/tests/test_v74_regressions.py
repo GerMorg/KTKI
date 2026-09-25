@@ -5,7 +5,7 @@ ROOT=Path(__file__).resolve().parents[1];APP=ROOT/'app';REPO=ROOT.parent
 class V74RegressionTests(unittest.TestCase):
  def test_active_runtime_and_version_are_v83(self):
   run=(ROOT/'run.sh').read_text(encoding='utf-8');version=(APP/'version.py').read_text(encoding='utf-8');config=(ROOT/'config.yaml').read_text(encoding='utf-8');runtime=(APP/'v83_main.py').read_text(encoding='utf-8');repo=(REPO/'repository.yaml').read_text(encoding='utf-8')
-  self.assertIn('v83_main:app',run);self.assertIn("APP_VERSION='0.1.0-dev.83'",version);self.assertIn('version: 0.1.0-dev.83',config);self.assertIn('version: 0.1.0-dev.83',repo);self.assertIn("'research_shape_error_quarantine': True",(APP/'v76_main.py').read_text(encoding='utf-8'));self.assertIn("'version': '0.1.0-dev.83'",runtime)
+  self.assertIn('v83_main:app',run);self.assertIn("APP_VERSION='0.1.0-dev.83'",version);self.assertIn('version: 0.1.0-dev.83',config);self.assertIn('version: 0.1.0-dev.83',repo);self.assertIn("'research_shape_error_quarantine': True",(APP/'v76_main.py').read_text(encoding='utf-8'));self.assertIn('"version": "0.1.0-dev.83"',runtime)
  def test_deep_scan_is_fail_soft_at_runtime_boundary(self):
   source=(APP/'v74_main.py').read_text(encoding='utf-8');self.assertIn('_original_scanner_run = MarketScanner.run',source);self.assertIn('def _scanner_run_v74',source);self.assertIn("'DEEP_SCAN_DEGRADED'",source);self.assertIn("'status': 'DEGRADED'",source);self.assertIn('_original_shadow_run = ForexShadow.run',source);self.assertIn("'FOREX_SHADOW_DEGRADED'",source)
  def test_research_pipeline_has_final_shape_error_quarantine_and_recovery(self):
