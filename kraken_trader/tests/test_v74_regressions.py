@@ -3,9 +3,9 @@ from pathlib import Path
 import unittest
 ROOT=Path(__file__).resolve().parents[1];APP=ROOT/'app';REPO=ROOT.parent
 class V74RegressionTests(unittest.TestCase):
- def test_active_runtime_and_version_are_v80(self):
-  run=(ROOT/'run.sh').read_text(encoding='utf-8');version=(APP/'version.py').read_text(encoding='utf-8');config=(ROOT/'config.yaml').read_text(encoding='utf-8');runtime=(APP/'v80_main.py').read_text(encoding='utf-8');repo=(REPO/'repository.yaml').read_text(encoding='utf-8')
-  self.assertIn('v80_main:app',run);self.assertIn("APP_VERSION='0.1.0-dev.80'",version);self.assertIn('version: 0.1.0-dev.80',config);self.assertIn('version: 0.1.0-dev.80',repo);self.assertIn("'research_shape_error_quarantine': True",(APP/'v76_main.py').read_text(encoding='utf-8'));self.assertIn("'version':'0.1.0-dev.80'",runtime)
+ def test_active_runtime_and_version_are_v81(self):
+  run=(ROOT/'run.sh').read_text(encoding='utf-8');version=(APP/'version.py').read_text(encoding='utf-8');config=(ROOT/'config.yaml').read_text(encoding='utf-8');runtime=(APP/'v81_main.py').read_text(encoding='utf-8');repo=(REPO/'repository.yaml').read_text(encoding='utf-8')
+  self.assertIn('v81_main:app',run);self.assertIn("APP_VERSION='0.1.0-dev.81'",version);self.assertIn('version: 0.1.0-dev.81',config);self.assertIn('version: 0.1.0-dev.81',repo);self.assertIn("'research_shape_error_quarantine': True",(APP/'v76_main.py').read_text(encoding='utf-8'));self.assertIn("'version': '0.1.0-dev.81'",runtime)
  def test_deep_scan_is_fail_soft_at_runtime_boundary(self):
   source=(APP/'v74_main.py').read_text(encoding='utf-8');self.assertIn('_original_scanner_run = MarketScanner.run',source);self.assertIn('def _scanner_run_v74',source);self.assertIn("'DEEP_SCAN_DEGRADED'",source);self.assertIn("'status': 'DEGRADED'",source);self.assertIn('_original_shadow_run = ForexShadow.run',source);self.assertIn("'FOREX_SHADOW_DEGRADED'",source)
  def test_research_pipeline_has_final_shape_error_quarantine_and_recovery(self):
@@ -27,6 +27,6 @@ class V74RegressionTests(unittest.TestCase):
   for name in ('prefilter.py','market_universe.py','scanner.py','forex_shadow.py','research_pipeline.py'):
    source=(APP/name).read_text(encoding='utf-8');self.assertIn('isinstance(',source,name)
  def test_all_v80_runtime_modules_compile(self):
-  for name in ('v80_main.py','v79_main.py','v78_main.py','v77_main.py','v76_main.py','v75_main.py','v74_main.py','research_pipeline.py','scanner.py','forex_shadow.py','prefilter.py','market_universe.py','payload_utils.py','ws_market.py'):
+  for name in ('v81_main.py','real_autonomous_v81.py','v80_main.py','v79_main.py','v78_main.py','v77_main.py','v76_main.py','v75_main.py','v74_main.py','research_pipeline.py','scanner.py','forex_shadow.py','prefilter.py','market_universe.py','payload_utils.py','ws_market.py'):
    ast.parse((APP/name).read_text(encoding='utf-8'),filename=name)
 if __name__=='__main__':unittest.main()
