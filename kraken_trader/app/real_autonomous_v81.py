@@ -57,7 +57,8 @@ class RealPortfolioAllocatorV81(RealPortfolioAllocator):
   secret=self.db.value('real_balancing_automation_secret','');secret_hash=self.db.value('real_balancing_automation_secret_hash','')
   if not secret_hash:return result
   candidates=self._all_candidates(cfg);active_symbols={str(x['symbol']).upper() for x in candidates if not x.get('held_only') and D(x.get('score'))>=D(cfg['minimum_score'])};held=self._held_symbols()
-  reduction=[];room=min(max(0,cfg['max_actions_per_run']-len(result.get('actions') or [])),max(0,cfg['max_actions_per_day']-self._daily_count()))
+  used_run=sum(1 for action in (result.get('actions') or []) if str(action.get('status','')).upper()=='SUBMITTED')
+  reduction=[];room=min(max(0,cfg['max_actions_per_run']-used_run),max(0,cfg['max_actions_per_day']-self._daily_count()))
   if room<=0:return result
   run_id=result.get('run_id') or secrets.token_hex(8);health=ModelHealth(self.db);tickers=self._tickers()
   for symbol in held:
