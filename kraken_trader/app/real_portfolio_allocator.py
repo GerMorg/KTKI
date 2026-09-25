@@ -88,11 +88,11 @@ class RealPortfolioAllocator:
    if automatic and not cfg['enabled']:return {'status':'DISABLED'}
    current,total=self._current_eur();payload={k:(str(v) if isinstance(v,Decimal) else v) for k,v in cfg.items()};tickers=self._tickers();health=ModelHealth(self.db);health_by_family={family:health.evaluate(family) for family in ('crypto_spot','xstocks','forex')};candidates=self._candidates(cfg);targets=build_targets(candidates,total,cfg['cash_reserve_pct'],cfg['max_position_pct'],cfg['minimum_score'],cfg['min_trade_eur'])
    with self.db.con() as con:cur=con.execute('INSERT INTO real_allocation_runs(created_at,status,automatic,settings_json,details_json) VALUES(?,?,?,?,?)',(now(),'RUNNING',1 if automatic else 0,safe_json(payload),'{}'));rid=cur.lastrowid
-   actions=[];today=self.db.rows("SELECT COUNT(*) n FROM real_allocation_actions WHERE status='SUBMITTED' AND date(created_at)=date('now')")[0]['n'];room=max(0,cfg['max_actions_per_day']-int(today));run_cap=cfg['max_actions_per_run'];submitted_count=0;evaluated_count=0
+   actions=[];today=self.db.rows("SELECT COUNT(*) n FROM real_allocation_actions WHERE status='SUBMITTED' AND date(created_at)=date('now')")[0]['n'];room=max(0,cfg['max_actions_per_day']-int(today));run_cap=cfg['max_actions_per_run'];execution_capacity=min(run_cap,room);submitted_count=0;evaluated_count=0
    # Evaluate candidates in conviction order and only consume execution capacity when an order is actually submitted.
    # This prevents a blocked/no-trade candidate from occupying one of the best available slots.
    for target in targets:
-    if submitted_count>=room or evaluated_count>=len(targets):break
+    if submitted_count>=execution_capacity or evaluated_count>=len(targets):break
     evaluated_count+=1
     symbol=target['symbol'];asset=self._asset(symbol.split('/')[0]);present=D(current.get(asset,0));target_eur=D(target['target_exposure_eur']);diff=target_eur-present
     if total<=0 or abs(diff)/total*100<cfg['no_trade_band_pct'] or abs(diff)<cfg['min_trade_eur']:continue
@@ -123,10 +123,10 @@ class RealPortfolioAllocator:
     with self.db.con() as con:con.execute('INSERT INTO real_allocation_actions(run_id,created_at,symbol,side,current_eur,target_eur,difference_eur,status,decision_json,order_intent_id,error) VALUES(?,?,?,?,?,?,?,?,?,?,?)',(rid,now(),symbol,side,str(present),str(target_eur),str(diff),status,safe_json({'decision':decision,'route':route,'funding':funding,'model_health':h}),intent,None))
     actions.append({'symbol':symbol,'side':side,'trade_eur':str(trade_eur),'status':status,'route':selected['symbol'],'quote':quote,'funding':funding,'conviction':target.get('conviction'),'score':target.get('score')})
     if status=='SUBMITTED':submitted_count+=1
-   skipped_for_capacity=max(0,len(targets)-evaluated_count) if submitted_count>=room else 0
+   skipped_for_capacity=max(0,len(targets)-evaluated_count) if submitted_count>=execution_capacity else 0
    final='COMPLETED' if all(x['status'] not in ('FAILED','FUNDING_FAILED','FUNDING_RECHECK_FAILED') for x in actions) else 'PARTIAL'
    with self.db.con() as con:con.execute('UPDATE real_allocation_runs SET finished_at=?,status=?,details_json=? WHERE id=?',(now(),final,safe_json({'total_eur':str(total),'actions':actions,'model_health':health_by_family}),rid))
-   self.db.audit('REAL_BALANCING_RUN',safe_json({'run_id':rid,'status':final,'automatic':automatic,'actions':len(actions)}),'warning' if automatic else 'info','REAL');return {'status':final,'run_id':rid,'total_eur':str(total),'actions':actions,'evaluated_candidates':evaluated_count,'execution_capacity':min(run_cap,room),'skipped_for_capacity':skipped_for_capacity,'settings':payload,'model_health':health_by_family}
+   self.db.audit('REAL_BALANCING_RUN',safe_json({'run_id':rid,'status':final,'automatic':automatic,'actions':len(actions)}),'warning' if automatic else 'info','REAL');return {'status':final,'run_id':rid,'total_eur':str(total),'actions':actions,'evaluated_candidates':evaluated_count,'execution_capacity':execution_capacity,'skipped_for_capacity':skipped_for_capacity,'settings':payload,'model_health':health_by_family}
   except Exception as exc:
    if rid:
     with self.db.con() as con:con.execute('UPDATE real_allocation_runs SET finished_at=?,status=?,error=? WHERE id=?',(now(),'FAILED',type(exc).__name__+': '+str(exc),rid))
