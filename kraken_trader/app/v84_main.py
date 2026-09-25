@@ -13,6 +13,16 @@ app = base.app
 legacy = base.legacy
 
 AUTOMATION_KEYS = tuple(AUTOMATION_DEFAULTS.keys())
+REAL_OPTION_KEYS = (
+    'real_trading_enabled','real_kill_switch','real_fee_bps','real_fx_fee_bps','real_slippage_bps',
+    'real_max_price_deviation_pct','real_allow_fx_conversion','real_max_order_volume','real_max_order_notional_eur',
+    'real_allowed_symbols','real_allow_market_orders','real_max_orders_per_day','real_max_fx_orders_per_day',
+    'real_balancing_enabled','real_balancing_execute_enabled','real_balancing_dry_run',
+    'real_balancing_interval_minutes','real_balancing_max_position_pct','real_balancing_cash_reserve_pct',
+    'real_balancing_min_trade_eur','real_balancing_max_trade_eur','real_balancing_no_trade_band_pct',
+    'real_balancing_max_actions_per_run','real_balancing_max_actions_per_day','real_balancing_cooldown_hours',
+    'real_balancing_minimum_score','real_balancing_limit_offset_pct',
+)
 
 
 def _options():
@@ -32,7 +42,7 @@ def _sync_options(db, options):
     a stale false row otherwise survives every restart.
     """
     changed = []
-    for key in AUTOMATION_KEYS:
+    for key in AUTOMATION_KEYS + REAL_OPTION_KEYS:
         if key not in options:
             continue
         value = options.get(key)
