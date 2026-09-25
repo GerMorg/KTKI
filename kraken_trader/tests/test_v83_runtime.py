@@ -13,7 +13,7 @@ class V83RuntimeTests(unittest.TestCase):
         self.assertIn('import v80_main as base', source)
         self.assertIn('AutomationControllerV67(', source)
         self.assertIn('legacy.db', source)
-        self.assertIn("'version': '0.1.0-dev.83'", source)
+        self.assertIn("\"version\": \"0.1.0-dev.83\"", source)
         ast.parse(source, filename='v83_main.py')
 
     def test_active_runtime_and_version_are_v83(self):
