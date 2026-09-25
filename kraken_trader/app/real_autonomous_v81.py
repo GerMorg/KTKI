@@ -6,8 +6,8 @@ Keeps the existing RealPortfolioAllocator safety gates but fixes the live path:
 - live balances are refreshed before allocation;
 - held positions are included in the rebalance universe so reductions/exits are
   considered, not only new BUY candidates;
-- every live action gets a deterministic idempotency key for the allocation run;
-- FX funding and the asset order share the same all-in cost/risk gates.
+- reduction orders use deterministic idempotency keys;
+- FX funding and the asset order remain behind the existing all-in cost/risk gates.
 """
 import hashlib
 import json
@@ -15,45 +15,29 @@ import secrets
 from decimal import Decimal
 
 from automation_v67 import AutomationControllerV67
+from controlled_learning import ControlledLearning
+from news_learning import NewsLearning
 from real_portfolio_allocator import RealPortfolioAllocator
 from model_health import ModelHealth
 from decision_matrix import DecisionMatrix
 from execution_router import choose_route
-from portfolio_target import build_targets
 from strategy_profiles import active_profile, family_for_category
-from db import now
 
 D = lambda x: Decimal(str(x or 0))
 
 REAL_DEFAULTS = {
-    'real_trading_enabled': 'false',
-    'real_kill_switch': 'true',
-    'real_fee_bps': '40',
-    'real_fx_fee_bps': '10',
-    'real_slippage_bps': '10',
-    'real_max_price_deviation_pct': '1',
-    'real_allow_fx_conversion': 'true',
-    'real_max_order_volume': '0',
-    'real_max_order_notional_eur': '0',
-    'real_allowed_symbols': '',
-    'real_allow_market_orders': 'false',
-    'real_max_orders_per_day': '2',
-    'real_max_fx_orders_per_day': '2',
-    'real_balancing_enabled': 'false',
-    'real_balancing_execute_enabled': 'false',
-    'real_balancing_dry_run': 'true',
-    'real_balancing_interval_minutes': '60',
-    'real_balancing_max_position_pct': '5',
-    'real_balancing_cash_reserve_pct': '20',
-    'real_balancing_min_trade_eur': '20',
-    'real_balancing_max_trade_eur': '50',
-    'real_balancing_no_trade_band_pct': '2',
-    'real_balancing_max_actions_per_run': '1',
-    'real_balancing_max_actions_per_day': '2',
-    'real_balancing_cooldown_hours': '24',
-    'real_balancing_minimum_score': '70',
-    'real_balancing_limit_offset_pct': '.2',
-    'real_balancing_automation_secret': '',
+    'real_trading_enabled': 'false', 'real_kill_switch': 'true', 'real_fee_bps': '40',
+    'real_fx_fee_bps': '10', 'real_slippage_bps': '10', 'real_max_price_deviation_pct': '1',
+    'real_allow_fx_conversion': 'true', 'real_max_order_volume': '0', 'real_max_order_notional_eur': '0',
+    'real_allowed_symbols': '', 'real_allow_market_orders': 'false', 'real_max_orders_per_day': '2',
+    'real_max_fx_orders_per_day': '2', 'real_balancing_enabled': 'false',
+    'real_balancing_execute_enabled': 'false', 'real_balancing_dry_run': 'true',
+    'real_balancing_interval_minutes': '60', 'real_balancing_max_position_pct': '5',
+    'real_balancing_cash_reserve_pct': '20', 'real_balancing_min_trade_eur': '20',
+    'real_balancing_max_trade_eur': '50', 'real_balancing_no_trade_band_pct': '2',
+    'real_balancing_max_actions_per_run': '1', 'real_balancing_max_actions_per_day': '2',
+    'real_balancing_cooldown_hours': '24', 'real_balancing_minimum_score': '70',
+    'real_balancing_limit_offset_pct': '.2', 'real_balancing_automation_secret': '',
     'real_balancing_automation_secret_hash': '',
 }
 
@@ -62,10 +46,7 @@ def install_real_settings(db, options=None):
     options = options or {}
     for key, default in REAL_DEFAULTS.items():
         if not db.rows('SELECT value FROM settings WHERE key=?', (key,)):
-            value = options.get(key, default)
-            db.set_setting(key, value)
-    # The HA option is intentionally human-readable/configurable.  Runtime
-    # authorization always compares a hash; never use the plaintext as a gate.
+            db.set_setting(key, options.get(key, default))
     secret = str(db.value('real_balancing_automation_secret', '') or '')
     hashed = str(db.value('real_balancing_automation_secret_hash', '') or '')
     if secret and not hashed:
@@ -101,9 +82,6 @@ class RealPortfolioAllocatorV81(RealPortfolioAllocator):
     def _all_candidates(self, cfg):
         candidates = self._candidates(cfg)
         known = {str(x['symbol']).upper() for x in candidates}
-        # Existing holdings are retained in the rebalance universe.  A held
-        # asset with no current BUY signal gets a zero target and can therefore
-        # be reduced/exited, subject to the same live gates.
         for symbol in self._held_symbols():
             if cfg['allowed_symbols'] and symbol not in cfg['allowed_symbols']:
                 continue
@@ -125,23 +103,17 @@ class RealPortfolioAllocatorV81(RealPortfolioAllocator):
         raw = f'v81:{run_id}:{symbol.upper()}:{side.lower()}'
         return 'kt81-' + hashlib.sha256(raw.encode()).hexdigest()[:24]
 
-    def _daily_count(self, kind=None):
-        if kind == 'fx':
-            return int(self.db.rows("SELECT COUNT(*) n FROM real_trade_intents WHERE validate_only=0 AND status='SUBMITTED' AND symbol='EUR/USD' AND date(created_at)=date('now')")[0]['n'])
+    def _daily_count(self):
         return int(self.db.rows("SELECT COUNT(*) n FROM real_trade_intents WHERE validate_only=0 AND status='SUBMITTED' AND date(created_at)=date('now')")[0]['n'])
 
     def _submit_live(self, selected, side, trade_eur, route, run_id, secret, approval_token):
-        symbol = selected['symbol']
-        volume, price = self._volume(symbol, trade_eur, side, route)
-        cid = self._deterministic_id(run_id, symbol, side)
-        return self.trade_engine.submit(symbol, side, str(volume), 'limit', str(price), cid, approval_token, False, secret)
+        volume, price = self._volume(selected['symbol'], trade_eur, side, route)
+        cid = self._deterministic_id(run_id, selected['symbol'], side)
+        return self.trade_engine.submit(selected['symbol'], side, str(volume), 'limit', str(price), cid, approval_token, False, secret)
 
     def run(self, automatic=False, approval_token=None):
         if automatic:
             self._refresh_before_run()
-        # The parent implementation already contains the mature decision/risk
-        # gates.  Use it for the normal BUY path and then perform a separate,
-        # bounded reduction pass for held positions absent from the target set.
         result = super().run(automatic=automatic, approval_token=approval_token)
         if not automatic or not isinstance(result, dict) or result.get('status') in ('DISABLED', 'BUSY'):
             return result
@@ -152,9 +124,6 @@ class RealPortfolioAllocatorV81(RealPortfolioAllocator):
         secret_hash = self.db.value('real_balancing_automation_secret_hash', '')
         if not secret_hash:
             return result
-        # Only consider a reduction when the asset is not represented by an
-        # active BUY candidate. This avoids the old one-sided allocator blind
-        # spot while keeping the current strategy as the source of truth.
         candidates = self._all_candidates(cfg)
         active_symbols = {str(x['symbol']).upper() for x in candidates if not x.get('held_only') and D(x.get('score')) >= D(cfg['minimum_score'])}
         held = self._held_symbols()
@@ -175,40 +144,35 @@ class RealPortfolioAllocatorV81(RealPortfolioAllocator):
             if not selected or route.get('status') != 'VALID':
                 continue
             asset = self._asset(symbol.split('/')[0])
-            current, _ = self._current_eur()
+            current, total = self._current_eur()
             present = D(current.get(asset, 0))
             if present < cfg['min_trade_eur']:
                 continue
             trade_eur = min(present, cfg['max_trade_eur'])
-            family = family_for_category((self.db.rows('SELECT category FROM market_universe WHERE symbol=? LIMIT 1', (symbol,)) or [{'category': 'crypto_spot'}])[0]['category'])
+            row = self.db.rows('SELECT category FROM market_universe WHERE symbol=? LIMIT 1', (symbol,))
+            family = family_for_category(row[0]['category'] if row else 'crypto_spot')
             h = health.evaluate(family)
-            # A reduction is only autonomous when the same model-health gate is
-            # satisfied. This deliberately does not create a new path around
-            # the existing real-trading safeguards.
             raw_edge = D(health.expected_edge_pct(family, 24) or 0)
             cost = D(route['selected']['total_cost_pct'])
             ctx = {
                 'canonical_id': symbol, 'confirmation_count': 1, 'confirmation_required': 1,
                 'minimum_hold_ok': True, 'cooldown_ok': True, 'daily_limit_ok': True,
                 'improvement_after_costs': str(max(D(0), raw_edge - cost) * trade_eur / 100),
-                'tax_loss_ok': True, 'data_fresh': True,
-                'model_health_ok': h.get('status') == 'READY', 'model_health_details': h,
-                'route_cost_ok': True, 'route_cost_details': route,
-                'quote_funding_ok': True, 'quote_funding_details': {},
-                'portfolio_risk_ok': True, 'portfolio_risk_details': {'target_eur': '0', 'total_eur': str(sum(current.values()))},
+                'tax_loss_ok': True, 'data_fresh': True, 'model_health_ok': h.get('status') == 'READY',
+                'model_health_details': h, 'route_cost_ok': True, 'route_cost_details': route,
+                'quote_funding_ok': True, 'quote_funding_details': {}, 'portfolio_risk_ok': True,
+                'portfolio_risk_details': {'target_eur': '0', 'total_eur': str(total)},
                 'order_constraints_ok': True, 'order_constraints_details': {},
                 'real_trading_enabled': self.trade_engine.enabled(),
                 'real_kill_switch_clear': self.db.value('real_kill_switch', 'true').lower() != 'true',
                 'real_limits_ok': trade_eur <= cfg['max_trade_eur'], 'real_balance_ok': True,
             }
             decision = DecisionMatrix(self.db).evaluate(symbol, 'SELL', ctx, 'REAL')
-            status = 'BLOCKED'
-            intent = None
+            status = 'BLOCKED'; intent = None
             if decision['allowed']:
                 try:
                     out = self._submit_live(selected, 'sell', trade_eur, route, run_id, secret, approval_token)
-                    status = out.get('status', 'FAILED')
-                    intent = out.get('client_order_id')
+                    status = out.get('status', 'FAILED'); intent = out.get('client_order_id')
                 except Exception as exc:
                     status = 'FAILED'
                     self.db.audit('REAL_REBALANCE_SELL_FAILED', json.dumps({'symbol': symbol, 'error': type(exc).__name__}), 'error', 'REAL')
@@ -229,7 +193,7 @@ def replace_controller(base, allocator):
         except Exception:
             pass
     controller = AutomationControllerV67(base.db, base.legacy.pipeline, base.legacy.news_prefilter,
-                                         base.ControlledLearning(base.db), base.NewsLearning(base.db),
+                                         ControlledLearning(base.db), NewsLearning(base.db),
                                          base.legacy.run_paper_cycle, allocator)
     controller.start_background()
     base.controller = controller
