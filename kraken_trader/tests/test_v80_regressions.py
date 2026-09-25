@@ -6,8 +6,8 @@ class V80RegressionTests(unittest.TestCase):
  def test_active_runtime_and_versions(self):
   self.assertIn('v82_main:app',(ROOT/'run.sh').read_text(encoding='utf-8'))
   self.assertIn("APP_VERSION='0.1.0-dev.82'",(APP/'version.py').read_text(encoding='utf-8'))
-  self.assertIn('version: 0.1.0-dev.81',(ROOT/'config.yaml').read_text(encoding='utf-8'))
-  self.assertIn('version: 0.1.0-dev.81',(REPO/'repository.yaml').read_text(encoding='utf-8'))
+  self.assertIn('version: 0.1.0-dev.82',(ROOT/'config.yaml').read_text(encoding='utf-8'))
+  self.assertIn('version: 0.1.0-dev.82',(REPO/'repository.yaml').read_text(encoding='utf-8'))
  def test_gemini_provider_has_provider_specific_model_and_retryable_invalid_rows(self):
   source=(APP/'external_ai.py').read_text(encoding='utf-8');self.assertIn("gemini-2.5-flash-lite",source);self.assertIn("a.status!='VALID'",source);self.assertIn('urllib.error.HTTPError',source);self.assertIn("EXTERNAL_NEWS_AI_RUN",source)
  def test_automatic_news_cycle_runs_external_ai(self):
