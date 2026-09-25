@@ -57,7 +57,14 @@ def install_real_settings_v82(db, options=None):
     )
 
 
+if controller is not None:
+    try:
+        controller.stop()
+    except Exception:
+        pass
 install_real_settings_v82(legacy.db, _options())
+if controller is not None:
+    controller.start_background()
 
 
 @app.get("/v82-health")
@@ -82,3 +89,5 @@ def v82_health():
 @app.get("/v81-health")
 def v81_health_compat():
     return v82_health()
+
+app.view_functions["v81_health"] = v81_health_compat
