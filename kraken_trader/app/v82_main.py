@@ -12,6 +12,7 @@ import v81_main as base
 from real_autonomous_v81 import install_real_settings as _install_v81
 
 app = base.app
+VERSION_INFO = {'version':'0.1.0-dev.82'}
 legacy = base.legacy
 allocator = legacy.real_allocator
 controller = base.controller
