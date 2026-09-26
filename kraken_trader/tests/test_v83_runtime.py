@@ -11,7 +11,7 @@ class V83CompatibilityTests(unittest.TestCase):
         self.assertNotIn('import v81_main as base', source)
         self.assertNotIn('import v82_main as base', source)
         self.assertIn('import v84_main as base', source)
-        self.assertIn('AutomationControllerV67(', source)
+        self.assertIn('controller = base.controller', source)
         self.assertIn('legacy.db', source)
         self.assertIn("\"version\": \"0.1.0-dev.85\"", source)
         ast.parse(source, filename='v85_main.py')
