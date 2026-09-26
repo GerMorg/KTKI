@@ -10,7 +10,7 @@ class V67RepositoryTests(unittest.TestCase):
   run=(ROOT/'run.sh').read_text(encoding='utf-8');self.assertIn('v87_main:app',run)
  def test_versions_and_new_controls(self):
   version=(APP/'version.py').read_text(encoding='utf-8');config=(ROOT/'config.yaml').read_text(encoding='utf-8')
-  self.assertIn("APP_VERSION='0.1.0-dev.87'",version);self.assertIn('version: 0.1.0-dev.86',config)
+  self.assertIn("APP_VERSION='0.1.0-dev.87'",version);self.assertIn('version: 0.1.0-dev.87',config)
   for key in ('automation_master_enabled','automation_analysis_enabled','automation_news_enabled','automation_learning_enabled','automation_paper_enabled','automation_real_enabled','automation_real_execute_enabled','learning_max_evaluations','news_learning_max_samples','analysis_max_symbols','real_balancing_automation_secret'):
    self.assertIn(key+':',config)
  def test_process_navigation_and_portfolio_graph(self):
