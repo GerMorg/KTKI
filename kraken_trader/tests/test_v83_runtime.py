@@ -10,7 +10,7 @@ class V83CompatibilityTests(unittest.TestCase):
         source=(APP/'v85_main.py').read_text(encoding='utf-8')
         self.assertNotIn('import v81_main as base', source)
         self.assertNotIn('import v82_main as base', source)
-        self.assertIn('import v80_main as base', source)
+        self.assertIn('import v84_main as base', source)
         self.assertIn('AutomationControllerV67(', source)
         self.assertIn('legacy.db', source)
         self.assertIn("\"version\": \"0.1.0-dev.85\"", source)
