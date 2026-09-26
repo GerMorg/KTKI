@@ -6,7 +6,7 @@ ROOT=Path(__file__).resolve().parents[1]
 APP=ROOT/'app'
 
 class V84RuntimeTests(unittest.TestCase):
-    def test_v85_is_active_and_syncs_explicit_automation_options(self):
+    def test_v84_compatibility_runtime_syncs_explicit_automation_options(self):
         runtime=(APP/'v85_main.py').read_text(encoding='utf-8')
         self.assertIn('import v80_main as base',runtime)
         self.assertIn('def _sync_options',runtime)
