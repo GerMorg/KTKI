@@ -9,9 +9,9 @@ class V84RuntimeTests(unittest.TestCase):
     def test_v84_compatibility_runtime_syncs_explicit_automation_options(self):
         runtime=(APP/'v85_main.py').read_text(encoding='utf-8')
         self.assertIn('import v84_main as base',runtime)
-        self.assertIn('def _sync_options',runtime)
+        self.assertNotIn('def _sync_options',runtime)
         self.assertIn("'automation_real_execute_enabled'",(APP/'automation_v67.py').read_text(encoding='utf-8'))
-        self.assertIn('db.set(key, normalized)',runtime)
+        self.assertIn('controller = base.controller',runtime)
         self.assertIn('"version": "0.1.0-dev.85"',runtime)
         self.assertNotIn('"real_balancing_automation_secret_hash":',runtime)
         self.assertIn('v85_main:app',(ROOT/'run.sh').read_text(encoding='utf-8'))
