@@ -71,6 +71,9 @@ class RealTradeEngine:
   return {'eligible':True,'symbol':symbol,'side':side,'volume':str(volume),'price':str(price),'eur_notional':str(eur_notional),'quote':quote,'base':base}
  def submit(self,symbol,side,volume,order_type='limit',limit_price=None,client_order_id=None,approval_token=None,validate_only=True,automation_secret=None):
   symbol=str(symbol).upper().strip();side=str(side).lower();order_type=str(order_type).lower();volume=D(volume);live=not bool(validate_only)
+  # Gate market-order permission before any market-price lookup so the safety
+  # decision is deterministic even when no ticker has been cached yet.
+  if order_type=='market' and self.db.value('real_allow_market_orders','false').lower()!='true':raise PermissionError('Market-Orders sind nicht freigegeben')
   if live:
    automation_ok=False
    if automation_secret:
