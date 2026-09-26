@@ -8,6 +8,7 @@ def D(v):
  if v is None or str(v).strip()=='':return Decimal(0)
  try:return Decimal(str(v))
  except (InvalidOperation,ValueError,TypeError):raise ValueError('Ungültiger Zahlenwert')
+
 class RealTradeEngine:
  def __init__(self,db,client):self.db=db;self.client=client;self.ensure()
  def ensure(self):
@@ -46,10 +47,30 @@ class RealTradeEngine:
   if p<=0:p=D(r.get('last'))
   if p<=0:raise ValueError('Ungültiger Marktpreis')
   return p,r
- def submit(self,symbol,side,volume,order_type='limit',limit_price=None,client_order_id=None,approval_token=None,validate_only=True,automation_secret=None):
-  symbol=str(symbol).upper().strip();side=str(side).lower();order_type=str(order_type).lower();volume=D(volume);live=not bool(validate_only)
+ def _order_limits(self):
+  # 0 means no additional per-order limit from this setting; the balancing
+  # limit remains the effective safety cap when both explicit limits are zero.
+  return D(self.db.value('real_max_order_volume','0')),D(self.db.value('real_max_order_notional_eur','0')),D(self.db.value('real_balancing_max_trade_eur','0'))
+ def _preflight_limits(self,volume,eur_notional):
+  max_volume,max_notional,fallback=self._order_limits()
+  if max_volume>0 and volume>max_volume:raise ValueError('MAX_ORDER_VOLUME')
+  if max_notional>0 and eur_notional>max_notional:raise ValueError('MAX_ORDER_NOTIONAL_EUR')
+  if max_volume<=0 and max_notional<=0 and fallback>0 and eur_notional>fallback:raise ValueError('MAX_BALANCING_TRADE_EUR')
+ def preflight(self,symbol,side,volume,order_type='limit',limit_price=None):
+  symbol=str(symbol).upper().strip();side=str(side).lower();volume=D(volume);order_type=str(order_type).lower()
   if side not in ('buy','sell') or order_type not in ('limit','market') or volume<=0:raise ValueError('Ungültiger Auftrag')
   if order_type=='market' and self.db.value('real_allow_market_orders','false').lower()!='true':raise PermissionError('Market-Orders sind nicht freigegeben')
+  row=self._pair(symbol);quote=str(row.get('quote_asset') or symbol.rsplit('/',1)[-1]).upper();base=str(row.get('base_asset') or symbol.split('/',1)[0]).upper()
+  if quote not in ('EUR','USD'):raise PermissionError('Nur EUR/USD-Quoten sind für Realhandel freigegeben')
+  price=self._live_price(symbol,side)[0] if order_type=='market' else D(limit_price)
+  if price<=0:raise ValueError('Preis fehlt')
+  eur_notional=self._eur_notional(symbol,volume,price);self._preflight_limits(volume,eur_notional)
+  ordermin=D(row.get('ordermin'));costmin=D(row.get('costmin'))
+  if ordermin>0 and volume<ordermin:raise ValueError(f'Mindestmenge {ordermin} unterschritten')
+  if costmin>0 and D(volume)*price<costmin:raise ValueError(f'Mindestkosten {costmin} unterschritten')
+  return {'eligible':True,'symbol':symbol,'side':side,'volume':str(volume),'price':str(price),'eur_notional':str(eur_notional),'quote':quote,'base':base}
+ def submit(self,symbol,side,volume,order_type='limit',limit_price=None,client_order_id=None,approval_token=None,validate_only=True,automation_secret=None):
+  symbol=str(symbol).upper().strip();side=str(side).lower();order_type=str(order_type).lower();volume=D(volume);live=not bool(validate_only)
   if live:
    automation_ok=False
    if automation_secret:
@@ -68,10 +89,7 @@ class RealTradeEngine:
   allowed=[x.strip().upper() for x in self.db.value('real_allowed_symbols','').split(',') if x.strip()]
   if symbol=='EUR/USD' and self.db.value('real_allow_fx_conversion','true').lower()=='true':allowed=allowed+['EUR/USD']
   if allowed and symbol not in allowed:raise PermissionError('Symbol ist nicht für Realhandel freigegeben')
-  max_volume=D(self.db.value('real_max_order_volume','0'))
-  if max_volume<=0 or volume>max_volume:raise ValueError('Real-Auftragsvolumen nicht konfiguriert oder überschritten')
-  eur_notional=self._eur_notional(symbol,volume,price);max_notional=D(self.db.value('real_max_order_notional_eur','0'))
-  if max_notional<=0 or eur_notional>max_notional:raise ValueError('Real-Auftragswert nicht konfiguriert oder überschritten')
+  self._preflight_limits(volume,self._eur_notional(symbol,volume,price))
   ordermin=D(row.get('ordermin'));costmin=D(row.get('costmin'))
   if ordermin>0 and volume<ordermin:raise ValueError(f'Mindestmenge {ordermin} unterschritten')
   if costmin>0 and D(volume)*price<costmin:raise ValueError(f'Mindestkosten {costmin} unterschritten')
@@ -92,7 +110,7 @@ class RealTradeEngine:
    if live:
     with self.db.con() as c:c.execute('UPDATE real_trade_control SET armed_until=NULL,token_hash=NULL,updated_at=? WHERE id=1',(now(),))
    with self.db.con() as c:c.execute('UPDATE real_trade_intents SET status=?,response_json=? WHERE client_order_id=?',(status,json.dumps(result,sort_keys=True),cid))
-   self.db.audit('REAL_ORDER_'+status,json.dumps({'client_order_id':cid,'symbol':symbol,'side':side,'validate_only':not live,'eur_notional':str(eur_notional)}),'warning' if live else 'info','REAL');return {'duplicate':False,'status':status,'client_order_id':cid,'result':result,'eur_notional':str(eur_notional)}
+   self.db.audit('REAL_ORDER_'+status,json.dumps({'client_order_id':cid,'symbol':symbol,'side':side,'validate_only':not live,'eur_notional':str(self._eur_notional(symbol,volume,price))}),'warning' if live else 'info','REAL');return {'duplicate':False,'status':status,'client_order_id':cid,'result':result}
   except Exception as exc:
    with self.db.con() as c:c.execute('UPDATE real_trade_intents SET status=?,error=? WHERE client_order_id=?',('FAILED',type(exc).__name__,cid))
    self.db.audit('REAL_ORDER_FAILED',json.dumps({'client_order_id':cid,'error':type(exc).__name__}),'error','REAL');raise
