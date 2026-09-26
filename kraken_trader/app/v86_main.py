@@ -95,10 +95,14 @@ def v86_health():
     }
 
 
-# Compatibility endpoints remain available while all traffic uses v86.
-app.add_url_rule("/v85-health", "v85_health_compat", v86_health)
-app.add_url_rule("/v84-health", "v84_health_compat", v86_health)
-app.add_url_rule("/v83-health", "v83_health_compat", v86_health)
-app.add_url_rule("/v82-health", "v82_health_compat", v86_health)
-if "v81_health" in app.view_functions:
-    app.view_functions["v81_health"] = v86_health
+# Compatibility endpoints: v84 already registered several legacy routes on the
+# shared Flask app. Reusing their endpoint mappings avoids Flask's duplicate
+# endpoint assertion during Gunicorn import.
+for _endpoint in ("v84_health", "v83_health_compat", "v82_health_compat", "v81_health"):
+    if _endpoint in app.view_functions:
+        app.view_functions[_endpoint] = v86_health
+
+if "v85_health_compat" in app.view_functions:
+    app.view_functions["v85_health_compat"] = v86_health
+else:
+    app.add_url_rule("/v85-health", "v85_health_compat", v86_health)
