@@ -1,5 +1,5 @@
 name: Kraken Trader
-version: 0.1.0-dev.84
+version: 0.1.0-dev.85
 slug: kraken_trader
 description: Autonomous Kraken Portfolio, Paper-Trading and strictly gated Realhandel
 arch:
