@@ -9,7 +9,7 @@ APP = ROOT / "app"
 class V88RuntimeTests(unittest.TestCase):
     def test_active_runtime_is_v88(self):
         run_sh = (ROOT / "run.sh").read_text(encoding="utf-8")
-        self.assertIn("v89_main:app", run_sh)
+        self.assertIn("v90_main:app", run_sh)
         self.assertNotIn("v87_main:app", run_sh)
 
     def test_v88_entrypoint_keeps_v87_diagnostics(self):
@@ -26,9 +26,9 @@ class V88RuntimeTests(unittest.TestCase):
         self.assertIn("SUBMITTED", source)
 
     def test_version_metadata_is_v88(self):
-        self.assertIn("0.1.0-dev.89", (APP / "version.py").read_text(encoding="utf-8"))
-        self.assertIn("version: 0.1.0-dev.89", (ROOT / "config.yaml").read_text(encoding="utf-8"))
-        self.assertIn("version: 0.1.0-dev.89", (ROOT.parent / "repository.yaml").read_text(encoding="utf-8"))
+        self.assertIn("0.1.0-dev.90", (APP / "version.py").read_text(encoding="utf-8"))
+        self.assertIn("version: 0.1.0-dev.90", (ROOT / "config.yaml").read_text(encoding="utf-8"))
+        self.assertIn("version: 0.1.0-dev.90", (ROOT.parent / "repository.yaml").read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":
