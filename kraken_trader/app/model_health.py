@@ -24,6 +24,20 @@ class ModelHealth:
    worst=min(worst,equity/peak-1)
   return worst*100
 
+ def margin_calibration(self,family,direction,horizon=24,min_samples=20,max_drawdown_pct=-25.0):
+  direction=str(direction).upper()
+  rows=self.db.rows("SELECT f.direction,f.features_json,e.actual_return_pct FROM research_forecasts f JOIN forecast_evaluations e ON e.forecast_id=f.id WHERE f.family=? AND f.horizon_hours=? AND f.direction=? ORDER BY f.id",(family,int(horizon),direction))
+  returns=[];hits=0
+  for row in rows:
+   try:features=json.loads(row.get('features_json') or '{}')
+   except Exception:features={}
+   cost=float(features.get('estimated_roundtrip_cost_pct') or 0);actual=float(row.get('actual_return_pct') or 0)
+   pnl=(actual-cost) if direction=='UP' else (-actual-cost)
+   returns.append(pnl);hits+=int(pnl>0)
+  dd=self._drawdown(returns) if returns else None
+  samples=len(returns);win=hits/samples if samples else None;net=sum(returns)
+  ready=samples>=int(min_samples) and net>0 and (dd is None or dd>=float(max_drawdown_pct))
+  return {'family':family,'direction':direction,'horizon_hours':int(horizon),'samples':samples,'wins':hits,'win_rate':win,'net_return_pct':net,'max_drawdown_pct':dd,'required_samples':int(min_samples),'required_net_return_pct':0.0,'required_max_drawdown_pct':float(max_drawdown_pct),'status':'READY' if ready else 'NOT_READY','reason':'READY' if ready else ('INSUFFICIENT_SAMPLES' if samples<int(min_samples) else ('NEGATIVE_NET_RETURN' if net<=0 else 'DRAWDOWN_LIMIT'))}
  def evaluate(self,family,min_samples=20,min_net_return_pct=0.0,max_drawdown_pct=-25.0,require_long_horizon=True):
   """Evaluate model health with an explicit execution-gate mode.
 

@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / "app"
 
 
-class V90RiskExitDrawdownTests(unittest.TestCase):
+class V91RiskExitDrawdownTests(unittest.TestCase):
     def _db(self):
         from db import DB
         handle = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
@@ -97,15 +97,16 @@ class V90RiskExitDrawdownTests(unittest.TestCase):
         finally:
             Path(path).unlink(missing_ok=True)
 
-    def test_v90_runtime_exposes_risk_configuration(self):
+    def test_v91_runtime_exposes_risk_configuration(self):
         run_sh = (ROOT / "run.sh").read_text(encoding="utf-8")
         version = (APP / "version.py").read_text(encoding="utf-8")
         config = (ROOT / "config.yaml").read_text(encoding="utf-8")
-        runtime = (APP / "v90_main.py").read_text(encoding="utf-8")
-        self.assertIn("v90_main:app", run_sh)
-        self.assertIn("0.1.0-dev.90", version)
+        runtime = (APP / "v91_main.py").read_text(encoding="utf-8")
+        self.assertIn("v91_main:app", run_sh)
+        self.assertIn("0.1.0-dev.91", version)
         self.assertIn("real_balancing_max_drawdown_pct", config)
         self.assertIn("H168", runtime)
+        self.assertIn("margin", runtime)
         self.assertIn("existing_position_exit", runtime)
 
 

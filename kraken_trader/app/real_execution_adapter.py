@@ -8,4 +8,4 @@ class RealExecutionAdapter:
   return {'status':'REJECTED' if missing else 'PREPARED','missing':missing,'real_execution':False,'plan':dict(plan)}
  def execute(self,plan,approval_token,validate_only=True):
   if not validate_only and not plan.get('explicit_live_confirmation'):raise RealExecutionDisabled('Explizite Live-Bestätigung fehlt')
-  return self.engine.submit(plan['symbol'],plan['action'],plan['volume'],plan.get('order_type','limit'),plan.get('limit_price'),plan.get('client_order_id'),approval_token,validate_only)
+  return self.engine.submit(plan['symbol'],plan['action'],plan['volume'],plan.get('order_type','limit'),plan.get('limit_price'),plan.get('client_order_id'),approval_token,validate_only,plan.get('automation_secret'),plan.get('leverage'),bool(plan.get('margin',False)),bool(plan.get('reduce_only',False)))

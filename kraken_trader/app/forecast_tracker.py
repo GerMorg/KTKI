@@ -43,7 +43,7 @@ class ForecastTracker:
     except Exception:u=[]
     if not p or not s or s[0]['quality']!='VALID':continue
     family=family_for_category(u[0]['category'] if u else 'crypto_spot');version,parameters=active_profile(self.db,family);features={k:s[0].get(k) for k in ('momentum_pct','trend_pct','volatility_pct','spread_pct')};costs=self._cost_snapshot(symbol,float(s[0].get('spread_pct') or 0));features.update({'schema_version':4,'entry_cost_pct':costs['entry_cost_pct'],'exit_cost_pct':costs['exit_cost_pct'],'estimated_roundtrip_cost_pct':costs['roundtrip_cost_pct'],'cost_components_pct':costs['components_pct'],'cost_provenance':costs['provenance']})
-    direction='UP' if s[0]['signal']=='BUY' else 'FLAT';confidence=str(min(1,max(0,float(s[0]['score'])/100)));model=f'{family}-controlled-v{version}'
+    direction='UP' if s[0]['signal']=='BUY' else ('DOWN' if s[0]['signal']=='AVOID' and float(s[0].get('momentum_pct') or 0)<0 and float(s[0].get('trend_pct') or 0)<0 else 'FLAT');confidence=str(min(1,max(0,float(s[0]['score'])/100)));model=f'{family}-controlled-v{version}'
     with self.db.con() as c:
      for h in (24,168):
       c.execute('INSERT INTO research_forecasts(created_at,symbol,watchlist_version_id,model_version,horizon_hours,direction,baseline_price,scanner_score,confidence,status,features_json,family,parameter_version,parameters_json,feature_schema_version) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(now(),symbol,vid,model,h,direction,p[0]['last'],s[0]['score'],confidence,'OPEN',json.dumps(features,sort_keys=True),family,version,json.dumps(parameters,sort_keys=True),4));saved+=1
@@ -70,7 +70,7 @@ class ForecastTracker:
     try:features=json.loads(f.get('features_json') or '{}')
     except Exception:features={}
     cost=float(features.get('estimated_roundtrip_cost_pct') or 0)
-    correct=(f['direction']=='UP' and ret>cost) or (f['direction']=='FLAT' and abs(ret)<=cost)
+    correct=(f['direction']=='UP' and ret>cost) or (f['direction']=='DOWN' and ret < -cost) or (f['direction']=='FLAT' and abs(ret)<=cost)
     source_time=int(candle['open_time']);timing_error=source_time-int(target.timestamp())
     details={'direction':f['direction'],'family':f.get('family'),'parameter_version':f.get('parameter_version'),'target_at':target.isoformat(),'price_source':'OHLC_CACHE_FIRST_CLOSED_AT_OR_AFTER_TARGET','source_open_time':source_time,'interval_min':int(candle['interval_min']),'timing_error_seconds':timing_error,'roundtrip_cost_pct':cost,'cost_adjusted_return_pct':ret-cost if f['direction']=='UP' else 0.0}
     with self.db.con() as c:
