@@ -15,7 +15,7 @@ def v90_health():
         "version": "0.1.0-dev.90",
         "runtime": "v90_main",
         "real_execution_model_health_gate": "H24_ONLY",
-        "h168_role": "ADVISORY",
+        "h168_role": "H168_ADVISORY",
         "real_execution_max_drawdown_pct": str(cfg.get("max_drawdown_pct", "-25")),
         "existing_position_exit": {
             "enabled": True,
