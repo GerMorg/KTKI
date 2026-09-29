@@ -1,5 +1,5 @@
 name: Kraken Trader
-version: 0.1.0-dev.90
+version: 0.1.0-dev.91
 slug: kraken_trader
 description: Autonomous Kraken Portfolio, Paper-Trading and strictly gated Realhandel
 arch:
@@ -88,6 +88,15 @@ options:
   real_balancing_minimum_score: 70
   real_balancing_limit_offset_pct: 0.2
   real_balancing_automation_secret: ''
+  real_margin_enabled: false
+  real_margin_default_leverage: 2
+  real_margin_max_leverage: 3
+  real_margin_max_exposure_pct: 20
+  real_margin_max_free_margin_pct: 50
+  real_margin_min_margin_level_pct: 200
+  real_margin_safety_buffer_pct: 20
+  real_margin_allow_shorts: false
+  real_margin_balance_asset: ZEUR
   automation_master_enabled: false
   automation_analysis_enabled: false
   automation_news_enabled: false
@@ -186,6 +195,15 @@ schema:
   real_balancing_minimum_score: float
   real_balancing_limit_offset_pct: float
   real_balancing_automation_secret: password?
+  real_margin_enabled: bool
+  real_margin_default_leverage: int(2,5)
+  real_margin_max_leverage: int(2,5)
+  real_margin_max_exposure_pct: float(1,100)
+  real_margin_max_free_margin_pct: float(1,100)
+  real_margin_min_margin_level_pct: float(100,1000)
+  real_margin_safety_buffer_pct: float(0,80)
+  real_margin_allow_shorts: bool
+  real_margin_balance_asset: str
   automation_master_enabled: bool
   automation_analysis_enabled: bool
   automation_news_enabled: bool
