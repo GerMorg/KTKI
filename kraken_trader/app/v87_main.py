@@ -42,21 +42,28 @@ def _global_blockers():
         blockers.append(("AUTOMATION_SECRET_INVALID", "Kein gültiger Automation-Secret-Hash konfiguriert"))
 
     max_day = max(0, int(_d(legacy.db.value("real_balancing_max_actions_per_day", "0"))))
-    submitted_day = int((legacy.db.rows(
-        "SELECT COUNT(*) n FROM real_trade_intents "
-        "WHERE validate_only=0 AND status='SUBMITTED' AND date(created_at)=date('now')"
+    submitted_rows = legacy.db.rows(
+        "SELECT id, created_at, client_order_id, symbol, side, volume, status, validate_only, error "
+        "FROM real_trade_intents "
+        "WHERE validate_only=0 AND status='SUBMITTED' AND date(created_at)=date('now') "
+        "ORDER BY id DESC"
+    )
+    submitted_day = len(submitted_rows)
+    executed_day = int((legacy.db.rows(
+        "SELECT COUNT(*) n FROM private_execution_events "
+        "WHERE date(received_at)=date('now')"
     ) or [{"n": 0}])[0]["n"])
     if max_day and submitted_day >= max_day:
         blockers.append((
-            "DAILY_EXECUTION_LIMIT",
-            f"Tägliches Umschichtungslimit erreicht ({submitted_day}/{max_day})",
+            "DAILY_SUBMISSION_LIMIT",
+            f"Tägliches Einreichungslimit erreicht ({submitted_day}/{max_day} eingereicht; {executed_day} Ausführungsereignisse)",
         ))
 
     cached_balance = legacy.db.rows("SELECT COUNT(*) n FROM private_balances") or [{"n": 0}]
     if int(cached_balance[0]["n"]) == 0:
         blockers.append(("PRIVATE_BALANCE_CACHE_EMPTY", "Kein aktueller Private-Balance-Stand vorhanden"))
 
-    return blockers, submitted_day, max_day
+    return blockers, submitted_day, max_day, submitted_rows, executed_day
 
 
 def _blocked_decisions():
@@ -93,7 +100,7 @@ def _recent_actions():
 
 
 def v87_real_trading():
-    blockers, submitted_day, max_day = _global_blockers()
+    blockers, submitted_day, max_day, submitted_rows, executed_day = _global_blockers()
     blocked = _blocked_decisions()
     actions = _recent_actions()
     cfg = legacy.real_allocator.settings()
@@ -112,7 +119,7 @@ warum die automatische Real-Ausführung blockiert ist.</p>
   <div class="card">
     <h3>Tageslimit</h3>
     <div class="metric">{{ submitted_day }}{% if max_day %} / {{ max_day }}{% endif %}</div>
-    <small>bereits eingereichte Realaufträge heute</small>
+    <small>{{ submitted_day }} eingereicht · {{ executed_day }} Ausführungsereignisse heute{% if max_day %} · Limit {{ max_day }}{% endif %}</small>
   </div>
   <div class="card">
     <h3>Blockierungen</h3>
@@ -133,6 +140,22 @@ warum die automatische Real-Ausführung blockiert ist.</p>
   {% else %}
     <p>Keine globalen Blockierungsgründe erkannt.</p>
   {% endif %}
+</div>
+
+<div class="card">
+  <h2>Tageslimit – Nachweis</h2>
+  {% if submitted_rows %}
+    <p>Das Tageslimit zählt ausschließlich tatsächlich an Kraken eingereichte Live-Aufträge (<code>validate_only=0</code>, Status <code>SUBMITTED</code>). Eine reine Validierung zählt nicht.</p>
+    <table>
+      <tr><th>Zeit</th><th>Symbol</th><th>Seite</th><th>Volumen</th><th>Status</th></tr>
+      {% for x in submitted_rows %}
+        <tr><td>{{ x.created_at }}</td><td>{{ x.symbol }}</td><td>{{ x.side }}</td><td>{{ x.volume }}</td><td>{{ x.status }}</td></tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p><b>Keine eingereichten Live-Aufträge heute.</b></p>
+  {% endif %}
+  <p>Ausführungsereignisse von Kraken heute: <b>{{ executed_day }}</b>. „SUBMITTED“ bedeutet eingereicht/angenommen, nicht zwingend gefüllt.</p>
 </div>
 
 <div class="card">
@@ -184,6 +207,8 @@ warum die automatische Real-Ausführung blockiert ist.</p>
         actions=actions,
         submitted_day=submitted_day,
         max_day=max_day,
+        submitted_rows=submitted_rows,
+        executed_day=executed_day,
     )
 
 
@@ -201,13 +226,13 @@ if _original_real_trade_view is not None:
 
 @app.get("/v87-health")
 def v87_health():
-    blockers, submitted_day, max_day = _global_blockers()
+    blockers, submitted_day, max_day, submitted_rows, executed_day = _global_blockers()
     return {
         "version": "0.1.0-dev.87",
         "runtime": "v87_main",
         "blockers": [{"code": code, "reason": reason} for code, reason in blockers],
         "blocked_decisions": _blocked_decisions()[:100],
-        "daily_execution": {"submitted": submitted_day, "limit": max_day},
+        "daily_execution": {"submitted": submitted_day, "limit": max_day, "executed_events": executed_day, "submitted_rows": submitted_rows},
         "real": legacy.real_allocator.settings(),
         "recent_real_runs": _recent_actions(),
     }
