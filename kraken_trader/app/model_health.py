@@ -31,6 +31,9 @@ class ModelHealth:
   available as a mandatory validation horizon for the general health result,
   but callers may explicitly use H24_ONLY while long-horizon data accumulates.
   """
+  max_drawdown_pct=float(max_drawdown_pct)
+  except (TypeError,ValueError):
+   max_drawdown_pct=-25.0
   try:
    rows=self.db.rows("SELECT f.horizon_hours,f.direction,f.features_json,e.actual_return_pct,e.direction_correct FROM research_forecasts f JOIN forecast_evaluations e ON e.forecast_id=f.id WHERE f.family=? ORDER BY f.id",(family,))
   except Exception:
