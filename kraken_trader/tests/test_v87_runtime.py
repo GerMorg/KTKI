@@ -24,7 +24,9 @@ class V87RuntimeTests(unittest.TestCase):
         source = (APP / "v87_main.py").read_text(encoding="utf-8")
         self.assertIn('app.view_functions["real_trade.view"]', source)
         self.assertIn("Blockierte Kandidaten / Regelprüfungen", source)
-        self.assertIn("Tägliches Umschichtungslimit erreicht", source)
+        self.assertIn("DAILY_SUBMISSION_LIMIT", source)
+        self.assertIn("private_execution_events", source)
+        self.assertIn("SUBMITTED", source)
 
     def test_decision_matrix_persists_blocking_reasons(self):
         source = (APP / "decision_matrix.py").read_text(encoding="utf-8")
