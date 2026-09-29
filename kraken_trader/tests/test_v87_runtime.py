@@ -10,15 +10,15 @@ class V87RuntimeTests(unittest.TestCase):
     def test_active_runtime_is_v88(self):
         run_sh = (ROOT / "run.sh").read_text(encoding="utf-8")
         self.assertIn("v88_main:app", run_sh)
-        self.assertNotIn("v88_main:app", run_sh)
+        self.assertNotIn("v87_main:app", run_sh)
 
     def test_v87_entrypoint_keeps_v86_baseline_and_exposes_health(self):
-        source = (APP / "v88_main.py").read_text(encoding="utf-8")
+        source = (APP / "v87_main.py").read_text(encoding="utf-8")
         self.assertIn("import v86_main as base", source)
         self.assertIn('"/v87-health"', source)
         self.assertIn("blockers", source)
         self.assertIn("blocked_decisions", source)
-        ast.parse(source, filename="v88_main.py")
+        ast.parse(source, filename="v87_main.py")
 
     def test_real_trade_gui_is_replaced_with_diagnostic_view(self):
         source = (APP / "v88_main.py").read_text(encoding="utf-8")
