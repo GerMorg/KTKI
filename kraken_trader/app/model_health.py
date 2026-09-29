@@ -31,7 +31,8 @@ class ModelHealth:
   available as a mandatory validation horizon for the general health result,
   but callers may explicitly use H24_ONLY while long-horizon data accumulates.
   """
-  max_drawdown_pct=float(max_drawdown_pct)
+  try:
+   max_drawdown_pct=float(max_drawdown_pct)
   except (TypeError,ValueError):
    max_drawdown_pct=-25.0
   try:
