@@ -60,17 +60,17 @@ class V89H168GateTests(unittest.TestCase):
         finally:
             Path(path).unlink(missing_ok=True)
 
-    def test_v89_runtime_and_version_are_active(self):
+    def test_v90_runtime_and_version_are_active(self):
         run_sh = (ROOT / "run.sh").read_text(encoding="utf-8")
         version = (APP / "version.py").read_text(encoding="utf-8")
         config = (ROOT / "config.yaml").read_text(encoding="utf-8")
         repository = (ROOT.parent / "repository.yaml").read_text(encoding="utf-8")
         runtime = (APP / "v89_main.py").read_text(encoding="utf-8")
-        self.assertIn("v89_main:app", run_sh)
-        self.assertNotIn("v88_main:app", run_sh)
-        self.assertIn("0.1.0-dev.89", version)
-        self.assertIn("version: 0.1.0-dev.89", config)
-        self.assertIn("version: 0.1.0-dev.89", repository)
+        self.assertIn("v90_main:app", run_sh)
+        self.assertNotIn("v89_main:app", run_sh)
+        self.assertIn("0.1.0-dev.90", version)
+        self.assertIn("version: 0.1.0-dev.90", config)
+        self.assertIn("version: 0.1.0-dev.90", repository)
         self.assertIn('"H24_ONLY"', runtime)
 
 

@@ -20,7 +20,7 @@ REAL_OPTION_KEYS = (
     'real_balancing_enabled','real_balancing_execute_enabled','real_balancing_dry_run',
     'real_balancing_interval_minutes','real_balancing_max_position_pct','real_balancing_cash_reserve_pct',
     'real_balancing_min_trade_eur','real_balancing_max_trade_eur','real_balancing_no_trade_band_pct',
-    'real_balancing_max_actions_per_run','real_balancing_max_actions_per_day','real_balancing_cooldown_hours',
+    'real_balancing_max_actions_per_run','real_balancing_max_actions_per_day','real_balancing_cooldown_hours','real_balancing_max_drawdown_pct',
     'real_balancing_minimum_score','real_balancing_limit_offset_pct',
 )
 

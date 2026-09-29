@@ -13,12 +13,20 @@ class DecisionMatrix:
   add('MINIMUM_HOLD',context.get('minimum_hold_ok',True),'Mindesthaltedauer erfüllt' if context.get('minimum_hold_ok',True) else 'Mindesthaltedauer aktiv')
   add('COOLDOWN',context.get('cooldown_ok',True),'Cooldown beendet' if context.get('cooldown_ok',True) else 'Wiederkauf-Cooldown aktiv')
   add('DAILY_LIMIT',context.get('daily_limit_ok',True),'Tageslimit verfügbar' if context.get('daily_limit_ok',True) else 'Tägliches Umschichtungslimit erreicht')
+  exit_override=bool(context.get('exit_risk_override',False))
   if real:
-   improvement=D(context.get('improvement_after_costs'));add('POSITIVE_AFTER_COSTS',improvement>0,'Erwarteter Vorteil nach Kosten positiv' if improvement>0 else 'Kein positiver Vorteil nach vollständigen Kosten',{'eur':str(improvement)})
+   improvement=D(context.get('improvement_after_costs'))
+   if exit_override:
+    add('POSITIVE_AFTER_COSTS',True,'Exit-Risikopfad: Entry-Economic-Gate wird nicht für den Abbau einer bestehenden Position verlangt',{'eur':str(improvement),'override':True})
+   else:
+    add('POSITIVE_AFTER_COSTS',improvement>0,'Erwarteter Vorteil nach Kosten positiv' if improvement>0 else 'Kein positiver Vorteil nach vollständigen Kosten',{'eur':str(improvement)})
   add('TAX_AND_LOSS',context.get('tax_loss_ok',True),'Steuer- und Verlustwirkung akzeptabel' if context.get('tax_loss_ok',True) else 'Steuer- oder Verlustwirkung blockiert')
   add('DATA_FRESHNESS',context.get('data_fresh',False),'Daten vollständig und aktuell' if context.get('data_fresh',False) else 'Daten fehlen oder sind veraltet')
   if real:
-   add('MODEL_HEALTH',context.get('model_health_ok',False),'Modell ist für autonomen Betrieb validiert' if context.get('model_health_ok',False) else 'Modell hat die autonome Eignungsprüfung nicht bestanden',context.get('model_health_details'))
+   if exit_override:
+    add('MODEL_HEALTH',True,'Exit-Risikopfad: Modell-Health-Gate wird beim Abbau einer bestehenden Position nicht als Entry-Gate verwendet',{'override':True,'original':context.get('model_health_details')})
+   else:
+    add('MODEL_HEALTH',context.get('model_health_ok',False),'Modell ist für autonomen Betrieb validiert' if context.get('model_health_ok',False) else 'Modell hat die autonome Eignungsprüfung nicht bestanden',context.get('model_health_details'))
    add('ROUTE_COST',context.get('route_cost_ok',False),'Günstigste EUR/USD-Ausführung ausgewählt' if context.get('route_cost_ok',False) else 'Ausführungsroute ist nicht ausreichend validiert',context.get('route_cost_details'))
    add('QUOTE_FUNDING',context.get('quote_funding_ok',False),'Quote-Währung verfügbar bzw. Funding-Leg bestätigt' if context.get('quote_funding_ok',False) else 'Quote-Währung fehlt oder Funding-Leg nicht bestätigt',context.get('quote_funding_details'))
    add('PORTFOLIO_RISK',context.get('portfolio_risk_ok',False),'Portfolio-Risikolimits eingehalten' if context.get('portfolio_risk_ok',False) else 'Portfolio-Risikolimit blockiert',context.get('portfolio_risk_details'))
