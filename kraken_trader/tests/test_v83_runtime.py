@@ -16,11 +16,11 @@ class V83CompatibilityTests(unittest.TestCase):
         self.assertIn("\"version\": \"0.1.0-dev.86\"", source)
         ast.parse(source, filename='v86_main.py')
 
-    def test_active_runtime_and_version_are_v87(self):
-        self.assertIn('v87_main:app',(ROOT/'run.sh').read_text(encoding='utf-8'))
-        self.assertIn("APP_VERSION='0.1.0-dev.87'",(APP/'version.py').read_text(encoding='utf-8'))
-        self.assertIn('version: 0.1.0-dev.87',(ROOT/'config.yaml').read_text(encoding='utf-8'))
-        self.assertIn('version: 0.1.0-dev.87',(ROOT.parent/'repository.yaml').read_text(encoding='utf-8'))
+    def test_active_runtime_and_version_are_v88(self):
+        self.assertIn('v88_main:app',(ROOT/'run.sh').read_text(encoding='utf-8'))
+        self.assertIn("APP_VERSION='0.1.0-dev.88'",(APP/'version.py').read_text(encoding='utf-8'))
+        self.assertIn('version: 0.1.0-dev.88',(ROOT/'config.yaml').read_text(encoding='utf-8'))
+        self.assertIn('version: 0.1.0-dev.88',(ROOT.parent/'repository.yaml').read_text(encoding='utf-8'))
 
     def test_secret_sync_does_not_expose_hash(self):
         source=(APP/'v86_main.py').read_text(encoding='utf-8')
