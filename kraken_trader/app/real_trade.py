@@ -48,6 +48,10 @@ class RealTradeEngine:
   row=self._pair(symbol);raw=row.get('leverage_buy_json' if side=='buy' else 'leverage_sell_json') or '[]'
   try:values=json.loads(raw) if isinstance(raw,str) else raw
   except Exception:values=[]
+  if not values:
+   try:
+    meta=json.loads(row.get('metadata_json') or '{}');values=meta.get('leverage_buy' if side=='buy' else 'leverage_sell') or []
+   except Exception:values=[]
   out=[]
   for x in values:
    try:out.append(D(str(x).replace(':1','')))
