@@ -14,10 +14,10 @@ class V84RuntimeTests(unittest.TestCase):
         self.assertIn('controller = base.controller',runtime)
         self.assertIn('"version": "0.1.0-dev.86"',runtime)
         self.assertNotIn('"real_balancing_automation_secret_hash":',runtime)
-        self.assertIn('v88_main:app',(ROOT/'run.sh').read_text(encoding='utf-8'))
-        self.assertIn("APP_VERSION='0.1.0-dev.88'",(APP/'version.py').read_text(encoding='utf-8'))
-        self.assertIn('version: 0.1.0-dev.88',(ROOT/'config.yaml').read_text(encoding='utf-8'))
-        self.assertIn('version: 0.1.0-dev.88',(ROOT.parent/'repository.yaml').read_text(encoding='utf-8'))
+        self.assertIn('v89_main:app',(ROOT/'run.sh').read_text(encoding='utf-8'))
+        self.assertIn("APP_VERSION='0.1.0-dev.89'",(APP/'version.py').read_text(encoding='utf-8'))
+        self.assertIn('version: 0.1.0-dev.89',(ROOT/'config.yaml').read_text(encoding='utf-8'))
+        self.assertIn('version: 0.1.0-dev.89',(ROOT.parent/'repository.yaml').read_text(encoding='utf-8'))
         ast.parse(runtime,filename='v86_main.py')
 
     def test_rebalancing_does_not_slice_candidates_before_gate_evaluation(self):
