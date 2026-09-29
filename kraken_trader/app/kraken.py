@@ -45,6 +45,12 @@ class KrakenClient:
   data={"pair":",".join(pairs),"assetVersion":1}
   if asset_class=="tokenized_asset":data["asset_class"]=asset_class
   return self.call("/0/public/Ticker",data)
+ def open_positions(self,docalcs=True,consolidation='market',rebase_multiplier='rebased'):
+  data={'docalcs':'true' if docalcs else 'false','consolidation':consolidation,'rebase_multiplier':rebase_multiplier}
+  return self.call('/0/private/OpenPositions',data,private=True)
+ def trade_balance(self,asset='ZEUR'):
+  data={'asset':asset} if asset else {}
+  return self.call('/0/private/TradeBalance',data,private=True)
  def trade_volume(self,pairs,fee_info=True):
   data={'pair':','.join(pairs),'fee-info':'true' if fee_info else 'false'}
   return self.call('/0/private/TradeVolume',data,private=True)
