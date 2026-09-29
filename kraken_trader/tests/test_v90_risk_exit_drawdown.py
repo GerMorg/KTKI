@@ -39,7 +39,7 @@ class V90RiskExitDrawdownTests(unittest.TestCase):
                         direction_correct INTEGER NOT NULL
                     );
                 """)
-                values = [2.0, -20.0, 2.0]
+                values = [10.0, -15.0, 10.0]
                 for i, value in enumerate(values, 1):
                     c.execute(
                         "INSERT INTO research_forecasts VALUES(?,?,?,?,?)",
