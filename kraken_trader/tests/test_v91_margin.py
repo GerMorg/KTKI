@@ -32,6 +32,7 @@ class V91MarginTests(unittest.TestCase):
    db.set_setting('real_margin_default_leverage','2');db.set_setting('real_margin_allow_shorts','true')
    db.set_setting('real_max_orders_per_day','10');db.set_setting('real_allowed_symbols','BTC/EUR')
    with db.con() as c:
+    c.execute("DROP TABLE IF EXISTS market_universe")
     c.execute("CREATE TABLE market_universe(symbol TEXT PRIMARY KEY,asset_class TEXT,category TEXT,base_asset TEXT,quote_asset TEXT,status TEXT,ordermin TEXT,costmin TEXT,lot_decimals INTEGER,pair_decimals INTEGER,leverage_buy_json TEXT,leverage_sell_json TEXT,source_key TEXT,updated_at TEXT,canonical_id TEXT,product_kind TEXT,metadata_json TEXT)")
     c.execute("CREATE TABLE IF NOT EXISTS live_prices(symbol TEXT PRIMARY KEY,last TEXT,bid TEXT,ask TEXT,received_at TEXT)")
     c.execute("INSERT INTO market_universe(symbol,asset_class,category,base_asset,quote_asset,status,ordermin,costmin,lot_decimals,pair_decimals,leverage_buy_json,leverage_sell_json,source_key,updated_at,canonical_id,product_kind,metadata_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
