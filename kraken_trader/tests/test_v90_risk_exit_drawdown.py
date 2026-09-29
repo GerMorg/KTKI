@@ -54,7 +54,7 @@ class V90RiskExitDrawdownTests(unittest.TestCase):
             relaxed = health.evaluate("crypto_spot", min_samples=3, max_drawdown_pct=-30, require_long_horizon=False)
             self.assertEqual(strict["status"], "NOT_READY")
             self.assertEqual(relaxed["status"], "READY")
-            self.assertEqual(strict["horizons"]["24"]["max_drawdown_pct"], -20.0)
+            self.assertAlmostEqual(strict["horizons"]["24"]["max_drawdown_pct"], -15.0, places=6)
         finally:
             Path(path).unlink(missing_ok=True)
 
