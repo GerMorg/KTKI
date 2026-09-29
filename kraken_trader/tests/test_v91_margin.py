@@ -38,6 +38,7 @@ class V91MarginTests(unittest.TestCase):
     c.execute("INSERT INTO market_universe(symbol,asset_class,category,base_asset,quote_asset,status,ordermin,costmin,lot_decimals,pair_decimals,leverage_buy_json,leverage_sell_json,source_key,updated_at,canonical_id,product_kind,metadata_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
       ('BTC/EUR','currency','crypto_spot','BTC','EUR','online','0','0',8,2,'[2,3]','[2,3]','BTCEUR','2026-01-01','BTC','crypto','{}'))
     c.execute("INSERT INTO live_prices(symbol,last,bid,ask,received_at) VALUES(?,?,?,?,?)",('BTC/EUR','50000','49999','50001','2026-01-01'))
+   engine._pair=lambda symbol:{'quote_asset':'EUR','base_asset':'BTC','ordermin':'0','costmin':'0','leverage_buy_json':'[2,3]','leverage_sell_json':'[2,3]','metadata_json':'{}'}
    result=engine.submit('BTC/EUR','sell','0.01','limit','49999','test-margin',None,True,None,3,True,True)
    self.assertEqual(result['status'],'VALIDATED')
    self.assertEqual(client.orders[0]['leverage'],'3')
