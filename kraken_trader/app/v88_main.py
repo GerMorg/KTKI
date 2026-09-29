@@ -9,8 +9,7 @@ options = getattr(base, "options", {})
 
 def v88_health():
     payload = base.v87_health()
-    payload["version"] = "0.1.0-dev.88"
-    payload["runtime"] = "v88_main"
+    payload = {**payload, "version": "0.1.0-dev.88", "runtime": "v88_main"}
     return payload
 
 
