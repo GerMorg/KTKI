@@ -1,4 +1,4 @@
-"""v91 runtime: gated Kraken spot-margin leverage, long/short automation and directional calibration."""
+"""v91 runtime: gated Kraken spot-margin leverage, long/short automation and directional calibration. H168 remains advisory."""
 import json,os
 from automation_v67 import AutomationControllerV67
 from controlled_learning import ControlledLearning
