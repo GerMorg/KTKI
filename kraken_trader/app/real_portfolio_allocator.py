@@ -86,7 +86,7 @@ class RealPortfolioAllocator:
   cfg=self.settings();rid=None
   try:
    if automatic and not cfg['enabled']:return {'status':'DISABLED'}
-   current,total=self._current_eur();payload={k:(str(v) if isinstance(v,Decimal) else v) for k,v in cfg.items()};tickers=self._tickers();health=ModelHealth(self.db);health_by_family={family:health.evaluate(family) for family in ('crypto_spot','xstocks','forex')};candidates=self._candidates(cfg);targets=build_targets(candidates,total,cfg['cash_reserve_pct'],cfg['max_position_pct'],cfg['minimum_score'],cfg['min_trade_eur'])
+   current,total=self._current_eur();payload={k:(str(v) if isinstance(v,Decimal) else v) for k,v in cfg.items()};tickers=self._tickers();health=ModelHealth(self.db);health_by_family={family:health.evaluate(family,require_long_horizon=False) for family in ('crypto_spot','xstocks','forex')};candidates=self._candidates(cfg);targets=build_targets(candidates,total,cfg['cash_reserve_pct'],cfg['max_position_pct'],cfg['minimum_score'],cfg['min_trade_eur'])
    with self.db.con() as con:cur=con.execute('INSERT INTO real_allocation_runs(created_at,status,automatic,settings_json,details_json) VALUES(?,?,?,?,?)',(now(),'RUNNING',1 if automatic else 0,safe_json(payload),'{}'));rid=cur.lastrowid
    actions=[];today=self.db.rows("SELECT COUNT(*) n FROM real_allocation_actions WHERE status='SUBMITTED' AND date(created_at)=date('now')")[0]['n'];room=max(0,cfg['max_actions_per_day']-int(today));run_cap=cfg['max_actions_per_run'];execution_capacity=min(run_cap,room);submitted_count=0;evaluated_count=0
    # Evaluate candidates in conviction order and only consume execution capacity when an order is actually submitted.
