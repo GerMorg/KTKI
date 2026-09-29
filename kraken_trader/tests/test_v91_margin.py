@@ -33,7 +33,7 @@ class V91MarginTests(unittest.TestCase):
    db.set_setting('real_max_orders_per_day','10');db.set_setting('real_allowed_symbols','BTC/EUR')
    with db.con() as c:
     c.execute("CREATE TABLE market_universe(symbol TEXT PRIMARY KEY,asset_class TEXT,category TEXT,base_asset TEXT,quote_asset TEXT,status TEXT,ordermin TEXT,costmin TEXT,lot_decimals INTEGER,pair_decimals INTEGER,leverage_buy_json TEXT,leverage_sell_json TEXT,source_key TEXT,updated_at TEXT,canonical_id TEXT,product_kind TEXT,metadata_json TEXT)")
-    c.execute("CREATE TABLE live_prices(symbol TEXT PRIMARY KEY,last TEXT,bid TEXT,ask TEXT,received_at TEXT)")
+    c.execute("CREATE TABLE IF NOT EXISTS live_prices(symbol TEXT PRIMARY KEY,last TEXT,bid TEXT,ask TEXT,received_at TEXT)")
     c.execute("INSERT INTO market_universe(symbol,asset_class,category,base_asset,quote_asset,status,ordermin,costmin,lot_decimals,pair_decimals,leverage_buy_json,leverage_sell_json,source_key,updated_at,canonical_id,product_kind,metadata_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
       ('BTC/EUR','currency','crypto_spot','BTC','EUR','online','0','0',8,2,'[2,3]','[2,3]','BTCEUR','2026-01-01','BTC','crypto','{}'))
     c.execute("INSERT INTO live_prices(symbol,last,bid,ask,received_at) VALUES(?,?,?,?,?)",('BTC/EUR','50000','49999','50001','2026-01-01'))
