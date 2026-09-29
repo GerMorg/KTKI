@@ -9,8 +9,8 @@ APP = ROOT / "app"
 class V87RuntimeTests(unittest.TestCase):
     def test_active_runtime_is_v87(self):
         run_sh = (ROOT / "run.sh").read_text(encoding="utf-8")
-        self.assertIn("v87_main:app", run_sh)
-        self.assertNotIn("v86_main:app", run_sh)
+        self.assertIn("v88_main:app", run_sh)
+        self.assertNotIn("v87_main:app", run_sh)
 
     def test_v87_entrypoint_keeps_v86_baseline_and_exposes_health(self):
         source = (APP / "v87_main.py").read_text(encoding="utf-8")
@@ -35,7 +35,7 @@ class V87RuntimeTests(unittest.TestCase):
         self.assertIn("Tägliches Umschichtungslimit erreicht", source)
 
     def test_version_metadata_is_v87(self):
-        self.assertIn("0.1.0-dev.87", (APP / "version.py").read_text(encoding="utf-8"))
+        self.assertIn("0.1.0-dev.88", (APP / "version.py").read_text(encoding="utf-8"))
         self.assertIn("version: 0.1.0-dev.87", (ROOT / "config.yaml").read_text(encoding="utf-8"))
         self.assertIn("version: 0.1.0-dev.87", (ROOT.parent / "repository.yaml").read_text(encoding="utf-8"))
 
