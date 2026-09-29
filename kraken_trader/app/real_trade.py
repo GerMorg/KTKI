@@ -34,7 +34,11 @@ class RealTradeEngine:
    con.execute('DELETE FROM real_margin_positions')
    for pid,pos in (positions or {}).items():
     pair=str(pos.get('pair') or '')
-    symbol=pair if '/' in pair else pair.replace('XXBT','XBT').replace('X','').replace('Z','')
+    symbol=pair if '/' in pair else ''
+    if not symbol:
+     mapped=self.db.rows('SELECT symbol FROM market_universe WHERE source_key=? OR REPLACE(symbol,\'/\',\'\')=? LIMIT 1',(pair,pair))
+     symbol=str(mapped[0]['symbol']) if mapped else pair.replace('XXBT','XBT').replace('ZUSD','/USD').replace('ZEUR','/EUR').replace('X','',1).replace('Z','',1)
+
     side=str(pos.get('type') or 'unknown').lower();vol=D(pos.get('vol') or 0);margin=D(pos.get('margin') or 0);cost=D(pos.get('cost') or 0);value=D(pos.get('value') or 0);net=D(pos.get('net') or 0);lev=(cost/margin) if margin>0 else D(0)
     con.execute('INSERT INTO real_margin_positions(position_id,symbol,side,volume,margin,entry_cost,current_value,unrealized_pnl,leverage,updated_at,details_json) VALUES(?,?,?,?,?,?,?,?,?,?,?)',(str(pid),symbol,side,str(vol),str(margin),str(cost),str(value),str(net),str(lev),now(),json.dumps(pos,sort_keys=True,default=str)))
    result=balance or {}
@@ -55,7 +59,8 @@ class RealTradeEngine:
   lev=D(leverage or cfg['default_leverage'])
   if lev<2 or lev>cfg['max_leverage']:raise ValueError('LEVERAGE_OUT_OF_RANGE')
   available=self._pair_leverage(symbol,side)
-  if available and lev not in available:raise ValueError('LEVERAGE_NOT_AVAILABLE_FOR_PAIR')
+  if not available:raise ValueError('LEVERAGE_NOT_AVAILABLE_FOR_PAIR')
+  if lev not in available:raise ValueError('LEVERAGE_NOT_AVAILABLE_FOR_PAIR')
   if side=='sell' and not reduce_only and not cfg['allow_shorts']:raise PermissionError('MARGIN_SHORTS_DISABLED')
   notional=D(volume)*D(price);required_margin=notional/lev;account=self.db.rows('SELECT * FROM real_margin_account WHERE id=1 LIMIT 1')
   if not account:
