@@ -51,7 +51,7 @@ def v91_health():
   margin_state={'status':'ERROR','error':type(exc).__name__}
  payload={**payload,'version':'0.1.0-dev.91','runtime':'v91_main',
   'margin_trading':{'enabled':cfg.get('margin_enabled',False),'default_leverage':str(cfg.get('margin_default_leverage')),'max_leverage':str(cfg.get('margin_max_leverage')),'max_exposure_pct':str(cfg.get('margin_max_exposure_pct')),'max_free_margin_pct':str(cfg.get('margin_max_free_margin_pct')),'min_margin_level_pct':str(cfg.get('margin_min_margin_level_pct')),'safety_buffer_pct':str(cfg.get('margin_safety_buffer_pct')),'allow_shorts':cfg.get('margin_allow_shorts',False),'account_state':margin_state},
-  'margin_model_gate':'DIRECTIONAL_H24_CALIBRATION','margin_execution':'SPOT_MARGIN_LEVERAGE','futures_not_enabled':True}
+  'margin_model_gate':'DIRECTIONAL_H24_CALIBRATION','margin_execution':'SPOT_MARGIN_LEVERAGE','futures_not_enabled':True,'existing_position_exit':{'enabled':True,'margin_reduce_only':True,'entry_gates_bypassed':True}}
  return payload
 
 if 'v91_health' not in app.view_functions:app.add_url_rule('/v91-health','v91_health',v91_health)
