@@ -28,6 +28,22 @@ class DecisionEngineV94:
             return {'BEAR':D('1.0'),'NEUTRAL':D('.75'),'MIXED':D('.55'),'BULL':D('.25')}.get(r,D('.5'))
         return D(0)
 
+    def _symbol_edge(self,symbol,direction,limit=30):
+        if not self.db or not symbol:return None
+        want='UP' if direction=='LONG' else 'DOWN'
+        try:
+            rows=self.db.rows("SELECT f.direction,e.actual_return_pct,f.features_json FROM research_forecasts f JOIN forecast_evaluations e ON e.forecast_id=f.id WHERE f.symbol=? AND f.horizon_hours=24 AND f.direction=? ORDER BY f.id DESC LIMIT ?",(symbol,want,int(limit)))
+        except Exception:return None
+        vals=[]
+        import json
+        for r in rows:
+            try:features=json.loads(r.get('features_json') or '{}')
+            except Exception:features={}
+            actual=D(r.get('actual_return_pct'))
+            cost=D(features.get('estimated_roundtrip_cost_pct'))
+            vals.append(actual-cost if want=='UP' else -actual-cost)
+        return sum(vals)/D(len(vals)) if vals else None
+
     def news_score(self,row):
         for k in ('news_score','news_impact_score','news_relevance_score'):
             if k in row and row.get(k) not in (None,''):
@@ -40,7 +56,10 @@ class DecisionEngineV94:
         # gate is an explicit forecast edge after the current route costs.
         raw=D(row.get('expected_edge_pct',row.get('forecast_edge_pct',0)))
         if raw==0:
-            if direction=='LONG':
+            symbol_edge=self._symbol_edge(row.get('symbol'),direction)
+            if symbol_edge is not None:
+                raw=symbol_edge
+            elif direction=='LONG':
                 raw=D(health.get('horizons',{}).get('24',{}).get('expected_up_edge_raw_pct',0) or 0)
                 if raw==0: raw=D(health.get('expected_edge_after_costs_pct',0) or 0)
             elif direction=='SHORT':
