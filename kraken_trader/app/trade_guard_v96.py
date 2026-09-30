@@ -24,7 +24,10 @@ class TradeGuardV96:
             )""")
 
     def canonical_id(self,symbol):
-        rows=self.db.rows("SELECT canonical_id FROM market_universe WHERE symbol=? LIMIT 1",(symbol,))
+        try:
+            rows=self.db.rows("SELECT canonical_id FROM market_universe WHERE symbol=? LIMIT 1",(symbol,))
+        except Exception:
+            rows=[]
         return (rows[0].get("canonical_id") if rows else None) or str(symbol)
 
     def check(self,symbol,action,risk_exit=False):
