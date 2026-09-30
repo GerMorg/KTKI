@@ -127,7 +127,8 @@ class ModelHealth:
   h168gates=[g for g in details['gates'] if g['name'].startswith('H168_')]
   details['h168_advisory_ready']=h24['samples']>=min_samples and all(g['passed'] for g in h168gates)
   details['h168_advisory_reason']='READY' if details['h168_advisory_ready'] else f"H168 advisory: {details['horizons']['168']['samples']}/{min_samples} Samples bzw. Validierung offen"
-  status='READY' if evidence else ('INSUFFICIENT_DATA' if up['samples']<min_samples else 'WEAK')
+  # A positive H24 mean edge is operational evidence; drawdown remains an explicit caution state and affects sizing, while directional margin calibration keeps its stricter gate.
+  status='READY' if (h24['samples']>=min_samples and h24['mean_edge_after_costs_pct'] is not None and h24['mean_edge_after_costs_pct']>min_net_return_pct) else ('INSUFFICIENT_DATA' if up['samples']<min_samples else 'WEAK')
   details['status']=status;details['score']=details['quality_score']
   with self.db.con() as c:c.execute('INSERT INTO model_health_snapshots(created_at,family,status,score,details_json) VALUES(?,?,?,?,?)',(now(),family,status,str(details['quality_score']),json.dumps(details,sort_keys=True)))
   return details
