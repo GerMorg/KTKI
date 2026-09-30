@@ -60,7 +60,21 @@ class ForecastTracker:
 
  def _target_candle(self,symbol,target,current):
   target_ts=int(target.timestamp());current_ts=int(current.timestamp())
-  rows=self.db.rows('SELECT open_time,close,interval_min FROM ohlc_cache WHERE symbol=? AND open_time>=? AND open_time+interval_min*60<=? ORDER BY open_time ASC LIMIT 1',(symbol,target_ts,current_ts))
+  rows=self.db.rows(
+   'SELECT open_time,close,interval_min FROM ohlc_cache '
+   'WHERE symbol=? AND open_time+interval_min*60<=? AND open_time+interval_min*60<=? '
+   'ORDER BY open_time DESC LIMIT 1',
+   (symbol,current_ts,target_ts)
+  )
+  if rows:return rows[0]
+  # Only when no fully completed candle exists at/before target do we use the
+  # first fully completed candle after target, and record the positive timing error.
+  rows=self.db.rows(
+   'SELECT open_time,close,interval_min FROM ohlc_cache '
+   'WHERE symbol=? AND open_time>=? AND open_time+interval_min*60<=? '
+   'ORDER BY open_time ASC LIMIT 1',
+   (symbol,target_ts,current_ts)
+  )
   return rows[0] if rows else None
 
  def evaluate_due(self):
@@ -77,7 +91,7 @@ class ForecastTracker:
     cost=float(features.get('estimated_roundtrip_cost_pct') or 0)
     correct=(f['direction']=='UP' and ret>cost) or (f['direction']=='DOWN' and ret < -cost) or (f['direction']=='FLAT' and abs(ret)<=cost)
     source_time=int(candle['open_time']);timing_error=source_time-int(target.timestamp())
-    details={'direction':f['direction'],'family':f.get('family'),'parameter_version':f.get('parameter_version'),'target_at':target.isoformat(),'price_source':'OHLC_CACHE_FIRST_CLOSED_AT_OR_AFTER_TARGET','source_open_time':source_time,'interval_min':int(candle['interval_min']),'timing_error_seconds':timing_error,'roundtrip_cost_pct':cost,'cost_adjusted_return_pct':ret-cost if f['direction']=='UP' else (-ret-cost if f['direction']=='DOWN' else 0.0)}
+    details={'direction':f['direction'],'family':f.get('family'),'parameter_version':f.get('parameter_version'),'target_at':target.isoformat(),'price_source':'OHLC_CACHE_LAST_CLOSED_AT_OR_BEFORE_TARGET_WITH_AFTER_TARGET_FALLBACK','source_open_time':source_time,'interval_min':int(candle['interval_min']),'timing_error_seconds':timing_error,'roundtrip_cost_pct':cost,'cost_adjusted_return_pct':ret-cost if f['direction']=='UP' else (-ret-cost if f['direction']=='DOWN' else 0.0)}
     with self.db.con() as c:
      c.execute('INSERT OR REPLACE INTO forecast_evaluations(forecast_id,evaluated_at,actual_price,actual_return_pct,direction_correct,details_json,target_at,price_source,source_open_time,timing_error_seconds) VALUES(?,?,?,?,?,?,?,?,?,?)',(f['id'],now(),str(actual),str(ret),1 if correct else 0,json.dumps(details,sort_keys=True),target.isoformat(),details['price_source'],source_time,timing_error));c.execute("UPDATE research_forecasts SET status='EVALUATED' WHERE id=?",(f['id'],));done+=1
    except Exception as exc:
