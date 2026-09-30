@@ -79,7 +79,9 @@ legacy.NAV_ITEMS = [
     ("/handel-v95", "Handel"),
     ("/lernen-v95", "Lernen"),
     ("/diagnose-v95", "Diagnose"),
+    ("/prozess-v95", "Prozess"),
     ("/automatik-v95", "Automatik"),
+    ("/real-trading", "Realhandel"),
     ("/tax-info", "Steuerinfo AT"),
 ]
 
@@ -225,7 +227,24 @@ def _automatik():
     )
 
 def _chart(values):
-    return legacy._chart(values)
+    vals=[]
+    for value in values or []:
+        try:
+            vals.append(float(value))
+        except (TypeError,ValueError):
+            pass
+    if not vals:
+        return '<svg viewBox="0 0 800 180" class="chart"><text x="24" y="90">Noch keine Historie</text></svg>'
+    lo,hi=min(vals),max(vals)
+    if hi==lo:
+        lo-=1
+        hi+=1
+    pts=[]
+    for i,v in enumerate(vals):
+        x=28+744*i/max(1,len(vals)-1)
+        y=24+128*(1-(v-lo)/(hi-lo))
+        pts.append(f"{x:.1f},{y:.1f}")
+    return f'<svg viewBox="0 0 800 180" class="chart" role="img" aria-label="Portfolioverlauf"><line x1="28" y1="152" x2="772" y2="152" class="chart-axis"/><polyline points="{" ".join(pts)}" class="chart-line" fill="none"/><text x="28" y="16" class="chart-label">{hi:.2f} €</text><text x="28" y="174" class="chart-label">{lo:.2f} €</text><text x="772" y="16" text-anchor="end" class="chart-value">{vals[-1]:.2f} €</text></svg>'
 
 @app.get("/analyse")
 def analyse_v95():
