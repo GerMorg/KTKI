@@ -10,7 +10,7 @@ from model_health import ModelHealth
 from strategy_profiles import family_for_category
 from execution_confidence import execution_confidence, choose_execution
 from market_regime import family_regime
-from decision_context_v95 import ticker_map, scanner_candidates, routes_for_symbol, alternatives
+from decision_context_v95 import ticker_map, scanner_candidates, routes_for_symbol, alternatives, decision_costs
 from decision_engine_v95 import DecisionEngineV95
 
 D=lambda x:Decimal(str(x or 0))
@@ -65,9 +65,7 @@ class PaperEngineV95(PaperEngine):
             row=dict(row)
             route=routes_for_symbol(
                 self.db,row['symbol'],tickers,
-                self.db.value('paper_fee_bps','40'),
-                self.db.value('paper_fx_fee_bps','10'),
-                self.db.value('paper_slippage_bps','10'),
+                *decision_costs(self.db),
             )
             if route.get('status')!='VALID':
                 continue
