@@ -124,7 +124,9 @@ class DecisionEngineV96:
         increasing=(abs(target)>abs(current)) or (target*current<0)
         reduction=(abs(target)<abs(current)) and (target*current>=0)
         economic_ok=(
-            direction=="HOLD" or target==current or reduction
+            direction=="HOLD"
+            or reduction
+            or (delta==0 and current!=0)
             or (net is not None and net>0)
         )
         benefit=D(0)
