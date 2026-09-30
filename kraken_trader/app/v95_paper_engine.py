@@ -170,7 +170,10 @@ class PaperEngineV95(PaperEngine):
             decision=dict(decision,execution_symbol=execution_symbol,execution_mode=ex['mode'],execution_leverage=str(ex['leverage']),execution_confidence=str(conf))
             if active:
                 try:
-                    allowed,reason=self.stability_gate(decision['symbol'],side,max(D(0),D(decision.get('expected_edge_after_costs_pct') or 0))*notional_gap/100)
+                    if not reducing:
+                        allowed,reason=self.stability_gate(decision['symbol'],side,max(D(0),D(decision.get('expected_edge_after_costs_pct') or 0))*notional_gap/100)
+                    else:
+                        allowed,reason=True,'RISK_REDUCTION'
                     if not allowed:
                         results.append({'symbol':decision['symbol'],'action':'HOLD','executed':False,'reason':reason,'decision':decision})
                         continue
