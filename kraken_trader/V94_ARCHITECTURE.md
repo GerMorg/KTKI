@@ -8,7 +8,10 @@ Invariants:
 - H24 is operational and H168 advisory;
 - long and short candidates are discovered from the same scanner universe;
 - news is an explicit candidate input when available;
+- symbol-specific historical forecast evidence is preferred over family averages;
 - target exposure is compared with current exposure for rebalancing;
 - held positions without a current thesis receive an explicit zero target;
+- bearish held longs are reduced to zero when short opening is disabled;
 - forecast cost adjustments are not counted twice;
-- Paper and Real persist the same canonical decision payload before execution.
+- Paper and Real calculate the same confidence/leverage routing before their execution adapters;
+- unsupported Paper short openings are blocked explicitly rather than silently becoming spot sells.
