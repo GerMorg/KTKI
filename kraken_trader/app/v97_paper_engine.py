@@ -10,12 +10,16 @@ from paper_engine import PaperEngine
 from decision_pipeline_v97 import CanonicalDecisionPlannerV97
 from execution_plan_v97 import build_execution_intent
 from order_math_v97 import volume_for_eur, order_constraints
-from trade_guard_v97 import TradeGuardV96
+from trade_guard_v97 import TradeGuardV97
 from decision_matrix import DecisionMatrix
 
 D=lambda x:Decimal(str(x or 0))
 
 class PaperEngineV97(PaperEngine):
+    def __init__(self, *args, runtime=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.runtime = runtime
+
     def _position_mode(self,symbol):
         rows=self.db.rows("SELECT leverage FROM paper_position_risk WHERE symbol=? LIMIT 1",(symbol,))
         if rows and self.db.value("paper_leverage_enabled","false").lower()=="true":
@@ -39,7 +43,7 @@ class PaperEngineV97(PaperEngine):
             except Exception:
                 continue
         plan=planner.build(total,current_by_symbol=current,environment="PAPER")
-        guard=TradeGuardV96(self.db,"PAPER")
+        guard=TradeGuardV97(self.db,"PAPER")
         matrix=DecisionMatrix(self.db)
         actions=[]
         submitted=0
