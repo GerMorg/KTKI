@@ -27,6 +27,8 @@ V95_DEFAULTS = {
     "decision_slippage_bps": "10",
     "decision_min_edge_samples": "10",
     "decision_volatility_reference_pct": "2",
+    "decision_market_data_max_age_seconds": "120",
+    "decision_max_scanner_age_minutes": "120",
 }
 
 def _options():
