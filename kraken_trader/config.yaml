@@ -53,6 +53,7 @@ options:
   decision_volatility_reference_pct: 2
   decision_market_data_max_age_seconds: 120
   decision_max_scanner_age_minutes: 120
+  decision_max_drawdown_pct: -25
   paper_min_hold_hours: 24
   paper_cooldown_hours: 12
   paper_confirmation_runs: 2
@@ -178,6 +179,7 @@ schema:
   decision_volatility_reference_pct: float(0.25,20)
   decision_market_data_max_age_seconds: int(10,600)
   decision_max_scanner_age_minutes: int(5,720)
+  decision_max_drawdown_pct: float(-100,0)
   paper_cash_reserve_pct: float(0,100)
   paper_min_hold_hours: int(0,720)
   paper_cooldown_hours: int(0,720)
