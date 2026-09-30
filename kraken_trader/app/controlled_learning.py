@@ -174,7 +174,7 @@ class ControlledLearning:
                 up = row.get('direction') == 'UP'; features = {'momentum_pct': 1 if up else -1, 'trend_pct': 1 if up else -1, 'volatility_pct': 0, 'spread_pct': 0}
             _, active_signal = score_features(features, active_params); _, candidate_signal = score_features(features, candidate_params)
             actual = float(row.get('actual_return_pct') or 0); cost_rate = float(features.get('estimated_roundtrip_cost_pct') or features.get('estimated_cost_pct') or 0)
-            def correct(signal): return int((signal == 'BUY' and actual > 0) or (signal == 'AVOID' and actual < 0) or (signal == 'HOLD' and abs(actual) < 1))
+            def correct(signal): return int(signal == 'BUY' and actual > cost_rate)
             a, c = correct(active_signal), correct(candidate_signal)
             shadow.append((row['id'], a, c, {'active_signal': active_signal, 'candidate_signal': candidate_signal, 'actual_return_pct': actual,
                 'horizon_hours': int(row.get('horizon_hours') or 0), 'estimated_cost_pct': cost_rate,
@@ -200,8 +200,8 @@ class ControlledLearning:
                 for value in values:
                     equity *= max(.000001, 1 + value / 100); peak = max(peak, equity); worst = min(worst, equity / peak - 1)
                 return worst * 100
-            active_decisions = sum(x[3]['active_signal'] != 'HOLD' for x in items); candidate_decisions = sum(x[3]['candidate_signal'] != 'HOLD' for x in items)
-            active_hits = sum(x[1] for x in items if x[3]['active_signal'] != 'HOLD'); candidate_hits = sum(x[2] for x in items if x[3]['candidate_signal'] != 'HOLD')
+            active_decisions = sum(x[3]['active_signal'] == 'BUY' for x in items); candidate_decisions = sum(x[3]['candidate_signal'] == 'BUY' for x in items)
+            active_hits = sum(x[1] for x in items if x[3]['active_signal'] == 'BUY'); candidate_hits = sum(x[2] for x in items if x[3]['candidate_signal'] == 'BUY')
             active_low, active_high = self._wilson(active_hits, active_decisions); candidate_low, candidate_high = self._wilson(candidate_hits, candidate_decisions)
             active_net = sum(active_returns); candidate_net = sum(candidate_returns)
             out.append({'horizon_hours': horizon, 'sample_count': n, 'active_decisions': active_decisions, 'candidate_decisions': candidate_decisions,
@@ -222,7 +222,7 @@ class ControlledLearning:
                 up=row.get('direction')=='UP'; features={'momentum_pct':1 if up else -1,'trend_pct':1 if up else -1,'volatility_pct':0,'spread_pct':0}
             _,signal=score_features(features,params); actual=float(row.get('actual_return_pct') or 0); cost=float(features.get('estimated_roundtrip_cost_pct') or features.get('estimated_cost_pct') or 0)
             returns.append(self._strategy_return(signal,actual,cost))
-            if signal!='HOLD': decided+=1; hits+=int((signal=='BUY' and actual>0) or (signal=='AVOID' and actual<0))
+            if signal=='BUY': decided+=1; hits+=int(actual>cost)
         coverage=decided/max(1,len(rows)); low=self._wilson(hits,decided)[0] if decided else 0.0
         return {'objective':sum(returns)+5*low+min(1.0,coverage),'net_return':sum(returns),'decisions':decided,'hits':hits,'coverage':coverage,
                 'hit_rate_raw':hits/decided if decided else None,'hit_rate_robust':low}
