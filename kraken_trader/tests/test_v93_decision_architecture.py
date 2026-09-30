@@ -33,7 +33,7 @@ class V93DecisionTests(unittest.TestCase):
  def test_target_weight_uses_quality_and_regime(self):
   rows=[{'symbol':'BULL','score':'85','volatility_pct':'2','roundtrip_cost_pct':'0.2','buy_threshold':'70','quality_score':100,'regime_factor':1},
         {'symbol':'BEAR','score':'85','volatility_pct':'2','roundtrip_cost_pct':'0.2','buy_threshold':'70','quality_score':20,'regime_factor':'.4'}]
-  targets=build_targets(rows,1000,20,10,70,5)
+  targets=build_targets(rows,1000,20,50,70,5)
   self.assertEqual(len(targets),2)
   weights={x['symbol']:Decimal(x['target_weight_pct']) for x in targets}
   self.assertGreater(weights['BULL'],weights['BEAR'])
