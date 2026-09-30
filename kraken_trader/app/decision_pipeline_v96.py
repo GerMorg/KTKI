@@ -204,7 +204,7 @@ class CanonicalDecisionPlannerV96:
             json.dumps(payload,sort_keys=True,default=str,separators=(",",":")).encode()
         ).hexdigest()
 
-    def build(self,environment,total_eur,current_by_symbol,allow_short=None):
+    def build(self,total_eur,current_by_symbol,environment="PAPER",allow_short=None):
         from decision_engine_v96 import DecisionEngineV96
         settings=self.settings()
         if allow_short is None:allow_short=settings["decision_allow_shorts"]
