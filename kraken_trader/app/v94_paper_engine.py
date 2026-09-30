@@ -47,8 +47,11 @@ class PaperEngineV94(PaperEngine):
         # Paper v94 currently models spot/margin long fills; it does not invent
         # a short position. An existing long can still be reduced to zero.
         for d in decisions:
-            if d['direction']=='SHORT' and D(d['current_exposure_eur'])==0:
-                d['target_exposure_eur']='0';d['rebalance_delta_eur']='0';d['action']='HOLD';d['economic_gate_passed']=False
+            if d['direction']=='SHORT':
+                if D(d['current_exposure_eur'])>0:
+                    d['target_exposure_eur']='0';d['rebalance_delta_eur']=str(-D(d['current_exposure_eur']));d['action']='SELL';d['economic_gate_passed']=True
+                else:
+                    d['target_exposure_eur']='0';d['rebalance_delta_eur']='0';d['action']='HOLD';d['economic_gate_passed']=False
         # Held positions with no current thesis are explicit zero targets.
         for p in self.positions():
             if p['symbol'] not in current_by:
