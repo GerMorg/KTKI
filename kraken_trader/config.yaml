@@ -1,5 +1,5 @@
 name: Kraken Trader
-version: 0.1.0-dev.96
+version: 0.1.0-dev.97
 # Historical baseline version: 0.1.0-dev.90
 slug: kraken_trader
 description: Autonomous Kraken Portfolio, Paper-Trading and strictly gated Realhandel
@@ -50,6 +50,7 @@ options:
   decision_fx_fee_bps: 10
   decision_slippage_bps: 10
   decision_min_edge_samples: 10
+  decision_shared_context_reuse_seconds: 10
   decision_volatility_reference_pct: 2
   decision_market_data_max_age_seconds: 120
   decision_max_scanner_age_minutes: 120
@@ -190,6 +191,7 @@ schema:
   decision_fx_fee_bps: int(0,500)
   decision_slippage_bps: int(0,500)
   decision_min_edge_samples: int(1,1000)
+  decision_shared_context_reuse_seconds: int(0,60)
   decision_volatility_reference_pct: float(0.25,20)
   decision_market_data_max_age_seconds: int(10,600)
   decision_max_scanner_age_minutes: int(5,720)
