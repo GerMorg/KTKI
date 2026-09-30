@@ -14,7 +14,7 @@ class FakeKraken:
   self.orders.append(data)
   return {'txid':['TEST-MARGIN-ORDER'],'descr':{'order':'margin test'}}
 
-class V93MarginTests(unittest.TestCase):
+class V94MarginTests(unittest.TestCase):
  def _db(self):
   import sys
   sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'app'))
@@ -62,10 +62,10 @@ class V93MarginTests(unittest.TestCase):
 
  def test_v93_runtime_metadata_is_active_and_margin_gated(self):
   root=Path(__file__).resolve().parents[1]
-  self.assertIn('v93_main:app',(root/'run.sh').read_text())
-  self.assertIn('0.1.0-dev.93',(root/'app/version.py').read_text())
+  self.assertIn('v94_main:app',(root/'run.sh').read_text())
+  self.assertIn('0.1.0-dev.94',(root/'app/version.py').read_text())
   self.assertIn('real_margin_enabled',(root/'config.yaml').read_text())
-  runtime=(root/'app/v93_main.py').read_text()
+  runtime=(root/'app/v94_main.py').read_text()
   self.assertIn('DIRECTIONAL_H24_CALIBRATION',runtime)
   self.assertIn('futures_not_enabled',runtime)
 
