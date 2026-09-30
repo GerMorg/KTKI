@@ -24,7 +24,7 @@ class V95EndToEndTests(unittest.TestCase):
         self.assertEqual(Decimal(d['expected_edge_after_costs_pct']),Decimal('.8'))
 
     def test_news_score_never_becomes_an_uncalibrated_expected_edge(self):
-        row={'symbol':'X','signal':'BUY','score':70,'volatility_pct':2,'momentum_pct':1,'trend_pct':1,'buy_threshold':70,'news_score':100}
+        row={'symbol':'X','signal':'BUY','score':80,'volatility_pct':2,'momentum_pct':1,'trend_pct':1,'buy_threshold':70,'news_score':100}
         d=self.e.build(row,{'quality_score':50},1000,0,.1,'BULL',self.cfg)
         self.assertFalse(d['economic_gate_passed'])
         self.assertIsNone(d['expected_edge_gross_pct'])
