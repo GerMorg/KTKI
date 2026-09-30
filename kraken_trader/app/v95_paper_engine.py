@@ -62,7 +62,7 @@ class PaperEngineV95(PaperEngine):
         }
         families=('crypto_spot','xstocks','forex')
         health=ModelHealth(self.db)
-        health_by={f:health.evaluate(f,require_long_horizon=False) for f in families}
+        health_by={f:health.evaluate(f,require_long_horizon=False,max_drawdown_pct=float(self.db.value('decision_max_drawdown_pct','-25'))) for f in families}
         regimes={f:family_regime(self.db,f) for f in families}
         candidates=scanner_candidates(self.db, max_age_minutes=int(float(self.db.value('decision_max_scanner_age_minutes','120')))
 
