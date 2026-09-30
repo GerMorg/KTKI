@@ -172,7 +172,7 @@ class RealTradeEngine:
    else:
     balance=self._base_balance(base)
     if balance<volume:raise PermissionError(f'Nicht genügend {base}-Saldo; benötigt {volume}, vorhanden {balance}')
-   is_fx_conversion=symbol=='EUR/USD';cap=max(1,int(float(self.db.value('real_max_fx_orders_per_day','1'))) if is_fx_conversion else int(float(self.db.value('real_max_orders_per_day','1')));query="SELECT COUNT(*) AS n FROM real_trade_intents WHERE validate_only=0 AND status='SUBMITTED' AND date(created_at)=date('now')"+(' AND symbol=\'EUR/USD\'' if is_fx_conversion else " AND symbol!=\'EUR/USD\'");used=self.db.rows(query)[0]['n']
+   is_fx_conversion=symbol=='EUR/USD';cap=max(1,int(float(self.db.value('real_max_fx_orders_per_day','1'))) if is_fx_conversion else int(float(self.db.value('real_max_orders_per_day','1'))));query="SELECT COUNT(*) AS n FROM real_trade_intents WHERE validate_only=0 AND status='SUBMITTED' AND date(created_at)=date('now')"+(' AND symbol=\'EUR/USD\'' if is_fx_conversion else " AND symbol!=\'EUR/USD\'");used=self.db.rows(query)[0]['n']
    if int(used)>=cap:raise PermissionError('Tageslimit für EUR/USD-Funding erreicht' if is_fx_conversion else 'Tageslimit für Realaufträge erreicht')
   data={'pair':symbol.replace('/',''),'type':side,'ordertype':order_type,'volume':str(volume),'cl_ord_id':cid,'validate':'false' if live else 'true'}
   if margin:data.update({'leverage':str(leverage),'reduce_only':'true' if reduce_only else 'false'})
