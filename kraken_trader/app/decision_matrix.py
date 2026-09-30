@@ -1,45 +1,95 @@
 import json
 from decimal import Decimal
 from db import now
+
 D=lambda x:Decimal(str(x or 0))
+
 class DecisionMatrix:
- def __init__(self,db):self.db=db;self.ensure()
+ def __init__(self,db):
+  self.db=db
+  self.ensure()
+
  def ensure(self):
-  with self.db.con() as c:c.executescript("CREATE TABLE IF NOT EXISTS decision_rule_evaluations(id INTEGER PRIMARY KEY AUTOINCREMENT,created_at TEXT NOT NULL,symbol TEXT NOT NULL,canonical_id TEXT NOT NULL,action TEXT NOT NULL,rule_key TEXT NOT NULL,passed INTEGER NOT NULL,reason TEXT NOT NULL,details_json TEXT NOT NULL,decision_id INTEGER);")
+  with self.db.con() as c:
+   c.execute("""CREATE TABLE IF NOT EXISTS decision_rule_evaluations(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,created_at TEXT NOT NULL,
+    symbol TEXT NOT NULL,canonical_id TEXT NOT NULL,action TEXT NOT NULL,
+    rule_key TEXT NOT NULL,passed INTEGER NOT NULL,reason TEXT NOT NULL,
+    details_json TEXT NOT NULL,decision_id INTEGER)""")
+
  def evaluate(self,symbol,action,context,trade_context='PAPER'):
-  cid=context.get('canonical_id') or symbol;checks=[];real=str(trade_context).upper()=='REAL'
-  def add(key,passed,reason,details=None):checks.append({'rule_key':key,'passed':bool(passed),'reason':reason,'details':details or {}})
-  add('SIGNAL_CONFIRMED',context.get('confirmation_count',0)>=context.get('confirmation_required',1),f"Bestätigung {context.get('confirmation_count',0)}/{context.get('confirmation_required',1)}")
-  add('MINIMUM_HOLD',context.get('minimum_hold_ok',True),'Mindesthaltedauer erfüllt' if context.get('minimum_hold_ok',True) else 'Mindesthaltedauer aktiv')
-  add('COOLDOWN',context.get('cooldown_ok',True),'Cooldown beendet' if context.get('cooldown_ok',True) else 'Wiederkauf-Cooldown aktiv')
-  add('DAILY_LIMIT',context.get('daily_limit_ok',True),'Tageslimit verfügbar' if context.get('daily_limit_ok',True) else 'Tägliches Umschichtungslimit erreicht')
-  exit_override=bool(context.get('exit_risk_override',False) or context.get('risk_reduction_override',False))
+  cid=context.get('canonical_id') or symbol
+  real=str(trade_context).upper()=='REAL'
+  checks=[]
+
+  def add(key,passed,reason,details=None):
+   checks.append({'rule_key':key,'passed':bool(passed),'reason':reason,'details':details or {}})
+
+  required=context.get('confirmation_required',1)
+  count=context.get('confirmation_count',0)
+  add('SIGNAL_CONFIRMED',count>=required,f"Bestätigung {count}/{required}")
+
+  exit_override=bool(context.get('exit_risk_override') or context.get('risk_reduction_override'))
+  add('MINIMUM_HOLD',context.get('minimum_hold_ok',True),
+      'Mindesthaltedauer erfüllt' if context.get('minimum_hold_ok',True) else 'Mindesthaltedauer aktiv')
+  add('COOLDOWN',context.get('cooldown_ok',True),
+      'Cooldown beendet' if context.get('cooldown_ok',True) else 'Wiederkauf-Cooldown aktiv')
+  add('DAILY_LIMIT',context.get('daily_limit_ok',True),
+      'Tageslimit verfügbar' if context.get('daily_limit_ok',True) else 'Tägliches Umschichtungslimit erreicht')
+
   improvement=D(context.get('improvement_after_costs'))
   if exit_override:
-   add('POSITIVE_AFTER_COSTS',True,'Risikoreduzierender Abbau: kein positiver Entry-Edge erforderlich',{'eur':str(improvement),'override':True})
+   add('POSITIVE_AFTER_COSTS',True,
+       'Risikoreduzierender Abbau: kein positiver Entry-Edge erforderlich',
+       {'eur':str(improvement),'override':True})
   else:
-   economic_ok=bool(context.get('economic_edge_ok',False)) and improvement>0
-   add('POSITIVE_AFTER_COSTS',economic_ok,'Erwarteter Vorteil nach vollständigen Kosten positiv' if economic_ok else 'Kein positiver Vorteil nach vollständigen Kosten',{'eur':str(improvement),'execution_confidence':context.get('execution_confidence'),'mode':context.get('execution_mode')})
-  add('MODEL_HEALTH',context.get('model_health_data_ok',False),'Modellqualitätsdaten vorhanden und konsistent' if context.get('model_health_data_ok',False) else 'Modellqualitätsdaten fehlen oder sind ungültig',context.get('model_health_details'))
-  add('ROUTE_COST',context.get('route_cost_ok',False),'Ausführungsroute und Kosten sind validiert' if context.get('route_cost_ok',False) else 'Ausführungsroute ist nicht ausreichend validiert',context.get('route_cost_details'))
-  add('QUOTE_FUNDING',context.get('quote_funding_ok',False),'Quote-Finanzierung ist bestätigt' if context.get('quote_funding_ok',False) else 'Quote-Finanzierung ist nicht bestätigt',context.get('quote_funding_details'))
-  add('PORTFOLIO_RISK',context.get('portfolio_risk_ok',False),'Portfolio-Risikolimits eingehalten' if context.get('portfolio_risk_ok',False) else 'Portfolio-Risikolimit blockiert',context.get('portfolio_risk_details'))
-  add('ORDER_CONSTRAINTS',context.get('order_constraints_ok',False),'Ordergröße und Kraken-Marktregeln eingehalten' if context.get('order_constraints_ok',False) else 'Ordergröße/Mindestwerte nicht erfüllt',context.get('order_constraints_details'))
+   economic_ok=bool(context.get('economic_edge_ok')) and improvement>0
+   add('POSITIVE_AFTER_COSTS',economic_ok,
+       'Erwarteter Vorteil nach vollständigen Kosten positiv' if economic_ok else 'Kein positiver Vorteil nach vollständigen Kosten',
+       {'eur':str(improvement),'execution_confidence':context.get('execution_confidence'),
+        'mode':context.get('execution_mode')})
+
+  add('TAX_AND_LOSS',context.get('tax_loss_ok',True),
+      'Steuer- und Verlustwirkung akzeptabel' if context.get('tax_loss_ok',True) else 'Steuer- oder Verlustwirkung blockiert')
+  add('DATA_FRESHNESS',context.get('data_fresh',False),
+      'Daten vollständig und aktuell' if context.get('data_fresh',False) else 'Daten fehlen oder sind veraltet')
+  add('MODEL_HEALTH',context.get('model_health_data_ok',False),
+      'Modellqualitätsdaten vorhanden und konsistent' if context.get('model_health_data_ok',False) else 'Modellqualitätsdaten fehlen oder sind ungültig',
+      context.get('model_health_details'))
+  add('ROUTE_COST',context.get('route_cost_ok',False),
+      'Ausführungsroute und Kosten sind validiert' if context.get('route_cost_ok',False) else 'Ausführungsroute ist nicht ausreichend validiert',
+      context.get('route_cost_details'))
+  add('QUOTE_FUNDING',context.get('quote_funding_ok',False),
+      'Quote-Finanzierung ist bestätigt' if context.get('quote_funding_ok',False) else 'Quote-Finanzierung ist nicht bestätigt',
+      context.get('quote_funding_details'))
+  add('PORTFOLIO_RISK',context.get('portfolio_risk_ok',False),
+      'Portfolio-Risikolimits eingehalten' if context.get('portfolio_risk_ok',False) else 'Portfolio-Risikolimit blockiert',
+      context.get('portfolio_risk_details'))
+  add('ORDER_CONSTRAINTS',context.get('order_constraints_ok',False),
+      'Ordergröße und Kraken-Marktregeln eingehalten' if context.get('order_constraints_ok',False) else 'Ordergröße/Mindestwerte nicht erfüllt',
+      context.get('order_constraints_details'))
+
   if real:
-   if context.get('model_health_data_ok',True):
-    add('MODEL_HEALTH',True,'Modellqualität liegt als Richtungsevidenz vor und wird für Sizing/Leverage verwendet',context.get('model_health_details'))
-   else:
-    add('MODEL_HEALTH',False,'Modellqualitätsdaten fehlen oder sind ungültig',context.get('model_health_details'))
-   add('ROUTE_COST',context.get('route_cost_ok',False),'Günstigste EUR/USD-Ausführung ausgewählt' if context.get('route_cost_ok',False) else 'Ausführungsroute ist nicht ausreichend validiert',context.get('route_cost_details'))
-   add('QUOTE_FUNDING',context.get('quote_funding_ok',False),'Quote-Währung verfügbar bzw. Funding-Leg bestätigt' if context.get('quote_funding_ok',False) else 'Quote-Währung fehlt oder Funding-Leg nicht bestätigt',context.get('quote_funding_details'))
-   add('PORTFOLIO_RISK',context.get('portfolio_risk_ok',False),'Portfolio-Risikolimits eingehalten' if context.get('portfolio_risk_ok',False) else 'Portfolio-Risikolimit blockiert',context.get('portfolio_risk_details'))
-   add('ORDER_CONSTRAINTS',context.get('order_constraints_ok',False),'Ordergröße und Kraken-Marktregeln eingehalten' if context.get('order_constraints_ok',False) else 'Ordergröße/Mindestwerte nicht erfüllt',context.get('order_constraints_details'))
-   add('REAL_TRADING_ENABLED',context.get('real_trading_enabled',False),'Realhandel aktiviert' if context.get('real_trading_enabled',False) else 'Realhandel deaktiviert')
-   add('REAL_KILL_SWITCH',context.get('real_kill_switch_clear',False),'Kill-Switch frei' if context.get('real_kill_switch_clear',False) else 'Kill-Switch aktiv')
-   add('REAL_LIMITS',context.get('real_limits_ok',False),'Realhandelslimits eingehalten' if context.get('real_limits_ok',False) else 'Realhandelslimits blockieren')
-   add('REAL_BALANCE',context.get('real_balance_ok',False),'Realer Saldo bestätigt' if context.get('real_balance_ok',False) else 'Realer Saldo fehlt')
-  allowed=all(x['passed'] for x in checks);blocker=next((x['reason'] for x in checks if not x['passed']),'Alle Regeln erfüllt')
+   add('REAL_TRADING_ENABLED',context.get('real_trading_enabled',False),
+       'Realhandel aktiviert' if context.get('real_trading_enabled',False) else 'Realhandel deaktiviert')
+   add('REAL_KILL_SWITCH',context.get('real_kill_switch_clear',False),
+       'Kill-Switch frei' if context.get('real_kill_switch_clear',False) else 'Kill-Switch aktiv')
+   add('REAL_LIMITS',context.get('real_limits_ok',False),
+       'Realhandelslimits eingehalten' if context.get('real_limits_ok',False) else 'Realhandelslimits blockieren')
+   add('REAL_BALANCE',context.get('real_balance_ok',False),
+       'Realer Saldo bestätigt' if context.get('real_balance_ok',False) else 'Realer Saldo fehlt')
+
+  allowed=all(x['passed'] for x in checks)
+  blocker=next((x['reason'] for x in checks if not x['passed']),'Alle Regeln erfüllt')
   with self.db.con() as c:
-   for x in checks:c.execute('INSERT INTO decision_rule_evaluations(created_at,symbol,canonical_id,action,rule_key,passed,reason,details_json,decision_id) VALUES(?,?,?,?,?,?,?,?,?)',(now(),symbol,cid,action,x['rule_key'],1 if x['passed'] else 0,x['reason'],json.dumps(x['details'],sort_keys=True,default=str),context.get('decision_id')))
+   for x in checks:
+    c.execute(
+     'INSERT INTO decision_rule_evaluations(created_at,symbol,canonical_id,action,rule_key,passed,reason,details_json,decision_id) VALUES(?,?,?,?,?,?,?,?,?)',
+     (now(),symbol,cid,action, x['rule_key'], 1 if x['passed'] else 0,
+      x['reason'],json.dumps(x['details'],sort_keys=True,default=str),
+      context.get('decision_id'))
+    )
   return {'allowed':allowed,'blocker':blocker,'checks':checks}
- def recent(self):return self.db.rows('SELECT * FROM decision_rule_evaluations ORDER BY id DESC LIMIT 500')
+
+ def recent(self):
+  return self.db.rows('SELECT * FROM decision_rule_evaluations ORDER BY id DESC LIMIT 500')
