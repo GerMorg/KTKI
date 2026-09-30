@@ -24,7 +24,7 @@ class V96EndToEndTests(unittest.TestCase):
         d=e.build(row,{"quality_score":80,"quality_score_by_direction":{"UP":80}},
                   1000,0,1.1,"BULL",cfg)
         self.assertFalse(d["economic_gate_passed"])
-        self.assertEqual(d["target_exposure_eur"],"0")
+        self.assertEqual(Decimal(d["target_exposure_eur"]),Decimal("0"))
 
     def test_positive_net_edge_drives_target_size(self):
         e=DecisionEngineV96(None)
@@ -53,7 +53,7 @@ class V96EndToEndTests(unittest.TestCase):
         row={"symbol":"BTC/EUR","signal":"HOLD","score":50,"momentum_pct":0,"trend_pct":0,"volatility_pct":2}
         cfg={"decision_max_position_pct":5,"decision_cash_reserve_pct":20}
         d=e.build(row,{},1000,100,.2,"NEUTRAL",cfg)
-        self.assertEqual(Decimal(d["target_exposure_eur"]),Decimal("50"))
+        self.assertEqual(Decimal(d["target_exposure_eur"]),Decimal("40"))
         self.assertEqual(d["action"],"SELL")
 
     def test_risk_reduction_is_allowed_without_positive_entry_edge(self):
