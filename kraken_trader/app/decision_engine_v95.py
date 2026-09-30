@@ -168,12 +168,16 @@ class DecisionEngineV95:
         else:
             action = "SELL" if current > 0 else "HOLD"
 
-        # A new exposure requires measurable candidate-specific edge after the
-        # complete estimated roundtrip. A reduction to zero is risk-reducing.
+        # Positive edge is required when exposure is increased. Reducing an
+        # existing exposure is risk-reducing and remains allowed even with weak edge.
+        exposure_reduction = abs(target) < abs(current)
+        same_sign_reduction = exposure_reduction and (target == 0 or target * current > 0)
+        increasing_or_flip = abs(target) > abs(current) or (target * current < 0)
         economic_ok = (
-(edge_after_costs is not None and edge_after_costs > 0)
-            or (direction == "HOLD")
-            or (existing and target == 0)
+            direction == "HOLD"
+            or same_sign_reduction
+            or (not increasing_or_flip and target == current)
+            or (edge_after_costs is not None and edge_after_costs > 0)
         )
 
         return {
