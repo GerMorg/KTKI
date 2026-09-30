@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 
 from decision_context_v95 import ticker_map, scanner_candidates, routes_for_symbol, decision_costs
-from strategy_profiles import active_profile, family_for_category
+from strategy_profiles import active_profile, family_for_category, score_features
 from model_health import ModelHealth
 from market_regime import family_regime
 
@@ -125,11 +125,21 @@ class CanonicalDecisionPlannerV97:
                 settings["decision_fx_fee_bps"],
                 settings["decision_slippage_bps"],
             )
+            recalculated_score, recalculated_signal = score_features({
+                "momentum_pct": row.get("momentum_pct"),
+                "trend_pct": row.get("trend_pct"),
+                "volatility_pct": row.get("volatility_pct"),
+                "spread_pct": row.get("spread_pct"),
+                "news_score": row.get("news_score"),
+            }, params)
             row.update({
                 "family":family,
                 "parameter_version":version,
                 "buy_threshold":buy_threshold,
                 "avoid_threshold":avoid_threshold,
+                "score":round(float(recalculated_score),4),
+                "signal":recalculated_signal,
+                "signal_source":"ACTIVE_PROFILE_RECALCULATED",
                 "route_context":route,
                 "roundtrip_cost_pct":route.get("roundtrip_cost_pct")
                     if route.get("roundtrip_cost_pct") is not None else D(999),
@@ -244,7 +254,25 @@ class CanonicalDecisionPlannerV97:
                 "plan_hash":plan_hash,
             })
             ranked.append(decision)
-        ranked.sort(key=lambda x:(-D(x["marginal_benefit_eur"]),-abs(D(x["rebalance_delta_eur"])),x["symbol"]))
+        current_total=sum(abs(D(v)) for v in current_by_symbol.values())
+        portfolio_budget=D(total_eur)*(1-max(D(0),min(D(100),D(settings["decision_cash_reserve_pct"])))/100)
+        position_cap=D(total_eur)*D(settings["decision_max_position_pct"])/100
+        for item in ranked:
+            current=D(item["current_exposure_eur"])
+            target=D(item["target_exposure_eur"])
+            reducing=abs(target)<abs(current) and abs(current)>0
+            required_derisk=reducing and (
+                target==0 or abs(current)>position_cap or current_total>portfolio_budget
+            )
+            item["execution_priority"]=0 if required_derisk else 1 if D(item["marginal_benefit_eur"])>0 else 2
+            item["execution_priority_reason"] = (
+                "RISK_REDUCTION_OR_PORTFOLIO_CAP"
+                if required_derisk else
+                "POSITIVE_MARGINAL_EDGE"
+                if D(item["marginal_benefit_eur"])>0 else
+                "NORMAL_REBALANCE"
+            )
+        ranked.sort(key=lambda x:(x["execution_priority"],-D(x["marginal_benefit_eur"]),-abs(D(x["rebalance_delta_eur"])),x["symbol"]))
         payload={"settings":settings,"tickers":tickers,"candidate_count":len(enriched),"decision_count":len(ranked),"health":health,"regimes":regimes}
         with self.db.con() as c:
             c.execute(
