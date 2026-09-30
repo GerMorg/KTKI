@@ -17,8 +17,14 @@ legacy = base.legacy
 options = getattr(base, "options", {})
 
 V95_DEFAULTS = {
-    "paper_cash_reserve_pct": "20",
-    "paper_no_trade_band_pct": "2",
+    "decision_minimum_score": "70",
+    "decision_max_position_pct": "5",
+    "decision_cash_reserve_pct": "20",
+    "decision_min_trade_eur": "20",
+    "decision_no_trade_band_pct": "2",
+    "decision_fee_bps": "40",
+    "decision_fx_fee_bps": "10",
+    "decision_slippage_bps": "10",
     "decision_min_edge_samples": "10",
     "decision_volatility_reference_pct": "2",
 }
