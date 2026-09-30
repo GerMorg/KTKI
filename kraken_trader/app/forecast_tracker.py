@@ -2,6 +2,7 @@ import json
 from datetime import datetime, timezone, timedelta
 from db import now
 from strategy_profiles import active_profile, family_for_category
+from decision_pipeline_v96 import CanonicalDecisionPlannerV96
 
 
 class ForecastTracker:
@@ -18,22 +19,26 @@ class ForecastTracker:
     if name not in cols:c.execute(f'ALTER TABLE forecast_evaluations ADD COLUMN {name} {definition}')
 
  def _cost_snapshot(self,symbol,spread_pct):
-  fee_bps=float(self.db.value('paper_fee_bps','40'));fee_source='CONFIG';fee_effective_at=None
+  settings=CanonicalDecisionPlannerV96(self.db).settings()
+  rows=self.db.rows("SELECT symbol,base_asset,quote_asset,source_key,ordermin,costmin,asset_class,category,canonical_id FROM market_universe WHERE symbol=? LIMIT 1",(symbol,))
+  if not rows:
+   return {'entry_cost_pct':999,'exit_cost_pct':999,'roundtrip_cost_pct':999,'components_pct':{},'provenance':{'status':'NO_MARKET_METADATA'}}
+  row=dict(rows[0]);tickers={}
   try:
-   fee=self.db.rows('SELECT taker_bps,source,effective_at FROM account_pair_fees WHERE symbol=?',(symbol,))
-   if fee:fee_bps=float(fee[0]['taker_bps']);fee_source=fee[0]['source'];fee_effective_at=fee[0]['effective_at']
-  except Exception:pass
-  trade_fee=fee_bps/10000;slippage=float(self.db.value('paper_slippage_bps','10'))/10000
-  fx_required=symbol.endswith('/USD');fx_fee=float(self.db.value('paper_fx_fee_bps','10'))/10000 if fx_required else 0.0;fx_spread=0.0
-  if fx_required:
-   fx=self.db.rows("SELECT bid,ask,last,received_at FROM live_prices WHERE symbol='EUR/USD'")
-   if fx:
-    bid=float(fx[0].get('bid') or fx[0].get('last') or 0);ask=float(fx[0].get('ask') or fx[0].get('last') or 0);mid=(bid+ask)/2
-    fx_spread=(ask-bid)/mid if mid and ask>=bid else 0.0
-  entry={'product_spread':spread_pct/2,'trade_fee':trade_fee*100,'slippage':slippage*100,'fx_spread':fx_spread/2*100,'fx_fee':fx_fee*100}
-  exit_cost=dict(entry);entry_total=sum(entry.values());exit_total=sum(exit_cost.values());roundtrip=entry_total+exit_total
-  return {'entry_cost_pct':round(entry_total,8),'exit_cost_pct':round(exit_total,8),'roundtrip_cost_pct':round(roundtrip,8),'components_pct':{'entry':entry,'exit':exit_cost},'provenance':{'trade_fee_source':fee_source,'trade_fee_effective_at':fee_effective_at,'trade_fee_bps':fee_bps,'fx_required':fx_required,'captured_at':now()}}
-
+   for x in self.db.rows("SELECT symbol,last,bid,ask,received_at FROM live_prices"):
+    tickers[x['symbol']]={'b':[x['bid'] or x['last']],'a':[x['ask'] or x['last']],'c':[x['last']],'received_at':x.get('received_at')}
+  except Exception:
+   tickers={}
+  from decision_context_v95 import routes_for_symbol
+  route=routes_for_symbol(self.db,symbol,tickers,settings['decision_fee_bps'],settings['decision_fx_fee_bps'],settings['decision_slippage_bps'])
+  total=float(route.get('roundtrip_cost_pct') or 999)
+  return {
+   'entry_cost_pct':round(total/2,8),
+   'exit_cost_pct':round(total/2,8),
+   'roundtrip_cost_pct':round(total,8),
+   'components_pct':route,
+   'provenance':{'source':'CANONICAL_ROUTE_COST_V96','captured_at':now()},
+  }
  def snapshot(self,symbols):
   ver=self.db.rows('SELECT id FROM watchlist_versions ORDER BY id DESC LIMIT 1');vid=ver[0]['id'] if ver else None;saved=0;failed=0
   for symbol in symbols:
