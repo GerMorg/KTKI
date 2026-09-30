@@ -61,7 +61,7 @@ class RealPortfolioAllocator:
   try:cols={x['name'] for x in self.db.rows('PRAGMA table_info(scanner_results)')}
   except Exception:cols=set()
   vol_expr='s.volatility_pct' if 'volatility_pct' in cols else '0 AS volatility_pct'
-  rows=self.db.rows(f"SELECT s.symbol,s.score,{vol_expr},s.signal,s.quality FROM scanner_results s WHERE s.quality='VALID' AND s.signal='BUY' AND CAST(s.score AS REAL)>=? ORDER BY CAST(s.score AS REAL) DESC",(str(cfg['minimum_score']),))
+  rows=self.db.rows(f"SELECT s.symbol,s.score,{vol_expr},s.momentum_pct,s.trend_pct,s.signal,s.quality FROM scanner_results s WHERE s.quality='VALID' AND s.signal='BUY' AND CAST(s.score AS REAL)>=? ORDER BY CAST(s.score AS REAL) DESC",(str(cfg['minimum_score']),))
   for row in rows:
    if cfg['allowed_symbols'] and row['symbol'].upper() not in cfg['allowed_symbols']:continue
    alts=self._alternatives(row['symbol'])
