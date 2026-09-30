@@ -65,12 +65,12 @@ class V89H168GateTests(unittest.TestCase):
         version = (APP / "version.py").read_text(encoding="utf-8")
         config = (ROOT / "config.yaml").read_text(encoding="utf-8")
         repository = (ROOT.parent / "repository.yaml").read_text(encoding="utf-8")
-        runtime = (APP / "v94_main.py").read_text(encoding="utf-8")
-        self.assertIn("v94_main:app", run_sh)
+        runtime = (APP / "v95_main.py").read_text(encoding="utf-8")
+        self.assertIn("v95_main:app", run_sh)
         self.assertNotIn("v89_main:app", run_sh)
-        self.assertIn("0.1.0-dev.94", version)
-        self.assertIn("version: 0.1.0-dev.94", config)
-        self.assertIn("version: 0.1.0-dev.94", repository)
+        self.assertIn("0.1.0-dev.95", version)
+        self.assertIn("version: 0.1.0-dev.95", config)
+        self.assertIn("version: 0.1.0-dev.95", repository)
         self.assertIn('h24', runtime)
 
 
