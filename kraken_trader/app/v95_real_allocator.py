@@ -27,6 +27,16 @@ class RealPortfolioAllocatorV95:
         self.trade_engine = trade_engine
         self.lock = threading.Lock()
 
+    def _existing_execution(self, symbol, cfg):
+        try:
+            rows=self.db.rows('SELECT side,leverage FROM real_margin_positions WHERE symbol=? LIMIT 1',(symbol,))
+        except Exception:
+            rows=[]
+        if rows and cfg['margin_enabled']:
+            lev=D(rows[0].get('leverage') or cfg['margin_default_leverage'])
+            return {'mode':'MARGIN','leverage':min(lev,cfg['margin_max_leverage']),'reason':'EXISTING_MARGIN_POSITION_ROUTING'}
+        return {'mode':'SPOT','leverage':D(1),'reason':'EXISTING_SPOT_POSITION_ROUTING'}
+
     def settings(self):
         return self.base.settings()
 
