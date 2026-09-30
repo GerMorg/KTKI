@@ -155,8 +155,8 @@ class DecisionEngineV95:
             if direction == "LONG"
             else -target_abs
             if direction == "SHORT"
-            else current
-            if direction == "HOLD"
+            else (D(1) if D(current_eur)>0 else D(-1))*min(abs(D(current_eur)), budget*max_position)
+            if direction == "HOLD" and D(current_eur)!=0
             else D(0)
         )
         delta = target - current
@@ -250,27 +250,36 @@ class DecisionEngineV95:
                     allow_short=allow_short,
                 )
             )
-        # Portfolio-wide normalization: individual caps alone can still
-        # over-allocate when many candidates qualify. Scale absolute targets
-        # together so the reserved cash budget remains a hard portfolio limit.
+        # Portfolio-wide normalization: compliant HOLD exposure is fixed first.
+        # Only the remaining budget is allocated to new directional exposure.
         budget=max(D(0),D(total))*(
             1-max(D(0),min(D(100),D(config.get("cash_reserve_pct",20))))/100
         )
-        gross=sum(abs(D(x.get("target_exposure_eur"))) for x in decisions)
-        if gross>budget and gross>0:
-            factor=budget/gross
-            for x in decisions:
-                target=D(x.get("target_exposure_eur"))*factor
-                current=D(x.get("current_exposure_eur"))
+        holds=[x for x in decisions if x.get("direction")=="HOLD"]
+        variable=[x for x in decisions if x.get("direction") in ("LONG","SHORT")]
+        fixed=sum(abs(D(x.get("target_exposure_eur"))) for x in holds)
+        hold_factor=D(1)
+        if fixed>budget and fixed>0:
+            hold_factor=budget/fixed
+            for x in holds:
+                target=D(x["target_exposure_eur"])*hold_factor
+                current=D(x["current_exposure_eur"])
                 x["target_exposure_eur"]=str(target)
                 x["rebalance_delta_eur"]=str(target-current)
-                if x["direction"] in ("LONG","SHORT"):
-                    x["action"]="BUY" if target-current>0 else "SELL" if target-current<0 else "HOLD"
-            for x in decisions:
-                x["portfolio_budget_scale"]=str(factor)
-        else:
-            for x in decisions:
-                x["portfolio_budget_scale"]="1"
+                x["action"]="BUY" if target-current>0 else "SELL" if target-current<0 else "HOLD"
+        fixed=sum(abs(D(x.get("target_exposure_eur"))) for x in holds)
+        variable_budget=max(D(0),budget-fixed)
+        variable_gross=sum(abs(D(x.get("target_exposure_eur"))) for x in variable)
+        variable_factor=variable_budget/variable_gross if variable_gross>variable_budget and variable_gross>0 else D(1)
+        for x in variable:
+            target=D(x["target_exposure_eur"])*variable_factor
+            current=D(x["current_exposure_eur"])
+            x["target_exposure_eur"]=str(target)
+            x["rebalance_delta_eur"]=str(target-current)
+            x["action"]="BUY" if target-current>0 else "SELL" if target-current<0 else "HOLD"
+        scale=hold_factor*variable_factor
+        for x in decisions:
+            x["portfolio_budget_scale"]=str(scale)
         return decisions
 
     def record(
