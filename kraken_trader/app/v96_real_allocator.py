@@ -126,7 +126,7 @@ class RealPortfolioAllocatorV96(RealPortfolioAllocatorV95):
                     **guard_state,
                     "improvement_after_costs":str(max(D(0),D(decision.get("expected_edge_after_costs_pct") or 0))*D(intent["trade_eur"])/100),
                     "economic_edge_ok":bool(intent["economic_edge_ok"]),
-                    "model_health_data_ok":True,
+                    "model_health_data_ok":bool(plan["health"].get(decision.get("family"),{}).get("status")),
                     "model_health_details":plan["health"].get(decision.get("family"),{}),
                     "route_cost_ok":route.get("status")=="VALID",
                     "route_cost_details":route,
