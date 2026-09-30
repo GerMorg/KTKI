@@ -67,12 +67,15 @@ class RealPortfolioAllocatorV94(RealPortfolioAllocator):
             # negative target from zero exposure.
             if not (cfg['margin_enabled'] and cfg['margin_allow_shorts']):
                 for d in decisions:
-                    if d['direction']=='SHORT' and D(d['current_exposure_eur'])==0:
-                        d['target_exposure_eur']='0';d['rebalance_delta_eur']='0';d['action']='HOLD';d['economic_gate_passed']=False
+                    if d['direction']=='SHORT':
+                        if D(d['current_exposure_eur'])>0:
+                            d['target_exposure_eur']='0';d['rebalance_delta_eur']=str(-D(d['current_exposure_eur']));d['action']='SELL';d['economic_gate_passed']=True
+                        else:
+                            d['target_exposure_eur']='0';d['rebalance_delta_eur']='0';d['action']='HOLD';d['economic_gate_passed']=False
             # For existing holdings without a live BUY thesis, force a reduction
             # target to zero. This is a target decision, not a separate exit engine.
             for d in decisions:
-                if d['symbol'] in held and d['direction']!='LONG' and d['direction']!='SHORT':
+                if D(d['current_exposure_eur'])>0 and d['direction']=='FLAT':
                     d['target_exposure_eur']='0';d['rebalance_delta_eur']=str(-D(d['current_exposure_eur']));d['action']='SELL';d['economic_gate_passed']=True
             with self.db.con() as c:
                 cur=c.execute('INSERT INTO real_allocation_runs(created_at,status,automatic,settings_json,details_json) VALUES(?,?,?,?,?)',(now(),'RUNNING',int(automatic),safe_json(cfg),'{}'));rid=cur.lastrowid
