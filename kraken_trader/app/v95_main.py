@@ -325,6 +325,8 @@ def v95_health():
         "model_health":"QUALITY_AND_SIZING_NOT_PORTFOLIO_RETURN",
         "news":"FRESH_48H_DECAYED_AND_IN_SCANNER",
         "rebalancing":"TARGET_MINUS_CURRENT",
+        "existing_position_exit":"TARGET_ZERO_RISK_REDUCTION",
+        "margin":"ACCOUNT_CAPABILITY_GATED",
         "tax_info":request.script_root+"/tax-info",
         "real_api_enabled":str(legacy.db.value("real_trading_enabled","false")).lower()=="true",
         "real_kill_switch_clear":str(legacy.db.value("real_kill_switch","true")).lower()!="true",
