@@ -19,7 +19,11 @@ class DecisionMatrix:
    if exit_override:
     add('POSITIVE_AFTER_COSTS',True,'Exit-Risikopfad: Entry-Economic-Gate wird nicht für den Abbau einer bestehenden Position verlangt',{'eur':str(improvement),'override':True})
    else:
-    add('POSITIVE_AFTER_COSTS',improvement>0,'Erwarteter Vorteil nach Kosten positiv' if improvement>0 else 'Kein positiver Vorteil nach vollständigen Kosten',{'eur':str(improvement)})
+    confidence_ok=bool(context.get('execution_confidence_ok',False))
+    if confidence_ok:
+     add('POSITIVE_AFTER_COSTS',True,'Ausführungs-Confidence-Gate bestanden; konkrete Route/Kosten werden separat geprüft',{'eur':str(improvement),'execution_confidence':context.get('execution_confidence'),'mode':context.get('execution_mode')})
+    else:
+     add('POSITIVE_AFTER_COSTS',improvement>0,'Erwarteter Vorteil nach vollständigen Kosten positiv' if improvement>0 else 'Kein positiver Vorteil nach vollständigen Kosten',{'eur':str(improvement)})
   add('TAX_AND_LOSS',context.get('tax_loss_ok',True),'Steuer- und Verlustwirkung akzeptabel' if context.get('tax_loss_ok',True) else 'Steuer- oder Verlustwirkung blockiert')
   add('DATA_FRESHNESS',context.get('data_fresh',False),'Daten vollständig und aktuell' if context.get('data_fresh',False) else 'Daten fehlen oder sind veraltet')
   if real:

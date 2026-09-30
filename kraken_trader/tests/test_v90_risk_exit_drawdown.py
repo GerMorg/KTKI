@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / "app"
 
 
-class V91RiskExitDrawdownTests(unittest.TestCase):
+class V92RiskExitDrawdownTests(unittest.TestCase):
     def _db(self):
         from db import DB
         handle = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
@@ -101,9 +101,9 @@ class V91RiskExitDrawdownTests(unittest.TestCase):
         run_sh = (ROOT / "run.sh").read_text(encoding="utf-8")
         version = (APP / "version.py").read_text(encoding="utf-8")
         config = (ROOT / "config.yaml").read_text(encoding="utf-8")
-        runtime = (APP / "v91_main.py").read_text(encoding="utf-8")
-        self.assertIn("v91_main:app", run_sh)
-        self.assertIn("0.1.0-dev.91", version)
+        runtime = (APP / "v92_main.py").read_text(encoding="utf-8")
+        self.assertIn("v92_main:app", run_sh)
+        self.assertIn("0.1.0-dev.92", version)
         self.assertIn("real_balancing_max_drawdown_pct", config)
         self.assertIn("H168", runtime)
         self.assertIn("margin", runtime)
