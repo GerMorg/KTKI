@@ -90,7 +90,7 @@ class DecisionEngineV95:
             values.append(actual if wanted == "UP" else -actual)
         return sum(values) / D(len(values)) if values else None
 
-    def gross_edge(self, row, direction):
+    def gross_edge(self, row, direction, health):
         explicit = row.get("expected_edge_pct")
         if explicit not in (None, ""):
             try:
@@ -128,7 +128,7 @@ class DecisionEngineV95:
             signal_strength = D(0)
         quality_factor = D(".70") + D(".30") * quality
         cost_factor = D(1) / (D(1) + max(D(0), D(roundtrip_cost_pct)) / D(100))
-        gross_edge = self.gross_edge(row, direction) if direction != "FLAT" else None
+        gross_edge = self.gross_edge(row, direction, health) if direction != "FLAT" else None
         edge_after_costs = (
             gross_edge - D(roundtrip_cost_pct)
             if gross_edge is not None
