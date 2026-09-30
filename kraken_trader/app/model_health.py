@@ -15,11 +15,11 @@ class ModelHealth:
  def _drawdown(values):
   # Forecast samples are not sequential invested returns. Use additive P&L,
   # matching model_net_return, rather than compounding independent forecasts.
-  equity=peak=0.0;worst=0.0
+  equity=peak=100.0;worst=0.0
   for value in values:
    equity+=float(value)
    peak=max(peak,equity)
-   if peak>0:worst=min(worst,(equity-peak)/max(1.0,abs(peak)))
+   if peak>0:worst=min(worst,(equity-peak)/peak)
   return worst*100
  @staticmethod
  def _direction_pnl(direction,actual,cost):
