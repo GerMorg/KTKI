@@ -68,9 +68,9 @@ class V89H168GateTests(unittest.TestCase):
         runtime = (APP / "v96_main.py").read_text(encoding="utf-8")
         self.assertIn("v96_main:app", run_sh)
         self.assertNotIn("v89_main:app", run_sh)
-        self.assertIn("0.1.0-dev.96", version)
-        self.assertIn("version: 0.1.0-dev.96", config)
-        self.assertIn("version: 0.1.0-dev.96", repository)
+        self.assertIn("0.1.0-dev.97", version)
+        self.assertIn("version: 0.1.0-dev.97", config)
+        self.assertIn("version: 0.1.0-dev.97", repository)
         self.assertIn('H24', runtime)
 
 
