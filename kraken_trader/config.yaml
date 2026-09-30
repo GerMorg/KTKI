@@ -68,6 +68,20 @@ options:
   decision_confidence_margin_4x: 93
   decision_confidence_margin_5x: 97
   decision_allow_shorts: false
+  decision_full_size_edge_pct: 2
+  decision_confirmation_runs: 2
+  decision_min_hold_hours: 24
+  decision_cooldown_hours: 12
+  decision_max_turnovers_per_day: 2
+  decision_max_actions_per_run: 1
+  decision_max_actions_per_day: 2
+  decision_max_trade_eur: 250
+  decision_confidence_spot_min: 65
+  decision_confidence_margin_2x: 78
+  decision_confidence_margin_3x: 86
+  decision_confidence_margin_4x: 93
+  decision_confidence_margin_5x: 97
+  decision_allow_shorts: false
   paper_min_hold_hours: 24
   paper_cooldown_hours: 12
   paper_confirmation_runs: 2
@@ -194,6 +208,20 @@ schema:
   decision_market_data_max_age_seconds: int(10,600)
   decision_max_scanner_age_minutes: int(5,720)
   decision_max_drawdown_pct: float(-100,0)
+  decision_full_size_edge_pct: float(0.1,25)
+  decision_confirmation_runs: int(1,10)
+  decision_min_hold_hours: int(0,720)
+  decision_cooldown_hours: int(0,720)
+  decision_max_turnovers_per_day: int(0,50)
+  decision_max_actions_per_run: int(1,100)
+  decision_max_actions_per_day: int(1,100)
+  decision_max_trade_eur: float(0.01,1000000)
+  decision_confidence_spot_min: float(0,100)
+  decision_confidence_margin_2x: float(0,100)
+  decision_confidence_margin_3x: float(0,100)
+  decision_confidence_margin_4x: float(0,100)
+  decision_confidence_margin_5x: float(0,100)
+  decision_allow_shorts: bool
   decision_full_size_edge_pct: float(0.1,25)
   decision_confirmation_runs: int(1,10)
   decision_min_hold_hours: int(0,720)
