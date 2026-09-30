@@ -102,12 +102,17 @@ class NewsPrefilter:
     with self.db.con() as c:c.execute('UPDATE news_sources SET last_status=?,last_checked_at=?,last_error=?,consecutive_failures=COALESCE(consecutive_failures,0)+1,cooldown_until=? WHERE name=?',(('DEGRADED TLS COOLDOWN' if is_tls else f'ERROR {label}'),now(),reason,cooldown,src['name']))
   ai=self.external_ai.analyze_pending() if getattr(self,'external_ai',None) else {'status':'DISABLED'};local=self.news_learning.refresh_local() if getattr(self,'news_learning',None) else {'status':'DISABLED'};self.db.audit('NEWS_COLLECT',json.dumps({'saved':saved,'errors':errors,'ai':ai,'local':local},ensure_ascii=False),'warning' if errors else 'info');return {'saved':saved,'errors':errors,'ai':ai,'local':local}
  def link_markets(self,markets,limit=500):
-  items=self.db.rows("SELECT n.id,n.title,n.summary,s.weight,COALESCE(l.score,'0') local_score FROM news_items n JOIN news_sources s ON s.name=n.source_name LEFT JOIN news_local_evaluations l ON l.news_id=n.id ORDER BY n.fetched_at DESC LIMIT ?",(limit,));links=[]
+  cutoff=(datetime.now(timezone.utc)-timedelta(hours=48)).isoformat();items=self.db.rows("SELECT n.id,n.title,n.summary,s.weight,COALESCE(l.score,'0') local_score,COALESCE(n.published_at,n.fetched_at) observed_at FROM news_items n JOIN news_sources s ON s.name=n.source_name LEFT JOIN news_local_evaluations l ON l.news_id=n.id WHERE COALESCE(n.published_at,n.fetched_at)>=? ORDER BY COALESCE(n.published_at,n.fetched_at) DESC LIMIT ?",(cutoff,limit));links=[]
   for m in markets:
    symbol=m['symbol'];base=(m.get('base_asset') or symbol.split('/')[0]).replace('XBT','BTC');terms=ALIASES.get(base.upper(),[base.lower()])+CATEGORY_TERMS.get(m.get('category') or '',[]);specific=set(ALIASES.get(base.upper(),[base.lower()]))
    for item in items:
     h=norm(item['title']+' '+item['summary']);hits=[t for t in terms if t and re.search(r'\b'+re.escape(t)+r'\b',h)]
     if hits:
-     direct=any(x in specific for x in hits);rel=float(item['weight'])*(1.0 if direct else .25)*(1.0+min(1.0,abs(float(item.get('local_score') or 0))));links.append((item['id'],symbol,str(rel),('Direkter Marktbezug: ' if direct else 'Kategorietrend: ')+', '.join(hits[:4])))
+     direct=any(x in specific for x in hits);age_factor=1.0
+     try:
+      age_hours=max(0.0,(datetime.now(timezone.utc)-datetime.fromisoformat(str(item.get('observed_at')).replace('Z','+00:00')).astimezone(timezone.utc)).total_seconds()/3600)
+      age_factor=max(0.15,1.0-age_hours/48.0)
+     except Exception: pass
+     rel=float(item['weight'])*(1.0 if direct else .25)*age_factor*(1.0+min(1.0,abs(float(item.get('local_score') or 0))));links.append((item['id'],symbol,str(rel),('Direkter Marktbezug: ' if direct else 'Kategorietrend: ')+', '.join(hits[:4])))
   with self.db.con() as c:c.execute('DELETE FROM news_market_links');c.executemany('INSERT OR REPLACE INTO news_market_links VALUES(?,?,?,?)',links)
   return len(links)
