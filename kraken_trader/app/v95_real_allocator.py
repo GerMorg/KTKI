@@ -130,8 +130,12 @@ class RealPortfolioAllocatorV95:
             if automatic and not cfg["enabled"]:
                 return {"status": "DISABLED"}
 
+            try:
+                self.base._refresh_private_balances()
+            except Exception:
+                pass
             current, total = self._current_eur()
-            tickers = ticker_map(self.db)
+            tickers = ticker_map(self.db, int(float(self.db.value('decision_market_data_max_age_seconds','120')))
             fee_bps, fx_fee_bps, slippage_bps = self._fee_values()
             families = ("crypto_spot", "xstocks", "forex")
             health = ModelHealth(self.db)
