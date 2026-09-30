@@ -17,6 +17,13 @@ D=lambda x:Decimal(str(x or 0))
 
 
 class PaperEngineV95(PaperEngine):
+    def _existing_execution(self, symbol, margin_enabled, max_leverage):
+        rows=self.db.rows('SELECT leverage FROM paper_position_risk WHERE symbol=? LIMIT 1',(symbol,))
+        if rows:
+            lev=max(1,int(float(rows[0].get('leverage') or 1)))
+            return {'mode':'MARGIN' if margin_enabled and lev>1 else 'SPOT','leverage':min(lev,max_leverage),'reason':'EXISTING_POSITION_ROUTING'}
+        return {'mode':'SPOT','leverage':1,'reason':'EXISTING_SPOT_POSITION_ROUTING'}
+
     def _current_exposure_by_symbol(self):
         out={}
         for p in self.positions():
