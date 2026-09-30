@@ -152,7 +152,9 @@ def _dashboard():
     latest = p["decisions"][:12]
     real_enabled = str(auto.get("automation_real_enabled","false")).lower() == "true"
     real_execute = str(auto.get("automation_real_execute_enabled","false")).lower() == "true"
-    live = real_enabled and real_execute
+    real_api_enabled=str(legacy.db.value("real_trading_enabled","false")).lower()=="true"
+    kill_clear=str(legacy.db.value("real_kill_switch","true")).lower()!="true"
+    live=real_enabled and real_execute and real_api_enabled and kill_clear
     return legacy.page(
         '''<section class="hero">
 <div><span class="eyebrow">KTKI v95</span><h1>Kraken Trader</h1>
@@ -176,7 +178,7 @@ def _dashboard():
 <div class="card"><h2>Steuerinfo</h2><p>Die bestehende österreichische Steuerinformation bleibt als eigene Fachseite erhalten. v95 vermischt Steuerberechnung nicht mit der Handelsentscheidung.</p><p><a href="{{request.script_root}}/tax-info">Steuerinfo AT öffnen →</a></p></div>
 </div>''',
         market=p["market"], research=p["research"], news=p["news"], paper=p["paper"],
-        health=p["health"], latest=latest, live=live, auto=auto
+        health=p["health"], latest=latest, live=live, auto=auto, real_api_enabled=real_api_enabled, kill_clear=kill_clear
     )
 
 def _analysis():
@@ -317,6 +319,8 @@ def v95_health():
         "news":"FRESH_48H_DECAYED_AND_IN_SCANNER",
         "rebalancing":"TARGET_MINUS_CURRENT",
         "tax_info":request.script_root+"/tax-info",
+        "real_api_enabled":str(legacy.db.value("real_trading_enabled","false")).lower()=="true",
+        "real_kill_switch_clear":str(legacy.db.value("real_kill_switch","true")).lower()!="true",
         "process":_process_status(),
     })
 
