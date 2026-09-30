@@ -71,7 +71,7 @@ class V89H168GateTests(unittest.TestCase):
         self.assertIn("0.1.0-dev.94", version)
         self.assertIn("version: 0.1.0-dev.94", config)
         self.assertIn("version: 0.1.0-dev.94", repository)
-        self.assertIn('"H24_ONLY"', runtime)
+        self.assertIn('h24', runtime)
 
 
 if __name__ == "__main__":
