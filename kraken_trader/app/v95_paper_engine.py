@@ -180,11 +180,11 @@ class PaperEngineV95(PaperEngine):
                     decision['leverage']=int(ex['leverage'])
                     tid=self.execute(execution_symbol,side,gross_for_paper,'v95 canonical rebalance',decision)
                     self.mark_turnover(execution_symbol,side)
-                    results.append({'symbol':decision['symbol'],'execution_symbol':execution_symbol,'action':side,'executed':True,'trade_id':tid,'decision':decision})
+                    engine.record('PAPER',decision,execution_symbol,ex['mode'],ex['leverage'],'SUBMITTED','PAPER_FILL');results.append({'symbol':decision['symbol'],'execution_symbol':execution_symbol,'action':side,'executed':True,'trade_id':tid,'decision':decision})
                 except Exception as exc:
-                    results.append({'symbol':decision['symbol'],'execution_symbol':execution_symbol,'action':side,'executed':False,'reason':str(exc),'decision':decision})
+                    engine.record('PAPER',decision,execution_symbol,ex['mode'],ex['leverage'],'FAILED',str(exc));results.append({'symbol':decision['symbol'],'execution_symbol':execution_symbol,'action':side,'executed':False,'reason':str(exc),'decision':decision})
             else:
-                results.append({'symbol':decision['symbol'],'execution_symbol':execution_symbol,'action':side,'executed':False,'reason':'AUTOMATION_DISABLED','decision':decision})
+                engine.record('PAPER',decision,execution_symbol,ex['mode'],ex['leverage'],'PROPOSED','AUTOMATION_DISABLED');results.append({'symbol':decision['symbol'],'execution_symbol':execution_symbol,'action':side,'executed':False,'reason':'AUTOMATION_DISABLED','decision':decision})
 
         self.snapshot()
         self.db.audit('PAPER_V95_CANONICAL_DECISION',str({
