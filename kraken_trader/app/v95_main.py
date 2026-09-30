@@ -34,8 +34,7 @@ def _sync(db, opts):
     for key, default in V95_DEFAULTS.items():
         value = opts.get(key, default)
         normalized = "true" if value is True else "false" if value is False else str(value)
-        if not db.rows("SELECT value FROM settings WHERE key=?", (key,)):
-            db.set_setting(key, normalized)
+        db.set_setting(key, normalized)
 
 opts = _options() or options
 _sync(legacy.db, opts)
