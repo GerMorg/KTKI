@@ -8,7 +8,7 @@ from db import now
 from model_health import ModelHealth
 from execution_confidence import execution_confidence, choose_execution
 from decision_engine_v95 import DecisionEngineV95
-from decision_context_v95 import ticker_map, scanner_candidates, routes_for_symbol, alternatives
+from decision_context_v95 import ticker_map, scanner_candidates, routes_for_symbol, alternatives, decision_costs
 from market_regime import family_regime
 from strategy_profiles import family_for_category
 
@@ -57,11 +57,7 @@ class RealPortfolioAllocatorV95:
         return current, total
 
     def _fee_values(self):
-        return (
-            self.db.value("real_fee_bps", self.db.value("paper_fee_bps", "40")),
-            self.db.value("real_fx_fee_bps", self.db.value("paper_fx_fee_bps", "10")),
-            self.db.value("real_slippage_bps", self.db.value("paper_slippage_bps", "10")),
-        )
+        return decision_costs(self.db)
 
     def _held_symbols(self, tickers, current):
         symbols = []
@@ -194,9 +190,9 @@ class RealPortfolioAllocatorV95:
                 total,
                 current_by,
                 {
-                    "minimum_score": cfg["minimum_score"],
-                    "max_position_pct": cfg["max_position_pct"],
-                    "cash_reserve_pct": cfg["cash_reserve_pct"],
+                    "minimum_score": D(self.db.value("decision_minimum_score","70")),
+                    "max_position_pct": D(self.db.value("decision_max_position_pct","5")),
+                    "cash_reserve_pct": D(self.db.value("decision_cash_reserve_pct","20")),
                     "volatility_reference_pct": D(self.db.value("decision_volatility_reference_pct", "2")),
                 },
                 regimes,
