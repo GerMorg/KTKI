@@ -62,11 +62,11 @@ class V94MarginTests(unittest.TestCase):
 
  def test_v93_runtime_metadata_is_active_and_margin_gated(self):
   root=Path(__file__).resolve().parents[1]
-  self.assertIn('v95_main:app',(root/'run.sh').read_text())
-  self.assertIn('0.1.0-dev.95',(root/'app/version.py').read_text())
+  self.assertIn('v96_main:app',(root/'run.sh').read_text())
+  self.assertIn('0.1.0-dev.96',(root/'app/version.py').read_text())
   self.assertIn('real_margin_enabled',(root/'config.yaml').read_text())
-  runtime=(root/'app/v95_main.py').read_text()
+  runtime=(root/'app/v96_main.py').read_text()
   self.assertIn('decision_engine',runtime)
-  self.assertIn('0.1.0-dev.95',runtime)
+  self.assertIn('0.1.0-dev.96',runtime)
 
 if __name__=='__main__':unittest.main()
