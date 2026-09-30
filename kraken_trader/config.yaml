@@ -41,6 +41,14 @@ options:
   paper_fx_fee_bps: 10
   paper_cash_reserve_pct: 20
   paper_no_trade_band_pct: 2
+  decision_minimum_score: 70
+  decision_max_position_pct: 5
+  decision_cash_reserve_pct: 20
+  decision_min_trade_eur: 20
+  decision_no_trade_band_pct: 2
+  decision_fee_bps: 40
+  decision_fx_fee_bps: 10
+  decision_slippage_bps: 10
   decision_min_edge_samples: 10
   decision_volatility_reference_pct: 2
   paper_min_hold_hours: 24
@@ -156,8 +164,14 @@ schema:
   paper_max_transfer_eur: float
   paper_rebalance_edge_pct: float
   paper_fx_fee_bps: int(0,500)
-  paper_cash_reserve_pct: float(0,100)
-  paper_no_trade_band_pct: float(0,100)
+  decision_minimum_score: float(0,100)
+  decision_max_position_pct: float(0.1,100)
+  decision_cash_reserve_pct: float(0,100)
+  decision_min_trade_eur: float(0,1000000)
+  decision_no_trade_band_pct: float(0,100)
+  decision_fee_bps: int(0,500)
+  decision_fx_fee_bps: int(0,500)
+  decision_slippage_bps: int(0,500)
   decision_min_edge_samples: int(1,1000)
   decision_volatility_reference_pct: float(0.25,20)
   paper_cash_reserve_pct: float(0,100)
