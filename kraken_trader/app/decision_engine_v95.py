@@ -127,7 +127,7 @@ class DecisionEngineV95:
         else:
             signal_strength = D(0)
         quality_factor = D(".70") + D(".30") * quality
-        cost_factor = D(1) / (D(1) + max(D(0), D(roundtrip_cost_pct)))
+        cost_factor = D(1) / (D(1) + max(D(0), D(roundtrip_cost_pct)) / D(100))
         gross_edge = self.gross_edge(row, direction) if direction != "FLAT" else None
         edge_after_costs = (
             gross_edge - D(roundtrip_cost_pct)
@@ -148,7 +148,7 @@ class DecisionEngineV95:
             1 - max(D(0), min(D(100), D(config.get("cash_reserve_pct", 20)))) / 100
         )
         max_position = max(D(0), D(config.get("max_position_pct", 5))) / 100
-        target_abs = budget * max_position * sizing_strength
+        target_abs = max(D(0), D(total)) * max_position * sizing_strength
         current = D(current_eur)
         target = (
             target_abs
@@ -171,7 +171,8 @@ class DecisionEngineV95:
         # A new exposure requires measurable candidate-specific edge after the
         # complete estimated roundtrip. A reduction to zero is risk-reducing.
         economic_ok = (
-            (edge_after_costs is not None and edge_after_costs > 0)
+(edge_after_costs is not None and edge_after_costs > 0)
+            or (direction == "HOLD")
             or (existing and target == 0)
         )
 
