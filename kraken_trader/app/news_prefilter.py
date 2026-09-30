@@ -115,6 +115,10 @@ class NewsPrefilter:
       age_hours=max(0.0,(datetime.now(timezone.utc)-datetime.fromisoformat(str(item.get('observed_at')).replace('Z','+00:00')).astimezone(timezone.utc)).total_seconds()/3600)
       age_factor=max(0.15,1.0-age_hours/48.0)
      except Exception: pass
-     rel=float(item['weight'])*(1.0 if direct else .25)*age_factor*(1.0+min(1.0,abs(float(item.get('local_score') or 0))));links.append((item['id'],symbol,str(rel),('Direkter Marktbezug: ' if direct else 'Kategorietrend: ')+', '.join(hits[:4])))
+     sentiment=max(-1.0,min(1.0,float(item.get('local_score') or 0)))
+     rel=float(item['weight'])*(1.0 if direct else .25)*age_factor*sentiment
+     if abs(rel)>=0.01:
+      label='positiv' if rel>0 else 'negativ'
+      links.append((item['id'],symbol,str(rel),(('Direkter Marktbezug: ' if direct else 'Kategorietrend: ')+', '.join(hits[:4])+f'; {label} Newswirkung')))
   with self.db.con() as c:c.execute('DELETE FROM news_market_links');c.executemany('INSERT OR REPLACE INTO news_market_links VALUES(?,?,?,?)',links)
   return len(links)
