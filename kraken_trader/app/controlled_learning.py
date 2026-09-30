@@ -184,8 +184,9 @@ class ControlledLearning:
 
     @staticmethod
     def _strategy_return(signal, actual, cost_rate):
+        # Controlled strategy learning is Long/Flat. AVOID means no position,
+        # not an implicit short. Downside forecasts are calibrated separately.
         if signal == 'BUY': return actual - cost_rate
-        if signal == 'AVOID': return -actual - cost_rate
         return 0.0
 
     def _metrics(self, shadow):
