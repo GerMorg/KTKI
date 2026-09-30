@@ -48,7 +48,14 @@ class ModelHealth:
    if direction=='UP':raw.append(actual)
    if direction in ('UP','DOWN'):hits+=int(pnl>0)
   n=len(pnls);net=sum(pnls);dd=self._drawdown(pnls) if pnls else None
-  return {'samples':n,'hit_rate':hits/n if n else None,'model_net_return_pct':net,'no_position_return_pct':0.0,'buy_hold_return_sum_pct':sum(float(r.get('actual_return_pct') or 0) for r in rows),'excess_vs_no_position_pct':net,'expected_up_edge_raw_pct':sum(raw)/len(raw) if raw else None,'expected_up_edge_after_costs_pct':(sum(self._direction_pnl('UP',float(r.get('actual_return_pct') or 0),float((json.loads(r.get('features_json') or '{}')).get('estimated_roundtrip_cost_pct') or 0)) for r in rows if str(r.get('direction')).upper()=='UP')/len(raw) if raw else None),'max_drawdown_pct':dd}
+  ups=[];downs=[];up_net=[];down_net=[]
+  for r in rows:
+   direction=str(r.get('direction') or '').upper();actual=float(r.get('actual_return_pct') or 0)
+   try:cost=float((json.loads(r.get('features_json') or '{}')).get('estimated_roundtrip_cost_pct') or 0)
+   except Exception:cost=0.0
+   if direction=='UP':ups.append(actual);up_net.append(actual-cost)
+   elif direction=='DOWN':downs.append(-actual);down_net.append(-actual-cost)
+  return {'samples':n,'hit_rate':hits/n if n else None,'model_net_return_pct':net,'no_position_return_pct':0.0,'buy_hold_return_sum_pct':sum(float(r.get('actual_return_pct') or 0) for r in rows),'excess_vs_no_position_pct':net,'expected_up_edge_raw_pct':sum(ups)/len(ups) if ups else None,'expected_up_edge_after_costs_pct':sum(up_net)/len(up_net) if up_net else None,'expected_down_edge_raw_pct':sum(downs)/len(downs) if downs else None,'expected_down_edge_after_costs_pct':sum(down_net)/len(down_net) if down_net else None,'max_drawdown_pct':dd}
  def margin_calibration(self,family,direction,horizon=24,min_samples=20,max_drawdown_pct=-25.0):
   direction=str(direction).upper();rows=self._rows(family,horizon,direction);pnls=[]
   for r in rows:
