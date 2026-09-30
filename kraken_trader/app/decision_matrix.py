@@ -53,8 +53,9 @@ class DecisionMatrix:
       'Steuer- und Verlustwirkung akzeptabel' if context.get('tax_loss_ok',True) else 'Steuer- oder Verlustwirkung blockiert')
   add('DATA_FRESHNESS',context.get('data_fresh',False),
       'Daten vollständig und aktuell' if context.get('data_fresh',False) else 'Daten fehlen oder sind veraltet')
-  add('MODEL_HEALTH',context.get('model_health_data_ok',False),
-      'Modellqualitätsdaten vorhanden und konsistent' if context.get('model_health_data_ok',False) else 'Modellqualitätsdaten fehlen oder sind ungültig',
+  model_health_ok=bool(context.get('model_health_data_ok',context.get('model_health_ok',False))) or exit_override
+  add('MODEL_HEALTH',model_health_ok,
+      'Modellqualitätsdaten vorhanden und konsistent' if model_health_ok else 'Modellqualitätsdaten fehlen oder sind ungültig',
       context.get('model_health_details'))
   add('ROUTE_COST',context.get('route_cost_ok',False),
       'Ausführungsroute und Kosten sind validiert' if context.get('route_cost_ok',False) else 'Ausführungsroute ist nicht ausreichend validiert',
