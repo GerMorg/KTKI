@@ -29,6 +29,7 @@ V95_DEFAULTS = {
     "decision_volatility_reference_pct": "2",
     "decision_market_data_max_age_seconds": "120",
     "decision_max_scanner_age_minutes": "120",
+    "decision_max_drawdown_pct": "-25",
 }
 
 def _options():
@@ -123,7 +124,7 @@ def _health():
         out[family]=mh.evaluate(
             family,
             require_long_horizon=False,
-            max_drawdown_pct=float(legacy.db.value("real_balancing_max_drawdown_pct","-25")),
+            max_drawdown_pct=float(legacy.db.value("decision_max_drawdown_pct","-25")),
         )
     return out
 
