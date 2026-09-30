@@ -278,6 +278,7 @@ class RealPortfolioAllocatorV95:
                         cfg["confidence_margin_5x"],
                         calibration=calibration if calibration.get("status") == "READY" else None,
                     )
+                is_exit = reducing and D(decision["target_exposure_eur"]) == 0
                 if execution["mode"] == "BLOCKED":
                     self._record(engine, "REAL", decision, execution_symbol, execution["mode"], execution["leverage"], "BLOCKED", execution["reason"])
                     continue
