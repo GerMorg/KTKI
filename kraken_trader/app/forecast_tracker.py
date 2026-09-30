@@ -38,7 +38,7 @@ class ForecastTracker:
   ver=self.db.rows('SELECT id FROM watchlist_versions ORDER BY id DESC LIMIT 1');vid=ver[0]['id'] if ver else None;saved=0;failed=0
   for symbol in symbols:
    try:
-    p=self.db.rows('SELECT last FROM live_prices WHERE symbol=?',(symbol,));cols={x['name'] for x in self.db.rows('PRAGMA table_info(scanner_results)')};wanted=['score','signal','quality','momentum_pct','trend_pct','volatility_pct','spread_pct'];select=','.join(x if x in cols else 'NULL AS '+x for x in wanted);s=self.db.rows('SELECT '+select+' FROM scanner_results WHERE symbol=?',(symbol,))
+    p=self.db.rows('SELECT last FROM live_prices WHERE symbol=?',(symbol,));cols={x['name'] for x in self.db.rows('PRAGMA table_info(scanner_results)')};wanted=['score','signal','quality','momentum_pct','trend_pct','volatility_pct','spread_pct','news_score'];select=','.join(x if x in cols else 'NULL AS '+x for x in wanted);s=self.db.rows('SELECT '+select+' FROM scanner_results WHERE symbol=?',(symbol,))
     try:u=self.db.rows('SELECT category FROM market_universe WHERE symbol=? LIMIT 1',(symbol,))
     except Exception:u=[]
     if not p or not s or s[0]['quality']!='VALID':continue
@@ -72,7 +72,7 @@ class ForecastTracker:
     cost=float(features.get('estimated_roundtrip_cost_pct') or 0)
     correct=(f['direction']=='UP' and ret>cost) or (f['direction']=='DOWN' and ret < -cost) or (f['direction']=='FLAT' and abs(ret)<=cost)
     source_time=int(candle['open_time']);timing_error=source_time-int(target.timestamp())
-    details={'direction':f['direction'],'family':f.get('family'),'parameter_version':f.get('parameter_version'),'target_at':target.isoformat(),'price_source':'OHLC_CACHE_FIRST_CLOSED_AT_OR_AFTER_TARGET','source_open_time':source_time,'interval_min':int(candle['interval_min']),'timing_error_seconds':timing_error,'roundtrip_cost_pct':cost,'cost_adjusted_return_pct':ret-cost if f['direction']=='UP' else 0.0}
+    details={'direction':f['direction'],'family':f.get('family'),'parameter_version':f.get('parameter_version'),'target_at':target.isoformat(),'price_source':'OHLC_CACHE_FIRST_CLOSED_AT_OR_AFTER_TARGET','source_open_time':source_time,'interval_min':int(candle['interval_min']),'timing_error_seconds':timing_error,'roundtrip_cost_pct':cost,'cost_adjusted_return_pct':ret-cost if f['direction']=='UP' else (-ret-cost if f['direction']=='DOWN' else 0.0)}
     with self.db.con() as c:
      c.execute('INSERT OR REPLACE INTO forecast_evaluations(forecast_id,evaluated_at,actual_price,actual_return_pct,direction_correct,details_json,target_at,price_source,source_open_time,timing_error_seconds) VALUES(?,?,?,?,?,?,?,?,?,?)',(f['id'],now(),str(actual),str(ret),1 if correct else 0,json.dumps(details,sort_keys=True),target.isoformat(),details['price_source'],source_time,timing_error));c.execute("UPDATE research_forecasts SET status='EVALUATED' WHERE id=?",(f['id'],));done+=1
    except Exception as exc:

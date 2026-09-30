@@ -36,7 +36,7 @@ class ModelHealth:
   try:return self.db.rows(q,tuple(args))
   except Exception:return []
  def _metrics(self,rows):
-  pnls=[];raw=[];hits=0
+  pnls=[];up_raw=[];up_net=[];down_raw=[];down_net=[];hits=0;directional=0
   for r in rows:
    try:features=json.loads(r.get('features_json') or '{}')
    except Exception:features={}
@@ -45,56 +45,72 @@ class ModelHealth:
    direction=str(r.get('direction') or 'FLAT').upper()
    pnl=self._direction_pnl(direction,actual,cost)
    pnls.append(pnl)
-   if direction=='UP':raw.append(actual)
-   if direction in ('UP','DOWN'):hits+=int(pnl>0)
-  n=len(pnls);net=sum(pnls);dd=self._drawdown(pnls) if pnls else None
-  ups=[];downs=[];up_net=[];down_net=[]
-  for r in rows:
-   direction=str(r.get('direction') or '').upper();actual=float(r.get('actual_return_pct') or 0)
-   try:cost=float((json.loads(r.get('features_json') or '{}')).get('estimated_roundtrip_cost_pct') or 0)
-   except Exception:cost=0.0
-   if direction=='UP':ups.append(actual);up_net.append(actual-cost)
-   elif direction=='DOWN':downs.append(-actual);down_net.append(-actual-cost)
-  return {'samples':n,'hit_rate':hits/n if n else None,'model_net_return_pct':net,'no_position_return_pct':0.0,'buy_hold_return_sum_pct':sum(float(r.get('actual_return_pct') or 0) for r in rows),'excess_vs_no_position_pct':net,'expected_up_edge_raw_pct':sum(ups)/len(ups) if ups else None,'expected_up_edge_after_costs_pct':sum(up_net)/len(up_net) if up_net else None,'expected_down_edge_raw_pct':sum(downs)/len(downs) if downs else None,'expected_down_edge_after_costs_pct':sum(down_net)/len(down_net) if down_net else None,'max_drawdown_pct':dd}
+   if direction=='UP':
+    up_raw.append(actual);up_net.append(pnl);directional+=1;hits+=int(pnl>0)
+   elif direction=='DOWN':
+    down_raw.append(-actual);down_net.append(pnl);directional+=1;hits+=int(pnl>0)
+  n=len(pnls);mean_edge=sum(pnls)/n if n else None
+  ordered=sorted(pnls);median=ordered[n//2] if n and n%2 else ((ordered[n//2-1]+ordered[n//2])/2 if n else None)
+  worst=min(pnls) if pnls else None
+  dd=self._drawdown(pnls) if pnls else None
+  return {
+   'samples':n,'directional_samples':directional,
+   'hit_rate':hits/directional if directional else None,
+   'model_net_return_pct':sum(pnls),
+   'mean_edge_after_costs_pct':mean_edge,
+   'median_edge_after_costs_pct':median,
+   'worst_sample_pct':worst,
+   'no_position_return_pct':0.0,
+   'buy_hold_return_sum_pct':sum(float(r.get('actual_return_pct') or 0) for r in rows),
+   'excess_vs_no_position_pct':mean_edge,
+   'expected_up_edge_raw_pct':sum(up_raw)/len(up_raw) if up_raw else None,
+   'expected_up_edge_after_costs_pct':sum(up_net)/len(up_net) if up_net else None,
+   'expected_down_edge_raw_pct':sum(down_raw)/len(down_raw) if down_raw else None,
+   'expected_down_edge_after_costs_pct':sum(down_net)/len(down_net) if down_net else None,
+   'max_drawdown_pct':dd,
+   'forecast_sequence_drawdown_pct':dd,
+   'drawdown_semantics':'FORECAST_SAMPLE_SEQUENCE_ONLY; NOT PORTFOLIO_EQUITY',
+  }
  def margin_calibration(self,family,direction,horizon=24,min_samples=20,max_drawdown_pct=-25.0):
   direction=str(direction).upper();rows=self._rows(family,horizon,direction);pnls=[]
   for r in rows:
    try:f=json.loads(r.get('features_json') or '{}')
    except Exception:f={}
    actual=float(r.get('actual_return_pct') or 0);cost=float(f.get('estimated_roundtrip_cost_pct') or 0);pnls.append(self._direction_pnl(direction,actual,cost))
-  dd=self._drawdown(pnls) if pnls else None;samples=len(pnls);wins=sum(int(x>0) for x in pnls);net=sum(pnls)
-  ready=samples>=int(min_samples) and net>0 and (dd is None or dd>=float(max_drawdown_pct))
-  return {'family':family,'direction':direction,'horizon_hours':int(horizon),'samples':samples,'wins':wins,'win_rate':wins/samples if samples else None,'net_return_pct':net,'max_drawdown_pct':dd,'required_samples':int(min_samples),'required_net_return_pct':0.0,'required_max_drawdown_pct':float(max_drawdown_pct),'status':'READY' if ready else 'NOT_READY','reason':'READY' if ready else ('INSUFFICIENT_SAMPLES' if samples<int(min_samples) else ('NEGATIVE_NET_RETURN' if net<=0 else 'DRAWDOWN_LIMIT'))}
+  samples=len(pnls);wins=sum(int(x>0) for x in pnls);net=sum(pnls);mean_edge=net/samples if samples else None;worst=min(pnls) if pnls else None;dd=self._drawdown(pnls) if pnls else None
+  ready=samples>=int(min_samples) and mean_edge is not None and mean_edge>0 and (worst is None or worst>=float(max_drawdown_pct))
+  reason='READY' if ready else ('INSUFFICIENT_SAMPLES' if samples<int(min_samples) else ('NON_POSITIVE_MEAN_EDGE' if mean_edge is None or mean_edge<=0 else 'WORST_SAMPLE_LIMIT'))
+  return {'family':family,'direction':direction,'horizon_hours':int(horizon),'samples':samples,'wins':wins,'win_rate':wins/samples if samples else None,'net_return_pct':net,'mean_edge_after_costs_pct':mean_edge,'worst_sample_pct':worst,'max_drawdown_pct':dd,'required_samples':int(min_samples),'required_net_return_pct':0.0,'required_max_drawdown_pct':float(max_drawdown_pct),'status':'READY' if ready else 'NOT_READY','reason':reason}
  def evaluate(self,family,min_samples=20,min_net_return_pct=0.0,max_drawdown_pct=-25.0,require_long_horizon=True):
   try:max_drawdown_pct=float(max_drawdown_pct)
   except (TypeError,ValueError):max_drawdown_pct=-25.0
   details={'family':family,'samples':0,'horizons':{},'gates':[],'execution_gate':'H24_ONLY','long_horizon_required':False}
   for horizon in self.REQUIRED_HORIZONS:
-   rows=self._rows(family,horizon);m=self._metrics(rows);details['horizons'][str(horizon)]=m;details['gates'] += [
+   rows=self._rows(family,horizon);m=self._metrics(rows);details['horizons'][str(horizon)]=m
+   mean=m['mean_edge_after_costs_pct']
+   details['gates'] += [
     {'name':f'H{horizon}_SAMPLES','passed':m['samples']>=min_samples,'actual':m['samples'],'required':min_samples},
-    {'name':f'H{horizon}_NET_RETURN','passed':m['model_net_return_pct']>=min_net_return_pct,'actual':m['model_net_return_pct'],'required':min_net_return_pct},
+    {'name':f'H{horizon}_MEAN_EDGE','passed':mean is not None and mean>=min_net_return_pct,'actual':mean,'required':min_net_return_pct},
     {'name':f'H{horizon}_DRAWDOWN','passed':m['max_drawdown_pct'] is None or m['max_drawdown_pct']>=max_drawdown_pct,'actual':m['max_drawdown_pct'],'required':max_drawdown_pct},
    ]
   h24=details['horizons']['24'];details['samples']=h24['samples']
-  up=self.margin_calibration(family,'UP',24,min_samples,max_drawdown_pct)
-  down=self.margin_calibration(family,'DOWN',24,min_samples,max_drawdown_pct)
+  up=self.margin_calibration(family,'UP',24,min_samples,max_drawdown_pct);down=self.margin_calibration(family,'DOWN',24,min_samples,max_drawdown_pct)
   details['directions']={'UP':up,'DOWN':down}
-  evidence=(h24['model_net_return_pct']>0 and h24['samples']>=min_samples)
+  evidence=(h24['samples']>=min_samples and h24['mean_edge_after_costs_pct'] is not None and h24['mean_edge_after_costs_pct']>min_net_return_pct)
   risk_state='OK'
   if h24['max_drawdown_pct'] is not None and h24['max_drawdown_pct']<max_drawdown_pct:risk_state='CAUTION'
   if h24['samples']<min_samples:risk_state='INSUFFICIENT_DATA'
-  if h24['model_net_return_pct']<=min_net_return_pct and h24['samples']>=min_samples:risk_state='WEAK'
-  # Quality is continuous and used by confidence/target sizing.
+  if h24['mean_edge_after_costs_pct'] is not None and h24['mean_edge_after_costs_pct']<=min_net_return_pct and h24['samples']>=min_samples:risk_state='WEAK'
   sample_factor=min(1.0,h24['samples']/max(1,min_samples))
-  net_factor=max(0.0,min(1.0,0.5+h24['model_net_return_pct']/100))
-  dd_factor=1.0 if h24['max_drawdown_pct'] is None else max(0.0,min(1.0,(h24['max_drawdown_pct']-max_drawdown_pct)/max(1.0,abs(max_drawdown_pct))))
-  quality=100*(0.25*sample_factor+0.45*net_factor+0.30*dd_factor)
+  edge_factor=max(0.0,min(1.0,0.5+(float(h24['mean_edge_after_costs_pct'] or 0)/2.0)))
+  hit_factor=float(h24['hit_rate'] or 0.5)
+  quality=100*(0.25*sample_factor+0.45*edge_factor+0.30*hit_factor)
   if risk_state=='INSUFFICIENT_DATA':quality=max(50.0,quality)
   details['quality_score']=round(quality,4);details['risk_state']=risk_state
-  details['gates'].append({'name':'POSITIVE_VS_NO_POSITION','passed':evidence,'actual':h24['excess_vs_no_position_pct'],'required':'> 0'})
-  details['h168_advisory_ready']=h24['samples']>=min_samples and all(g['passed'] for g in details['gates'] if g['name'].startswith('H168_'))
+  details['gates'].append({'name':'POSITIVE_MEAN_EDGE','passed':evidence,'actual':h24['mean_edge_after_costs_pct'],'required':f'>= {min_net_return_pct}'})
+  h168gates=[g for g in details['gates'] if g['name'].startswith('H168_')]
+  details['h168_advisory_ready']=h24['samples']>=min_samples and all(g['passed'] for g in h168gates)
   details['h168_advisory_reason']='READY' if details['h168_advisory_ready'] else f"H168 advisory: {details['horizons']['168']['samples']}/{min_samples} Samples bzw. Validierung offen"
-  # Status describes evidence quality, never an autonomous entry gate.
   status='READY' if evidence else ('INSUFFICIENT_DATA' if h24['samples']<min_samples else 'WEAK')
   details['status']=status;details['score']=details['quality_score']
   with self.db.con() as c:c.execute('INSERT INTO model_health_snapshots(created_at,family,status,score,details_json) VALUES(?,?,?,?,?)',(now(),family,status,str(details['quality_score']),json.dumps(details,sort_keys=True)))
