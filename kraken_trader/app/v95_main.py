@@ -49,6 +49,17 @@ real_allocator = RealPortfolioAllocatorV95(legacy.db, legacy.real_trade_engine)
 legacy.real_allocator = real_allocator
 
 def run_paper_cycle():
+    # Same live market inputs as Real: refresh public tickers and settle due forecasts
+    # before the shared DecisionEngine consumes them.
+    try:
+        if hasattr(legacy, "refresh_allowed_prices"):
+            legacy.refresh_allowed_prices()
+    except Exception:
+        pass
+    try:
+        legacy.forecasts.evaluate_due()
+    except Exception:
+        pass
     engine = PaperEngineV95(
         legacy.db,
         start_eur=legacy.db.value("paper_start_eur", "1000"),
