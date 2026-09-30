@@ -91,7 +91,7 @@ options:
   real_balancing_automation_secret: ''
   real_margin_enabled: false
   real_margin_default_leverage: 2
-  real_margin_max_leverage: 3
+  real_margin_max_leverage: 4
   real_margin_max_exposure_pct: 20
   real_margin_max_free_margin_pct: 50
   real_margin_min_margin_level_pct: 200
