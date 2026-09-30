@@ -52,14 +52,6 @@ real_allocator=RealPortfolioAllocatorV97(legacy.db,legacy.real_trade_engine,runt
 legacy.real_allocator=real_allocator
 
 def run_paper_cycle():
-    try:
-        legacy.refresh_allowed_prices()
-    except Exception as exc:
-        legacy.db.audit("V97_PAPER_PRICE_REFRESH_FAILED",type(exc).__name__+":"+str(exc)[:300],"warning")
-    try:
-        legacy.forecasts.evaluate_due()
-    except Exception as exc:
-        legacy.db.audit("V97_FORECAST_EVALUATION_FAILED",type(exc).__name__+":"+str(exc)[:300],"warning")
     engine=PaperEngineV97(
         legacy.db,
         start_eur=legacy.db.value("paper_start_eur","1000"),
