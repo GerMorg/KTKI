@@ -26,7 +26,9 @@ class PaperEngineV94(PaperEngine):
         health=ModelHealth(self.db);families=('crypto_spot','xstocks','forex')
         hb={f:health.evaluate(f,require_long_horizon=False) for f in families}
         rb={f:family_regime(self.db,f) for f in families}
-        rows=self.db.rows("SELECT s.symbol,s.score,s.volatility_pct,s.momentum_pct,s.trend_pct,s.signal,s.quality,COALESCE(s.news_score,0) news_score FROM scanner_results s WHERE s.quality='VALID' AND s.signal IN ('BUY','AVOID')")
+        cols={x['name'] for x in self.db.rows('PRAGMA table_info(scanner_results)')}
+        news_expr='s.news_score' if 'news_score' in cols else '0 AS news_score'
+        rows=self.db.rows(f"SELECT s.symbol,s.score,s.volatility_pct,s.momentum_pct,s.trend_pct,s.signal,s.quality,{news_expr} FROM scanner_results s WHERE s.quality='VALID' AND s.signal IN ('BUY','AVOID')")
         candidates=[];tickers={x['symbol']:{'b':[x['bid'] or x['last']],'a':[x['ask'] or x['last']],'c':[x['last']]} for x in self.db.rows('SELECT symbol,last,bid,ask FROM live_prices')}
         for r in rows:
             symbol=r['symbol'];cat=self.db.rows('SELECT category FROM market_universe WHERE symbol=? LIMIT 1',(symbol,));family=family_for_category(cat[0]['category'] if cat else 'crypto_spot')
