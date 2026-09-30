@@ -21,6 +21,7 @@ def _calibration_score(calibration):
         return D(50)
     samples=D(calibration.get('samples',0))
     required=D(calibration.get('required_samples',20) or 20)
+    if D(calibration.get('samples',0))<required:return D(50)
     win=D(calibration.get('win_rate',0) or 0)*100
     net=D(calibration.get('net_return_pct',0) or 0)
     sample_score=_clamp(samples/required*100 if required else 0)
