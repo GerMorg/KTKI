@@ -30,6 +30,13 @@ class V94EndToEndTests(unittest.TestCase):
         d=self.e.build(row,{'quality_score':80,'directions':{'DOWN':{'net_return_pct':2}}},1000,0,.2,'BEAR',self.cfg)
         self.assertEqual(d['direction'],'SHORT')
         self.assertLess(Decimal(d['target_exposure_eur']),Decimal('0'))
+    def test_target_zero_is_an_explicit_exit(self):
+        row={'symbol':'BTC/EUR','signal':'AVOID','score':20,'volatility_pct':2,'buy_threshold':70}
+        d=self.e.build(row,{'quality_score':20},1000,120,.5,'BEAR',self.cfg,True)
+        self.assertEqual(d['action'],'SELL')
+        self.assertEqual(Decimal(d['target_exposure_eur']),Decimal('0'))
+        self.assertTrue(d['economic_gate_passed'])
+
     def test_news_is_an_input_not_a_standalone_trigger(self):
         row={'symbol':'X','signal':'BUY','score':60,'volatility_pct':2,'buy_threshold':70,'news_score':100}
         d=self.e.build(row,{'quality_score':50,'expected_edge_after_costs_pct':0},1000,0,.1,'BULL',self.cfg)
