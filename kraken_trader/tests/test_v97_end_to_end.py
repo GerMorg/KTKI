@@ -89,6 +89,13 @@ class V97EndToEndTests(unittest.TestCase):
         run=Path(__file__).resolve().parents[2] / "run.sh"
         self.assertIn("v97_main:app",run.read_text(encoding="utf-8"))
 
+    def test_active_v97_gui_contains_portfolio_and_learning_routes(self):
+        runtime=(Path(__file__).resolve().parents[1] / "app" / "v97_main.py").read_text(encoding="utf-8")
+        self.assertIn('def portfolio_v97',runtime)
+        self.assertIn('def lernen_v97',runtime)
+        self.assertIn('_v97_chart',runtime)
+        self.assertIn('news_learning',runtime)
+
     def test_portfolio_budget_reserves_cash(self):
         engine=DecisionEngineV97(None)
         rows=[
