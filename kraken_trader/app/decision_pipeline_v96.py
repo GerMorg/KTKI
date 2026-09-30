@@ -171,6 +171,24 @@ class CanonicalDecisionPlannerV96:
             })
         return rows
 
+    def _canonical_symbol(self,symbol):
+        rows=self.db.rows("SELECT canonical_id FROM market_universe WHERE symbol=? LIMIT 1",(symbol,))
+        cid=rows[0].get("canonical_id") if rows else None
+        if cid:
+            selected=self.db.rows(
+                "SELECT symbol FROM market_universe WHERE canonical_id=? ORDER BY CASE WHEN quote_asset='EUR' THEN 0 ELSE 1 END,symbol LIMIT 1",
+                (cid,),
+            )
+            if selected:return selected[0]["symbol"]
+        return symbol
+
+    def _canonical_current(self,current_by_symbol):
+        out={}
+        for symbol,value in (current_by_symbol or {}).items():
+            canonical=self._canonical_symbol(symbol)
+            out[canonical]=D(out.get(canonical,0))+D(value)
+        return out
+
     @staticmethod
     def _plan_hash(settings,tickers,enriched,current,total,health,regimes):
         payload={
@@ -190,6 +208,7 @@ class CanonicalDecisionPlannerV96:
         from decision_engine_v96 import DecisionEngineV96
         settings=self.settings()
         if allow_short is None:allow_short=settings["decision_allow_shorts"]
+        current_by_symbol=self._canonical_current(current_by_symbol)
         tickers=self._fresh_tickers(settings)
         health=self._health(settings)
         regimes=self._regimes(settings)
