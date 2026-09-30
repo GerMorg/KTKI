@@ -62,6 +62,25 @@ class V95EndToEndTests(unittest.TestCase):
         self.assertLess(Decimal(d['target_exposure_eur']),Decimal('120'))
         self.assertTrue(d['economic_gate_passed'])
 
+    def test_portfolio_targets_stay_inside_cash_reserve_budget(self):
+        rows=[
+            {'symbol':'A','signal':'BUY','score':100,'volatility_pct':2,'momentum_pct':1,'trend_pct':1,'buy_threshold':70,'expected_edge_pct':2},
+            {'symbol':'B','signal':'BUY','score':100,'volatility_pct':2,'momentum_pct':1,'trend_pct':1,'buy_threshold':70,'expected_edge_pct':2},
+            {'symbol':'C','signal':'BUY','score':100,'volatility_pct':2,'momentum_pct':1,'trend_pct':1,'buy_threshold':70,'expected_edge_pct':2},
+        ]
+        cfg={'minimum_score':70,'max_position_pct':50,'cash_reserve_pct':20}
+        ds=self.e.target_rows(
+            rows,
+            {'crypto_spot':{'quality_score':100}},
+            1000,
+            {'A':0,'B':0,'C':0},
+            cfg,
+            {'crypto_spot':{'regime':'BULL'}},
+            {'A':'.2','B':'.2','C':'.2'},
+        )
+        total_target=sum(abs(Decimal(x['target_exposure_eur'])) for x in ds)
+        self.assertLessEqual(total_target,Decimal('800.000001'))
+
     def test_decision_matrix_rejects_non_positive_economic_edge(self):
         db=None
         # This is a contract test for the context passed to DecisionMatrix.
