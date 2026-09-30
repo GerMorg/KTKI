@@ -44,7 +44,7 @@ class RealPortfolioAllocatorV97(RealPortfolioAllocatorV95):
             except Exception:pass
             current,total=self._current_eur()
             current_by=self._current_by_symbol(current)
-            planner=CanonicalDecisionPlannerV96(self.db)
+            planner=CanonicalDecisionPlannerV97(self.db)
             settings=planner.settings()
             plan=planner.build(
                 total,
