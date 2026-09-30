@@ -28,38 +28,33 @@ def alternatives(db, symbol):
     return [dict(x) for x in rows]
 
 
-def routes_for_symbol(
-    db,
-    symbol,
-    tickers,
-    fee_bps,
-    fx_fee_bps,
-    slippage_bps,
-):
-    alts = alternatives(db, symbol)
-    buy_selected, buy_route = choose_route(
-        alts, tickers, 100, fee_bps, fx_fee_bps, slippage_bps, "buy"
-    )
-    sell_selected, sell_route = choose_route(
-        alts, tickers, 100, fee_bps, fx_fee_bps, slippage_bps, "sell"
-    )
-    if buy_route.get("status") != "VALID" or sell_route.get("status") != "VALID":
-        return {
-            "status": "INCOMPLETE",
-            "alternatives": alts,
-            "buy": buy_route,
-            "sell": sell_route,
-            "roundtrip_cost_pct": None,
-        }
+def routes_for_symbol(db, symbol, tickers, fee_bps, fx_fee_bps, slippage_bps):
+    # Choose one canonical execution market for both entry and exit. This keeps
+    # Paper position accounting and Real balance routing semantically identical:
+    # a position is not allowed to move between EUR/USD quote markets silently.
+    alts=alternatives(db,symbol)
+    ranked=[]
+    from execution_router import route_cost
+    for market in alts:
+        buy=route_cost(market,tickers,100,fee_bps,fx_fee_bps,slippage_bps,'buy')
+        sell=route_cost(market,tickers,100,fee_bps,fx_fee_bps,slippage_bps,'sell')
+        if buy.get('valid') and sell.get('valid'):
+            total=D(buy['total_cost_pct'])+D(sell['total_cost_pct'])
+            ranked.append((total,str(market.get('symbol')),market,buy,sell))
+    ranked.sort(key=lambda x:(x[0],x[1]))
+    if not ranked:
+        return {'status':'INCOMPLETE','alternatives':alts,'buy':{'status':'NO_VALID_ROUTE'},'sell':{'status':'NO_VALID_ROUTE'},'roundtrip_cost_pct':None}
+    _,_,market,buy,sell=ranked[0]
     return {
-        "status": "VALID",
-        "alternatives": alts,
-        "buy": {"selected": buy_selected, **buy_route},
-        "sell": {"selected": sell_selected, **sell_route},
-        "roundtrip_cost_pct": D(buy_route["selected"]["total_cost_pct"])
-        + D(sell_route["selected"]["total_cost_pct"]),
+        'status':'VALID','alternatives':alts,
+        'buy':{'status':'VALID','market':market,'cost':buy},
+        'sell':{'status':'VALID','market':market,'cost':sell},
+        'roundtrip_cost_pct':D(buy['total_cost_pct'])+D(sell['total_cost_pct']),
+        'route_selection':'MINIMIZE_ENTRY_PLUS_EXIT_COST_ON_ONE_MARKET',
+        'ranked':[
+            {'symbol':symbol,'roundtrip_cost_pct':str(cost)} for cost,symbol,_,_,_ in ranked
+        ],
     }
-
 
 def scanner_candidates(db, allowed_symbols=None):
     cols = {x["name"] for x in db.rows("PRAGMA table_info(scanner_results)")}
