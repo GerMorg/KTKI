@@ -325,6 +325,8 @@ def v96_health():
         "plan_hash":plan.get("plan_hash") if plan else None,
         "economic_gate":"POSITIVE_EXPECTED_H24_EDGE_AFTER_CURRENT_ENTRY_EXIT_ROUTE_COST_FOR_NEW_RISK",
         "risk_reduction":"ALLOWED_WITHOUT_NEW_ENTRY_EDGE",
+        "existing_position_exit":"TARGET_ZERO_RISK_REDUCTION",
+        "margin":"ACCOUNT_CAPABILITY_GATED",
         "news":"SIGNED_AND_TIME_DECAYED",
         "tax_ui":"/steuerinfo-at",
         "real_enabled":legacy.real_trade_engine.enabled(),
