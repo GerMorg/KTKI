@@ -98,12 +98,12 @@ options:
   real_margin_safety_buffer_pct: 20
   real_margin_allow_shorts: false
   real_margin_balance_asset: ZEUR
-  real_execution_confidence_spot_min: 70
-  real_execution_confidence_margin_2x: 80
-  real_execution_confidence_margin_3x: 88
-  real_execution_confidence_margin_4x: 94
+  real_execution_confidence_spot_min: 65
+  real_execution_confidence_margin_2x: 78
+  real_execution_confidence_margin_3x: 86
+  real_execution_confidence_margin_4x: 93
   real_execution_confidence_margin_5x: 97
-  real_execution_confidence_short_min: 82
+  real_execution_confidence_short_min: 75
   automation_master_enabled: false
   automation_analysis_enabled: false
   automation_news_enabled: false
