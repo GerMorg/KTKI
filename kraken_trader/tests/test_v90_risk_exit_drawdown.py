@@ -106,8 +106,8 @@ class V92RiskExitDrawdownTests(unittest.TestCase):
         self.assertIn("v95_main:app", run_sh)
         self.assertIn("0.1.0-dev.95", version)
         self.assertIn("real_balancing_max_drawdown_pct", config)
-        self.assertIn("H168", runtime)
-        self.assertIn("margin", runtime)
+        self.assertIn('h168', runtime)
+        self.assertIn('margin', runtime)
         self.assertIn("existing_position_exit", runtime)
 
 
