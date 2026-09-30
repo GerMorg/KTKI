@@ -99,6 +99,9 @@ class DecisionEngineV96:
         )
         qscore=self.directional_quality(health,direction) if direction in ("LONG","SHORT") else D(50)
         quality_factor=D(".60")+D(".40")*self.clamp(qscore/100)
+        risk_state=str((health or {}).get("risk_state","OK")).upper()
+        risk_factor={"OK":D("1"),"CAUTION":D(".70"),"WEAK":D(".45"),"INSUFFICIENT_DATA":D(".30")}.get(risk_state,D(".50"))
+        quality_factor*=risk_factor
         regime_factor=self.regime_factor(regime,direction)
         volatility=max(D(".25"),abs(D(row.get("volatility_pct") or 0)))
         vol_ref=max(D(".25"),D(config.get("decision_volatility_reference_pct",2)))
