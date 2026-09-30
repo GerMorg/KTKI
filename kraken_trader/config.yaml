@@ -1,5 +1,5 @@
 name: Kraken Trader
-version: 0.1.0-dev.93
+version: 0.1.0-dev.94
 # Historical baseline version: 0.1.0-dev.90
 slug: kraken_trader
 description: Autonomous Kraken Portfolio, Paper-Trading and strictly gated Realhandel
@@ -39,6 +39,7 @@ options:
   paper_max_transfer_eur: 250
   paper_rebalance_edge_pct: 8
   paper_fx_fee_bps: 10
+  paper_cash_reserve_pct: 20
   paper_min_hold_hours: 24
   paper_cooldown_hours: 12
   paper_confirmation_runs: 2
@@ -152,6 +153,7 @@ schema:
   paper_max_transfer_eur: float
   paper_rebalance_edge_pct: float
   paper_fx_fee_bps: int(0,500)
+  paper_cash_reserve_pct: float(0,100)
   paper_min_hold_hours: int(0,720)
   paper_cooldown_hours: int(0,720)
   paper_confirmation_runs: int(1,10)
