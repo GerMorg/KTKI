@@ -104,7 +104,7 @@ class PaperEngineV95(PaperEngine):
                 *decision_costs(self.db),
             )
             enriched.append({
-                'symbol':held_symbol,'direction':'HOLD','signal':'HOLD','family':'crypto_spot',
+                'symbol':held_symbol,'direction':'FLAT','signal':'HOLD','family':'crypto_spot',
                 'score':0,'quality':'VALID','volatility_pct':0,'momentum_pct':0,'trend_pct':0,'news_score':0,
                 'buy_threshold':cfg['minimum_score'],'avoid_threshold':35,
                 'route_context':route,
