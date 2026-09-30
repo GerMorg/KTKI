@@ -43,6 +43,11 @@ class PaperEngineV94(PaperEngine):
         engine=DecisionEngineV94(self.db)
         current_by={c['symbol']:current.get(c['symbol'],D(0)) for c in candidates}
         decisions=engine.target_rows(candidates,hb,total,current_by,cfg,rb,{c['symbol']:D(c['roundtrip_cost_pct']) for c in candidates})
+        # Paper v94 currently models spot/margin long fills; it does not invent
+        # a short position. An existing long can still be reduced to zero.
+        for d in decisions:
+            if d['direction']=='SHORT' and D(d['current_exposure_eur'])==0:
+                d['target_exposure_eur']='0';d['rebalance_delta_eur']='0';d['action']='HOLD';d['economic_gate_passed']=False
         # Held positions with no current thesis are explicit zero targets.
         for p in self.positions():
             if p['symbol'] not in current_by:
