@@ -7,6 +7,7 @@ import v90_main as base
 from real_autonomous_v91 import RealPortfolioAllocatorV91
 from v94_real_allocator import RealPortfolioAllocatorV94
 from v94_paper_engine import PaperEngineV94
+from decimal import Decimal as D
 
 app=base.app
 legacy=base.legacy
