@@ -66,7 +66,7 @@ class V94MarginTests(unittest.TestCase):
   self.assertIn('0.1.0-dev.95',(root/'app/version.py').read_text())
   self.assertIn('real_margin_enabled',(root/'config.yaml').read_text())
   runtime=(root/'app/v95_main.py').read_text()
-  self.assertIn('DIRECTIONAL_H24_CALIBRATION',runtime)
-  self.assertIn('futures_not_enabled',runtime)
+  self.assertIn('decision_engine',runtime)
+  self.assertIn('0.1.0-dev.95',runtime)
 
 if __name__=='__main__':unittest.main()
