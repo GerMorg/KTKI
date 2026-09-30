@@ -200,8 +200,12 @@ class CanonicalDecisionPlannerV96:
             enriched,health,total_eur,current_by_symbol,settings,regimes,route_costs,allow_short=allow_short
         )
         plan_hash=self._plan_hash(settings,tickers,enriched,current_by_symbol,total_eur,health,regimes)
+        by_symbol={x["symbol"]:x for x in enriched}
         ranked=[]
         for decision in decisions:
+            source=by_symbol.get(decision["symbol"],{})
+            decision["route_context"]=source.get("route_context",{})
+            decision["parameter_version"]=source.get("parameter_version")
             delta=D(decision["rebalance_delta_eur"])
             edge=D(decision.get("expected_edge_after_costs_pct"))
             trade=D(min(abs(delta),D(settings["decision_max_trade_eur"])))
