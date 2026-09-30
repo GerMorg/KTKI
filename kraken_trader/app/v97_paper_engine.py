@@ -7,7 +7,7 @@ import json
 from decimal import Decimal
 from model_health import ModelHealth
 from paper_engine import PaperEngine
-from decision_pipeline_v97 import CanonicalDecisionPlannerV96
+from decision_pipeline_v97 import CanonicalDecisionPlannerV97
 from execution_plan_v97 import build_execution_intent
 from order_math_v97 import volume_for_eur, order_constraints
 from trade_guard_v97 import TradeGuardV96
@@ -15,7 +15,7 @@ from decision_matrix import DecisionMatrix
 
 D=lambda x:Decimal(str(x or 0))
 
-class PaperEngineV96(PaperEngine):
+class PaperEngineV97(PaperEngine):
     def _position_mode(self,symbol):
         rows=self.db.rows("SELECT leverage FROM paper_position_risk WHERE symbol=? LIMIT 1",(symbol,))
         if rows and self.db.value("paper_leverage_enabled","false").lower()=="true":
@@ -121,7 +121,7 @@ class PaperEngineV96(PaperEngine):
             __import__("decision_engine_v97").DecisionEngineV97(self.db).record("PAPER",decision,intent["execution_symbol"],intent["mode"],intent["leverage"],status,reason)
             actions.append({"decision":decision,"intent":intent,"matrix":risk,"status":status,"reason":reason,"trade_id":trade_id})
         self.snapshot()
-        self.db.audit("PAPER_V96_CANONICAL_RUN",json.dumps({
+        self.db.audit("PAPER_V97_CANONICAL_RUN",json.dumps({
             "plan_hash":plan["plan_hash"],"decisions":len(plan["decisions"]),
             "actions":len(actions),"executed":sum(1 for x in actions if x["status"]=="SUBMITTED"),
         },sort_keys=True))
