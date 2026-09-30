@@ -47,10 +47,10 @@ class PaperEngineV95(PaperEngine):
         active=self.db.value('automation_enabled','false').lower()=='true'
         cash,pv,total,missing=self.equity()
         cfg={
-            'max_position_pct':D(self.db.value('paper_max_position_pct','10')),
-            'cash_reserve_pct':D(self.db.value('paper_cash_reserve_pct','20')),
-            'minimum_score':D(self.db.value('paper_buy_score_threshold','62')),
-            'min_trade_eur':D(self.db.value('paper_min_transfer_eur','20')),
+            'max_position_pct':D(self.db.value('decision_max_position_pct','5')),
+            'cash_reserve_pct':D(self.db.value('decision_cash_reserve_pct','20')),
+            'minimum_score':D(self.db.value('decision_minimum_score','70')),
+            'min_trade_eur':D(self.db.value('decision_min_trade_eur','20')),
             'volatility_reference_pct':D(self.db.value('decision_volatility_reference_pct','2')),
         }
         families=('crypto_spot','xstocks','forex')
