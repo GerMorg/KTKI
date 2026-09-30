@@ -10,7 +10,7 @@ def build_targets(candidates,total_eur,cash_reserve_pct=20,max_position_pct=10,b
  total=D(total_eur);reserve=max(D(0),min(D(100),D(cash_reserve_pct)))/100;budget=total*(1-reserve);cap=max(D(0),D(max_position_pct))/100;minimum=D(min_target_eur)
  ranked=[]
  for row in candidates:
-  score=D(row.get('score'));vol=max(D('0.25'),abs(D(row.get('volatility_pct') or 0)));threshold=D(row.get('buy_threshold') or buy_threshold);cost=max(D(0),D(row.get('roundtrip_cost_pct') or 0));conviction=max(D(0),score-threshold)/vol/(D(1)+cost)
+  score=D(row.get('score'));vol=max(D('0.25'),abs(D(row.get('volatility_pct') or 0)));threshold=D(row.get('buy_threshold') or buy_threshold);cost=max(D(0),D(row.get('roundtrip_cost_pct') or 0));quality=D(row.get('quality_score',50) or 50);quality_factor=D('.65')+D('.35')*max(D(0),min(D(100),quality))/100;regime_factor=D(row.get('regime_factor',1) or 1);conviction=max(D(0),score-threshold)/vol/(D(1)+cost)*quality_factor*regime_factor
   if score>=threshold and conviction>0:ranked.append((conviction,str(row.get('symbol')),row))
  ranked.sort(key=lambda x:(x[0],x[1]),reverse=True)
  if not ranked or budget<=0:return []
