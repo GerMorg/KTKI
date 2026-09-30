@@ -94,11 +94,12 @@ class RealTradeEngine:
   return rows[0] if rows else {}
  def _fx(self):
   rows=self.db.rows("SELECT bid,ask,last,received_at FROM live_prices WHERE symbol='EUR/USD' LIMIT 1");return rows[0] if rows else None
- def _eur_notional(self,symbol,volume,price):
+ def _eur_notional(self,symbol,volume,price,side='buy'):
   row=self._pair(symbol);quote=str(row.get('quote_asset') or symbol.rsplit('/',1)[-1]).upper();notional=D(volume)*D(price)
   if quote=='EUR':return notional
   if quote=='USD':
-   fx=self._fx();rate=D((fx or {}).get('last') or 0)
+   fx=self._fx()
+   rate=D((fx or {}).get('bid' if str(side).lower()=='buy' else 'ask') or (fx or {}).get('last') or 0)
    if rate<=0:raise ValueError('EUR/USD fehlt für EUR-Notional')
    return notional/rate
   raise ValueError('Nur EUR- und USD-Quote sind für Realhandel freigegeben')
@@ -109,8 +110,16 @@ class RealTradeEngine:
  def _live_price(self,symbol,side):
   rows=self.db.rows('SELECT last,bid,ask,received_at FROM live_prices WHERE symbol=? LIMIT 1',(symbol,))
   if not rows:raise ValueError('Kein aktueller Marktpreis')
-  r=rows[0];p=D(r.get('ask') if side=='buy' else r.get('bid') or r.get('last'))
-  if p<=0:p=D(r.get('last'))
+  r=rows[0]
+  try:
+   age=(datetime.now(timezone.utc)-datetime.fromisoformat(str(r.get('received_at')).replace('Z','+00:00'))).total_seconds()
+   max_age=float(self.db.value('decision_market_data_max_age_seconds','120'))
+   if age>max_age:raise ValueError('MARKET_DATA_STALE')
+  except ValueError:
+   raise
+  except Exception:
+   raise ValueError('MARKET_DATA_TIMESTAMP_INVALID')
+  p=D((r.get('ask') if side=='buy' else r.get('bid')) or r.get('last'))
   if p<=0:raise ValueError('Ungültiger Marktpreis')
   return p,r
  def _order_limits(self):
@@ -130,7 +139,7 @@ class RealTradeEngine:
   if quote not in ('EUR','USD'):raise PermissionError('Nur EUR/USD-Quoten sind für Realhandel freigegeben')
   price=self._live_price(symbol,side)[0] if order_type=='market' else D(limit_price)
   if price<=0:raise ValueError('Preis fehlt')
-  eur_notional=self._eur_notional(symbol,volume,price);self._preflight_limits(volume,eur_notional);margin_details=self._margin_preflight(symbol,side,volume,price,leverage,reduce_only) if margin else {}
+  eur_notional=self._eur_notional(symbol,volume,price,side);self._preflight_limits(volume,eur_notional);margin_details=self._margin_preflight(symbol,side,volume,price,leverage,reduce_only) if margin else {}
   ordermin=D(row.get('ordermin'));costmin=D(row.get('costmin'))
   if ordermin>0 and volume<ordermin:raise ValueError(f'Mindestmenge {ordermin} unterschritten')
   if costmin>0 and D(volume)*price<costmin:raise ValueError(f'Mindestkosten {costmin} unterschritten')
@@ -158,7 +167,7 @@ class RealTradeEngine:
   allowed=[x.strip().upper() for x in self.db.value('real_allowed_symbols','').split(',') if x.strip()]
   if symbol=='EUR/USD' and self.db.value('real_allow_fx_conversion','true').lower()=='true':allowed=allowed+['EUR/USD']
   if allowed and symbol not in allowed:raise PermissionError('Symbol ist nicht für Realhandel freigegeben')
-  self._preflight_limits(volume,self._eur_notional(symbol,volume,price))
+  self._preflight_limits(volume,self._eur_notional(symbol,volume,price,side))
   ordermin=D(row.get('ordermin'));costmin=D(row.get('costmin'))
   if ordermin>0 and volume<ordermin:raise ValueError(f'Mindestmenge {ordermin} unterschritten')
   if costmin>0 and D(volume)*price<costmin:raise ValueError(f'Mindestkosten {costmin} unterschritten')
