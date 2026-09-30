@@ -81,6 +81,9 @@ class DecisionEngineV95:
             )
         except Exception:
             return None
+        minimum = int(float(self.db.value("decision_min_edge_samples", "10"))) if self.db is not None else 10
+        if len(rows) < max(1, minimum):
+            return None
         values = []
         for row in rows:
             actual = D(row.get("actual_return_pct"))
