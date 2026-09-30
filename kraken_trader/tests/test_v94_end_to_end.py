@@ -9,6 +9,7 @@ from decision_engine_v95 import DecisionEngineV95
 from decision_matrix import DecisionMatrix
 
 class V95EndToEndTests(unittest.TestCase):
+    # v95: the 5% position cap applies to existing HOLD targets as well.
     def setUp(self):
         self.e=DecisionEngineV95(None)
         self.cfg={'minimum_score':70,'max_position_pct':10,'cash_reserve_pct':20}
@@ -46,12 +47,12 @@ class V95EndToEndTests(unittest.TestCase):
         self.assertLess(Decimal(d['target_exposure_eur']),Decimal('0'))
         self.assertGreater(Decimal(d['signal_strength']),Decimal('0'))
 
-    def test_holding_a_neutral_signal_keeps_target(self):
+    def test_holding_a_neutral_signal_respects_position_cap(self):
         row={'symbol':'BTC/EUR','signal':'HOLD','score':55,'volatility_pct':2,'momentum_pct':0,'trend_pct':0,'buy_threshold':70}
         d=self.e.build(row,{},1000,120,.2,'NEUTRAL',self.cfg,True)
         self.assertEqual(d['direction'],'HOLD')
-        self.assertEqual(Decimal(d['target_exposure_eur']),Decimal('120'))
-        self.assertEqual(d['action'],'HOLD')
+        self.assertEqual(Decimal(d['target_exposure_eur']),Decimal('80'))
+        self.assertEqual(d['action'],'SELL')
 
     def test_risk_reduction_does_not_require_positive_entry_edge(self):
         row={'symbol':'BTC/EUR','signal':'BUY','score':76,'volatility_pct':2,'momentum_pct':1,'trend_pct':.2,'buy_threshold':70}
