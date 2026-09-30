@@ -63,9 +63,11 @@ class PaperEngineV94(PaperEngine):
             side='BUY' if delta>0 else 'SELL'
             family=next((x['family'] for x in candidates if x['symbol']==d['symbol']),'crypto_spot')
             h=hb.get(family,{})
-            cal=health.margin_calibration(family,'UP' if side=='BUY' else 'DOWN',24,20) if margin_enabled else {'status':'READY','direction':'SPOT'}
+            is_reduce_only=D(d.get('target_exposure_eur'))==0 and D(d.get('current_exposure_eur'))>0
+            cal=health.margin_calibration(family,'UP' if side=='BUY' else 'DOWN',24,20) if margin_enabled and not is_reduce_only else {'status':'READY','direction':'EXIT' if is_reduce_only else 'SPOT'}
             conf=execution_confidence(d.get('score',0),h,cal if cal.get('status')=='READY' else None,regime=d.get('regime','NEUTRAL'),direction='UP' if side=='BUY' else 'DOWN')
-            ex=choose_execution(conf,margin_enabled,max_leverage,65,78,86,93,97,calibration=cal if cal.get('status')=='READY' else None)
+            ex=choose_execution(conf,margin_enabled,max_leverage,65,78,86,93,97,calibration=cal if not is_reduce_only else None)
+            if is_reduce_only: ex={'mode':'MARGIN' if margin_enabled else 'SPOT','leverage':max_leverage if margin_enabled else 1,'confidence':str(conf),'reason':'EXPLICIT_TARGET_ZERO_RISK_EXIT'}
             if ex['mode']=='BLOCKED':
                 results.append({'symbol':d['symbol'],'action':'HOLD','executed':False,'reason':ex['reason'],'decision':d});continue
             d['execution_confidence']=str(conf);d['execution_mode']=ex['mode'];d['execution_leverage']=str(ex['leverage'])
