@@ -37,7 +37,24 @@ class RealPortfolioAllocatorV95:
         return self.base._asset(code)
 
     def _current_eur(self):
-        return self.base._current_eur()
+        current, total = self.base._current_eur()
+        if not self.settings()["margin_enabled"]:
+            return current, total
+        try:
+            self.trade_engine.refresh_margin_state()
+            account=self.db.rows("SELECT equity FROM real_margin_account WHERE id=1 LIMIT 1")
+            if account and D(account[0].get("equity"))>0:
+                total=D(account[0]["equity"])
+            positions=self.db.rows("SELECT symbol,side,current_value FROM real_margin_positions")
+            for pos in positions:
+                value=D(pos.get("current_value") or 0)
+                if value<=0:
+                    continue
+                asset=self._asset(str(pos["symbol"]).split("/",1)[0])
+                current[asset]=value if str(pos.get("side")).lower()=="buy" else -value
+        except Exception:
+            pass
+        return current, total
 
     def _fee_values(self):
         return (
@@ -79,7 +96,7 @@ class RealPortfolioAllocatorV95:
         eur_notional = D(trade_eur)
         if quote == "USD":
             fx = tickers.get("EUR/USD") or {}
-            rate = D((fx.get("b") if side == "buy" else fx.get("a")) or [0])
+            rate = D(((fx.get("b") if side == "buy" else fx.get("a")) or [0])[0])
             if rate <= 0:
                 rate = D((fx.get("c") or [0])[0])
             if rate <= 0:
@@ -343,11 +360,6 @@ class RealPortfolioAllocatorV95:
 
                 self._record(engine, "REAL", decision, execution_symbol, execution["mode"], execution["leverage"], status, reason)
                 with self.db.con() as c:
-                    c.execute(
-                        "UPDATE real_allocation_actions SET decision_json=?,order_intent_id=?,status=? "
-                        "WHERE id=(SELECT id FROM real_allocation_actions WHERE run_id=? ORDER BY id DESC LIMIT 1)",
-                        (safe_json({"canonical": decision, "matrix": matrix, "route": cand["route_context"]}), intent, status, run_id),
-                    )
                     c.execute(
                         "INSERT INTO real_allocation_actions(run_id,created_at,symbol,side,current_eur,target_eur,difference_eur,status,decision_json,order_intent_id,error) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
                         (run_id, now(), symbol, side, decision["current_exposure_eur"], decision["target_exposure_eur"], decision["rebalance_delta_eur"], status, safe_json({"canonical": decision, "matrix": matrix, "route": cand["route_context"]}), intent, None),
