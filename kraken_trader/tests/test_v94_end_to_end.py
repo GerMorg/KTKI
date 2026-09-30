@@ -53,6 +53,15 @@ class V95EndToEndTests(unittest.TestCase):
         self.assertEqual(Decimal(d['target_exposure_eur']),Decimal('120'))
         self.assertEqual(d['action'],'HOLD')
 
+    def test_risk_reduction_does_not_require_positive_entry_edge(self):
+        row={'symbol':'BTC/EUR','signal':'BUY','score':76,'volatility_pct':2,'momentum_pct':1,'trend_pct':.2,'buy_threshold':70}
+        d=self.e.build(row,{},1000,120,-1,'BEAR',self.cfg,True)
+        # The regime/score can lower the target below the current holding even
+        # when the fresh entry edge is not positive. That is a valid reduction.
+        self.assertEqual(d['action'],'SELL')
+        self.assertLess(Decimal(d['target_exposure_eur']),Decimal('120'))
+        self.assertTrue(d['economic_gate_passed'])
+
     def test_decision_matrix_rejects_non_positive_economic_edge(self):
         db=None
         # This is a contract test for the context passed to DecisionMatrix.
