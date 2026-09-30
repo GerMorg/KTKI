@@ -96,20 +96,26 @@ class PaperEngineV95(PaperEngine):
         current_by={row['symbol']:self._current_for_canonical(row['symbol'],current) for row in enriched}
         route_costs={row['symbol']:D(row['roundtrip_cost_pct']) for row in enriched}
         engine=DecisionEngineV95(self.db)
+        enriched_symbols={x['symbol'] for x in enriched}
+        for held_symbol, exposure in current.items():
+            if held_symbol in enriched_symbols: continue
+            route=routes_for_symbol(
+                self.db,held_symbol,tickers,
+                *decision_costs(self.db),
+            )
+            enriched.append({
+                'symbol':held_symbol,'direction':'HOLD','signal':'HOLD','family':'crypto_spot',
+                'score':0,'quality':'VALID','volatility_pct':0,'momentum_pct':0,'trend_pct':0,'news_score':0,
+                'buy_threshold':cfg['minimum_score'],'avoid_threshold':35,
+                'route_context':route,
+                'roundtrip_cost_pct':route.get('roundtrip_cost_pct') if route.get('roundtrip_cost_pct') is not None else D(999),
+            })
+            current_by[held_symbol]=exposure
+            route_costs[held_symbol]=D(enriched[-1]['roundtrip_cost_pct'])
+
         decisions=engine.target_rows(
             enriched,health_by,total,current_by,cfg,regimes,route_costs,allow_short=False
         )
-
-        for held_symbol, exposure in current.items():
-            if held_symbol in {x['symbol'] for x in enriched}: continue
-            decisions.append({
-                'symbol':held_symbol,'direction':'FLAT','action':'SELL',
-                'score':'0','quality_score':'0','regime':'NEUTRAL','news_score':'0',
-                'target_exposure_eur':'0','current_exposure_eur':str(exposure),
-                'rebalance_delta_eur':str(-exposure),
-                'expected_edge_gross_pct':None,'expected_edge_after_costs_pct':None,
-                'economic_gate_passed':True,'edge_status':'RISK_EXIT',
-            })
 
         margin_enabled=self.db.value('paper_leverage_enabled','false').lower()=='true'
         max_leverage=int(float(self.db.value('paper_max_leverage','3')))
