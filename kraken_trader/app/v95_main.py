@@ -110,15 +110,22 @@ def _safe(fn, default=None):
         return default
 
 def _health():
-    mh = ModelHealth(legacy.db)
-    return {
-        f: mh.evaluate(
-            f,
+    mh=ModelHealth(legacy.db)
+    out={}
+    for family in ("crypto_spot","xstocks","forex"):
+        rows=legacy.db.rows("SELECT details_json FROM model_health_snapshots WHERE family=? ORDER BY id DESC LIMIT 1",(family,))
+        if rows:
+            try:
+                out[family]=json.loads(rows[0]["details_json"])
+                continue
+            except Exception:
+                pass
+        out[family]=mh.evaluate(
+            family,
             require_long_horizon=False,
-            max_drawdown_pct=float(legacy.db.value("real_balancing_max_drawdown_pct", "-25")),
+            max_drawdown_pct=float(legacy.db.value("real_balancing_max_drawdown_pct","-25")),
         )
-        for f in ("crypto_spot", "xstocks", "forex")
-    }
+    return out
 
 def _decision_rows(limit=50):
     return DecisionEngineV95(legacy.db).latest(limit=limit)
