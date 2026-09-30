@@ -54,6 +54,8 @@ class DecisionEngineV95:
             return "LONG"
         if signal == "AVOID" and momentum < 0 and trend < 0 and allow_short:
             return "SHORT"
+        if signal == "HOLD":
+            return "HOLD"
         return "FLAT"
 
     @staticmethod
@@ -109,14 +111,18 @@ class DecisionEngineV95:
         direction = self.direction(row, allow_short=allow_short)
         score = D(row.get("score"))
         threshold = D(row.get("buy_threshold", config.get("minimum_score", 70)))
+        avoid_threshold = D(row.get("avoid_threshold", 35))
         quality = self.clamp(D(health.get("quality_score", 50)) / 100)
         regime_factor = self.regime_factor(regime, direction)
         volatility = max(D(".25"), abs(D(row.get("volatility_pct") or 0)))
         volatility_reference = max(D(".25"), D(config.get("volatility_reference_pct", 2)))
         volatility_factor = min(D(1), volatility_reference / volatility)
-        signal_strength = self.clamp(
-            (score - threshold) / max(D(1), D(100) - threshold)
-        )
+        if direction == "LONG":
+            signal_strength = self.clamp((score - threshold) / max(D(1), D(100) - threshold))
+        elif direction == "SHORT":
+            signal_strength = self.clamp((avoid_threshold - score) / max(D(1), avoid_threshold))
+        else:
+            signal_strength = D(0)
         quality_factor = D(".70") + D(".30") * quality
         cost_factor = D(1) / (D(1) + max(D(0), D(roundtrip_cost_pct)))
         gross_edge = self.gross_edge(row, direction) if direction != "FLAT" else None
@@ -140,21 +146,24 @@ class DecisionEngineV95:
         )
         max_position = max(D(0), D(config.get("max_position_pct", 5))) / 100
         target_abs = budget * max_position * sizing_strength
+        current = D(current_eur)
         target = (
             target_abs
             if direction == "LONG"
             else -target_abs
             if direction == "SHORT"
+            else current
+            if direction == "HOLD"
             else D(0)
         )
-
-        current = D(current_eur)
         delta = target - current
 
         if direction in ("LONG", "SHORT"):
             action = "BUY" if delta > 0 else "SELL" if delta < 0 else "HOLD"
+        elif direction == "HOLD":
+            action = "HOLD"
         else:
-            action = "SELL" if current > 0 else "BUY" if current < 0 else "HOLD"
+            action = "SELL" if current > 0 else "HOLD"
 
         # A new exposure requires measurable candidate-specific edge after the
         # complete estimated roundtrip. A reduction to zero is risk-reducing.
@@ -170,6 +179,7 @@ class DecisionEngineV95:
             "score": str(score),
             "buy_threshold": str(threshold),
             "quality_score": str(quality * 100),
+            "avoid_threshold": str(avoid_threshold),
             "regime": regime,
             "regime_factor": str(regime_factor),
             "volatility_pct": str(volatility),
