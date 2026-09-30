@@ -7,13 +7,17 @@ from v95_real_allocator import RealPortfolioAllocatorV95
 from decision_pipeline_v97 import CanonicalDecisionPlannerV97
 from execution_plan_v97 import build_execution_intent
 from order_math_v97 import volume_for_eur, order_constraints
-from trade_guard_v97 import TradeGuardV96
+from trade_guard_v97 import TradeGuardV97
 from decision_matrix import DecisionMatrix
 from decision_engine_v97 import DecisionEngineV97
 
 D=lambda x:Decimal(str(x or 0))
 
 class RealPortfolioAllocatorV97(RealPortfolioAllocatorV95):
+    def __init__(self, db, trade_engine, runtime=None):
+        super().__init__(db, trade_engine)
+        self.runtime = runtime
+
     def _current_by_symbol(self,current):
         out={}
         for asset,value in current.items():
@@ -52,7 +56,7 @@ class RealPortfolioAllocatorV97(RealPortfolioAllocatorV95):
                 environment="REAL",
                 allow_short=settings["decision_allow_shorts"],
             )
-            guard=TradeGuardV96(self.db,"REAL")
+            guard=TradeGuardV97(self.db,"REAL")
             matrix=DecisionMatrix(self.db)
             engine=DecisionEngineV97(self.db)
 
