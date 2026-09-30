@@ -17,6 +17,7 @@ D=lambda x:Decimal(str(x or 0))
 
 DEFAULTS={
     "decision_minimum_score":"70",
+    "decision_shared_context_reuse_seconds":"10",
     "decision_max_position_pct":"5",
     "decision_cash_reserve_pct":"20",
     "decision_min_trade_eur":"20",
@@ -71,7 +72,7 @@ class CanonicalDecisionPlannerV97:
             value=self.db.value(key,default)
             out[key]=value
         for key in ("decision_minimum_score","decision_max_position_pct","decision_cash_reserve_pct","decision_min_trade_eur",
-                    "decision_max_trade_eur","decision_no_trade_band_pct","decision_min_edge_samples",
+                    "decision_max_trade_eur","decision_no_trade_band_pct","decision_min_edge_samples","decision_shared_context_reuse_seconds",
                     "decision_volatility_reference_pct","decision_max_scanner_age_minutes","decision_max_drawdown_pct",
                     "decision_full_size_edge_pct","decision_confirmation_runs","decision_min_hold_hours",
                     "decision_cooldown_hours","decision_max_turnovers_per_day","decision_max_actions_per_run",
