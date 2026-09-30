@@ -62,6 +62,13 @@ class RealPortfolioAllocatorV94(RealPortfolioAllocator):
             route_costs={c['symbol']:D(c.get('roundtrip_cost_pct',999)) for c in candidates}
             # Candidate-specific family health is the only model evidence.
             decisions=engine.target_rows(candidates,health_by,total,current_by,cfg,regimes,route_costs)
+            # Opening a short is a separate capability. If it is disabled, an AVOID
+            # candidate may still close an existing long but may never create a
+            # negative target from zero exposure.
+            if not (cfg['margin_enabled'] and cfg['margin_allow_shorts']):
+                for d in decisions:
+                    if d['direction']=='SHORT' and D(d['current_exposure_eur'])==0:
+                        d['target_exposure_eur']='0';d['rebalance_delta_eur']='0';d['action']='HOLD';d['economic_gate_passed']=False
             # For existing holdings without a live BUY thesis, force a reduction
             # target to zero. This is a target decision, not a separate exit engine.
             for d in decisions:
