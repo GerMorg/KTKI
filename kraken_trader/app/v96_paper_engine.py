@@ -18,7 +18,7 @@ D=lambda x:Decimal(str(x or 0))
 class PaperEngineV96(PaperEngine):
     def _position_mode(self,symbol):
         rows=self.db.rows("SELECT leverage FROM paper_position_risk WHERE symbol=? LIMIT 1",(symbol,))
-        if rows:
+        if rows and self.db.value("paper_leverage_enabled","false").lower()=="true":
             lev=max(1,int(float(rows[0].get("leverage") or 1)))
             return "MARGIN",lev
         return "SPOT",1
@@ -40,7 +40,10 @@ class PaperEngineV96(PaperEngine):
         guard=TradeGuardV96(self.db,"PAPER")
         matrix=DecisionMatrix(self.db)
         actions=[]
+        submitted=0
+        execution_capacity=int(settings["decision_max_actions_per_run"])
         for decision in plan["decisions"]:
+            if submitted>=execution_capacity:break
             delta=D(decision["rebalance_delta_eur"])
             if delta==0:continue
             if abs(delta)<D(settings["decision_min_trade_eur"]):continue
@@ -108,6 +111,7 @@ class PaperEngineV96(PaperEngine):
                     })
                     guard.record_fill(decision["symbol"],intent["side"])
                     status="SUBMITTED"
+                    submitted+=1
                     reason="PAPER_FILL_SIMULATED"
                 except Exception as exc:
                     status="FAILED"
