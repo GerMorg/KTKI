@@ -23,13 +23,23 @@ options=getattr(base,"options",{})
 
 planner=CanonicalDecisionPlannerV96(legacy.db)
 
-def _sync_settings():
-    for key,value in planner.settings().items():
-        if isinstance(value,bool):
-            value="true" if value else "false"
-        legacy.db.set_setting(key,str(value))
+def _load_options():
+    path=os.environ.get("APP_OPTIONS","/data/options.json")
+    try:
+        with open(path,encoding="utf-8") as fh:return json.load(fh) or {}
+    except Exception:
+        return {}
 
-_sync_settings()
+def _sync_settings():
+    opts=_load_options()
+    defaults=planner.settings()
+    for key,default in defaults.items():
+        value=opts.get(key,default)
+        normalized=("true" if value else "false") if isinstance(value,bool) else str(value)
+        legacy.db.set_setting(key,normalized)
+    return opts
+
+options=_sync_settings()
 
 try:
     base.controller.stop()
@@ -197,7 +207,7 @@ def _dashboard():
 <strong class="hero-state">{{"REALHANDEL FREIGEGEBEN" if real_ready else "REALHANDEL BLOCKIERT"}}</strong></section>
 <div class="process-strip">{% for x in ["Kraken","News","Analyse","Lernen","Edge","Target","Order"] %}<div class="process-node"><span>{{loop.index}}</span><b>{{x}}</b></div>{% if not loop.last %}<i>→</i>{% endif %}{% endfor %}</div>
 <div class="summary-grid">
-<div class="summary"><span>Marktdaten</span><b>{{public.effective_state or "—"}}</b><small>{{public.symbol_count or 0}} Ticker · Frischegate {{planner.settings().decision_market_data_max_age_seconds|int}}s</small></div>
+<div class="summary"><span>Marktdaten</span><b>{{public.effective_state or "—"}}</b><small>{{public.symbol_count or 0}} Ticker · Frischegate {{fresh_market_seconds|int}}s</small></div>
 <div class="summary"><span>News</span><b>{{news_count[0].n if news_count else 0}}</b><small>{{news_links[0].n if news_links else 0}} signierte Marktverknüpfungen</small></div>
 <div class="summary"><span>Plan</span><b>{{plan.plan_hash[:10] if plan else "—"}}</b><small>{{plan.decision_count if plan else 0}} Entscheidungen</small></div>
 <div class="summary"><span>Steuer</span><b>AT / 27,5 %</b><small>Einkommensteuer-/KESt-Prüfhilfe</small></div>
@@ -206,7 +216,7 @@ def _dashboard():
 <div class="split"><div class="card"><h2>Modellqualität je Richtung</h2>{% for f,h in health.items() %}<div class="allocation"><div><b>{{f}}</b><small>UP {{h.quality_score_by_direction.UP if h.quality_score_by_direction else "—"}} · DOWN {{h.quality_score_by_direction.DOWN if h.quality_score_by_direction else "—"}}</small></div><strong>{{h.status or "—"}}</strong></div>{% endfor %}</div>
 <div class="card"><h2>Portfolio-/Orderlogik</h2><p>Neue Risiken benötigen positive erwartete Rendite nach aktuellen Routekosten. Rebalancing/Exit darf bestehendes Risiko reduzieren, auch bei negativer Neueinstiegs-Edge.</p><p><a href="/prozess-v96">Ablauf und Diagnose →</a> · <a href="/steuerinfo-at">Einkommensteuer AT →</a></p></div></div>''',
         plan=plan,decisions=decisions,health=health,public=public,private=private,
-        news_count=news_count,news_links=news_links,auto=auto,real_ready=real_ready,planner=planner
+        news_count=news_count,news_links=news_links,auto=auto,real_ready=real_ready,fresh_market_seconds=planner.settings()["decision_market_data_max_age_seconds"]
     )
 
 def _analysis():
