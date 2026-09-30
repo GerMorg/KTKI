@@ -301,6 +301,7 @@ class RealPortfolioAllocatorV95:
                     "cooldown_ok": True,
                     "daily_limit_ok": True,
                     "improvement_after_costs": str(max(D(0), D(decision["expected_edge_after_costs_pct"] or 0)) * trade_eur / 100),
+                    "economic_edge_ok": bool(decision.get("economic_gate_passed")) and (is_exit or D(decision.get("expected_edge_after_costs_pct") or 0)>0),
                     "exit_risk_override": is_exit,
                     "execution_confidence": str(confidence),
                     "execution_mode": execution["mode"],
