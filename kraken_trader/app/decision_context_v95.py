@@ -1,21 +1,30 @@
 """v95 shared market/route context for Paper and Real."""
 
 from decimal import Decimal
+from datetime import datetime, timezone
 from execution_router import choose_route
 from strategy_profiles import family_for_category
 
 D = lambda x: Decimal(str(x or 0))
 
 
-def ticker_map(db):
-    return {
-        x["symbol"]: {
-            "b": [x["bid"] or x["last"]],
-            "a": [x["ask"] or x["last"]],
-            "c": [x["last"]],
+def ticker_map(db, max_age_seconds=120):
+    out={}
+    now=datetime.now(timezone.utc)
+    for x in db.rows("SELECT symbol,last,bid,ask,received_at FROM live_prices"):
+        try:
+            age=(now-datetime.fromisoformat(str(x.get("received_at")).replace("Z","+00:00")).astimezone(timezone.utc)).total_seconds()
+        except Exception:
+            age=float("inf")
+        if age>float(max_age_seconds):
+            continue
+        out[x["symbol"]]={
+            "b":[x["bid"] or x["last"]],
+            "a":[x["ask"] or x["last"]],
+            "c":[x["last"]],
+            "received_at":x.get("received_at"),
         }
-        for x in db.rows("SELECT symbol,last,bid,ask FROM live_prices")
-    }
+    return out
 
 
 def alternatives(db, symbol):
@@ -56,12 +65,12 @@ def routes_for_symbol(db, symbol, tickers, fee_bps, fx_fee_bps, slippage_bps):
         ],
     }
 
-def scanner_candidates(db, allowed_symbols=None):
+def scanner_candidates(db, allowed_symbols=None, max_age_minutes=120):
     cols={x["name"] for x in db.rows("PRAGMA table_info(scanner_results)")}
     news="s.news_score" if "news_score" in cols else "0 AS news_score"
     rows=db.rows(
         f"""SELECT s.symbol,s.score,s.momentum_pct,s.trend_pct,s.volatility_pct,
-                   s.spread_pct,s.signal,s.quality,{news},
+                   s.spread_pct,s.signal,s.quality,s.scanned_at,{news},
                    u.category,u.base_asset,u.quote_asset,u.canonical_id
             FROM scanner_results s
             LEFT JOIN market_universe u ON u.symbol=s.symbol
@@ -70,9 +79,16 @@ def scanner_candidates(db, allowed_symbols=None):
     )
     allowed={str(x).upper() for x in (allowed_symbols or []) if str(x).strip()}
     by_canonical={}
+    now=datetime.now(timezone.utc)
     for row in rows:
         symbol=str(row["symbol"]).upper()
         if allowed and symbol not in allowed:
+            continue
+        try:
+            age=(now-datetime.fromisoformat(str(row.get("scanned_at")).replace("Z","+00:00")).astimezone(timezone.utc)).total_seconds()/60
+        except Exception:
+            age=float("inf")
+        if age>float(max_age_minutes):
             continue
         cid=row.get("canonical_id") or symbol
         if cid in by_canonical:
