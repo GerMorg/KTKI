@@ -153,13 +153,13 @@ class RealPortfolioAllocatorV95:
                 family: health.evaluate(
                     family,
                     require_long_horizon=False,
-                    max_drawdown_pct=cfg["max_drawdown_pct"],
+                    max_drawdown_pct=float(self.db.value('decision_max_drawdown_pct','-25')),
                 )
                 for family in families
             }
             regimes = {family: family_regime(self.db, family) for family in families}
 
-            candidates = scanner_candidates(self.db, cfg["allowed_symbols"])
+            candidates = scanner_candidates(self.db, cfg["allowed_symbols"], max_age_minutes=int(float(self.db.value('decision_max_scanner_age_minutes','120'))))
             enriched = []
             for row in candidates:
                 route = routes_for_symbol(self.db, row["symbol"], tickers, fee_bps, fx_fee_bps, slippage_bps)
