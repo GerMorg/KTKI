@@ -109,9 +109,9 @@ class PaperEngineV95(PaperEngine):
         results=[]
         for decision in sorted(decisions,key=lambda x:abs(D(x['rebalance_delta_eur'])),reverse=True):
             delta=D(decision['rebalance_delta_eur'])
-            if abs(delta)<cfg['min_trade_eur']:
+            if abs(delta)<D(self.db.value('decision_min_trade_eur','20')):
                 continue
-            if abs(delta)/max(D(1),total)*100<D(self.db.value('paper_no_trade_band_pct','2')):
+            if abs(delta)/max(D(1),total)*100<D(self.db.value('decision_no_trade_band_pct','2')):
                 continue
             if not decision['economic_gate_passed']:
                 continue
