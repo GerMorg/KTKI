@@ -20,8 +20,11 @@ class DecisionMatrix:
   else:
    economic_ok=bool(context.get('economic_edge_ok',False)) and improvement>0
    add('POSITIVE_AFTER_COSTS',economic_ok,'Erwarteter Vorteil nach vollständigen Kosten positiv' if economic_ok else 'Kein positiver Vorteil nach vollständigen Kosten',{'eur':str(improvement),'execution_confidence':context.get('execution_confidence'),'mode':context.get('execution_mode')})
-  add('TAX_AND_LOSS',context.get('tax_loss_ok',True),'Steuer- und Verlustwirkung akzeptabel' if context.get('tax_loss_ok',True) else 'Steuer- oder Verlustwirkung blockiert')
-  add('DATA_FRESHNESS',context.get('data_fresh',False),'Daten vollständig und aktuell' if context.get('data_fresh',False) else 'Daten fehlen oder sind veraltet')
+  add('MODEL_HEALTH',context.get('model_health_data_ok',False),'Modellqualitätsdaten vorhanden und konsistent' if context.get('model_health_data_ok',False) else 'Modellqualitätsdaten fehlen oder sind ungültig',context.get('model_health_details'))
+  add('ROUTE_COST',context.get('route_cost_ok',False),'Ausführungsroute und Kosten sind validiert' if context.get('route_cost_ok',False) else 'Ausführungsroute ist nicht ausreichend validiert',context.get('route_cost_details'))
+  add('QUOTE_FUNDING',context.get('quote_funding_ok',False),'Quote-Finanzierung ist bestätigt' if context.get('quote_funding_ok',False) else 'Quote-Finanzierung ist nicht bestätigt',context.get('quote_funding_details'))
+  add('PORTFOLIO_RISK',context.get('portfolio_risk_ok',False),'Portfolio-Risikolimits eingehalten' if context.get('portfolio_risk_ok',False) else 'Portfolio-Risikolimit blockiert',context.get('portfolio_risk_details'))
+  add('ORDER_CONSTRAINTS',context.get('order_constraints_ok',False),'Ordergröße und Kraken-Marktregeln eingehalten' if context.get('order_constraints_ok',False) else 'Ordergröße/Mindestwerte nicht erfüllt',context.get('order_constraints_details'))
   if real:
    if context.get('model_health_data_ok',True):
     add('MODEL_HEALTH',True,'Modellqualität liegt als Richtungsevidenz vor und wird für Sizing/Leverage verwendet',context.get('model_health_details'))
