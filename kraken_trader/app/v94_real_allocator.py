@@ -79,7 +79,9 @@ class RealPortfolioAllocatorV94(RealPortfolioAllocator):
                     d['target_exposure_eur']='0';d['rebalance_delta_eur']=str(-D(d['current_exposure_eur']));d['action']='SELL';d['economic_gate_passed']=True
             with self.db.con() as c:
                 cur=c.execute('INSERT INTO real_allocation_runs(created_at,status,automatic,settings_json,details_json) VALUES(?,?,?,?,?)',(now(),'RUNNING',int(automatic),safe_json(cfg),'{}'));rid=cur.lastrowid
-            actions=[];capacity=min(cfg['max_actions_per_run'],max(0,cfg['max_actions_per_day']-int(self.db.rows("SELECT COUNT(*) n FROM real_allocation_actions WHERE status='SUBMITTED' AND date(created_at)=date('now')")[0]['n']))
+            actions=[]
+            submitted_today=int(self.db.rows("SELECT COUNT(*) n FROM real_allocation_actions WHERE status='SUBMITTED' AND date(created_at)=date('now')")[0]['n'])
+            capacity=min(cfg['max_actions_per_run'],max(0,cfg['max_actions_per_day']-submitted_today))
             for d in sorted(decisions,key=lambda x:abs(D(x['rebalance_delta_eur'])),reverse=True):
                 if capacity<=0: break
                 delta=D(d['rebalance_delta_eur'])
