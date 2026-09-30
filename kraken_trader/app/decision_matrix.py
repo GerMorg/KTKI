@@ -13,21 +13,20 @@ class DecisionMatrix:
   add('MINIMUM_HOLD',context.get('minimum_hold_ok',True),'Mindesthaltedauer erfüllt' if context.get('minimum_hold_ok',True) else 'Mindesthaltedauer aktiv')
   add('COOLDOWN',context.get('cooldown_ok',True),'Cooldown beendet' if context.get('cooldown_ok',True) else 'Wiederkauf-Cooldown aktiv')
   add('DAILY_LIMIT',context.get('daily_limit_ok',True),'Tageslimit verfügbar' if context.get('daily_limit_ok',True) else 'Tägliches Umschichtungslimit erreicht')
-  exit_override=bool(context.get('exit_risk_override',False))
-  if real:
-   improvement=D(context.get('improvement_after_costs'))
-   if exit_override:
-    add('POSITIVE_AFTER_COSTS',True,'Exit-Risikopfad: Entry-Economic-Gate wird nicht für den Abbau einer bestehenden Position verlangt',{'eur':str(improvement),'override':True})
-   else:
-    economic_ok=bool(context.get('economic_edge_ok',False)) and improvement>0
-    add('POSITIVE_AFTER_COSTS',economic_ok,'Erwarteter Vorteil nach vollständigen Kosten positiv' if economic_ok else 'Kein positiver Vorteil nach vollständigen Kosten',{'eur':str(improvement),'execution_confidence':context.get('execution_confidence'),'mode':context.get('execution_mode')})
+  exit_override=bool(context.get('exit_risk_override',False) or context.get('risk_reduction_override',False))
+  improvement=D(context.get('improvement_after_costs'))
+  if exit_override:
+   add('POSITIVE_AFTER_COSTS',True,'Risikoreduzierender Abbau: kein positiver Entry-Edge erforderlich',{'eur':str(improvement),'override':True})
+  else:
+   economic_ok=bool(context.get('economic_edge_ok',False)) and improvement>0
+   add('POSITIVE_AFTER_COSTS',economic_ok,'Erwarteter Vorteil nach vollständigen Kosten positiv' if economic_ok else 'Kein positiver Vorteil nach vollständigen Kosten',{'eur':str(improvement),'execution_confidence':context.get('execution_confidence'),'mode':context.get('execution_mode')})
   add('TAX_AND_LOSS',context.get('tax_loss_ok',True),'Steuer- und Verlustwirkung akzeptabel' if context.get('tax_loss_ok',True) else 'Steuer- oder Verlustwirkung blockiert')
   add('DATA_FRESHNESS',context.get('data_fresh',False),'Daten vollständig und aktuell' if context.get('data_fresh',False) else 'Daten fehlen oder sind veraltet')
   if real:
-   if exit_override:
-    add('MODEL_HEALTH',True,'Exit-Risikopfad: Modell-Health-Gate wird beim Abbau einer bestehenden Position nicht als Entry-Gate verwendet',{'override':True,'original':context.get('model_health_details')})
+   if context.get('model_health_data_ok',True):
+    add('MODEL_HEALTH',True,'Modellqualität liegt als Richtungsevidenz vor und wird für Sizing/Leverage verwendet',context.get('model_health_details'))
    else:
-    add('MODEL_HEALTH',context.get('model_health_ok',False),'Modell ist für autonomen Betrieb validiert' if context.get('model_health_ok',False) else 'Modell hat die autonome Eignungsprüfung nicht bestanden',context.get('model_health_details'))
+    add('MODEL_HEALTH',False,'Modellqualitätsdaten fehlen oder sind ungültig',context.get('model_health_details'))
    add('ROUTE_COST',context.get('route_cost_ok',False),'Günstigste EUR/USD-Ausführung ausgewählt' if context.get('route_cost_ok',False) else 'Ausführungsroute ist nicht ausreichend validiert',context.get('route_cost_details'))
    add('QUOTE_FUNDING',context.get('quote_funding_ok',False),'Quote-Währung verfügbar bzw. Funding-Leg bestätigt' if context.get('quote_funding_ok',False) else 'Quote-Währung fehlt oder Funding-Leg nicht bestätigt',context.get('quote_funding_details'))
    add('PORTFOLIO_RISK',context.get('portfolio_risk_ok',False),'Portfolio-Risikolimits eingehalten' if context.get('portfolio_risk_ok',False) else 'Portfolio-Risikolimit blockiert',context.get('portfolio_risk_details'))
