@@ -9,6 +9,7 @@ from decision_engine_v95 import DecisionEngineV95
 from decision_matrix import DecisionMatrix
 
 class V95EndToEndTests(unittest.TestCase):
+    # v95: risk limits are part of deterministic target construction.
     def setUp(self):
         self.e=DecisionEngineV95(None)
         self.cfg={'minimum_score':70,'max_position_pct':10,'cash_reserve_pct':20}
