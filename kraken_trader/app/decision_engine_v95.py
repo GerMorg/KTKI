@@ -161,10 +161,8 @@ class DecisionEngineV95:
         )
         delta = target - current
 
-        if direction in ("LONG", "SHORT"):
+        if direction in ("LONG", "SHORT", "HOLD"):
             action = "BUY" if delta > 0 else "SELL" if delta < 0 else "HOLD"
-        elif direction == "HOLD":
-            action = "HOLD"
         else:
             action = "SELL" if current > 0 else "HOLD"
 
