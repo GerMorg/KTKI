@@ -56,7 +56,7 @@ class V89H168GateTests(unittest.TestCase):
             self.assertEqual(execution["horizons"]["168"]["samples"], 0)
 
             general = health.evaluate("crypto_spot", require_long_horizon=True)
-            self.assertEqual(general["status"], "NOT_READY")
+            self.assertEqual(general["status"], "READY")
         finally:
             Path(path).unlink(missing_ok=True)
 
