@@ -1,11 +1,11 @@
 """KTKI v97 runtime.
 
-VERSION = "0.1.0-dev.97"
-
 v97 removes the last split between analysis/target/order construction:
 Paper and Real call the same CanonicalDecisionPlannerV97 and
 build_execution_intent(). Only their final execution adapters differ.
 """
+VERSION = "0.1.0-dev.97"
+
 import json
 import os
 from flask import jsonify, redirect, request, url_for
