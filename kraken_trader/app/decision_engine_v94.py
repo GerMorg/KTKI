@@ -40,8 +40,12 @@ class DecisionEngineV94:
         # gate is an explicit forecast edge after the current route costs.
         raw=D(row.get('expected_edge_pct',row.get('forecast_edge_pct',0)))
         if raw==0:
-            raw=D(health.get('expected_edge_after_costs_pct',0) or 0)
-            if direction=='SHORT': raw=D(health.get('directions',{}).get('DOWN',{}).get('net_return_pct',0) or 0)
+            if direction=='LONG':
+                raw=D(health.get('horizons',{}).get('24',{}).get('expected_up_edge_raw_pct',0) or 0)
+                if raw==0: raw=D(health.get('expected_edge_after_costs_pct',0) or 0)
+            elif direction=='SHORT':
+                raw=D(health.get('horizons',{}).get('24',{}).get('expected_down_edge_raw_pct',0) or 0)
+                if raw==0: raw=D(health.get('directions',{}).get('DOWN',{}).get('net_return_pct',0) or 0)
         news=self.news_score(row)
         # News is an input to the decision, never a standalone order trigger.
         news_adj=max(D('-2'),min(D(2),news/100))
