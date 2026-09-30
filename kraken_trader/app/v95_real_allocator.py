@@ -51,7 +51,7 @@ class RealPortfolioAllocatorV95:
                 if value<=0:
                     continue
                 asset=self._asset(str(pos["symbol"]).split("/",1)[0])
-                current[asset]=value if str(pos.get("side")).lower()=="buy" else -value
+                current[asset]=current.get(asset,D(0)) + (value if str(pos.get("side")).lower()=="buy" else -value)
         except Exception:
             pass
         return current, total
