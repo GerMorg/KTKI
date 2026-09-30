@@ -341,7 +341,7 @@ def prozess_v97():return _prozess()
 def v97_health():
     plan=_latest_plan()
     return jsonify({
-        "version":"0.1.0-dev.96",
+        "version":"0.1.0-dev.97",
         "runtime":"v97_main",
         "architecture":"CANONICAL_PLANNER_PLUS_SHARED_EXECUTION_INTENT",
         "paper_real_same_plan":True,
