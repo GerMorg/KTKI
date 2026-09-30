@@ -11,7 +11,7 @@ legacy=base.legacy
 options=getattr(base,'options',{})
 
 MARGIN_DEFAULTS={
- 'real_margin_enabled':'false','real_margin_default_leverage':'2','real_margin_max_leverage':'3',
+ 'real_margin_enabled':'false','real_margin_default_leverage':'2','real_margin_max_leverage':'4',
  'real_margin_max_exposure_pct':'20','real_margin_max_free_margin_pct':'50',
  'real_margin_min_margin_level_pct':'200','real_margin_safety_buffer_pct':'20',
  'real_margin_allow_shorts':'false','real_margin_balance_asset':'ZEUR','real_execution_confidence_spot_min':'70','real_execution_confidence_margin_2x':'80','real_execution_confidence_margin_3x':'88','real_execution_confidence_margin_4x':'94','real_execution_confidence_margin_5x':'97','real_execution_confidence_short_min':'82'
@@ -50,7 +50,7 @@ def v91_health():
  except Exception as exc:
   margin_state={'status':'ERROR','error':type(exc).__name__}
  payload={**payload,'version':'0.1.0-dev.92','runtime':'v92_main',
-  'execution_confidence':{'spot_min':str(cfg.get('confidence_spot_min')),'margin_2x':str(cfg.get('confidence_margin_2x')),'margin_3x':str(cfg.get('confidence_margin_3x')),'margin_4x':str(cfg.get('confidence_margin_4x')),'margin_5x':str(cfg.get('confidence_margin_5x')),'short_min':str(cfg.get('confidence_short_min'))},'margin_trading':{'enabled':cfg.get('margin_enabled',False),'default_leverage':str(cfg.get('margin_default_leverage')),'max_leverage':str(cfg.get('margin_max_leverage')),'max_exposure_pct':str(cfg.get('margin_max_exposure_pct')),'max_free_margin_pct':str(cfg.get('margin_max_free_margin_pct')),'min_margin_level_pct':str(cfg.get('margin_min_margin_level_pct')),'safety_buffer_pct':str(cfg.get('margin_safety_buffer_pct')),'allow_shorts':cfg.get('margin_allow_shorts',False),'account_state':margin_state},
+  'execution_confidence':{'spot_min':str(cfg.get('confidence_spot_min')),'margin_2x':str(cfg.get('confidence_margin_2x')),'margin_3x':str(cfg.get('confidence_margin_3x')),'margin_4x':str(cfg.get('confidence_margin_4x')),'margin_5x':str(cfg.get('confidence_margin_5x')),'short_min':str(cfg.get('confidence_short_min'))},'automatic_leverage_mode':'CONFIDENCE_TIERED','execution_confidence':{'spot_min':str(cfg.get('confidence_spot_min')),'margin_2x':str(cfg.get('confidence_margin_2x')),'margin_3x':str(cfg.get('confidence_margin_3x')),'margin_4x':str(cfg.get('confidence_margin_4x')),'margin_5x':str(cfg.get('confidence_margin_5x')),'short_min':str(cfg.get('confidence_short_min'))},'margin_trading':{'enabled':cfg.get('margin_enabled',False),'default_leverage':str(cfg.get('margin_default_leverage')),'max_leverage':str(cfg.get('margin_max_leverage')),'max_exposure_pct':str(cfg.get('margin_max_exposure_pct')),'max_free_margin_pct':str(cfg.get('margin_max_free_margin_pct')),'min_margin_level_pct':str(cfg.get('margin_min_margin_level_pct')),'safety_buffer_pct':str(cfg.get('margin_safety_buffer_pct')),'allow_shorts':cfg.get('margin_allow_shorts',False),'account_state':margin_state},
   'margin_model_gate':'DIRECTIONAL_H24_CALIBRATION','margin_execution':'SPOT_MARGIN_LEVERAGE','futures_not_enabled':True,'existing_position_exit':{'enabled':True,'margin_reduce_only':True,'entry_gates_bypassed':True}}
  return payload
 
