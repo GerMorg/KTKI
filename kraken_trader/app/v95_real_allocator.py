@@ -276,7 +276,7 @@ class RealPortfolioAllocatorV95:
                 else:
                     calibration = (
                         health.margin_calibration(
-                            family, "UP" if side == "buy" else "DOWN", 24, 20, cfg["max_drawdown_pct"]
+                            family, "UP" if side == "buy" else "DOWN", 24, 20, float(self.db.value("decision_max_drawdown_pct","-25"))
                         )
                         if cfg["margin_enabled"]
                         else {"status": "READY", "direction": "SPOT"}
