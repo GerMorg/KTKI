@@ -29,7 +29,7 @@ class PaperEngineV97(PaperEngine):
             self.runtime.prepare()
         active=self.db.value("automation_enabled","false").lower()=="true"
         cash,pv,total,missing=self.equity()
-        planner=CanonicalDecisionPlannerV96(self.db)
+        planner=CanonicalDecisionPlannerV97(self.db)
         settings=planner.settings()
         current={}
         for p in self.positions():
