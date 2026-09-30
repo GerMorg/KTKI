@@ -157,7 +157,7 @@ class RealPortfolioAllocatorV95:
                 )
                 for family in families
             }
-            regimes = {family: family_regime(self.db, family) for family in families}
+            regimes = {family: family_regime(self.db, family, max_age_minutes=int(float(self.db.value('decision_max_scanner_age_minutes','120')))) for family in families}
 
             candidates = scanner_candidates(self.db, cfg["allowed_symbols"], max_age_minutes=int(float(self.db.value('decision_max_scanner_age_minutes','120'))))
             enriched = []
@@ -292,7 +292,8 @@ class RealPortfolioAllocatorV95:
                         cfg["confidence_margin_5x"],
                         calibration=calibration if calibration.get("status") == "READY" else None,
                     )
-                is_exit = reducing and D(decision["target_exposure_eur"]) == 0
+                risk_reduction = reducing
+                is_exit = risk_reduction and D(decision["target_exposure_eur"]) == 0
                 if execution["mode"] == "BLOCKED":
                     self._record(engine, "REAL", decision, execution_symbol, execution["mode"], execution["leverage"], "BLOCKED", execution["reason"])
                     continue
@@ -316,8 +317,8 @@ class RealPortfolioAllocatorV95:
                     "cooldown_ok": True,
                     "daily_limit_ok": True,
                     "improvement_after_costs": str(max(D(0), D(decision["expected_edge_after_costs_pct"] or 0)) * trade_eur / 100),
-                    "economic_edge_ok": bool(decision.get("economic_gate_passed")) and (is_exit or D(decision.get("expected_edge_after_costs_pct") or 0)>0),
-                    "exit_risk_override": is_exit,
+                    "economic_edge_ok": bool(decision.get("economic_gate_passed")) and (risk_reduction or D(decision.get("expected_edge_after_costs_pct") or 0)>0),
+                    "exit_risk_override": risk_reduction,
                     "execution_confidence": str(confidence),
                     "execution_mode": execution["mode"],
                     "execution_leverage": str(execution["leverage"]),
@@ -361,7 +362,7 @@ class RealPortfolioAllocatorV95:
                         secret,
                         leverage=execution["leverage"],
                         margin=(execution["mode"] == "MARGIN"),
-                        reduce_only=is_exit,
+                        reduce_only=risk_reduction,
                     )
                     status = result.get("status")
                     intent = result.get("client_order_id")
