@@ -232,7 +232,7 @@ class CanonicalDecisionPlannerV96:
             elif delta>0:benefit=max(D(0),edge)*trade/100
             else:benefit=max(D(0),-edge)*trade/100
             action_type=(
-                "ENTRY" if delta>0 and D(decision["current_exposure_eur"])==0 else
+                "ENTRY" if D(decision["current_exposure_eur"])==0 and D(decision["target_exposure_eur"])!=0 else
                 "REBALANCE_UP" if delta>0 else
                 "EXIT" if D(decision["target_exposure_eur"])==0 and D(decision["current_exposure_eur"])!=0 else
                 "REBALANCE_DOWN" if delta<0 else "HOLD"
