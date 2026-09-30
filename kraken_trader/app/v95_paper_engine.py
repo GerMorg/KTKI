@@ -140,19 +140,18 @@ class PaperEngineV95(PaperEngine):
             family=row.get('family','crypto_spot')
             h=health_by.get(family,{})
             is_exit=D(decision.get('target_exposure_eur'))==0 and D(decision.get('current_exposure_eur'))>0
-            cal=health.margin_calibration(family,'UP' if side=='BUY' else 'DOWN',24,20) if margin_enabled and not is_exit else {'status':'READY','direction':'EXIT'}
-            conf=execution_confidence(
-                decision.get('score',0),h,
-                cal if cal.get('status')=='READY' else None,
-                regime=decision.get('regime','NEUTRAL'),
-                direction='UP' if side=='BUY' else 'DOWN',
-            )
-            ex=choose_execution(
-                conf,margin_enabled,max_leverage,65,78,86,93,97,
-                calibration=cal if not is_exit else None,
-            )
-            if is_exit:
-                ex={'mode':'MARGIN' if margin_enabled else 'SPOT','leverage':max_leverage if margin_enabled else 1,'confidence':str(conf),'reason':'EXPLICIT_TARGET_ZERO_RISK_EXIT'}
+            reducing=abs(D(decision.get('target_exposure_eur')))<abs(D(decision.get('current_exposure_eur'))) and D(decision.get('target_exposure_eur'))*D(decision.get('current_exposure_eur'))>=0
+            if reducing:
+                ex=self._existing_execution(execution_symbol,margin_enabled,max_leverage)
+                conf=execution_confidence(decision.get('score',0),h,None,regime=decision.get('regime','NEUTRAL'),direction='UP' if side=='BUY' else 'DOWN')
+                ex={**ex,'confidence':str(conf)}
+            else:
+                cal=health.margin_calibration(family,'UP' if side=='BUY' else 'DOWN',24,20) if margin_enabled else {'status':'READY','direction':'SPOT'}
+                conf=execution_confidence(
+                    decision.get('score',0),h,cal if cal.get('status')=='READY' else None,
+                    regime=decision.get('regime','NEUTRAL'),direction='UP' if side=='BUY' else 'DOWN',
+                )
+                ex=choose_execution(conf,margin_enabled,max_leverage,65,78,86,93,97,calibration=cal if cal.get('status')=='READY' else None)
             if ex['mode']=='BLOCKED':
                 results.append({'symbol':decision['symbol'],'action':'HOLD','executed':False,'reason':ex['reason'],'decision':decision})
                 continue
