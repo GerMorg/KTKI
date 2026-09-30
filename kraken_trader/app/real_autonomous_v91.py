@@ -5,6 +5,7 @@ from decision_matrix import DecisionMatrix
 from model_health import ModelHealth
 from real_autonomous_v81 import RealPortfolioAllocatorV81
 from execution_confidence import execution_confidence,short_execution
+from market_regime import family_regime
 
 D=lambda x:Decimal(str(x or 0))
 
@@ -65,9 +66,9 @@ class RealPortfolioAllocatorV91(RealPortfolioAllocatorV81):
   if sum(1 for x in result.get('actions',[]) if str(x.get('status','')).upper()=='SUBMITTED')>=cfg['max_actions_per_run']:return result
   candidates=self._scanner_short_candidates(cfg)
   if not candidates:return result
-  health=ModelHealth(self.db);total=self._current_eur()[1];selected_candidate=candidates[0];symbol=selected_candidate['symbol'];family=selected_candidate['family'];cal=health.margin_calibration(family,'DOWN',24,20,cfg['max_drawdown_pct']);family_health=health.evaluate(family,require_long_horizon=False,max_drawdown_pct=cfg['max_drawdown_pct']);confidence=execution_confidence(selected_candidate.get('score',0),family_health,cal);execution=short_execution(confidence,cal,cfg['margin_max_leverage'],cfg['confidence_short_min'],cfg['confidence_margin_2x'],cfg['confidence_margin_3x'],cfg['confidence_margin_4x'],cfg['confidence_margin_5x'])
+  health=ModelHealth(self.db);total=self._current_eur()[1];selected_candidate=candidates[0];symbol=selected_candidate['symbol'];family=selected_candidate['family'];cal=health.margin_calibration(family,'DOWN',24,20,cfg['max_drawdown_pct']);family_health=health.evaluate(family,require_long_horizon=False,max_drawdown_pct=cfg['max_drawdown_pct']);regime=family_regime(self.db,family).get('regime','NEUTRAL');directional_score=max(D(0),D(100)-D(selected_candidate.get('score',0)));confidence=execution_confidence(directional_score,family_health,cal,regime=regime,direction='DOWN');execution=short_execution(confidence,cal,cfg['margin_max_leverage'],cfg['confidence_short_min'],cfg['confidence_margin_2x'],cfg['confidence_margin_3x'],cfg['confidence_margin_4x'],cfg['confidence_margin_5x'])
   if execution['mode']!='MARGIN':
-   result=dict(result);result['margin_short']={'symbol':symbol,'status':'BLOCKED','execution_confidence':str(confidence),'reason':execution['reason'],'calibration':cal};return result
+   result=dict(result);result['margin_short']={'symbol':symbol,'status':'BLOCKED','execution_confidence':str(confidence),'reason':execution['reason'],'calibration':cal,'regime':regime};return result
   trade_eur=min(cfg['max_trade_eur'],max(cfg['min_trade_eur'],total*cfg['max_position_pct']/100))
   selected=selected_candidate['selected'];route=selected_candidate['route'];price=D(self._tickers()[selected['symbol']]['b'][0]);volume=trade_eur/price if price>0 else D(0)
   if volume<=0:return result
@@ -75,5 +76,5 @@ class RealPortfolioAllocatorV91(RealPortfolioAllocatorV81):
   if not decision['allowed']:return result
   try:out=self.trade_engine.submit(selected['symbol'],'sell',str(volume),'limit',str(price),secrets.token_hex(16),approval_token,False,self.db.value('real_balancing_automation_secret',''),leverage=execution['leverage'],margin=True,reduce_only=False);status=out.get('status','FAILED');intent=out.get('client_order_id')
   except Exception as exc:status='FAILED';intent=None
-  result=dict(result);result['actions']=list(result.get('actions') or [])+[{'symbol':symbol,'side':'sell','trade_eur':str(trade_eur),'status':status,'margin':True,'leverage':str(execution['leverage']),'reduce_only':False,'reason':'MARGIN_SHORT_OPEN','execution_confidence':str(confidence),'execution_reason':execution['reason'],'blockers':[],'calibration':cal,'order_intent_id':intent}];result['margin_short']=result['actions'][-1]
+  result=dict(result);result['actions']=list(result.get('actions') or [])+[{'symbol':symbol,'side':'sell','trade_eur':str(trade_eur),'status':status,'margin':True,'leverage':str(execution['leverage']),'reduce_only':False,'reason':'MARGIN_SHORT_OPEN','execution_confidence':str(confidence),'execution_reason':execution['reason'],'blockers':[],'calibration':cal,'regime':regime,'directional_score':str(directional_score),'order_intent_id':intent}];result['margin_short']=result['actions'][-1]
   return result

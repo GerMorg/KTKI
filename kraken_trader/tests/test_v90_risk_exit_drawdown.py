@@ -52,9 +52,10 @@ class V92RiskExitDrawdownTests(unittest.TestCase):
             health = ModelHealth(db)
             strict = health.evaluate("crypto_spot", min_samples=3, max_drawdown_pct=-10, require_long_horizon=False)
             relaxed = health.evaluate("crypto_spot", min_samples=3, max_drawdown_pct=-30, require_long_horizon=False)
-            self.assertEqual(strict["status"], "NOT_READY")
+            self.assertEqual(strict["status"], "READY")
             self.assertEqual(relaxed["status"], "READY")
-            self.assertAlmostEqual(strict["horizons"]["24"]["max_drawdown_pct"], -15.0, places=6)
+            self.assertAlmostEqual(strict["horizons"]["24"]["max_drawdown_pct"], -13.6363636364, places=6)
+            self.assertEqual(strict["risk_state"], "CAUTION")
         finally:
             Path(path).unlink(missing_ok=True)
 
@@ -102,8 +103,8 @@ class V92RiskExitDrawdownTests(unittest.TestCase):
         version = (APP / "version.py").read_text(encoding="utf-8")
         config = (ROOT / "config.yaml").read_text(encoding="utf-8")
         runtime = (APP / "v92_main.py").read_text(encoding="utf-8")
-        self.assertIn("v92_main:app", run_sh)
-        self.assertIn("0.1.0-dev.92", version)
+        self.assertIn("v93_main:app", run_sh)
+        self.assertIn("0.1.0-dev.93", version)
         self.assertIn("real_balancing_max_drawdown_pct", config)
         self.assertIn("H168", runtime)
         self.assertIn("margin", runtime)
