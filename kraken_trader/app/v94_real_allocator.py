@@ -87,9 +87,11 @@ class RealPortfolioAllocatorV94(RealPortfolioAllocator):
                 if not cand: continue
                 selected=cand['selected'];route=cand['route'];trade_eur=min(abs(delta),cfg['max_trade_eur'])
                 family=cand['family'];h=health_by[family];regime=d['regime']
-                cal=health.margin_calibration(family,'UP' if side=='buy' else 'DOWN',24,20,cfg['max_drawdown_pct']) if cfg['margin_enabled'] else {'status':'READY','direction':'SPOT'}
+                is_reduce_only=D(d['target_exposure_eur'])==0 and D(d['current_exposure_eur'])>0
+                cal=health.margin_calibration(family,'UP' if side=='buy' else 'DOWN',24,20,cfg['max_drawdown_pct']) if cfg['margin_enabled'] and not is_reduce_only else {'status':'READY','direction':'EXIT' if is_reduce_only else 'SPOT'}
                 conf=execution_confidence(d['score'],h,cal if cal.get('status')=='READY' else None,regime=regime,direction='UP' if side=='buy' else 'DOWN')
-                ex=choose_execution(conf,cfg['margin_enabled'],cfg['margin_max_leverage'],cfg['confidence_spot_min'],cfg['confidence_margin_2x'],cfg['confidence_margin_3x'],cfg['confidence_margin_4x'],cfg['confidence_margin_5x'],calibration=cal if side=='buy' else None)
+                ex=choose_execution(conf,cfg['margin_enabled'],cfg['margin_max_leverage'],cfg['confidence_spot_min'],cfg['confidence_margin_2x'],cfg['confidence_margin_3x'],cfg['confidence_margin_4x'],cfg['confidence_margin_5x'],calibration=cal if not is_reduce_only else None)
+                if is_reduce_only: ex={'mode':'MARGIN' if cfg['margin_enabled'] else 'SPOT','leverage':cfg['margin_default_leverage'] if cfg['margin_enabled'] else D(1),'confidence':str(conf),'reason':'EXPLICIT_TARGET_ZERO_RISK_EXIT'}
                 if ex['mode']=='BLOCKED': continue
                 price=D(self.db.rows('SELECT ask,bid,last FROM live_prices WHERE symbol=? LIMIT 1',(symbol,))[0][('ask' if side=='buy' else 'bid')])
                 vol=D(trade_eur)/price if price>0 else D(0)
@@ -101,7 +103,7 @@ class RealPortfolioAllocatorV94(RealPortfolioAllocator):
                 if automatic and cfg['dry_run']:status='DRY_RUN'
                 elif automatic and cfg['automatic_execution'] and dec['allowed']:
                     secret=self.db.value('real_balancing_automation_secret','')
-                    res=self.trade_engine.submit(symbol,side,str(vol),'limit',str(price),secrets.token_hex(16),approval_token,False,secret,leverage=ex['leverage'],margin=(ex['mode']=='MARGIN'),reduce_only=(D(d['target_exposure_eur'])==0))
+                    res=self.trade_engine.submit(symbol,side,str(vol),'limit',str(price),secrets.token_hex(16),approval_token,False,secret,leverage=ex['leverage'],margin=(ex['mode']=='MARGIN'),reduce_only=is_reduce_only)
                     status=res.get('status');intent=res.get('client_order_id')
                 with self.db.con() as c:c.execute('INSERT INTO real_allocation_actions(run_id,created_at,symbol,side,current_eur,target_eur,difference_eur,status,decision_json,order_intent_id,error) VALUES(?,?,?,?,?,?,?,?,?,?,?)',(rid,now(),symbol,side,d['current_exposure_eur'],d['target_exposure_eur'],d['rebalance_delta_eur'],status,safe_json({'canonical_decision':d,'decision':dec,'model_health':h}),intent,None))
                 actions.append({'symbol':symbol,'side':side,'status':status,'decision':d,'execution':ex,'blockers':[x['reason'] for x in dec.get('checks',[]) if not x['passed']]})
