@@ -45,7 +45,7 @@ DEFAULTS={
     "decision_allow_shorts":"false",
 }
 
-class CanonicalDecisionPlannerV96:
+class CanonicalDecisionPlannerV97:
     def __init__(self,db):
         self.db=db
         self.ensure()
