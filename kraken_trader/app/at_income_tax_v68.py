@@ -117,10 +117,13 @@ class AustrianTaxV68:
         return bool(base and quote in ('EUR', 'USD') and base not in ('EUR', 'USD'))
 
     def _tax_bucket(self, pair):
-        rows=self.db.rows(
-            "SELECT category,asset_class FROM market_universe "
-            "WHERE symbol=? OR source_key=? LIMIT 1",(str(pair).upper(),str(pair).upper())
-        )
+        try:
+            rows=self.db.rows(
+                "SELECT category,asset_class FROM market_universe "
+                "WHERE symbol=? OR source_key=? LIMIT 1",(str(pair).upper(),str(pair).upper())
+            )
+        except Exception:
+            rows=[]
         category=(rows[0].get('category') if rows else '') or ''
         if category=='crypto_spot':
             return 'CRYPTO_27_5'
