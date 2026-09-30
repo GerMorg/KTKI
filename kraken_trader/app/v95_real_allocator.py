@@ -56,11 +56,21 @@ class RealPortfolioAllocatorV95:
             if account and D(account[0].get("equity"))>0:
                 total=D(account[0]["equity"])
             positions=self.db.rows("SELECT symbol,side,current_value FROM real_margin_positions")
+            mt=ticker_map(self.db, int(float(self.db.value("decision_market_data_max_age_seconds","120"))))
             for pos in positions:
                 value=D(pos.get("current_value") or 0)
                 if value<=0:
                     continue
-                asset=self._asset(str(pos["symbol"]).split("/",1)[0])
+                symbol=str(pos.get("symbol") or "")
+                quote=symbol.rsplit("/",1)[-1].upper()
+                if quote=="USD":
+                    fx=mt.get("EUR/USD") or {}
+                    rate=D((fx.get("c") or [0])[0])
+                    if rate>0:
+                        value=value/rate
+                    else:
+                        continue
+                asset=self._asset(symbol.split("/",1)[0])
                 current[asset]=current.get(asset,D(0)) + (value if str(pos.get("side")).lower()=="buy" else -value)
         except Exception:
             pass
