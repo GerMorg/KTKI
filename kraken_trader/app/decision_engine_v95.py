@@ -245,6 +245,27 @@ class DecisionEngineV95:
                     allow_short=allow_short,
                 )
             )
+        # Portfolio-wide normalization: individual caps alone can still
+        # over-allocate when many candidates qualify. Scale absolute targets
+        # together so the reserved cash budget remains a hard portfolio limit.
+        budget=max(D(0),D(total))*(
+            1-max(D(0),min(D(100),D(config.get("cash_reserve_pct",20))))/100
+        )
+        gross=sum(abs(D(x.get("target_exposure_eur"))) for x in decisions)
+        if gross>budget and gross>0:
+            factor=budget/gross
+            for x in decisions:
+                target=D(x.get("target_exposure_eur"))*factor
+                current=D(x.get("current_exposure_eur"))
+                x["target_exposure_eur"]=str(target)
+                x["rebalance_delta_eur"]=str(target-current)
+                if x["direction"] in ("LONG","SHORT"):
+                    x["action"]="BUY" if target-current>0 else "SELL" if target-current<0 else "HOLD"
+            for x in decisions:
+                x["portfolio_budget_scale"]=str(factor)
+        else:
+            for x in decisions:
+                x["portfolio_budget_scale"]="1"
         return decisions
 
     def record(
