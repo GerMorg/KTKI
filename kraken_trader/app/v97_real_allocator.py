@@ -4,7 +4,7 @@ import secrets
 from decimal import Decimal
 
 from v95_real_allocator import RealPortfolioAllocatorV95
-from decision_pipeline_v97 import CanonicalDecisionPlannerV96
+from decision_pipeline_v97 import CanonicalDecisionPlannerV97
 from execution_plan_v97 import build_execution_intent
 from order_math_v97 import volume_for_eur, order_constraints
 from trade_guard_v97 import TradeGuardV96
@@ -13,7 +13,7 @@ from decision_engine_v97 import DecisionEngineV97
 
 D=lambda x:Decimal(str(x or 0))
 
-class RealPortfolioAllocatorV96(RealPortfolioAllocatorV95):
+class RealPortfolioAllocatorV97(RealPortfolioAllocatorV95):
     def _current_by_symbol(self,current):
         out={}
         for asset,value in current.items():
@@ -195,7 +195,7 @@ class RealPortfolioAllocatorV96(RealPortfolioAllocatorV95):
                     "UPDATE real_allocation_runs SET finished_at=?,status=?,details_json=? WHERE id=?",
                     (__import__("db").now(),final,json.dumps({"plan_hash":plan["plan_hash"],"actions":actions},sort_keys=True,default=str),run_id)
                 )
-            self.db.audit("REAL_V96_CANONICAL_RUN",json.dumps({"plan_hash":plan["plan_hash"],"status":final,"actions":len(actions)}), "warning" if automatic else "info","REAL")
+            self.db.audit("REAL_V97_CANONICAL_RUN",json.dumps({"plan_hash":plan["plan_hash"],"status":final,"actions":len(actions)}), "warning" if automatic else "info","REAL")
             return {**plan,"status":final,"run_id":run_id,"actions":actions}
         except Exception as exc:
             if run_id:
