@@ -81,6 +81,11 @@ class ModelHealth:
   ready=samples>=int(min_samples) and mean_edge is not None and mean_edge>0 and (worst is None or worst>=float(max_drawdown_pct))
   reason='READY' if ready else ('INSUFFICIENT_SAMPLES' if samples<int(min_samples) else ('NON_POSITIVE_MEAN_EDGE' if mean_edge is None or mean_edge<=0 else 'WORST_SAMPLE_LIMIT'))
   return {'family':family,'direction':direction,'horizon_hours':int(horizon),'samples':samples,'wins':wins,'win_rate':wins/samples if samples else None,'net_return_pct':net,'mean_edge_after_costs_pct':mean_edge,'worst_sample_pct':worst,'max_drawdown_pct':dd,'required_samples':int(min_samples),'required_net_return_pct':0.0,'required_max_drawdown_pct':float(max_drawdown_pct),'status':'READY' if ready else 'NOT_READY','reason':reason}
+ def _direction_quality(self,item,min_samples):
+  samples=float(item.get('samples') or 0);win=float(item.get('win_rate') or 0);edge=float(item.get('mean_edge_after_costs_pct') or 0)
+  sample_score=min(1.0,samples/max(1,min_samples));win_score=max(0.0,min(1.0,win));edge_score=max(0.0,min(1.0,0.5+edge/4.0))
+  return round(100*(0.25*sample_score+0.45*win_score+0.30*edge_score),4)
+
  def evaluate(self,family,min_samples=20,min_net_return_pct=0.0,max_drawdown_pct=-25.0,require_long_horizon=True):
   try:max_drawdown_pct=float(max_drawdown_pct)
   except (TypeError,ValueError):max_drawdown_pct=-25.0
@@ -95,8 +100,19 @@ class ModelHealth:
    ]
   h24=details['horizons']['24'];details['samples']=h24['samples']
   up=self.margin_calibration(family,'UP',24,min_samples,max_drawdown_pct);down=self.margin_calibration(family,'DOWN',24,min_samples,max_drawdown_pct)
+  # Preserve the historical round-trip cost used to produce the edge. This allows
+  # the decision engine to convert net historical edge back to gross and subtract
+  # the current route cost exactly once.
+  for item in (up,down):
+   rows=self._rows(family,24,item['direction']);costs=[]
+   for r in rows:
+    try:f=json.loads(r.get('features_json') or '{}');costs.append(float(f.get('estimated_roundtrip_cost_pct') or 0))
+    except Exception:pass
+   item['historical_roundtrip_cost_pct']=sum(costs)/len(costs) if costs else 0.0
   details['directions']={'UP':up,'DOWN':down}
-  evidence=(h24['samples']>=min_samples and h24['mean_edge_after_costs_pct'] is not None and h24['mean_edge_after_costs_pct']>min_net_return_pct)
+  details['quality_score_by_direction']={'UP':self._direction_quality(up,min_samples),'DOWN':self._direction_quality(down,min_samples)}
+  up_evidence=up['status']=='READY'
+  evidence=up_evidence
   risk_state='OK'
   if h24['max_drawdown_pct'] is not None and h24['max_drawdown_pct']<max_drawdown_pct:risk_state='CAUTION'
   if h24['samples']<min_samples:risk_state='INSUFFICIENT_DATA'
@@ -111,7 +127,8 @@ class ModelHealth:
   h168gates=[g for g in details['gates'] if g['name'].startswith('H168_')]
   details['h168_advisory_ready']=h24['samples']>=min_samples and all(g['passed'] for g in h168gates)
   details['h168_advisory_reason']='READY' if details['h168_advisory_ready'] else f"H168 advisory: {details['horizons']['168']['samples']}/{min_samples} Samples bzw. Validierung offen"
-  status='READY' if evidence else ('INSUFFICIENT_DATA' if h24['samples']<min_samples else 'WEAK')
+  # A positive H24 mean edge is operational evidence; drawdown remains an explicit caution state and affects sizing, while directional margin calibration keeps its stricter gate.
+  status='READY' if (h24['samples']>=min_samples and h24['mean_edge_after_costs_pct'] is not None and h24['mean_edge_after_costs_pct']>min_net_return_pct) else ('INSUFFICIENT_DATA' if up['samples']<min_samples else 'WEAK')
   details['status']=status;details['score']=details['quality_score']
   with self.db.con() as c:c.execute('INSERT INTO model_health_snapshots(created_at,family,status,score,details_json) VALUES(?,?,?,?,?)',(now(),family,status,str(details['quality_score']),json.dumps(details,sort_keys=True)))
   return details

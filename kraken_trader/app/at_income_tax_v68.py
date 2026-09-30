@@ -10,6 +10,9 @@ from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from db import now
 
 RATE = Decimal('0.275')
+BMF_CAPITAL_URL='https://www.bmf.gv.at/themen/steuern/sparen-veranlagen/besteuerung-kapitalertraege-inland.html'
+BMF_CRYPTO_URL='https://www.bmf.gv.at/themen/steuern/sparen-veranlagen/steuerliche-behandlung-von-kryptowaehrungen.html'
+BMF_REPORTING_URL='https://www.bmf.gv.at/themen/steuern/sparen-veranlagen/information-zu-einkuenften-aus-kapitalvermoegen.html'
 DISCLAIMER = ('Arbeits- und Prüfhilfe für die österreichische Einkommensteuer. '
               'Keine Steuer- oder Rechtsberatung und kein Ersatz für die Prüfung durch '
               'Steuerberatung bzw. Finanzverwaltung. Die steuerliche Einordnung einzelner '
@@ -112,6 +115,27 @@ class AustrianTaxV68:
     def _is_supported_market(self, pair):
         base, quote = self._pair_parts(pair)
         return bool(base and quote in ('EUR', 'USD') and base not in ('EUR', 'USD'))
+
+    def _tax_bucket(self, pair):
+        try:
+            rows=self.db.rows(
+                "SELECT category,asset_class FROM market_universe "
+                "WHERE symbol=? OR source_key=? LIMIT 1",(str(pair).upper(),str(pair).upper())
+            )
+        except Exception:
+            rows=[]
+        category=(rows[0].get('category') if rows else '') or ''
+        if category=='crypto_spot':
+            return 'CRYPTO_27_5'
+        if category=='xstocks':
+            return 'CAPITAL_ASSET_27_5'
+        if category in ('forex','leveraged_spot'):
+            return 'REVIEW_GENERAL_TARIFF_OR_SPECIAL'
+        base,quote=self._pair_parts(pair)
+        crypto_bases={'XBT','BTC','ETH','XRP','SOL','ADA','DOT','LINK','LTC','BCH','AVAX','ATOM','UNI','MATIC','POL','DOGE'}
+        if base in crypto_bases:
+            return 'CRYPTO_27_5'
+        return 'REVIEW_UNCLASSIFIED_PRODUCT'
 
     def _fetch_trades(self):
         client = self._client()
@@ -246,11 +270,14 @@ class AustrianTaxV68:
             qty, cost_quote, fee_quote = D(trade['volume']), D(trade['cost']), D(trade['fee'])
             if not self._is_supported_market(pair) or qty <= 0:
                 continue
+            tax_bucket=self._tax_bucket(pair)
             gross_eur, fx_source = self._eur_value(pair, cost_quote, moment.date().isoformat(), fx)
             fee_eur, _ = self._eur_value(pair, fee_quote, moment.date().isoformat(), fx)
             state = inventory.setdefault(base, [Decimal(0), Decimal(0), 'derived'])
             side = str(trade['side']).lower()
             review = []
+            if tax_bucket.startswith('REVIEW_'):
+                review.append(tax_bucket)
             if quote == 'USD' and gross_eur <= 0:
                 review.append('HISTORISCHE_EUR_USD_RATE_FEHLT')
             if side == 'buy':
@@ -268,6 +295,7 @@ class AustrianTaxV68:
                              'gross_value_eur': money(gross_eur), 'fee_eur': money(fee_eur),
                              'acquisition_basis_eur': money(acquisition), 'proceeds_eur': '0.00',
                              'gain_loss_eur': '0.00', 'estimated_tax_eur': '0.00',
+                             'tax_bucket': tax_bucket,
                              'fx_rate_source': fx_source, 'review_required': 'yes' if review else 'no',
                              'review_reasons': '|'.join(sorted(set(review)))})
                 continue
@@ -294,6 +322,7 @@ class AustrianTaxV68:
                          'gross_value_eur': money(gross_eur), 'fee_eur': money(fee_eur),
                          'acquisition_basis_eur': money(basis), 'proceeds_eur': money(proceeds),
                          'gain_loss_eur': money(gain), 'estimated_tax_eur': money(max(Decimal(0), gain) * RATE) if not review else '0.00',
+                         'tax_bucket': tax_bucket,
                          'fx_rate_source': fx_source, 'review_required': 'yes' if review else 'no',
                          'review_reasons': '|'.join(sorted(set(review)))})
         return rows, inventory, warnings
@@ -367,8 +396,11 @@ class AustrianTaxV68:
             warnings.append('Real-Trade-Historie konnte nicht vollständig aktualisiert werden')
         status = 'READY_FOR_REVIEW' if not warnings and all(x['review_required'] == 'no' for x in realized) else 'REVIEW_REQUIRED'
         summary = {'tax_year': year, 'status': status,
-                   'calculation_method': 'Durchschnittliche Anschaffungskosten je Asset aus dem importierten Real-Trade-Bestand; Sonderfälle und Abweichungen prüfen.',
-                   'tax_rate_reference': '27,5 % als Berechnungsparameter; steuerliche Einordnung und anwendbarer Satz prüfen.',
+                   'calculation_method': 'Durchschnittliche Anschaffungskosten je Asset aus dem importierten Real-Trade-Bestand; Sonderfälle, Fremdwährungsfälle und Abweichungen prüfen.',
+                   'tax_scope': 'Kapitalvermögens-/Krypto-Arbeitswerte; Fälle außerhalb des Sondersteuersatzes bleiben Prüffälle.',
+                   'tax_rate_reference': '27,5 % als Berechnungsparameter für die meisten Kapitaleinkünfte und grundsätzlich für Einkünfte aus Kryptowährungen; anwendbaren Satz prüfen.',
+                   'official_sources': {'capital': BMF_CAPITAL_URL, 'crypto': BMF_CRYPTO_URL, 'reporting': BMF_REPORTING_URL},
+                   'loss_offset_note': 'Verluste werden nicht automatisch gegen beliebige Einkommen verrechnet; die konkrete Verlustausgleichsregel ist zu prüfen.',
                    'realized_positive_eur': money(gains), 'realized_negative_eur': money(losses),
                    'net_realized_eur': money(gains + losses),
                    'estimated_tax_eur': money(max(Decimal(0), gains + losses) * RATE) if status == 'READY_FOR_REVIEW' else '0.00',
@@ -379,7 +411,7 @@ class AustrianTaxV68:
         return {'summary': summary, 'realized': realized, 'inventory': inventory_rows, 'cashflow': cashflow, 'warnings': warnings, 'fx': fx}
 
     def persist(self, year, report):
-        realized_fields = ['trade_id','date','day','pair','asset','side','quantity','quote_amount','quote_currency','gross_value_eur','fee_eur','acquisition_basis_eur','proceeds_eur','gain_loss_eur','estimated_tax_eur','fx_rate_source','review_required','review_reasons']
+        realized_fields = ['trade_id','date','day','pair','asset','side','quantity','quote_amount','quote_currency','gross_value_eur','fee_eur','acquisition_basis_eur','proceeds_eur','gain_loss_eur','estimated_tax_eur','tax_bucket','fx_rate_source','review_required','review_reasons']
         inventory_fields = ['tax_year','asset','quantity','basis_eur','unit_basis_eur','basis_source','review_required']
         cashflow_fields = ['ledger_id','date','asset','amount','fee','type','subtype','refid','classification','review_required']
         audit_fields = ['tax_year','record_type','record_id','status','reason']
@@ -440,8 +472,8 @@ class AustrianTaxV68:
 
 
 _TEMPLATE = '''
-<h1>Steuerinfo Österreich – v68</h1>
-<p class="lead">Realhandel-Jahresarbeitsmappe für Kraken: Rohdaten, Ledger-Abstimmung, historische EUR/USD-Bewertung, Anschaffungsbestand, Veräußerungsergebnisse, Prüffälle und E1kv-Arbeitswerte.</p>
+<h1>Einkommensteuer / KESt – Österreich</h1>
+<p class="lead">Arbeits- und Prüfhilfe für realen Kraken-Handel: Rohdaten, Ledger-Abstimmung, historische EUR/USD-Bewertung, Anschaffungsbestand, Veräußerungsergebnisse, Prüffälle und E1kv-Arbeitswerte.</p><div class="card"><b>Steuerrahmen:</b> Für die meisten Einkünfte aus Kapitalvermögen gilt 27,5 %; Einkünfte aus Kryptowährungen unterliegen grundsätzlich ebenfalls 27,5 %. Bestimmte Einkünfte fallen stattdessen unter den allgemeinen Tarif. <a href="https://www.bmf.gv.at/themen/steuern/sparen-veranlagen/besteuerung-kapitalertraege-inland.html" target="_blank" rel="noopener">BMF Kapitalerträge</a> · <a href="https://www.bmf.gv.at/themen/steuern/sparen-veranlagen/steuerliche-behandlung-von-kryptowaehrungen.html" target="_blank" rel="noopener">BMF Kryptowährungen</a> · <a href="https://www.bmf.gv.at/themen/steuern/sparen-veranlagen/information-zu-einkuenften-aus-kapitalvermoegen.html" target="_blank" rel="noopener">BMF Veranlagung</a></div>
 <div class="card"><form method="post"><label>Steuerjahr<input name="year" type="number" min="2009" value="{{year}}"></label><label>Kraken-Daten<select name="refresh"><option value="yes">aktualisieren</option><option value="no">nur vorhandene Daten rechnen</option></select></label><button>Steuerbericht erstellen</button></form></div>
 {% if error %}<div class="card error">{{error}}</div>{% endif %}
 {% if report %}<div class="card"><h2>{{report.summary.status}}</h2><p>{{report.summary.disclaimer}}</p><div class="grid"><div><b>Positive Ergebnisse</b><br>{{report.summary.realized_positive_eur}} EUR</div><div><b>Negative Ergebnisse</b><br>{{report.summary.realized_negative_eur}} EUR</div><div><b>Netto</b><br>{{report.summary.net_realized_eur}} EUR</div><div><b>Steuerwert</b><br>{{report.summary.estimated_tax_eur}} EUR</div><div><b>Prüffälle</b><br>{{report.summary.review_count}}</div><div><b>Report-Hash</b><br><small>{{report.summary.content_sha256}}</small></div></div></div>
@@ -450,5 +482,5 @@ _TEMPLATE = '''
 <div class="card"><h2>E1kv-Arbeitsblatt</h2><div class="tablewrap"><table><tr><th>Kategorie</th><th>EUR</th><th>Status</th></tr>{% for x in report.e1kv_summary %}<tr><td>{{x.category}}</td><td>{{x.amount_eur}}</td><td>{{x.status}}</td></tr>{% endfor %}</table></div></div>
 <div class="card"><h2>Realisierte Geschäfte und Anschaffungen</h2><div class="tablewrap"><table><tr><th>Datum</th><th>Paar</th><th>Seite</th><th>Menge</th><th>Erlös</th><th>Anschaffung</th><th>Ergebnis</th><th>Prüfung</th></tr>{% for x in report.realized %}<tr><td>{{x.date}}</td><td>{{x.pair}}</td><td>{{x.side}}</td><td>{{x.quantity}}</td><td>{{x.proceeds_eur}}</td><td>{{x.acquisition_basis_eur}}</td><td>{{x.gain_loss_eur}}</td><td>{{x.review_required}}</td></tr>{% endfor %}</table></div></div>
 {% else %}{% if latest %}<div class="card"><h2>Letzter Bericht</h2><p>{{latest.status}} · {{latest.trade_count}} Trades · {{latest.review_count}} Prüffälle · {{latest.content_sha256}}</p><a class="button" href="/tax-info-v68.zip?year={{year}}">ZIP exportieren</a></div>{% endif %}{% endif %}
-<div class="card"><small>{{'Arbeits- und Prüfhilfe für die österreichische Einkommensteuer. Keine Steuer- oder Rechtsberatung und kein Ersatz für die Prüfung durch Steuerberatung bzw. Finanzverwaltung. Die steuerliche Einordnung einzelner Produkte, Transaktionen, Verluste und Anschaffungszeitpunkte muss anhand der vollständigen Unterlagen geprüft werden.'}}</small></div>
+<div class="card"><small>Der berechnete 27,5-%-Wert ist ein Arbeitswert für entsprechend eingeordnete Kapital-/Kryptofälle und keine automatische Festsetzung der gesamten Einkommensteuer. Fremdwährungs-, Sonderprodukt-, Bestands- oder Verlustausgleichsfälle bleiben prüfpflichtig.<br><br>{{'Arbeits- und Prüfhilfe für die österreichische Einkommensteuer. Keine Steuer- oder Rechtsberatung und kein Ersatz für die Prüfung durch Steuerberatung bzw. Finanzverwaltung. Die steuerliche Einordnung einzelner Produkte, Transaktionen, Verluste und Anschaffungszeitpunkte muss anhand der vollständigen Unterlagen geprüft werden.'}}</small></div>
 '''

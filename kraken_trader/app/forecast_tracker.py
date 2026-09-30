@@ -2,6 +2,7 @@ import json
 from datetime import datetime, timezone, timedelta
 from db import now
 from strategy_profiles import active_profile, family_for_category
+from decision_pipeline_v96 import CanonicalDecisionPlannerV96
 
 
 class ForecastTracker:
@@ -18,22 +19,26 @@ class ForecastTracker:
     if name not in cols:c.execute(f'ALTER TABLE forecast_evaluations ADD COLUMN {name} {definition}')
 
  def _cost_snapshot(self,symbol,spread_pct):
-  fee_bps=float(self.db.value('paper_fee_bps','40'));fee_source='CONFIG';fee_effective_at=None
+  settings=CanonicalDecisionPlannerV96(self.db).settings()
+  rows=self.db.rows("SELECT symbol,base_asset,quote_asset,source_key,ordermin,costmin,asset_class,category,canonical_id FROM market_universe WHERE symbol=? LIMIT 1",(symbol,))
+  if not rows:
+   return {'entry_cost_pct':999,'exit_cost_pct':999,'roundtrip_cost_pct':999,'components_pct':{},'provenance':{'status':'NO_MARKET_METADATA'}}
+  row=dict(rows[0]);tickers={}
   try:
-   fee=self.db.rows('SELECT taker_bps,source,effective_at FROM account_pair_fees WHERE symbol=?',(symbol,))
-   if fee:fee_bps=float(fee[0]['taker_bps']);fee_source=fee[0]['source'];fee_effective_at=fee[0]['effective_at']
-  except Exception:pass
-  trade_fee=fee_bps/10000;slippage=float(self.db.value('paper_slippage_bps','10'))/10000
-  fx_required=symbol.endswith('/USD');fx_fee=float(self.db.value('paper_fx_fee_bps','10'))/10000 if fx_required else 0.0;fx_spread=0.0
-  if fx_required:
-   fx=self.db.rows("SELECT bid,ask,last,received_at FROM live_prices WHERE symbol='EUR/USD'")
-   if fx:
-    bid=float(fx[0].get('bid') or fx[0].get('last') or 0);ask=float(fx[0].get('ask') or fx[0].get('last') or 0);mid=(bid+ask)/2
-    fx_spread=(ask-bid)/mid if mid and ask>=bid else 0.0
-  entry={'product_spread':spread_pct/2,'trade_fee':trade_fee*100,'slippage':slippage*100,'fx_spread':fx_spread/2*100,'fx_fee':fx_fee*100}
-  exit_cost=dict(entry);entry_total=sum(entry.values());exit_total=sum(exit_cost.values());roundtrip=entry_total+exit_total
-  return {'entry_cost_pct':round(entry_total,8),'exit_cost_pct':round(exit_total,8),'roundtrip_cost_pct':round(roundtrip,8),'components_pct':{'entry':entry,'exit':exit_cost},'provenance':{'trade_fee_source':fee_source,'trade_fee_effective_at':fee_effective_at,'trade_fee_bps':fee_bps,'fx_required':fx_required,'captured_at':now()}}
-
+   for x in self.db.rows("SELECT symbol,last,bid,ask,received_at FROM live_prices"):
+    tickers[x['symbol']]={'b':[x['bid'] or x['last']],'a':[x['ask'] or x['last']],'c':[x['last']],'received_at':x.get('received_at')}
+  except Exception:
+   tickers={}
+  from decision_context_v95 import routes_for_symbol
+  route=routes_for_symbol(self.db,symbol,tickers,settings['decision_fee_bps'],settings['decision_fx_fee_bps'],settings['decision_slippage_bps'])
+  total=float(route.get('roundtrip_cost_pct') or 999)
+  return {
+   'entry_cost_pct':round(total/2,8),
+   'exit_cost_pct':round(total/2,8),
+   'roundtrip_cost_pct':round(total,8),
+   'components_pct':route,
+   'provenance':{'source':'CANONICAL_ROUTE_COST_V96','captured_at':now()},
+  }
  def snapshot(self,symbols):
   ver=self.db.rows('SELECT id FROM watchlist_versions ORDER BY id DESC LIMIT 1');vid=ver[0]['id'] if ver else None;saved=0;failed=0
   for symbol in symbols:
@@ -55,7 +60,21 @@ class ForecastTracker:
 
  def _target_candle(self,symbol,target,current):
   target_ts=int(target.timestamp());current_ts=int(current.timestamp())
-  rows=self.db.rows('SELECT open_time,close,interval_min FROM ohlc_cache WHERE symbol=? AND open_time>=? AND open_time+interval_min*60<=? ORDER BY open_time ASC LIMIT 1',(symbol,target_ts,current_ts))
+  rows=self.db.rows(
+   'SELECT open_time,close,interval_min FROM ohlc_cache '
+   'WHERE symbol=? AND open_time+interval_min*60<=? AND open_time+interval_min*60<=? '
+   'ORDER BY open_time DESC LIMIT 1',
+   (symbol,current_ts,target_ts)
+  )
+  if rows:return rows[0]
+  # Only when no fully completed candle exists at/before target do we use the
+  # first fully completed candle after target, and record the positive timing error.
+  rows=self.db.rows(
+   'SELECT open_time,close,interval_min FROM ohlc_cache '
+   'WHERE symbol=? AND open_time>=? AND open_time+interval_min*60<=? '
+   'ORDER BY open_time ASC LIMIT 1',
+   (symbol,target_ts,current_ts)
+  )
   return rows[0] if rows else None
 
  def evaluate_due(self):
@@ -72,7 +91,7 @@ class ForecastTracker:
     cost=float(features.get('estimated_roundtrip_cost_pct') or 0)
     correct=(f['direction']=='UP' and ret>cost) or (f['direction']=='DOWN' and ret < -cost) or (f['direction']=='FLAT' and abs(ret)<=cost)
     source_time=int(candle['open_time']);timing_error=source_time-int(target.timestamp())
-    details={'direction':f['direction'],'family':f.get('family'),'parameter_version':f.get('parameter_version'),'target_at':target.isoformat(),'price_source':'OHLC_CACHE_FIRST_CLOSED_AT_OR_AFTER_TARGET','source_open_time':source_time,'interval_min':int(candle['interval_min']),'timing_error_seconds':timing_error,'roundtrip_cost_pct':cost,'cost_adjusted_return_pct':ret-cost if f['direction']=='UP' else (-ret-cost if f['direction']=='DOWN' else 0.0)}
+    details={'direction':f['direction'],'family':f.get('family'),'parameter_version':f.get('parameter_version'),'target_at':target.isoformat(),'price_source':'OHLC_CACHE_LAST_CLOSED_AT_OR_BEFORE_TARGET_WITH_AFTER_TARGET_FALLBACK','source_open_time':source_time,'interval_min':int(candle['interval_min']),'timing_error_seconds':timing_error,'roundtrip_cost_pct':cost,'cost_adjusted_return_pct':ret-cost if f['direction']=='UP' else (-ret-cost if f['direction']=='DOWN' else 0.0)}
     with self.db.con() as c:
      c.execute('INSERT OR REPLACE INTO forecast_evaluations(forecast_id,evaluated_at,actual_price,actual_return_pct,direction_correct,details_json,target_at,price_source,source_open_time,timing_error_seconds) VALUES(?,?,?,?,?,?,?,?,?,?)',(f['id'],now(),str(actual),str(ret),1 if correct else 0,json.dumps(details,sort_keys=True),target.isoformat(),details['price_source'],source_time,timing_error));c.execute("UPDATE research_forecasts SET status='EVALUATED' WHERE id=?",(f['id'],));done+=1
    except Exception as exc:
