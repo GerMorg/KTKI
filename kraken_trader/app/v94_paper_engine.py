@@ -11,6 +11,7 @@ from strategy_profiles import family_for_category
 from market_regime import family_regime
 from execution_router import choose_route
 from decision_engine_v94 import DecisionEngineV94
+from execution_confidence import execution_confidence,choose_execution
 
 D=lambda x:Decimal(str(x or 0))
 
@@ -53,16 +54,27 @@ class PaperEngineV94(PaperEngine):
             if p['symbol'] not in current_by:
                 decisions.append({'symbol':p['symbol'],'direction':'FLAT','action':'SELL','current_exposure_eur':str(current.get(p['symbol'],0)),'target_exposure_eur':'0','rebalance_delta_eur':str(-current.get(p['symbol'],0)),'economic_gate_passed':True,'expected_edge_after_costs_pct':'0','score':'0','quality_score':'0','regime':'NEUTRAL'})
         results=[]
+        margin_enabled=self.db.value('paper_leverage_enabled','false')=='true'
+        max_leverage=int(float(self.db.value('paper_max_leverage','3')))
         for d in sorted(decisions,key=lambda x:abs(D(x['rebalance_delta_eur'])),reverse=True):
             delta=D(d['rebalance_delta_eur'])
             if abs(delta)<cfg['min_trade_eur']:continue
             if not d['economic_gate_passed']:continue
             side='BUY' if delta>0 else 'SELL'
+            family=next((x['family'] for x in candidates if x['symbol']==d['symbol']),'crypto_spot')
+            h=hb.get(family,{})
+            cal=health.margin_calibration(family,'UP' if side=='BUY' else 'DOWN',24,20) if margin_enabled else {'status':'READY','direction':'SPOT'}
+            conf=execution_confidence(d.get('score',0),h,cal if cal.get('status')=='READY' else None,regime=d.get('regime','NEUTRAL'),direction='UP' if side=='BUY' else 'DOWN')
+            ex=choose_execution(conf,margin_enabled,max_leverage,65,78,86,93,97,calibration=cal if cal.get('status')=='READY' else None)
+            if ex['mode']=='BLOCKED':
+                results.append({'symbol':d['symbol'],'action':'HOLD','executed':False,'reason':ex['reason'],'decision':d});continue
+            d['execution_confidence']=str(conf);d['execution_mode']=ex['mode'];d['execution_leverage']=str(ex['leverage'])
             if active:
                 allowed,reason=self.stability_gate(d['symbol'],side,max(D(0),D(d['expected_edge_after_costs_pct']))*abs(delta)/100)
                 if not allowed:
                     results.append({'symbol':d['symbol'],'action':'HOLD','executed':False,'reason':reason,'decision':d});continue
                 try:
+                    d['leverage']=int(ex['leverage'])
                     tid=self.execute(d['symbol'],side,abs(delta), 'v94 canonical rebalance',d)
                     self.mark_turnover(d['symbol'],side);results.append({'symbol':d['symbol'],'action':side,'executed':True,'trade_id':tid,'decision':d})
                 except Exception as exc:
