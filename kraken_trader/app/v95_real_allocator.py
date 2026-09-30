@@ -251,43 +251,33 @@ class RealPortfolioAllocatorV95:
                 execution_symbol = selected["symbol"]
                 family = cand["family"]
                 h = health_by[family]
-                calibration = (
-                    health.margin_calibration(
-                        family,
-                        "UP" if side == "buy" else "DOWN",
-                        24,
-                        20,
-                        cfg["max_drawdown_pct"],
+                reducing = abs(D(decision["target_exposure_eur"])) < abs(D(decision["current_exposure_eur"])) and D(decision["target_exposure_eur"]) * D(decision["current_exposure_eur"]) >= 0
+                if reducing:
+                    confidence = execution_confidence(
+                        decision["score"], h, None, regime=decision["regime"],
+                        direction="UP" if side == "buy" else "DOWN",
                     )
-                    if cfg["margin_enabled"] and D(decision["target_exposure_eur"]) != 0
-                    else {"status": "READY", "direction": "EXIT"}
-                )
-                is_exit = D(decision["target_exposure_eur"]) == 0 and D(decision["current_exposure_eur"]) != 0
-                confidence = execution_confidence(
-                    decision["score"],
-                    h,
-                    calibration if calibration.get("status") == "READY" else None,
-                    regime=decision["regime"],
-                    direction="UP" if side == "buy" else "DOWN",
-                )
-                execution = choose_execution(
-                    confidence,
-                    cfg["margin_enabled"],
-                    cfg["margin_max_leverage"],
-                    cfg["confidence_spot_min"],
-                    cfg["confidence_margin_2x"],
-                    cfg["confidence_margin_3x"],
-                    cfg["confidence_margin_4x"],
-                    cfg["confidence_margin_5x"],
-                    calibration=calibration if not is_exit else None,
-                )
-                if is_exit:
-                    execution = {
-                        "mode": "MARGIN" if cfg["margin_enabled"] else "SPOT",
-                        "leverage": cfg["margin_default_leverage"] if cfg["margin_enabled"] else D(1),
-                        "confidence": str(confidence),
-                        "reason": "EXPLICIT_TARGET_ZERO_RISK_EXIT",
-                    }
+                    execution = self._existing_execution(execution_symbol, cfg)
+                    execution["confidence"] = str(confidence)
+                else:
+                    calibration = (
+                        health.margin_calibration(
+                            family, "UP" if side == "buy" else "DOWN", 24, 20, cfg["max_drawdown_pct"]
+                        )
+                        if cfg["margin_enabled"]
+                        else {"status": "READY", "direction": "SPOT"}
+                    )
+                    confidence = execution_confidence(
+                        decision["score"], h, calibration if calibration.get("status") == "READY" else None,
+                        regime=decision["regime"], direction="UP" if side == "buy" else "DOWN",
+                    )
+                    execution = choose_execution(
+                        confidence, cfg["margin_enabled"], cfg["margin_max_leverage"],
+                        cfg["confidence_spot_min"], cfg["confidence_margin_2x"],
+                        cfg["confidence_margin_3x"], cfg["confidence_margin_4x"],
+                        cfg["confidence_margin_5x"],
+                        calibration=calibration if calibration.get("status") == "READY" else None,
+                    )
                 if execution["mode"] == "BLOCKED":
                     self._record(engine, "REAL", decision, execution_symbol, execution["mode"], execution["leverage"], "BLOCKED", execution["reason"])
                     continue
