@@ -94,3 +94,11 @@ def scanner_candidates(db, allowed_symbols=None):
             }
         )
     return out
+
+
+def decision_costs(db):
+    return (
+        db.value("decision_fee_bps", db.value("real_fee_bps", db.value("paper_fee_bps", "40"))),
+        db.value("decision_fx_fee_bps", db.value("real_fx_fee_bps", db.value("paper_fx_fee_bps", "10"))),
+        db.value("decision_slippage_bps", db.value("real_slippage_bps", db.value("paper_slippage_bps", "10"))),
+    )
