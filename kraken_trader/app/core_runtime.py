@@ -30,6 +30,12 @@ from monitoring import NotificationService,create_monitoring_blueprint
 from at_income_tax import create_tax_blueprint
 from real_trade import create_real_trade_blueprint,RealTradeEngine
 from real_portfolio_allocator import RealPortfolioAllocator
+import sys
+
+# Compatibility facade for the consolidated runtime: older feature modules
+# still refer to the application core as \"legacy\". Keep that contract explicit
+# without maintaining another versioned entrypoint.
+legacy = sys.modules[__name__]
 class IngressPrefix:
  def __init__(self,app):self.app=app
  def __call__(self,environ,start_response):
@@ -40,6 +46,8 @@ DATA=os.getenv('APP_DATA_DIR','/tmp/kraken-trader');os.makedirs(DATA,exist_ok=Tr
 try:
  with open(os.getenv('APP_OPTIONS','/data/options.json')) as f:opts=json.load(f)
 except Exception:opts={}
+options=opts
+controller=None
 db=DB(os.path.join(DATA,'kraken_trader.db'));db.init(opts.get('paper_start_eur',1000));repair_database(db);paper_engine=PaperEngine(db,opts.get('paper_start_eur',1000),opts.get('paper_fee_bps',40),opts.get('paper_slippage_bps',10),opts.get('paper_max_position_pct',10),opts.get('paper_trade_eur',25));client=KrakenClient(opts.get('kraken_api_key',''),opts.get('kraken_api_secret',''))
 for key,value in {'paper_fee_bps':opts.get('paper_fee_bps',40),'paper_slippage_bps':opts.get('paper_slippage_bps',10),'paper_max_position_pct':opts.get('paper_max_position_pct',10),'paper_trade_eur':opts.get('paper_trade_eur',25),'paper_interval_minutes':opts.get('paper_interval_minutes',15),'scanner_required':opts.get('scanner_required',True),'scanner_delay_seconds':opts.get('scanner_delay_seconds',1.05),'prefilter_top_per_category':opts.get('prefilter_top_per_category',8),'research_auto_enabled':opts.get('research_auto_enabled',False),'research_interval_minutes':opts.get('research_interval_minutes',60),'paper_leverage_enabled':opts.get('paper_leverage_enabled',False),'paper_max_leverage':opts.get('paper_max_leverage',3),'paper_min_position_pct':opts.get('paper_min_position_pct',2),'paper_min_transfer_eur':opts.get('paper_min_transfer_eur',20),'paper_max_transfer_eur':opts.get('paper_max_transfer_eur',250),'paper_rebalance_edge_pct':opts.get('paper_rebalance_edge_pct',8),'paper_fx_fee_bps':opts.get('paper_fx_fee_bps',10),'paper_min_hold_hours':opts.get('paper_min_hold_hours',24),'paper_cooldown_hours':opts.get('paper_cooldown_hours',12),'paper_confirmation_runs':opts.get('paper_confirmation_runs',2),'paper_max_turnovers_per_day':opts.get('paper_max_turnovers_per_day',2),'paper_sell_hysteresis_pct':opts.get('paper_sell_hysteresis_pct',2),'paper_buy_score_threshold':opts.get('paper_buy_score_threshold',62),'paper_tax_rate_pct':opts.get('paper_tax_rate_pct',27.5),'learning_required_horizons':opts.get('learning_required_horizons','24,168'),'learning_min_horizon_samples':opts.get('learning_min_horizon_samples',5),'learning_min_candidate_coverage':opts.get('learning_min_candidate_coverage',.5),'learning_min_net_return_improvement':opts.get('learning_min_net_return_improvement',.01),'learning_max_candidate_drawdown_pct':opts.get('learning_max_candidate_drawdown_pct',-25),'learning_max_drawdown_degradation_pct':opts.get('learning_max_drawdown_degradation_pct',2),'real_trading_enabled':opts.get('real_trading_enabled',False),'real_kill_switch':opts.get('real_kill_switch',True),'real_max_order_volume':opts.get('real_max_order_volume',0),'real_max_order_notional_eur':opts.get('real_max_order_notional_eur',0),'real_allowed_symbols':opts.get('real_allowed_symbols',''),'real_allow_market_orders':opts.get('real_allow_market_orders',False),'real_max_orders_per_day':opts.get('real_max_orders_per_day',1),'learning_min_validation_samples':opts.get('learning_min_validation_samples',5)}.items():
  if not db.rows('SELECT value FROM settings WHERE key=?',(key,)):db.set_setting(key,value)
