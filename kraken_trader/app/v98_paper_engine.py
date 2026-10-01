@@ -47,8 +47,7 @@ class PaperEngineV98(PaperEngine):
         plan=planner.build(total,current_by_symbol=current,environment="PAPER",available_quotes=available_quotes)
         guard=TradeGuardV98(self.db,"PAPER")
         matrix=DecisionMatrix(self.db)
-        actions=[]
-        submitted=0
+        actions=[];submitted=0;skips=[];evaluated_candidates=len(plan['decisions'])
         execution_capacity=int(settings["decision_max_actions_per_run"])
         for decision in plan["decisions"]:
             if submitted>=execution_capacity:break
