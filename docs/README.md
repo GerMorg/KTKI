@@ -1,3 +1,7 @@
+### v101
+
+Der aktive Runtime-Entrypoint ist `v101_main:app`. `core_runtime` enthält die gemeinsame Kerninitialisierung und exponiert für bestehende Fachmodule explizit das Modulalias `legacy`.
+
 # Dokumentation · v100
 
 Die verbindliche aktuelle Dokumentation beschreibt den v100-Runtimepfad. Historische Releaseunterlagen bleiben als Archiv gekennzeichnet.

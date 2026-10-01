@@ -1,4 +1,4 @@
-# Benutzerhandbuch · v100
+# Benutzerhandbuch · v101
 
 Die Oberfläche ist über Home-Assistant-Ingress erreichbar. Die aktuelle Navigation führt zu Übersicht, Analyse, Portfolio, Handel, Lernen, Diagnose, Prozess, Automatik, Realhandel und den ergänzenden Fachseiten.
 

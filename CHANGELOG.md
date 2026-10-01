@@ -1,3 +1,10 @@
+## v101 – Runtime-Boot repariert
+
+- `v101_main:app` ist der einzige aktive Add-on-Entrypoint.
+- `core_runtime` stellt das frühere `legacy`-Modul explizit als Kompatibilitätsfassade bereit.
+- Fehlender Flask-`Response`-Import im Tax-ZIP-Endpunkt ergänzt.
+- v101-Boot-/Konfigurations-Regressionstests ergänzt.
+
 ## 0.1.0-dev.100 — 2026-10-01
 
 - v100 als einziger aktiver Runtime-Einstiegspunkt eingeführt.

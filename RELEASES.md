@@ -1,3 +1,7 @@
+## v101
+
+Runtime-Startfehler nach der v100-Konsolidierung behoben. Der Core stellt `legacy` wieder explizit bereit, der Add-on-Start zeigt auf `v101_main:app`, und der Tax-ZIP-Endpunkt hat seinen fehlenden `Response`-Import erhalten.
+
 # Releases — append-only
 
 ## 0.1.0-dev.100 — 2026-10-01

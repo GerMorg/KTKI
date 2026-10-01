@@ -3,6 +3,8 @@ import tempfile
 import unittest
 from pathlib import Path
 import sys
+import os
+import subprocess
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"app"))
@@ -13,7 +15,7 @@ from news_learning import NewsLearning
 from news_prefilter import NewsPrefilter
 
 
-class V100RepairTests(unittest.TestCase):
+class V101RepairTests(unittest.TestCase):
     def db(self):
         f=tempfile.NamedTemporaryFile(suffix=".db",delete=False)
         f.close()
@@ -95,24 +97,59 @@ class V100RepairTests(unittest.TestCase):
         finally:
             Path(f.name).unlink(missing_ok=True)
 
-    def test_runtime_and_config_are_v100_and_consolidated(self):
+    def test_runtime_and_config_are_v101_and_consolidated(self):
         run=(ROOT/"run.sh").read_text(encoding="utf-8")
-        self.assertIn("v100_main:app",run)
+        self.assertIn("v101_main:app",run)
         config=(ROOT/"config.yaml").read_text(encoding="utf-8")
-        self.assertIn("version: 0.1.0-dev.100",config)
+        self.assertIn("version: 0.1.0-dev.101",config)
         for forbidden in ("ai_provider:", "ai_endpoint:", "azure_openai", "gpt-4o-mini"):
             self.assertNotIn(forbidden,config)
         self.assertIn("ai_api_key:",config)
         self.assertIn("automation_enabled:",config)
 
-    def test_v100_runtime_exposes_real_positions_source(self):
+
+    def test_v101_application_import_smoke(self):
+        with tempfile.TemporaryDirectory() as td:
+            options_path=Path(td)/"options.json"
+            options_path.write_text(json.dumps({
+                "automation_enabled": False,
+                "real_trading_enabled": False,
+                "real_execute_enabled": False,
+                "real_kill_switch": True,
+                "paper_start_eur": 1000,
+            }),encoding="utf-8")
+            env=os.environ.copy()
+            env["APP_DATA_DIR"]=td
+            env["APP_OPTIONS"]=str(options_path)
+            env["APP_DISABLE_WEBSOCKETS"]="1"
+            result=subprocess.run(
+                [sys.executable,"-c","import v101_main; assert v101_main.app is not None; print('v101 import ok')"],
+                cwd=str(ROOT/"app"),env=env,capture_output=True,text=True,timeout=20
+            )
+            self.assertEqual(result.returncode,0,msg=result.stdout+"\\n"+result.stderr)
+
+    def test_v101_boot_contract(self):
+        core=(ROOT/"app"/"core_runtime.py").read_text(encoding="utf-8")
+        runtime=(ROOT/"app"/"v101_main.py").read_text(encoding="utf-8")
+        run=(ROOT/"run.sh").read_text(encoding="utf-8")
+        compile(core,"core_runtime.py","exec")
+        compile(runtime,"v101_main.py","exec")
+        self.assertIn("legacy = sys.modules[__name__]",core)
+        self.assertIn("options=opts",core)
+        self.assertIn("controller=None",core)
+        self.assertIn("import core_runtime as base",runtime)
+        self.assertIn("legacy=base.legacy",runtime)
+        self.assertIn("from flask import Response, jsonify, redirect, request, url_for",runtime)
+        self.assertIn("v101_main:app",run)
+
+    def test_v101_runtime_exposes_real_positions_source(self):
         source=(ROOT/"app"/"v100_main.py").read_text(encoding="utf-8")
         self.assertIn("FROM portfolio_assets",source)
         self.assertIn("Paper-Depot · Positionen",source)
         self.assertIn("Reales Depot · Positionen",source)
         self.assertIn("FROM real_margin_positions",source)
 
-    def test_v100_unified_real_state_and_clean_gui(self):
+    def test_v101_unified_real_state_and_clean_gui(self):
         source=(ROOT/"app"/"v100_main.py").read_text(encoding="utf-8")
         helper=(ROOT/"app"/"real_state_v100.py").read_text(encoding="utf-8")
         core=(ROOT/"app"/"core_runtime.py").read_text(encoding="utf-8")
@@ -125,7 +162,7 @@ class V100RepairTests(unittest.TestCase):
         self.assertNotIn("Realhandel bleibt technisch deaktiviert",core)
         self.assertNotIn("@app.route('/settings'",core)
 
-    def test_v100_real_state_behavior(self):
+    def test_v101_real_state_behavior(self):
         from db import DB
         from real_state_v100 import build_real_state
         import tempfile
@@ -147,7 +184,7 @@ class V100RepairTests(unittest.TestCase):
             self.assertTrue(s["automatic_execution_ready"])
             self.assertEqual(s["status_label"],"REALHANDEL FREIGEGEBEN")
 
-    def test_v100_tax_exports_are_current_and_routable(self):
+    def test_v101_tax_exports_are_current_and_routable(self):
         source=(ROOT/"app"/"v100_main.py").read_text(encoding="utf-8")
         self.assertIn('@app.get("/tax-info.zip")',source)
         self.assertIn('@app.get("/tax-info.csv")',source)
