@@ -1,3 +1,15 @@
+# HA Kraken Trader Projektübergabe
+
+## Aktueller Stand · 0.1.0-dev.100
+
+v100 ist der einzige aktive Runtime-Einstiegspunkt (v100_main:app). Die GUI, Realhandelsstatusanzeige und Laufzeitdiagnose verwenden eine gemeinsame Real-State-Auswertung. Die Home-Assistant-Konfiguration enthält nur die aktuellen Realhandels-Schalter real_trading_enabled, real_execute_enabled, real_kill_switch und real_allowed_symbols sowie die allgemeine Automatiksteuerung.
+
+Die Entscheidungslogik läuft über den kanonischen gemeinsamen Plan für Paper und Real. Danach wird derselbe Execution Intent verwendet; nur die Ausführung trennt Simulation und reale Kraken-Übermittlung. Reale Orders bleiben durch Kill-Switch, Freigabe, Limits, Balance, Daten-/Edge-/Risiko-Gates und Kraken-Preflight abgesichert.
+
+Die alten versionierten Runtime-Wrapper v67 bis v99 sowie die dazugehörigen reinen Kompatibilitäts-GUIs wurden aus dem aktiven Programmbaum entfernt. Ebenso wurden widersprüchliche real_execution_disabled-/real_dry_run-Anzeigen aus der aktuellen GUI entfernt. Historische Release- und Migrationsnachweise bleiben ausschließlich als Archiv erhalten.
+
+## Historisches Übergabeprotokoll
+
 # HA Kraken Trader Projektuebergabe
 
 Stand: 0.1.0-dev.5

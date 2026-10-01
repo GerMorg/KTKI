@@ -1,5 +1,10 @@
 # Releases — append-only
 
+## 0.1.0-dev.100 — 2026-10-01
+Konsolidierter v100-Runtimepfad mit einem aktiven Einstiegspunkt, zentralem Real-State, bereinigter GUI, konsolidierter Home-Assistant-Konfiguration und entferntem v67-v99 Runtime-Wrapper-Ballast. Die kanonische Entscheidungs-/Execution-Pipeline bleibt für Paper und Real gemeinsam; reale Ausführung bleibt explizit sicherheits- und freigabegesteuert.
+
+# Releases — append-only
+
 ## 0.1.0-dev.1 — 2026-08-23
 Erster installierbarer Read-only-Stand.
 

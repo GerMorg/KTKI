@@ -1,3 +1,14 @@
+## 0.1.0-dev.100 — 2026-10-01
+
+- v100 als einziger aktiver Runtime-Einstiegspunkt eingeführt.
+- Realhandelsstatus über real_state_v100 zentralisiert.
+- Übersicht, Automatik und Realhandel auf denselben Statuspfad ausgerichtet.
+- Alte REAL_EXECUTION_DISABLED-/REAL_DRY_RUN-GUIpfade entfernt.
+- Nicht mehr verlinkte alte GUI-Routen und versionierte Runtime-Wrapper v67-v99 entfernt.
+- Home-Assistant-Konfiguration auf die aktuelle, kleine Benutzeroberfläche konsolidiert.
+- Portfolio-, News- und Lernfunktionen als aktuelle Pipelinepfade erhalten.
+- Historische Runtime- und Kompatibilitätstests bereinigt; v100-Konsolidierungsregressionen ergänzt.
+
 ## 0.1.0-dev.57
 - Zentrales GUI-Template und externes Stylesheet eingeführt.
 - Falschen Sicherheitstext sowie sichtbare UTF-8-/Mojibake-Schäden behoben.

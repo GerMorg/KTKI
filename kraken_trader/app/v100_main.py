@@ -1,15 +1,13 @@
-"""KTKI v99 runtime.
+"""KTKI v100 runtime.
 
-v98 removes the last split between analysis/target/order construction:
-Paper and Real call the same CanonicalDecisionPlannerV98 and
-build_execution_intent(). Only their final execution adapters differ.
+One active runtime owns the current GUI, canonical decision pipeline, shared execution intent and unified Real-Handel status.
 """
-VERSION = "0.1.0-dev.99"
+VERSION = "0.1.0-dev.100"
 
 import json
 import os
 from flask import jsonify, redirect, request, url_for
-import v95_main as base
+import core_runtime as base
 from automation_v67 import AutomationControllerV67
 from controlled_learning import ControlledLearning
 from news_learning import NewsLearning
@@ -20,6 +18,7 @@ from v98_paper_engine import PaperEngineV98
 from v98_real_allocator import RealPortfolioAllocatorV98
 from decision_runtime_v98 import DecisionRuntimeV98
 from portfolio_sync import build_rows,normalize_asset
+from real_state_v100 import build_real_state
 
 app=base.app
 legacy=base.legacy
@@ -83,7 +82,7 @@ except Exception:
 real_allocator=RealPortfolioAllocatorV98(legacy.db,legacy.real_trade_engine,runtime=runtime)
 
 class RealAllocatorV99:
-    """Delegate v98 trading while keeping the persisted real portfolio in sync."""
+    """Delegate canonical trading while keeping the persisted real portfolio in sync."""
     def __init__(self,delegate):
         self.delegate=delegate
     def _sync_portfolio(self):
@@ -146,19 +145,7 @@ controller.start_background()
 base.controller=controller
 legacy.controller=controller
 
-legacy.NAV_ITEMS=[
-    ("/","Übersicht"),
-    ("/analyse-v98","Analyse"),
-    ("/portfolio-v98","Portfolio"),
-    ("/handel-v98","Handel"),
-    ("/lernen-v98","Lernen"),
-    ("/diagnose-v98","Diagnose"),
-    ("/prozess-v98","Prozess"),
-    ("/automatik","Automatik"),
-    ("/real-trading","Realhandel"),
-    ("/tax-info","Einkommensteuer AT"),
-    ("/audit","Audit"),
-]
+legacy.NAV_ITEMS=[("/","Übersicht"),("/analyse","Analyse"),("/portfolio","Portfolio"),("/handel","Handel"),("/lernen","Lernen"),("/diagnose","Diagnose"),("/prozess","Prozess"),("/automatik","Automatik"),("/real-trading","Realhandel"),("/steuerinfo-at","Einkommensteuer AT"),("/products","Produkte"),("/news-learning","Nachrichten-Lernen"),("/fees","Gebühren"),("/data-quality","Datenqualität"),("/backtests","Backtests"),("/decision-matrix","Regelmatrix"),("/audit","Audit"),("/exports","Export")]
 
 tax_service=AustrianTaxV68(legacy.db)
 
@@ -171,7 +158,7 @@ def _tax_page():
         try:
             report=tax_service.generate(year,refresh=request.form.get("refresh","yes")=="yes")
         except Exception as exc:
-            legacy.db.audit("V98_TAX_GUI_FAILED",type(exc).__name__+":"+str(exc)[:300],"error")
+            legacy.db.audit("V100_TAX_GUI_FAILED",type(exc).__name__+":"+str(exc)[:300],"error")
             error=type(exc).__name__+":"+str(exc)[:300]
     else:
         latest=tax_service.latest(year)
@@ -195,7 +182,7 @@ def _tax_page():
 <div class="card"><b>Negative Ergebnisse</b><div class="metric">{{report.summary.realized_negative_eur}} €</div></div>
 <div class="card"><b>Rechnerischer Steuerwert</b><div class="metric">{{report.summary.estimated_tax_eur}} €</div></div></div>
 {% if report.warnings %}<div class="card warning"><h2>Prüffälle</h2><ul>{% for x in report.warnings %}<li>{{x}}</li>{% endfor %}</ul></div>{% endif %}
-<div class="card"><h2>Exporte</h2><p><a class="button" href="/tax-info-v68.zip?year={{year}}">Komplettpaket ZIP</a> <a class="button" href="/tax-info-v68.csv?year={{year}}">Realisierte Geschäfte CSV</a></p>
+<div class="card"><h2>Exporte</h2><p><a class="button" href="/tax-info.zip?year={{year}}">Komplettpaket ZIP</a> <a class="button" href="/tax-info.csv?year={{year}}">Realisierte Geschäfte CSV</a></p>
 <p>Das Paket enthält Summary, realisierte Geschäfte, offenen Bestand, Cashflow/Ledger, Prüfliste und E1kv-Arbeitswerte.</p></div>
 <div class="card"><h2>E1kv-Arbeitswerte</h2><div class="tablewrap"><table><tr><th>Kategorie</th><th>EUR</th><th>Status</th></tr>{% for x in report.e1kv_summary %}<tr><td>{{x.category}}</td><td>{{x.amount_eur}}</td><td>{{x.status}}</td></tr>{% endfor %}</table></div></div>
 <div class="card"><h2>Realisierte Geschäfte</h2><div class="tablewrap"><table><tr><th>Datum</th><th>Paar</th><th>Seite</th><th>Erlös</th><th>Anschaffung</th><th>Gewinn/Verlust</th><th>Prüfung</th></tr>{% for x in report.realized %}<tr><td>{{x.date}}</td><td>{{x.pair}}</td><td>{{x.side}}</td><td>{{x.proceeds_eur}}</td><td>{{x.acquisition_basis_eur}}</td><td>{{x.gain_loss_eur}}</td><td>{{x.review_required}}</td></tr>{% endfor %}</table></div></div>
@@ -210,7 +197,7 @@ for endpoint in ("at_tax_v63.tax_info","at_tax_v63.tax_info_generate"):
     if endpoint in app.view_functions:
         app.view_functions[endpoint]=_tax_page
 if "at_tax_v63.tax_csv_export" in app.view_functions:
-    app.view_functions["at_tax_v63.tax_csv_export"]=lambda: redirect(url_for("tax_v98_csv",year=request.args.get("year")))
+    app.view_functions["at_tax_v63.tax_csv_export"]=lambda: redirect(url_for("tax_v100_csv",year=request.args.get("year")))
 
 @app.post("/steuerinfo-at")
 def tax_info_alias():
@@ -220,13 +207,13 @@ def tax_info_alias():
 def tax_info_alias_get():
     return _tax_page()
 
-@app.get("/tax-info-v98.csv")
-def tax_v98_csv():
+@app.get("/tax-info.csv")
+def tax_csv():
     row=tax_service.latest(request.args.get("year"))
     if not row:
-        return ("Kein v98-Steuerbericht vorhanden",404)
+        return ("Kein Steuerbericht vorhanden",404)
     from flask import Response
-    return Response(row["realized_csv"],mimetype="text/csv",headers={"Content-Disposition":f"attachment; filename=steuer-at-{row['tax_year']}-realized-v98.csv"})
+    return Response(row["realized_csv"],mimetype="text/csv",headers={"Content-Disposition":f"attachment; filename=steuer-at-{row['tax_year']}-realized.csv"})
 
 def _latest_plan():
     rows=legacy.db.rows("SELECT * FROM decision_plan_runs_v98 ORDER BY id DESC LIMIT 1")
@@ -261,15 +248,12 @@ def _dashboard():
     news_count=legacy.db.rows("SELECT COUNT(*) AS n FROM news_items")
     news_links=legacy.db.rows("SELECT COUNT(*) AS n FROM news_market_links")
     auto=controller.settings()
-    real_ready=(
-        str(auto.get("automation_real_enabled","false")).lower()=="true"
-        and str(auto.get("automation_real_execute_enabled","false")).lower()=="true"
-        and legacy.real_trade_engine.enabled()
-    )
+    real_state=build_real_state(legacy.db,controller)
+    real_ready=real_state["automatic_execution_ready"]
     return legacy.page(
-        '''<section class="hero"><div><span class="eyebrow">KTKI v99</span><h1>Kraken Trader</h1>
+        '''<section class="hero"><div><span class="eyebrow">KTKI v100</span><h1>Kraken Trader</h1>
 <p class="lead">Ein gemeinsamer Daten-, Lern-, Bewertungs-, Ziel- und Orderprozess für Paper und Real.</p></div>
-<strong class="hero-state">{{"REALHANDEL FREIGEGEBEN" if real_ready else "REALHANDEL BLOCKIERT"}}</strong></section>
+<strong class="hero-state">{{real_state["status_label"]}}</strong></section>
 <div class="process-strip">{% for x in ["Kraken","News","Analyse","Lernen","Edge","Target","Order"] %}<div class="process-node"><span>{{loop.index}}</span><b>{{x}}</b></div>{% if not loop.last %}<i>→</i>{% endif %}{% endfor %}</div>
 <div class="summary-grid">
 <div class="summary"><span>Marktdaten</span><b>{{public.effective_state or "—"}}</b><small>{{public.symbol_count or 0}} Ticker · Frischegate {{fresh_market_seconds|int}}s</small></div>
@@ -279,9 +263,9 @@ def _dashboard():
 </div>
 <div class="card"><h2>Letzte Entscheidungen</h2><div class="tablewrap"><table><tr><th>Zeit</th><th>Umgebung</th><th>Symbol</th><th>Typ</th><th>Aktion</th><th>Edge nach Kosten</th><th>Target</th><th>Delta</th><th>Ausführung</th><th>Status</th></tr>{% for x in decisions %}<tr><td>{{x.created_at}}</td><td>{{x.environment}}</td><td>{{x.symbol}}</td><td>{{x.action_type or "—"}}</td><td>{{x.action}}</td><td>{{x.expected_edge_after_costs_pct or "—"}}%</td><td>{{x.target_exposure_eur}} €</td><td>{{x.delta_eur}} €</td><td>{{x.execution_symbol or "—"}} · {{x.execution_mode or "—"}} · {{x.leverage or "1"}}x</td><td>{{x.status}}</td></tr>{% else %}<tr><td colspan="10">Noch keine Entscheidung.</td></tr>{% endfor %}</table></div></div>
 <div class="split"><div class="card"><h2>Modellqualität je Richtung</h2>{% for f,h in health.items() %}<div class="allocation"><div><b>{{f}}</b><small>UP {{h.quality_score_by_direction.UP if h.quality_score_by_direction else "—"}} · DOWN {{h.quality_score_by_direction.DOWN if h.quality_score_by_direction else "—"}}</small></div><strong>{{h.status or "—"}}</strong></div>{% endfor %}</div>
-<div class="card"><h2>Portfolio-/Orderlogik</h2><p>Neue Risiken benötigen positive erwartete Rendite nach aktuellen Routekosten. Rebalancing/Exit darf bestehendes Risiko reduzieren, auch bei negativer Neueinstiegs-Edge.</p><p><a href="/prozess-v98">Ablauf und Diagnose →</a> · <a href="/steuerinfo-at">Einkommensteuer AT →</a></p></div></div>''',
+<div class="card"><h2>Portfolio-/Orderlogik</h2><p>Neue Risiken benötigen positive erwartete Rendite nach aktuellen Routekosten. Rebalancing/Exit darf bestehendes Risiko reduzieren, auch bei negativer Neueinstiegs-Edge.</p><p><a href="/prozess">Ablauf und Diagnose →</a> · <a href="/steuerinfo-at">Einkommensteuer AT →</a></p></div></div>''',
         plan=plan,decisions=decisions,health=health,public=public,private=private,
-        news_count=news_count,news_links=news_links,auto=auto,real_ready=real_ready,fresh_market_seconds=planner.settings()["decision_market_data_max_age_seconds"]
+        news_count=news_count,news_links=news_links,auto=auto,real_state=real_state,fresh_market_seconds=planner.settings()["decision_market_data_max_age_seconds"]
     )
 
 def _analysis():
@@ -294,12 +278,12 @@ def _analysis():
                           ORDER BY CAST(s.score AS REAL) DESC LIMIT 80""")
     return legacy.page(
         '''<span class="eyebrow">Analyse</span><h1>Aktuelle Kandidaten</h1>
-<p class="lead">Nur frische Kandidaten mit verwertbaren Marktdaten gehen in den gemeinsamen v98-Plan.</p>
+<p class="lead">Nur frische Kandidaten mit verwertbaren Marktdaten gehen in den gemeinsamen kanonischen Plan.</p>
 <div class="card"><div class="tablewrap"><table><tr><th>Symbol</th><th>Familie</th><th>Signal</th><th>Score</th><th>Momentum</th><th>Trend</th><th>Volatilität</th><th>Spread</th><th>News</th><th>Alter</th></tr>{% for x in rows %}<tr><td>{{x.symbol}}</td><td>{{x.category}}</td><td>{{x.signal}}</td><td>{{x.score}}</td><td>{{x.momentum_pct}}%</td><td>{{x.trend_pct}}%</td><td>{{x.volatility_pct}}%</td><td>{{x.spread_pct}}%</td><td>{{x.news_score}}</td><td>{{x.scanned_at}}</td></tr>{% endfor %}</table></div></div>''',
         rows=rows
     )
 
-def _v98_chart(values):
+def _v100_chart(values):
     vals=[]
     for value in values or []:
         try: vals.append(float(value))
@@ -367,8 +351,8 @@ def _portfolio():
 <div class="card"><h2>Reales Depot · Positionen</h2><div class="tablewrap"><table><tr><th>Asset</th><th>Menge</th><th>EUR-Kurs</th><th>EUR-Wert</th><th>Status</th></tr>{% for x in real_positions %}<tr><td>{{x.display_name or x.asset}}</td><td>{{x.amount}}</td><td>{{x.eur_price or "—"}}</td><td>{{x.eur_value or "—"}} €</td><td>{{x.classification}}</td></tr>{% else %}<tr><td colspan="5">Keine realen Positionen im Portfolio-Snapshot.</td></tr>{% endfor %}</table></div>{% if margin_positions %}<h3>Offene Margin-Positionen</h3><div class="tablewrap"><table><tr><th>Symbol</th><th>Seite</th><th>Menge</th><th>Wert</th><th>U/L</th><th>Hebel</th></tr>{% for x in margin_positions %}<tr><td>{{x.symbol}}</td><td>{{x.side}}</td><td>{{x.volume}}</td><td>{{x.current_value or "—"}} €</td><td>{{x.unrealized_pnl or "—"}} €</td><td>{{x.leverage or "1"}}x</td></tr>{% endfor %}</table></div>{% endif %}</div></div>
 <div class="card"><h2>Target vs. Current</h2>{% for x in decisions[:20] %}<div class="allocation"><div><b>{{x.symbol}}</b><small>{{x.action_type}} · {{x.execution_symbol or "—"}} · {{x.status}}</small></div><strong>{{x.target_exposure_eur}} €</strong></div>{% else %}<span class="muted">Noch kein Plan.</span>{% endfor %}</div>
 </div>''',
-        paper_chart=_v98_chart([x["total_eur"] for x in reversed(paper)]),
-        real_chart=_v98_chart([x["total_eur"] for x in reversed(real)]),
+        paper_chart=_v100_chart([x["total_eur"] for x in reversed(paper)]),
+        real_chart=_v100_chart([x["total_eur"] for x in reversed(real)]),
         paper_positions=paper_positions,real_positions=real_positions,margin_positions=margin_positions,decisions=decisions
     )
 
@@ -427,14 +411,14 @@ def _diagnose():
 <div class="grid"><div class="card"><b>Public Kraken</b><div class="metric">{{public.effective_state}}</div><small>{{public.last_message_at or "—"}}</small></div><div class="card"><b>Private Kraken</b><div class="metric">{{private.effective_state}}</div><small>{{private.last_message_at or "—"}}</small></div><div class="card"><b>Letzter Plan</b><div class="metric">{{plan.plan_hash[:12] if plan else "—"}}</div><small>{{plan.environment if plan else "—"}}</small></div><div class="card"><b>Blockierungen</b><div class="metric">{{blocked|length}}</div><small>letzte 120</small></div></div>
 <div class="card"><h2>Directional Model Health</h2>{% for f,h in health.items() %}<div class="allocation"><div><b>{{f}}</b><small>UP {{h.quality_score_by_direction.UP if h.quality_score_by_direction else "—"}} · DOWN {{h.quality_score_by_direction.DOWN if h.quality_score_by_direction else "—"}} · H24 {{h.horizons["24"].samples if h.horizons else "—"}}</small></div><strong>{{h.status or "—"}}</strong></div>{% endfor %}</div>
 <div class="card"><h2>Blockierte Regeln</h2><div class="tablewrap"><table><tr><th>Zeit</th><th>Symbol</th><th>Aktion</th><th>Regel</th><th>Grund</th></tr>{% for x in blocked %}<tr><td>{{x.created_at}}</td><td>{{x.symbol}}</td><td>{{x.action}}</td><td>{{x.rule_key}}</td><td>{{x.reason}}</td></tr>{% else %}<tr><td colspan="5">Keine gespeicherte Blockierung.</td></tr>{% endfor %}</table></div></div>
-<div class="card"><h2>Letzter Real-Automatiklauf</h2><div class="grid"><div><b>Status</b><div class="metric">{{real_summary.status}}</div></div><div><b>Bewertete Kandidaten</b><div class="metric">{{real_summary.evaluated_candidates}}</div></div><div><b>Übersprungen</b><div class="metric">{{real_summary.skipped_count}}</div></div><div><b>Kapazität</b><div class="metric">{{real_summary.execution_capacity}}</div></div></div><p>Letzte Ziel-/Depotbasis: {{real_summary.total_eur}} € · Mindestorder: {{min_trade_eur}} € · Entry-No-Trade-Band gilt nicht für Neukäufe.</p>{% for x in real_summary.skips %}<div class="allocation"><div><b>{{x.symbol}}</b><small>{{x.reason}}</small></div><strong>{{x.delta_eur or "—"}} €</strong></div>{% else %}<span class="muted">Keine v98-Skip-Gründe gespeichert.</span>{% endfor %}</div>
+<div class="card"><h2>Letzter Real-Automatiklauf</h2><div class="grid"><div><b>Status</b><div class="metric">{{real_summary.status}}</div></div><div><b>Bewertete Kandidaten</b><div class="metric">{{real_summary.evaluated_candidates}}</div></div><div><b>Übersprungen</b><div class="metric">{{real_summary.skipped_count}}</div></div><div><b>Kapazität</b><div class="metric">{{real_summary.execution_capacity}}</div></div></div><p>Letzte Ziel-/Depotbasis: {{real_summary.total_eur}} € · Mindestorder: {{min_trade_eur}} € · Entry-No-Trade-Band gilt nicht für Neukäufe.</p>{% for x in real_summary.skips %}<div class="allocation"><div><b>{{x.symbol}}</b><small>{{x.reason}}</small></div><strong>{{x.delta_eur or "—"}} €</strong></div>{% else %}<span class="muted">Keine gespeicherten Skip-Gründe gespeichert.</span>{% endfor %}</div>
 <div class="card"><h2>Prozessstatus</h2><pre>{{{"plan_hash":plan.plan_hash if plan else None,"public":public,"private":private}|tojson(indent=2)}}</pre></div>''',
         plan=plan,public=public,private=private,health=health,decisions=decisions,blocked=blocked,real_summary=real_summary,min_trade_eur=planner.settings()["decision_min_trade_eur"]
     )
 
 def _prozess():
     return legacy.page(
-        '''<span class="eyebrow">Prozess</span><h1>Verbindlicher v99-Ablauf</h1><div class="flow">{% for s in steps %}<div class="card"><div class="flowstep"><span class="num">{{loop.index}}</span><div><h3>{{s.t}}</h3><p>{{s.d}}</p></div></div></div>{% endfor %}</div>''',
+        '''<span class="eyebrow">Prozess</span><h1>Verbindlicher v100-Ablauf</h1><div class="flow">{% for s in steps %}<div class="card"><div class="flowstep"><span class="num">{{loop.index}}</span><div><h3>{{s.t}}</h3><p>{{s.d}}</p></div></div></div>{% endfor %}</div>''',
         steps=[
             {"t":"Kraken Market Data","d":"Public WebSocket/REST liefern Ticker und abgeschlossene OHLC-Daten. Frische und Datenqualität sind harte Vorbedingungen."},
             {"t":"Nachrichten","d":"News werden gesammelt, klassifiziert, lokal/extern bewertet und als zeitlich abklingendes signiertes Feature in den Scanner gegeben."},
@@ -449,25 +433,103 @@ def _prozess():
         ]
     )
 
-@app.get("/analyse-v98")
-def analyse_v98():return _analysis()
-@app.get("/portfolio-v98")
-def portfolio_v98():return _portfolio()
-@app.get("/handel-v98")
-def handel_v98():return _handel()
-@app.get("/lernen-v98")
-def lernen_v98():return _lernen()
-@app.get("/diagnose-v98")
-def diagnose_v98():return _diagnose()
-@app.get("/prozess-v98")
-def prozess_v98():return _prozess()
+@app.get("/analyse")
+def analyse_v100():return _analysis()
+@app.get("/portfolio")
+def portfolio_v100():return _portfolio()
+@app.get("/handel")
+def handel_v100():return _handel()
+@app.get("/lernen")
+def lernen_v100():return _lernen()
+@app.get("/diagnose")
+def diagnose_v100():return _diagnose()
+@app.get("/prozess")
+def prozess_v100():return _prozess()
 
-@app.get("/v99-health")
-def v98_health():
+
+def _automatik():
+    cfg=controller.settings()
+    real_state=build_real_state(legacy.db,controller)
+    return legacy.page(
+        """<span class="eyebrow">Automatik</span><h1>Automatik</h1>
+<p class="lead">Die Home-Assistant-Konfiguration ist die einzige Benutzerquelle für Betriebs- und Realhandels-Schalter. Diese Seite zeigt ausschließlich den aktuellen Laufzeitstatus.</p>
+<div class="automation-grid">{% for k,n in items %}<div class="automation-card"><b>{{n}}</b><span class="status {{'on' if cfg["automation_"+k+"_enabled"]=="true" else "off"}}">{{"AN" if cfg["automation_"+k+"_enabled"]=="true" else "AUS"}}</span><small>{{cfg["automation_"+k+"_interval_minutes"]}} min</small></div>{% endfor %}</div>
+<div class="card"><h2>Realhandelsstatus</h2><p><b>{{real_state.status_label}}</b></p><p>{{real_state.summary}}</p><p><a href="/real-trading">Realhandel & konkrete Blockierungen →</a></p></div>""",
+        cfg=cfg,items=[("news","Nachrichten"),("analysis","Analyse"),("learning","Lernen"),("paper","Paper"),("real","Real")],real_state=real_state)
+
+@app.get("/automatik")
+def automatik_v100():
+    return _automatik()
+
+def _real_trading():
+    engine=legacy.real_trade_engine
+    real_state=build_real_state(legacy.db,controller)
+    result=error=token=None
+    if request.method=="POST":
+        try:
+            if request.form.get("action")=="arm":
+                token=engine.arm(request.form.get("phrase"))
+            else:
+                result=engine.submit(request.form.get("symbol"),request.form.get("side"),request.form.get("volume"),request.form.get("order_type"),request.form.get("limit_price"),request.form.get("client_order_id") or None,request.form.get("approval_token"),request.form.get("live")!="yes",None,request.form.get("leverage") or None,request.form.get("margin")=="yes",request.form.get("reduce_only")=="yes")
+        except Exception as exc:
+            error=type(exc).__name__+":"+str(exc)
+    rows=legacy.db.rows("SELECT id,created_at,client_order_id,symbol,side,order_type,volume,limit_price,status,validate_only,error FROM real_trade_intents ORDER BY id DESC LIMIT 50")
+    blocked=legacy.db.rows("SELECT created_at,symbol,action,rule_key,reason FROM decision_rule_evaluations ORDER BY id DESC LIMIT 100")
+    return legacy.page(
+        """<span class="eyebrow">Realhandel</span><h1>Realhandel</h1>
+<div class="grid">
+<div class="card"><b>Globaler Realhandelsstatus</b><div class="metric">{{real_state.status_label}}</div><p>{{real_state.summary}}</p></div>
+<div class="card"><b>Automatische Real-Ausführung</b><div class="metric">{{"AKTIV" if real_state.automatic_execution_ready else "BLOCKIERT"}}</div><p>{{real_state.automatic_summary}}</p></div>
+<div class="card"><b>Manuelle Realorder</b><div class="metric">{{"VERFÜGBAR" if real_state.manual_order_available else "BLOCKIERT"}}</div><p>Eine Live-Order benötigt zusätzlich das zeitlich begrenzte Freigabetoken.</p></div></div>
+{% if error %}<div class="card error">{{error}}</div>{% endif %}
+{% if result %}<div class="card"><h2>Ergebnis</h2><pre>{{result|tojson(indent=2)}}</pre></div>{% endif %}
+{% if token %}<div class="card warning"><b>Einmaliges Freigabetoken · 5 Minuten gültig</b><pre>{{token}}</pre></div>{% endif %}
+<div class="card"><h2>Globale Blockierungen</h2>{% if real_state.blockers %}<table><tr><th>Code</th><th>Grund</th></tr>{% for x in real_state.blockers %}<tr><td><code>{{x.code}}</code></td><td>{{x.reason}}</td></tr>{% endfor %}</table>{% else %}<p class="ok">Keine globale Blockierung.</p>{% endif %}</div>
+<div class="card"><h2>Konkrete Regelblockierungen</h2>{% if blocked %}<table><tr><th>Zeit</th><th>Symbol</th><th>Aktion</th><th>Regel</th><th>Grund</th></tr>{% for x in blocked %}<tr><td>{{x.created_at}}</td><td>{{x.symbol}}</td><td>{{x.action}}</td><td>{{x.rule_key}}</td><td>{{x.reason}}</td></tr>{% endfor %}</table>{% else %}<p>Noch keine gespeicherte Blockierung.</p>{% endif %}</div>
+<div class="card"><h2>Manuelle Order</h2><p>Standardmäßig wird nur gegen Kraken validiert. Eine echte Order wird ausschließlich nach expliziter Live-Auswahl und erfolgreicher Freigabe übermittelt.</p>
+<form method="post">
+<input type="hidden" name="action" value="submit">
+<label>Symbol<input name="symbol" value="BTC/EUR"></label>
+<label>Seite<select name="side"><option>buy</option><option>sell</option></select></label>
+<label>Typ<select name="order_type"><option>limit</option><option>market</option></select></label>
+<label>Volumen<input name="volume" required></label>
+<label>Limitpreis<input name="limit_price"></label>
+<label>Margin/Leverage<select name="margin"><option value="no">Spot</option><option value="yes">Margin</option></select></label>
+<label>Hebel<input name="leverage" value="2"></label>
+<label>Reduce-only<select name="reduce_only"><option value="no">Nein</option><option value="yes">Ja</option></select></label>
+<label>Idempotenz-ID<input name="client_order_id"></label>
+<label>Freigabetoken<input name="approval_token"></label>
+<label>Live<select name="live"><option value="no">Nein, nur validieren</option><option value="yes">Ja</option></select></label>
+<button>Absenden</button>
+</form></div>
+<div class="card"><h2>Manuelle Livefreigabe</h2><form method="post"><input type="hidden" name="action" value="arm"><label>Bestätigungsphrase<input name="phrase"></label><button>5 Minuten aktiv bestätigen</button></form></div>
+<div class="card"><h2>Letzte Realorder-Intents</h2><div class="tablewrap"><table><tr><th>Zeit</th><th>ID</th><th>Symbol</th><th>Seite</th><th>Volumen</th><th>Status</th><th>Validierung</th></tr>{% for x in rows %}<tr><td>{{x.created_at}}</td><td>{{x.client_order_id}}</td><td>{{x.symbol}}</td><td>{{x.side}}</td><td>{{x.volume}}</td><td>{{x.status}}</td><td>{{x.validate_only}}</td></tr>{% endfor %}</table></div></div>""",
+        real_state=real_state,error=error,result=result,token=token,rows=rows,blocked=blocked)
+
+app.view_functions["real_trade.view"]=_real_trading
+
+def _health_current():
+    real_state=build_real_state(legacy.db,controller)
+    return {
+        "status":"ok",
+        "version":"0.1.0-dev.100",
+        "runtime":"v100_main",
+        "real_state":real_state,
+        "real_trading":real_state["manual_order_available"],
+        "automatic_real_execution":real_state["automatic_execution_ready"],
+        "market_stream":legacy.stream.status(),
+        "private_stream":legacy.private_stream.status(),
+    }
+
+app.view_functions["health"]=_health_current
+
+@app.get("/v100-health")
+def v100_health():
     plan=_latest_plan()
+    real_state=build_real_state(legacy.db,controller)
     return jsonify({
-        "version":"0.1.0-dev.99",
-        "runtime":"v99_main",
+        "version":"0.1.0-dev.100",
+        "runtime":"v100_main",
         "architecture":"CANONICAL_PLANNER_PLUS_SHARED_EXECUTION_INTENT",
         "paper_real_same_plan":True,
         "plan_hash":plan.get("plan_hash") if plan else None,
@@ -477,7 +539,9 @@ def v98_health():
         "margin":"ACCOUNT_CAPABILITY_GATED",
         "news":"SIGNED_AND_TIME_DECAYED",
         "tax_ui":"/steuerinfo-at",
-        "real_enabled":legacy.real_trade_engine.enabled(),
+        "real_enabled":real_state["manual_order_available"],
+        "real_automatic_execution":real_state["automatic_execution_ready"],
+        "real_state":real_state,
     })
 
 app.view_functions["index"]=_dashboard

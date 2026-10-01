@@ -13,7 +13,7 @@ from news_learning import NewsLearning
 from news_prefilter import NewsPrefilter
 
 
-class V99RepairTests(unittest.TestCase):
+class V100RepairTests(unittest.TestCase):
     def db(self):
         f=tempfile.NamedTemporaryFile(suffix=".db",delete=False)
         f.close()
@@ -95,23 +95,57 @@ class V99RepairTests(unittest.TestCase):
         finally:
             Path(f.name).unlink(missing_ok=True)
 
-    def test_runtime_and_config_are_v99_and_consolidated(self):
+    def test_runtime_and_config_are_v100_and_consolidated(self):
         run=(ROOT/"run.sh").read_text(encoding="utf-8")
-        self.assertIn("v99_main:app",run)
+        self.assertIn("v100_main:app",run)
         config=(ROOT/"config.yaml").read_text(encoding="utf-8")
-        self.assertIn("version: 0.1.0-dev.99",config)
+        self.assertIn("version: 0.1.0-dev.100",config)
         for forbidden in ("ai_provider:", "ai_endpoint:", "azure_openai", "gpt-4o-mini"):
             self.assertNotIn(forbidden,config)
         self.assertIn("ai_api_key:",config)
         self.assertIn("automation_enabled:",config)
 
-    def test_v99_runtime_exposes_real_positions_source(self):
-        source=(ROOT/"app"/"v99_main.py").read_text(encoding="utf-8")
+    def test_v100_runtime_exposes_real_positions_source(self):
+        source=(ROOT/"app"/"v100_main.py").read_text(encoding="utf-8")
         self.assertIn("FROM portfolio_assets",source)
         self.assertIn("Paper-Depot · Positionen",source)
         self.assertIn("Reales Depot · Positionen",source)
         self.assertIn("FROM real_margin_positions",source)
 
+    def test_v100_unified_real_state_and_clean_gui(self):
+        source=(ROOT/"app"/"v100_main.py").read_text(encoding="utf-8")
+        helper=(ROOT/"app"/"real_state_v100.py").read_text(encoding="utf-8")
+        core=(ROOT/"app"/"core_runtime.py").read_text(encoding="utf-8")
+        self.assertIn("build_real_state",source)
+        self.assertIn("automatic_execution_ready",helper)
+        self.assertNotIn("REAL_EXECUTION_DISABLED",source)
+        self.assertNotIn("REAL_DRY_RUN",source)
+        self.assertNotIn("/analyse-v98",source)
+        self.assertNotIn("/portfolio-v98",source)
+        self.assertNotIn("Realhandel bleibt technisch deaktiviert",core)
+        self.assertNotIn("@app.route('/settings'",core)
+
+    def test_v100_real_state_behavior(self):
+        from db import DB
+        from real_state_v100 import build_real_state
+        import tempfile
+        with tempfile.NamedTemporaryFile(suffix=".db") as f:
+            db=DB(f.name); db.init()
+            s=build_real_state(db,None)
+            self.assertFalse(s["manual_order_available"])
+            self.assertFalse(s["automatic_execution_ready"])
+            db.set_setting("real_trading_enabled","true")
+            db.set_setting("real_kill_switch","false")
+            s=build_real_state(db,None)
+            self.assertTrue(s["manual_order_available"])
+            self.assertFalse(s["automatic_execution_ready"])
+            db.set_setting("automation_master_enabled","true")
+            db.set_setting("automation_real_enabled","true")
+            db.set_setting("automation_real_execute_enabled","true")
+            s=build_real_state(db,None)
+            self.assertTrue(s["manual_order_available"])
+            self.assertTrue(s["automatic_execution_ready"])
+            self.assertEqual(s["status_label"],"REALHANDEL FREIGEGEBEN")
 
 if __name__=="__main__":
     unittest.main()
