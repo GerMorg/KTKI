@@ -84,25 +84,40 @@ class NewsLearning:
         return sentiment * impact * relevance * confidence
 
     def _local(self, row, params):
-        words=set(str((row.get('title') or '')+' '+(row.get('summary') or '')).lower().replace('-',' ').split())
+        words=set(str((row.get('title') or '')+' '+str(row.get('summary') or '')).lower().replace('-',' ').split())
         raw=len(words&POSITIVE)*params['positive_weight']-len(words&NEGATIVE)*params['negative_weight']-len(words&UNCERTAIN)*params['uncertainty_penalty']
         if row.get('source_class')=='primary': raw+=params['primary_source_bonus']
         if row.get('source_class')=='issuer': raw+=params['issuer_source_bonus']
-        result=row.get('teacher') or {}
-        if self._number(result.get('relevance'))<params['relevance_floor']: raw=0
-        if self._number(result.get('confidence'))<params['confidence_floor']: raw=0
-        if result.get('priced_in') is True: raw*=1-params['priced_in_penalty']
-        return max(-1.0,min(1.0,raw*params['impact_weight']))
-
+        local_score=max(-1.0,min(1.0,raw*params['impact_weight']))
+        teacher=row.get('teacher') or {}
+        ai_score=None
+        if isinstance(teacher,dict) and teacher:
+            relevance=self._number(teacher.get('relevance'))
+            confidence=self._number(teacher.get('confidence'))
+            if relevance>=params['relevance_floor'] and confidence>=params['confidence_floor']:
+                ai_score=self._teacher(teacher)
+                if teacher.get('priced_in') is True: ai_score*=1-params['priced_in_penalty']
+        # AI is a bounded semantic feature, never an unbounded return forecast.
+        # Without a valid AI result the deterministic local signal still works.
+        combined=local_score if ai_score is None else (0.35*local_score+0.65*ai_score)
+        row['_news_components']={'local_score':local_score,'ai_score':ai_score,'combined_score':combined,'ai_used':ai_score is not None}
+        return max(-1.0,min(1.0,combined))
     def data_status(self, required=10):
         def count(sql):
-            try: rows=self.db.rows(sql)
-            except Exception: return 0
+            try:
+                rows=self.db.rows(sql)
+            except Exception:
+                return 0
             return int(rows[0]['n']) if rows else 0
-        news_items=count('SELECT COUNT(*) AS n FROM news_items');ai_total=count('SELECT COUNT(*) AS n FROM external_news_ai_results');ai_valid=count("SELECT COUNT(*) AS n FROM external_news_ai_results WHERE status='VALID'");ai_invalid=count("SELECT COUNT(*) AS n FROM external_news_ai_results WHERE status!='VALID'");sample_count=len(self._samples());missing=max(0,int(required)-sample_count)
-        reason='NO_NEWS_ITEMS' if news_items==0 else 'NO_VALID_AI_RESULTS' if ai_valid==0 else 'INSUFFICIENT_VALID_AI_RESULTS' if missing else 'READY'
-        return {'status':reason,'news_items':news_items,'ai_total':ai_total,'ai_valid':ai_valid,'ai_invalid':ai_invalid,'ai_unprocessed':max(0,news_items-ai_total),'sample_count':sample_count,'required':int(required),'missing':missing,'ready':missing==0}
-
+        news_items=count('SELECT COUNT(*) AS n FROM news_items')
+        local_total=count('SELECT COUNT(*) AS n FROM news_local_evaluations')
+        ai_total=count('SELECT COUNT(*) AS n FROM external_news_ai_results')
+        ai_valid=count("SELECT COUNT(*) AS n FROM external_news_ai_results WHERE status='VALID'")
+        ai_invalid=count("SELECT COUNT(*) AS n FROM external_news_ai_results WHERE status!='VALID'")
+        sample_count=len(self._samples())
+        missing=max(0,int(required)-sample_count)
+        reason='NO_NEWS_ITEMS' if news_items==0 else 'OPERATIONAL_READY_AI_LEARNING_INSUFFICIENT' if local_total<news_items or ai_valid<required else 'READY'
+        return {'status':reason,'news_items':news_items,'local_evaluations':local_total,'ai_total':ai_total,'ai_valid':ai_valid,'ai_invalid':ai_invalid,'ai_unprocessed':max(0,news_items-ai_total),'sample_count':sample_count,'required':int(required),'missing':missing,'ready':news_items>0 and local_total>0,'ai_learning_ready':missing==0}
     def _samples(self):
         cols={x['name'] for x in self.db.rows('PRAGMA table_info(news_items)')};time_expr="COALESCE(n.published_at,n.fetched_at,a.created_at)" if {'published_at','fetched_at'}.issubset(cols) else 'a.created_at'
         try: rows=self.db.rows(f"SELECT n.id,n.title,n.summary,s.source_class,a.result_json,{time_expr} AS observed_at FROM news_items n JOIN news_sources s ON s.name=n.source_name JOIN external_news_ai_results a ON a.news_id=n.id WHERE a.status='VALID' ORDER BY observed_at,n.id")
@@ -214,10 +229,23 @@ class NewsLearning:
         self.db.audit('NEWS_MODEL_APPROVAL_BLOCKED',json.dumps(payload,sort_keys=True),'warning');return {'status':'REJECTED_RECHECK','reason':reason,**(extra or {})}
 
     def refresh_local(self):
-        active=self.active();params=json.loads(active['parameters_json']);rows=self.db.rows('SELECT n.id,n.title,n.summary,s.source_class FROM news_items n JOIN news_sources s ON s.name=n.source_name')
+        active=self.active()
+        if not active:return {'status':'NO_ACTIVE_VERSION','evaluated':0}
+        params=json.loads(active['parameters_json'])
+        rows=self.db.rows('SELECT n.id,n.title,n.summary,s.source_class,a.result_json,a.status AS ai_status FROM news_items n JOIN news_sources s ON s.name=n.source_name LEFT JOIN external_news_ai_results a ON a.news_id=n.id')
         with self.db.con() as c:
             for row in rows:
-                score=self._local(row,params);c.execute('INSERT INTO news_local_evaluations(news_id,evaluated_at,model_version,score,details_json) VALUES(?,?,?,?,?) ON CONFLICT(news_id) DO UPDATE SET evaluated_at=excluded.evaluated_at,model_version=excluded.model_version,score=excluded.score,details_json=excluded.details_json',(row['id'],now(),active['version'],str(score),json.dumps({'parameters':params},sort_keys=True)))
+                teacher={}
+                try:
+                    if row.get('ai_status')=='VALID':
+                        teacher=json.loads(row.get('result_json') or '{}')
+                except Exception:
+                    teacher={}
+                row['teacher']=teacher
+                score=self._local(row,params)
+                details={'parameters':params,**(row.get('_news_components') or {}),'ai_status':row.get('ai_status') or 'NONE'}
+                c.execute('INSERT INTO news_local_evaluations(news_id,evaluated_at,model_version,score,details_json) VALUES(?,?,?,?,?) ON CONFLICT(news_id) DO UPDATE SET evaluated_at=excluded.evaluated_at,model_version=excluded.model_version,score=excluded.score,details_json=excluded.details_json',
+                          (row['id'],now(),active['version'],str(score),json.dumps(details,sort_keys=True)))
         return {'status':'VALID','evaluated':len(rows),'version':active['version']}
 
     def candidates(self):
