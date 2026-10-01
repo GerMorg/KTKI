@@ -53,6 +53,7 @@ class V99RepairTests(unittest.TestCase):
         f,db=self.db()
         try:
             learning=NewsLearning(db)
+            prefilter=NewsPrefilter(db)
             ai=ExternalNewsAI(db,{"ai_news_enabled":True,"ai_api_key":"test"})
             with db.con() as c:
                 c.execute(
