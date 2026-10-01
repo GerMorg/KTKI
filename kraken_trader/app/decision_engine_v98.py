@@ -129,13 +129,28 @@ class DecisionEngineV98:
         conviction_factor=D(".50")+D(".50")*conviction
         regime_strength=D(".70")+D(".30")*regime_factor
         strength=edge_factor*conviction_factor*quality_factor*regime_strength*volatility_ratio
+        position_cap_eur=total*max_position
         target=(
-            total*max_position*strength if direction=="LONG"
-            else -total*max_position*strength if direction=="SHORT"
+            position_cap_eur*strength if direction=="LONG"
+            else -position_cap_eur*strength if direction=="SHORT"
             else (D(1) if current>0 else D(-1))*min(abs(current),budget*max_position)
                 if direction=="HOLD" and current!=0
                 else D(0)
         )
+        entry_floor=min(
+            D(config.get("decision_min_trade_eur",5)),
+            max(D(0),position_cap_eur)
+        )
+        if (
+            direction in ("LONG","SHORT")
+            and net is not None and net>0
+            and samples>=minimum
+            and score>=threshold
+            and entry_floor>0
+        ):
+            target_sign=D(1) if direction=="LONG" else D(-1)
+            if abs(target)<entry_floor:
+                target=target_sign*entry_floor
         delta=target-current
         action="BUY" if delta>0 else "SELL" if delta<0 else "HOLD"
         increasing=(abs(target)>abs(current)) or (target*current<0)
@@ -177,6 +192,7 @@ class DecisionEngineV98:
             "expected_edge_after_costs_pct":str(net) if net is not None else None,
             "edge_factor":str(edge_factor),
             "target_exposure_eur":str(target),
+            "entry_floor_eur":str(entry_floor) if direction in ("LONG","SHORT") else "0",
             "current_exposure_eur":str(current),
             "rebalance_delta_eur":str(delta),
             "action":action,
