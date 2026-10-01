@@ -19,12 +19,21 @@ class RealPortfolioAllocatorV98(RealPortfolioAllocatorV95):
         super().__init__(db, trade_engine)
         self.runtime = runtime
 
+    def _quote_balance(self,quote):
+        wanted=str(quote or "").upper()
+        aliases={wanted,"Z"+wanted,"X"+wanted}
+        try:
+            rows=self.db.rows("SELECT asset,balance FROM private_balances")
+        except Exception:
+            return D(0)
+        return sum((D(x.get("balance")) for x in rows if str(x.get("asset") or "").upper() in aliases),D(0))
+
     def _current_by_symbol(self,current):
         out={}
         for asset,value in current.items():
             if asset in ("EUR","USD") or D(value)==0:continue
             rows=self.db.rows(
-                "SELECT symbol FROM market_universe WHERE base_asset IN (?,?) "
+                "SELECT symbol FROM market_universe WHERE UPPER(base_asset) IN (UPPER(?),UPPER(?)) "
                 "AND quote_asset IN ('EUR','USD') ORDER BY CASE WHEN quote_asset='EUR' THEN 0 ELSE 1 END,symbol LIMIT 1",
                 (asset,"XBT" if asset=="BTC" else asset),
             )
