@@ -53,9 +53,9 @@ def _sync_runtime_options(opts):
     real_enabled=bool(opts.get("real_trading_enabled",False))
     real_execute=bool(opts.get("real_execute_enabled",False))
     legacy.db.set_setting("automation_master_enabled","true" if automation else "false")
-    for subsystem in ("analysis","news","learning","paper"):
+    for subsystem,cadence in (("analysis",60),("news",30),("learning",60),("paper",15)):
         legacy.db.set_setting("automation_"+subsystem+"_enabled","true" if automation else "false")
-        legacy.db.set_setting("automation_"+subsystem+"_interval_minutes",str(interval))
+        legacy.db.set_setting("automation_"+subsystem+"_interval_minutes",str(cadence))
     legacy.db.set_setting("automation_real_enabled","true" if automation and real_enabled else "false")
     legacy.db.set_setting("automation_real_execute_enabled","true" if automation and real_execute else "false")
     legacy.db.set_setting("automation_tick_minutes",str(min(60,interval)))
