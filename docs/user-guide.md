@@ -1,3 +1,19 @@
+# Benutzerhandbuch · v103
+
+Die Hauptnavigation bildet weiterhin nur den tatsächlichen Prozess ab. Gerenderte Aktionen zeigen auf aktuelle Endpoints; historische URLs werden nur als Weiterleitungen vorgehalten.
+
+## Paper-Handel
+
+Ein SUBMITTED-Eintrag im Paperpfad bedeutet einen persistierten simulierten Fill. Nachgelagerte Snapshot- oder Guard-Buchhaltung wird separat als Warnung protokolliert und macht den vorhandenen Fill nicht zu einem FAILED-Trade.
+
+## Realhandel
+
+Die automatische Ausführung nutzt denselben Plan/Intent wie Paper. Für eine Liveübermittlung müssen Realhandel, Kill-Switch und die automatische Real-Ausführung über die Home-Assistant-Konfiguration freigegeben sein; anschließend werden Balance, Limits, Marktregeln und Kraken-Preflight erneut geprüft. Der manuelle Livepfad bleibt davon getrennt und benötigt das zeitlich begrenzte Freigabetoken.
+
+## Österreichische Steuerhilfe
+
+/steuerinfo-at enthält die österreichische Einkommensteuer-/KESt-Arbeitshilfe, offizielle BMF-Quellen, Prüffelder und die aktuellen ZIP-/CSV-Exporte. Die Darstellung ist ausdrücklich keine Steuer- oder Rechtsberatung.
+
 # Benutzerhandbuch · v102
 
 Die Hauptnavigation bildet nur noch den tatsächlichen Prozess ab. Legacy-GUI-URLs führen auf die jeweilige aktuelle Seite, damit alte Bookmarks nicht mehr in veralteten Oberflächen landen.

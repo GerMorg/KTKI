@@ -160,7 +160,7 @@ class RealTradeEngine:
   if ordermin>0 and volume<ordermin:raise ValueError(f'Mindestmenge {ordermin} unterschritten')
   if costmin>0 and D(volume)*price<costmin:raise ValueError(f'Mindestkosten {costmin} unterschritten')
   return {'eligible':True,'symbol':symbol,'side':side,'volume':str(volume),'price':str(price),'eur_notional':str(eur_notional),'quote':quote,'base':base,'margin':bool(margin),'reduce_only':bool(reduce_only),'leverage':str(margin_details.get('leverage','1')),'margin_details':margin_details}
- def submit(self,symbol,side,volume,order_type='limit',limit_price=None,client_order_id=None,approval_token=None,validate_only=True,automation_secret=None,leverage=None,margin=False,reduce_only=False):
+ def submit(self,symbol,side,volume,order_type='limit',limit_price=None,client_order_id=None,approval_token=None,validate_only=True,automation_secret=None,leverage=None,margin=False,reduce_only=False,automation_context=False):
   symbol=self._resolve_symbol(symbol);side=str(side).lower();order_type=str(order_type).lower();volume=D(volume);live=not bool(validate_only);margin=bool(margin);reduce_only=bool(reduce_only);leverage=D(leverage or self.margin_settings()['default_leverage']) if margin else D(1)
   # Gate market-order permission before any market-price lookup so the safety
   # decision is deterministic even when no ticker has been cached yet.
@@ -169,6 +169,15 @@ class RealTradeEngine:
    automation_ok=False
    if automation_secret:
     wanted=self.db.value('real_balancing_automation_secret_hash','');automation_ok=bool(wanted) and hmac.compare_digest(hashlib.sha256(str(automation_secret).encode()).hexdigest(),wanted)
+   if automation_context:
+    automation_ok=(
+     self.db.value('automation_real_enabled','false').lower()=='true'
+     and self.db.value('automation_real_execute_enabled','false').lower()=='true'
+     and self.db.value('real_balancing_enabled','false').lower()=='true'
+     and self.db.value('real_balancing_execute_enabled','false').lower()=='true'
+     and self.db.value('real_balancing_dry_run','true').lower()!='true'
+     and self.enabled()
+    )
    if not self.enabled() or not (self._armed(approval_token) or automation_ok):raise PermissionError('Realhandel ist nicht freigegeben oder nicht aktiv bestätigt')
   row=self._pair(symbol);quote=str(row.get('quote_asset') or symbol.rsplit('/',1)[-1]).upper();base=str(row.get('base_asset') or symbol.split('/',1)[0]).upper()
   if quote not in ('EUR','USD'):raise PermissionError('Nur EUR/USD-Quoten sind für Realhandel freigegeben')
@@ -199,7 +208,8 @@ class RealTradeEngine:
     if balance<volume:raise PermissionError(f'Nicht genügend {base}-Saldo; benötigt {volume}, vorhanden {balance}')
    is_fx_conversion=symbol=='EUR/USD';cap=max(1,int(float(self.db.value('real_max_fx_orders_per_day','1'))) if is_fx_conversion else int(float(self.db.value('real_max_orders_per_day','1'))));query="SELECT COUNT(*) AS n FROM real_trade_intents WHERE validate_only=0 AND status='SUBMITTED' AND date(created_at)=date('now')"+(' AND symbol=\'EUR/USD\'' if is_fx_conversion else " AND symbol!=\'EUR/USD\'");used=self.db.rows(query)[0]['n']
    if int(used)>=cap:raise PermissionError('Tageslimit für EUR/USD-Funding erreicht' if is_fx_conversion else 'Tageslimit für Realaufträge erreicht')
-  data={'pair':symbol.replace('/',''),'type':side,'ordertype':order_type,'volume':str(volume),'cl_ord_id':cid,'validate':'false' if live else 'true'}
+  order_pair=str(row.get('source_key') or row.get('altname') or symbol.replace('/',''))
+  data={'pair':order_pair.replace('/',''),'type':side,'ordertype':order_type,'volume':str(volume),'cl_ord_id':cid,'validate':'false' if live else 'true'}
   if margin:data.update({'leverage':str(leverage),'reduce_only':'true' if reduce_only else 'false'})
   if order_type=='limit':data['price']=str(price)
   with self.db.con() as c:c.execute('INSERT INTO real_trade_intents(created_at,client_order_id,symbol,side,order_type,volume,limit_price,status,validate_only,approval_token_hash,leverage,margin,reduce_only) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)',(now(),cid,symbol,side,order_type,str(volume),str(price),'SUBMITTING',0 if live else 1,None,str(leverage),1 if margin else 0,1 if reduce_only else 0))
@@ -212,12 +222,12 @@ class RealTradeEngine:
   except Exception as exc:
    with self.db.con() as c:c.execute('UPDATE real_trade_intents SET status=?,error=? WHERE client_order_id=?',('FAILED',type(exc).__name__,cid))
    self.db.audit('REAL_ORDER_FAILED',json.dumps({'client_order_id':cid,'error':type(exc).__name__}),'error','REAL');raise
- def convert_eur_to_usd(self,eur_amount,automation_secret=None,approval_token=None,validate_only=True):
+ def convert_eur_to_usd(self,eur_amount,automation_secret=None,approval_token=None,validate_only=True,automation_context=False):
   fx=self._fx()
   if not fx:raise ValueError('EUR/USD Livepreis fehlt')
   bid=D(fx.get('bid') or fx.get('last'))
   if bid<=0:raise ValueError('EUR/USD Bid ungültig')
-  return self.submit('EUR/USD','sell',str(D(eur_amount)),'limit',str(bid),secrets.token_hex(16),approval_token,validate_only,automation_secret)
+  return self.submit('EUR/USD','sell',str(D(eur_amount)),'limit',str(bid),secrets.token_hex(16),approval_token,validate_only,automation_secret,automation_context=automation_context)
 
 def create_real_trade_blueprint(db,client,page):
  engine=RealTradeEngine(db,client);bp=Blueprint('real_trade',__name__)

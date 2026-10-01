@@ -1,8 +1,8 @@
-# KTKI v102 — aktuelle Prüfmatrix
-v102:
+# KTKI v103 — aktuelle Prüfmatrix
+v103:
   runtime:
-    entrypoint: {expected: v102_main:app, required: true}
-    version: {expected: 0.1.0-dev.102, required: true}
+    entrypoint: {expected: v103_main:app, required: true}
+    version: {expected: 0.1.0-dev.103, required: true}
     boot_import_smoke: {required: true}
   gui:
     current_pages_exact: {expected: 8, required: true}
@@ -27,3 +27,7 @@ v102:
     tax_exports_current: {required: true}
     real_state_behavior: {required: true}
     full_ci: {required: true}
+
+    austrian_tax_help_current: {required: true}
+    paper_fill_persistence: {required: true}
+    automatic_real_submission: {required: true}

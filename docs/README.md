@@ -1,3 +1,7 @@
+## v103
+
+Die aktive Oberfläche bleibt auf den aktuellen Prozess reduziert. Neu sind der stabilisierte letzte Paper-/Real-Ausführungsschritt, routengeprüfte GUI-Aktionen und die wiederhergestellte österreichische Einkommensteuer-/KESt-Arbeitshilfe unter /steuerinfo-at mit aktuellen Exporten.
+
 ## v102
 
 Die aktive Oberfläche besteht aus Übersicht, Markt & Daten, Analyse, Portfolio, Handel, Lernen, Realhandel und System. Österreichische Steuerhilfe bleibt als Fachroute `/steuerinfo-at` erhalten, ist aber nicht Teil der Hauptnavigation.
