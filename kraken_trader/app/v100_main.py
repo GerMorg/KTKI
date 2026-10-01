@@ -82,7 +82,7 @@ except Exception:
 real_allocator=RealPortfolioAllocatorV98(legacy.db,legacy.real_trade_engine,runtime=runtime)
 
 class RealAllocatorV99:
-    """Delegate v98 trading while keeping the persisted real portfolio in sync."""
+    """Delegate canonical trading while keeping the persisted real portfolio in sync."""
     def __init__(self,delegate):
         self.delegate=delegate
     def _sync_portfolio(self):
@@ -158,7 +158,7 @@ def _tax_page():
         try:
             report=tax_service.generate(year,refresh=request.form.get("refresh","yes")=="yes")
         except Exception as exc:
-            legacy.db.audit("V98_TAX_GUI_FAILED",type(exc).__name__+":"+str(exc)[:300],"error")
+            legacy.db.audit("V100_TAX_GUI_FAILED",type(exc).__name__+":"+str(exc)[:300],"error")
             error=type(exc).__name__+":"+str(exc)[:300]
     else:
         latest=tax_service.latest(year)
@@ -182,7 +182,7 @@ def _tax_page():
 <div class="card"><b>Negative Ergebnisse</b><div class="metric">{{report.summary.realized_negative_eur}} €</div></div>
 <div class="card"><b>Rechnerischer Steuerwert</b><div class="metric">{{report.summary.estimated_tax_eur}} €</div></div></div>
 {% if report.warnings %}<div class="card warning"><h2>Prüffälle</h2><ul>{% for x in report.warnings %}<li>{{x}}</li>{% endfor %}</ul></div>{% endif %}
-<div class="card"><h2>Exporte</h2><p><a class="button" href="/tax-info-v68.zip?year={{year}}">Komplettpaket ZIP</a> <a class="button" href="/tax-info-v68.csv?year={{year}}">Realisierte Geschäfte CSV</a></p>
+<div class="card"><h2>Exporte</h2><p><a class="button" href="/tax-info.zip?year={{year}}">Komplettpaket ZIP</a> <a class="button" href="/tax-info.csv?year={{year}}">Realisierte Geschäfte CSV</a></p>
 <p>Das Paket enthält Summary, realisierte Geschäfte, offenen Bestand, Cashflow/Ledger, Prüfliste und E1kv-Arbeitswerte.</p></div>
 <div class="card"><h2>E1kv-Arbeitswerte</h2><div class="tablewrap"><table><tr><th>Kategorie</th><th>EUR</th><th>Status</th></tr>{% for x in report.e1kv_summary %}<tr><td>{{x.category}}</td><td>{{x.amount_eur}}</td><td>{{x.status}}</td></tr>{% endfor %}</table></div></div>
 <div class="card"><h2>Realisierte Geschäfte</h2><div class="tablewrap"><table><tr><th>Datum</th><th>Paar</th><th>Seite</th><th>Erlös</th><th>Anschaffung</th><th>Gewinn/Verlust</th><th>Prüfung</th></tr>{% for x in report.realized %}<tr><td>{{x.date}}</td><td>{{x.pair}}</td><td>{{x.side}}</td><td>{{x.proceeds_eur}}</td><td>{{x.acquisition_basis_eur}}</td><td>{{x.gain_loss_eur}}</td><td>{{x.review_required}}</td></tr>{% endfor %}</table></div></div>
@@ -208,7 +208,7 @@ def tax_info_alias_get():
     return _tax_page()
 
 @app.get("/tax-info.csv")
-def tax_v98_csv():
+def tax_csv():
     row=tax_service.latest(request.args.get("year"))
     if not row:
         return ("Kein Steuerbericht vorhanden",404)
@@ -251,7 +251,7 @@ def _dashboard():
     real_state=build_real_state(legacy.db,controller)
     real_ready=real_state["automatic_execution_ready"]
     return legacy.page(
-        '''<section class="hero"><div><span class="eyebrow">KTKI v99</span><h1>Kraken Trader</h1>
+        '''<section class="hero"><div><span class="eyebrow">KTKI v100</span><h1>Kraken Trader</h1>
 <p class="lead">Ein gemeinsamer Daten-, Lern-, Bewertungs-, Ziel- und Orderprozess für Paper und Real.</p></div>
 <strong class="hero-state">{{real_state["status_label"]}}</strong></section>
 <div class="process-strip">{% for x in ["Kraken","News","Analyse","Lernen","Edge","Target","Order"] %}<div class="process-node"><span>{{loop.index}}</span><b>{{x}}</b></div>{% if not loop.last %}<i>→</i>{% endif %}{% endfor %}</div>
@@ -263,7 +263,7 @@ def _dashboard():
 </div>
 <div class="card"><h2>Letzte Entscheidungen</h2><div class="tablewrap"><table><tr><th>Zeit</th><th>Umgebung</th><th>Symbol</th><th>Typ</th><th>Aktion</th><th>Edge nach Kosten</th><th>Target</th><th>Delta</th><th>Ausführung</th><th>Status</th></tr>{% for x in decisions %}<tr><td>{{x.created_at}}</td><td>{{x.environment}}</td><td>{{x.symbol}}</td><td>{{x.action_type or "—"}}</td><td>{{x.action}}</td><td>{{x.expected_edge_after_costs_pct or "—"}}%</td><td>{{x.target_exposure_eur}} €</td><td>{{x.delta_eur}} €</td><td>{{x.execution_symbol or "—"}} · {{x.execution_mode or "—"}} · {{x.leverage or "1"}}x</td><td>{{x.status}}</td></tr>{% else %}<tr><td colspan="10">Noch keine Entscheidung.</td></tr>{% endfor %}</table></div></div>
 <div class="split"><div class="card"><h2>Modellqualität je Richtung</h2>{% for f,h in health.items() %}<div class="allocation"><div><b>{{f}}</b><small>UP {{h.quality_score_by_direction.UP if h.quality_score_by_direction else "—"}} · DOWN {{h.quality_score_by_direction.DOWN if h.quality_score_by_direction else "—"}}</small></div><strong>{{h.status or "—"}}</strong></div>{% endfor %}</div>
-<div class="card"><h2>Portfolio-/Orderlogik</h2><p>Neue Risiken benötigen positive erwartete Rendite nach aktuellen Routekosten. Rebalancing/Exit darf bestehendes Risiko reduzieren, auch bei negativer Neueinstiegs-Edge.</p><p><a href="/prozess-v98">Ablauf und Diagnose →</a> · <a href="/steuerinfo-at">Einkommensteuer AT →</a></p></div></div>''',
+<div class="card"><h2>Portfolio-/Orderlogik</h2><p>Neue Risiken benötigen positive erwartete Rendite nach aktuellen Routekosten. Rebalancing/Exit darf bestehendes Risiko reduzieren, auch bei negativer Neueinstiegs-Edge.</p><p><a href="/prozess">Ablauf und Diagnose →</a> · <a href="/steuerinfo-at">Einkommensteuer AT →</a></p></div></div>''',
         plan=plan,decisions=decisions,health=health,public=public,private=private,
         news_count=news_count,news_links=news_links,auto=auto,real_state=real_state,fresh_market_seconds=planner.settings()["decision_market_data_max_age_seconds"]
     )
@@ -352,7 +352,7 @@ def _portfolio():
 <div class="card"><h2>Target vs. Current</h2>{% for x in decisions[:20] %}<div class="allocation"><div><b>{{x.symbol}}</b><small>{{x.action_type}} · {{x.execution_symbol or "—"}} · {{x.status}}</small></div><strong>{{x.target_exposure_eur}} €</strong></div>{% else %}<span class="muted">Noch kein Plan.</span>{% endfor %}</div>
 </div>''',
         paper_chart=_v100_chart([x["total_eur"] for x in reversed(paper)]),
-        real_chart=_v98_chart([x["total_eur"] for x in reversed(real)]),
+        real_chart=_v100_chart([x["total_eur"] for x in reversed(real)]),
         paper_positions=paper_positions,real_positions=real_positions,margin_positions=margin_positions,decisions=decisions
     )
 
