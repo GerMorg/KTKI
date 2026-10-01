@@ -37,6 +37,8 @@ class PaperEngineV98(PaperEngine):
         planner=CanonicalDecisionPlannerV98(self.db)
         settings=planner.settings()
         available_quotes={"EUR"} if cash>0 else set()
+        if self.db.value("paper_leverage_enabled","false").lower()=="true":
+            available_quotes.update({"EUR","USD"})
         current={}
         for p in self.positions():
             try:
