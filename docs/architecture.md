@@ -1,3 +1,7 @@
+# Architektur · v102
+
+v102 trennt drei Ebenen: `core_runtime.py` stellt die gemeinsamen Fachobjekte bereit, `market_feed_v102.py` ist die einzige öffentliche Kraken-Market-Schnittstelle, und `v102_main.py` bildet ausschließlich den aktuellen GUI-/Prozessrahmen. Paper und Real verwenden weiterhin den gemeinsamen kanonischen Planner und Execution Intent.
+
 # Architektur · v101
 
 kraken_trader/app/v101_main.py ist der einzige aktive GUI-/Runtime-Einstiegspunkt. kraken_trader/app/core_runtime.py stellt die gemeinsamen Daten- und Fachobjekte bereit; die kanonische Entscheidungsstrecke baut einen Plan, daraus einen gemeinsamen Execution Intent und trennt erst am letzten Schritt Paper von Real.
