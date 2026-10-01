@@ -20,4 +20,9 @@ def trade_thresholds(delta,current,total,min_trade_eur,no_trade_band_pct,max_pos
         relative=abs(delta)/max(D(1),abs(current))*100
         if relative<band:
             return {"allowed":False,"reason":"REBALANCE_HYSTERESIS","relative_delta_pct":str(relative),"required_pct":str(band)}
-    return {"allowed":True}
+    return {
+        "allowed":True,
+        "minimum_eur":str(minimum),
+        "configured_minimum_eur":str(configured_min),
+        "position_cap_eur":str(max_position_eur),
+    }
