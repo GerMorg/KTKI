@@ -3,6 +3,8 @@ import tempfile
 import unittest
 from pathlib import Path
 import sys
+import os
+import subprocess
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"app"))
@@ -97,7 +99,7 @@ class V101RepairTests(unittest.TestCase):
 
     def test_runtime_and_config_are_v101_and_consolidated(self):
         run=(ROOT/"run.sh").read_text(encoding="utf-8")
-        self.assertIn("v100_main:app",run)
+        self.assertIn("v101_main:app",run)
         config=(ROOT/"config.yaml").read_text(encoding="utf-8")
         self.assertIn("version: 0.1.0-dev.101",config)
         for forbidden in ("ai_provider:", "ai_endpoint:", "azure_openai", "gpt-4o-mini"):
@@ -105,6 +107,26 @@ class V101RepairTests(unittest.TestCase):
         self.assertIn("ai_api_key:",config)
         self.assertIn("automation_enabled:",config)
 
+
+    def test_v101_application_import_smoke(self):
+        with tempfile.TemporaryDirectory() as td:
+            options_path=Path(td)/"options.json"
+            options_path.write_text(json.dumps({
+                "automation_enabled": False,
+                "real_trading_enabled": False,
+                "real_execute_enabled": False,
+                "real_kill_switch": True,
+                "paper_start_eur": 1000,
+            }),encoding="utf-8")
+            env=os.environ.copy()
+            env["APP_DATA_DIR"]=td
+            env["APP_OPTIONS"]=str(options_path)
+            env["APP_DISABLE_WEBSOCKETS"]="1"
+            result=subprocess.run(
+                [sys.executable,"-c","import v101_main; assert v101_main.app is not None; print('v101 import ok')"],
+                cwd=str(ROOT/"app"),env=env,capture_output=True,text=True,timeout=20
+            )
+            self.assertEqual(result.returncode,0,msg=result.stdout+"\\n"+result.stderr)
 
     def test_v101_boot_contract(self):
         core=(ROOT/"app"/"core_runtime.py").read_text(encoding="utf-8")
