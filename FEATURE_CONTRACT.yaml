@@ -1,8 +1,8 @@
 # KTKI v101 — aktueller Feature-Vertrag
-v100:
+v101:
   runtime:
-    entrypoint: v100_main:app
-    version: 0.1.0-dev.100
+    entrypoint: v101_main:app
+    version: 0.1.0-dev.101
     single_active_runtime: true
     obsolete_runtime_wrappers: deleted
   gui:

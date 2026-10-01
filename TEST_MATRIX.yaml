@@ -1,8 +1,8 @@
 # KTKI v101 — aktuelles Prüfmatrix
-v100:
+v101:
   runtime:
-    entrypoint: {expected: v100_main:app, required: true}
-    version: {expected: 0.1.0-dev.100, required: true}
+    entrypoint: {expected: v101_main:app, required: true}
+    version: {expected: 0.1.0-dev.101, required: true}
     wrappers_v67_v99: {expected: absent, required: true}
   gui:
     unified_real_state: {required: true}
