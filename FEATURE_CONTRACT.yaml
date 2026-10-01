@@ -37,10 +37,6 @@ v100:
       - real_allowed_symbols
       - automation_enabled
       - automation_interval_minutes
-        - real_execution_disabled
-      - real_dry_run
-      - real_balancing_execute_enabled
-      - real_balancing_dry_run
   decision_pipeline:
     canonical_plan: true
     shared_paper_real_plan: true
