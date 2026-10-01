@@ -88,7 +88,16 @@ class RealTradeEngine:
   self.db.audit('REAL_TRADING_ARMED','{"duration_seconds":300}','warning','REAL');return token
  def _armed(self,token):
   r=self.db.rows('SELECT * FROM real_trade_control WHERE id=1')[0];h=hashlib.sha256(str(token or '').encode()).hexdigest();return bool(r['token_hash']) and hmac.compare_digest(h,r['token_hash']) and D(r['armed_until'])>=D(datetime.now(timezone.utc).timestamp())
+ def _resolve_symbol(self,symbol):
+  text=str(symbol or '').strip()
+  rows=self.db.rows('SELECT symbol FROM market_universe WHERE symbol=? OR UPPER(symbol)=UPPER(?) ORDER BY CASE WHEN asset_class=\'currency\' THEN 0 ELSE 1 END LIMIT 1',(text,text))
+  if rows:return str(rows[0]['symbol'])
+  rows=self.db.rows('SELECT symbol FROM live_prices WHERE symbol=? OR UPPER(symbol)=UPPER(?) LIMIT 1',(text,text))
+  if rows:return str(rows[0]['symbol'])
+  return text
+
  def _pair(self,symbol):
+  symbol=self._resolve_symbol(symbol)
   try:rows=self.db.rows("SELECT * FROM market_universe WHERE symbol=? ORDER BY CASE WHEN asset_class='currency' THEN 0 ELSE 1 END LIMIT 1",(symbol))
   except Exception:rows=[]
   return rows[0] if rows else {}
@@ -108,6 +117,7 @@ class RealTradeEngine:
  def _base_balance(self,base):
   aliases={base,'X'+base,'Z'+base};rows=self.db.rows('SELECT asset,balance FROM private_balances');return sum((D(x['balance']) for x in rows if str(x['asset']).upper() in aliases),D(0))
  def _live_price(self,symbol,side):
+  symbol=self._resolve_symbol(symbol)
   rows=self.db.rows('SELECT last,bid,ask,received_at FROM live_prices WHERE symbol=? LIMIT 1',(symbol,))
   if not rows:raise ValueError('Kein aktueller Marktpreis')
   r=rows[0]
@@ -132,7 +142,7 @@ class RealTradeEngine:
   if max_notional>0 and eur_notional>max_notional:raise ValueError('MAX_ORDER_NOTIONAL_EUR')
   if max_volume<=0 and max_notional<=0 and fallback>0 and eur_notional>fallback:raise ValueError('MAX_BALANCING_TRADE_EUR')
  def preflight(self,symbol,side,volume,order_type='limit',limit_price=None,leverage=None,margin=False,reduce_only=False):
-  symbol=str(symbol).upper().strip();side=str(side).lower();volume=D(volume);order_type=str(order_type).lower()
+  symbol=self._resolve_symbol(symbol);side=str(side).lower();volume=D(volume);order_type=str(order_type).lower()
   if side not in ('buy','sell') or order_type not in ('limit','market') or volume<=0:raise ValueError('Ungültiger Auftrag')
   if order_type=='market' and self.db.value('real_allow_market_orders','false').lower()!='true':raise PermissionError('Market-Orders sind nicht freigegeben')
   row=self._pair(symbol);quote=str(row.get('quote_asset') or symbol.rsplit('/',1)[-1]).upper();base=str(row.get('base_asset') or symbol.split('/',1)[0]).upper()
@@ -145,7 +155,7 @@ class RealTradeEngine:
   if costmin>0 and D(volume)*price<costmin:raise ValueError(f'Mindestkosten {costmin} unterschritten')
   return {'eligible':True,'symbol':symbol,'side':side,'volume':str(volume),'price':str(price),'eur_notional':str(eur_notional),'quote':quote,'base':base,'margin':bool(margin),'reduce_only':bool(reduce_only),'leverage':str(margin_details.get('leverage','1')),'margin_details':margin_details}
  def submit(self,symbol,side,volume,order_type='limit',limit_price=None,client_order_id=None,approval_token=None,validate_only=True,automation_secret=None,leverage=None,margin=False,reduce_only=False):
-  symbol=str(symbol).upper().strip();side=str(side).lower();order_type=str(order_type).lower();volume=D(volume);live=not bool(validate_only);margin=bool(margin);reduce_only=bool(reduce_only);leverage=D(leverage or self.margin_settings()['default_leverage']) if margin else D(1)
+  symbol=self._resolve_symbol(symbol);side=str(side).lower();order_type=str(order_type).lower();volume=D(volume);live=not bool(validate_only);margin=bool(margin);reduce_only=bool(reduce_only);leverage=D(leverage or self.margin_settings()['default_leverage']) if margin else D(1)
   # Gate market-order permission before any market-price lookup so the safety
   # decision is deterministic even when no ticker has been cached yet.
   if order_type=='market' and self.db.value('real_allow_market_orders','false').lower()!='true':raise PermissionError('Market-Orders sind nicht freigegeben')
