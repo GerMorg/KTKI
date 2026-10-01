@@ -61,6 +61,8 @@ class RealPortfolioAllocatorV98(RealPortfolioAllocatorV95):
             available_quotes=set()
             if D(self._quote_balance("EUR"))>0: available_quotes.add("EUR")
             if D(self._quote_balance("USD"))>0: available_quotes.add("USD")
+            if bool(cfg["margin_enabled"]):
+                available_quotes.update({"EUR","USD"})
             planner=CanonicalDecisionPlannerV98(self.db)
             settings=planner.settings()
             plan=planner.build(
