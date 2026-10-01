@@ -1,4 +1,4 @@
-"""KTKI v97 canonical decision settings and portfolio plan.
+"""KTKI v98 canonical decision settings and portfolio plan.
 
 This module deliberately contains no Paper/Real execution code. It is the single
 decision path used by both environments.
@@ -53,7 +53,7 @@ class CanonicalDecisionPlannerV98:
 
     def ensure(self):
         with self.db.con() as c:
-            c.execute("""CREATE TABLE IF NOT EXISTS decision_plan_runs_v97(
+            c.execute("""CREATE TABLE IF NOT EXISTS decision_plan_runs_v98(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 created_at TEXT NOT NULL,
                 environment TEXT NOT NULL,
@@ -64,7 +64,7 @@ class CanonicalDecisionPlannerV98:
                 settings_json TEXT NOT NULL,
                 context_json TEXT NOT NULL
             )""")
-            c.execute("CREATE INDEX IF NOT EXISTS idx_decision_plan_v97_hash ON decision_plan_runs_v97(plan_hash,created_at DESC)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_decision_plan_v98_hash ON decision_plan_runs_v98(plan_hash,created_at DESC)")
 
     def settings(self):
         out={}
@@ -279,7 +279,7 @@ class CanonicalDecisionPlannerV98:
         payload={"settings":settings,"tickers":tickers,"candidate_count":len(enriched),"decision_count":len(ranked),"health":health,"regimes":regimes}
         with self.db.con() as c:
             c.execute(
-                "INSERT INTO decision_plan_runs_v97(created_at,environment,plan_hash,total_eur,candidate_count,decision_count,settings_json,context_json) VALUES(?,?,?,?,?,?,?,?)",
+                "INSERT INTO decision_plan_runs_v98(created_at,environment,plan_hash,total_eur,candidate_count,decision_count,settings_json,context_json) VALUES(?,?,?,?,?,?,?,?)",
                 (datetime.now(timezone.utc).isoformat(),str(environment),plan_hash,str(total_eur),len(enriched),len(ranked),
                  json.dumps(settings,sort_keys=True),json.dumps(payload,sort_keys=True,default=str))
             )
