@@ -42,7 +42,13 @@ class V103ProcessTests(unittest.TestCase):
                 quote_asset TEXT,source_key TEXT,ordermin TEXT,costmin TEXT,
                 canonical_id TEXT
             )""")
+            columns={row[1] for row in c.execute("PRAGMA table_info(market_universe)").fetchall()}
+            if "lot_decimals" not in columns:
+                c.execute("ALTER TABLE market_universe ADD COLUMN lot_decimals INTEGER")
+            if "pair_decimals" not in columns:
+                c.execute("ALTER TABLE market_universe ADD COLUMN pair_decimals INTEGER")
             c.execute("""INSERT OR REPLACE INTO market_universe
+                (symbol,asset_class,category,base_asset,quote_asset,source_key,ordermin,costmin,canonical_id,lot_decimals,pair_decimals)
                 VALUES(?,?,?,?,?,?,?,?,?,?,?)""",
                 ("BTC/EUR","currency","crypto_spot","BTC","EUR","XXBTZEUR","0","0","btc",8,5))
 
