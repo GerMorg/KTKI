@@ -288,11 +288,18 @@ class V102RepairTests(unittest.TestCase):
             def ticker(self,pairs,asset_class="currency"):
                 return {"XXBTZEUR":{"c":["90000"],"b":["89999"],"a":["90001"],"o":"89000"}}
 
-        class FakeUniverse:
-            def sync(self):
-                return {"total":1,"enabled":1,"quality":"VALID","errors":[]}
-            def symbols(self,quote=None):
-                return ["BTC/EUR"]
+        class FakeDB:
+            def __init__(self):
+                self.saved=[]
+                self.settings={}
+            def rows(self,query,params=()):
+                return []
+            def upsert_live_price(self,row):
+                self.saved.append(dict(row))
+            def set_setting(self,key,value):
+                self.settings[key]=value
+            def audit(self,*args):
+                return None
 
         class FakeStream:
             enabled=False
@@ -302,15 +309,12 @@ class V102RepairTests(unittest.TestCase):
             def start(self):
                 return None
 
-        f,db=self.db()
-        try:
-            service=PublicMarketServiceV102(db,FakeClient(),FakeUniverse(),FakeStream())
-            result=service.snapshot(["BTC/EUR"])
-            self.assertEqual(result["saved"],1)
-            row=db.rows("SELECT symbol,last FROM live_prices WHERE symbol='BTC/EUR'")[0]
-            self.assertEqual(row["last"],"90000")
-        finally:
-            Path(f.name).unlink(missing_ok=True)
+        db=FakeDB()
+        service=PublicMarketServiceV102(db,FakeClient(),object(),FakeStream())
+        result=service.snapshot(["BTC/EUR"])
+        self.assertEqual(result["saved"],1)
+        self.assertEqual(db.saved[0]["symbol"],"BTC/EUR")
+        self.assertEqual(db.saved[0]["last"],"90000")
 
     def test_v102_public_market_does_not_require_private_credentials(self):
         source=(ROOT/"app"/"v102_main.py").read_text(encoding="utf-8")
