@@ -20,5 +20,5 @@ class RepositoryQualityTests(unittest.TestCase):
         self.assertIn(f"version: {version}",(ADDON/"config.yaml").read_text(encoding="utf-8"));self.assertIn(f"version: {version}",(ROOT/"repository.yaml").read_text(encoding="utf-8"))
     def test_gui_shell_is_centralized_and_accessible(self):
         main=(ADDON/"app/main.py").read_text(encoding="utf-8");template=(ADDON/"app/templates/base.html").read_text(encoding="utf-8");css=(ADDON/"app/static/style.css").read_text(encoding="utf-8")
-        self.assertNotIn("BASE="+"'''",main);self.assertIn("render_template('base.html'",main);self.assertIn("DEAKTIVIERT",template);self.assertIn('aria-current="page"',template);self.assertIn(":focus-visible",css)
+        self.assertNotIn("BASE="+"'''",main);self.assertIn("render_template('base.html'",main);self.assertIn("REALHANDEL NUR BEI EXPLIZITER FREIGABE",template);self.assertIn('aria-current="page"',template);self.assertIn(":focus-visible",css)
 if __name__=="__main__":unittest.main()
