@@ -17,7 +17,7 @@ from at_income_tax_v68 import AustrianTaxV68, tax_year, BMF_CAPITAL_URL, BMF_CRY
 from decision_pipeline_v98 import CanonicalDecisionPlannerV98
 from decision_runtime_v98 import DecisionRuntimeV98
 from v103_paper_engine import PaperEngineV103
-from v98_real_allocator import RealPortfolioAllocatorV98
+from v103_real_allocator import RealPortfolioAllocatorV103
 from portfolio_sync import build_rows, normalize_asset
 from real_state_v102 import build_real_state
 from market_feed_v102 import PublicMarketServiceV102
@@ -65,8 +65,6 @@ def _sync_runtime_options(opts):
             legacy.db.set_setting(key,str(opts[key]))
 
 _sync_runtime_options(options)
-if bool(options.get("real_execute_enabled",False)):
-    legacy.real_trade_engine.ensure_automation_secret()
 
 runtime=DecisionRuntimeV98(
     legacy.db,
@@ -84,7 +82,7 @@ paper_engine=PaperEngineV103(
     runtime=runtime,
 )
 
-real_delegate=RealPortfolioAllocatorV98(legacy.db,legacy.real_trade_engine,runtime=runtime)
+real_delegate=RealPortfolioAllocatorV103(legacy.db,legacy.real_trade_engine,runtime=runtime)
 
 class RealAllocatorV102:
     def __init__(self,delegate):
