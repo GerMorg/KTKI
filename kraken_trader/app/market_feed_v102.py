@@ -235,7 +235,7 @@ class PublicMarketServiceV102:
 
     def status(self):
         stream = self.stream.status()
-        prices = self.db.rows("SELECT COUNT(*) AS n FROM live_prices WHERE received_at >= datetime('now','-10 minutes')")
+        prices = self.db.rows("SELECT COUNT(*) AS n FROM live_prices WHERE julianday(received_at) >= julianday('now','-10 minutes')")
         stream["live_price_count_10m"] = int(prices[0]["n"]) if prices else 0
         stream["last_rest_refresh"] = self.db.value("v102_market_last_refresh", "")
         stream["last_refresh_result"] = self.last_result or {}
