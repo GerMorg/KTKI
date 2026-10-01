@@ -1,3 +1,7 @@
+## v101 Runtime-Korrektur
+
+`core_runtime.py` enthält die zentrale Initialisierung. Das Alias `legacy` verweist explizit auf dieses Modul, damit v101 die bestehenden Fachkomponenten ohne versionierte Runtime-Kette nutzen kann. `run.sh` startet ausschließlich `v101_main:app`.
+
 # Datei-Audit · v100
 
 Der aktive Runtimebaum wurde von den historischen v67-v99-Wrappern bereinigt. Die folgenden Dateien bilden den aktuellen Kern.
