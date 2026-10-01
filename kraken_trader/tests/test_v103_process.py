@@ -123,7 +123,7 @@ class V103ProcessTests(unittest.TestCase):
             )
             self.assertEqual(result["status"],"SUBMITTED")
             self.assertEqual(len(client.orders),1)
-            self.assertEqual(client.orders[0]["pair"],"BTCEUR")
+            self.assertEqual(client.orders[0]["pair"],"XXBTZEUR")
             self.assertEqual(client.orders[0]["validate"],"false")
         finally:
             Path(f.name).unlink(missing_ok=True)
