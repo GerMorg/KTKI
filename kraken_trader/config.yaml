@@ -1,5 +1,7 @@
 name: Kraken Trader
 version: 0.1.0-dev.99
+# Historical baseline version: 0.1.0-dev.90
+# Historical internal default: private_websocket_readonly_enabled: true
 slug: kraken_trader
 description: Autonomous Kraken Portfolio, Paper-Trading und streng freigegebener Realhandel
 arch:
