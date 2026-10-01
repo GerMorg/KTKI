@@ -246,7 +246,7 @@ def _state():
 def _dashboard():
     st=_state()
     return legacy.page(
-        '''<span class="eyebrow">KTKI v102</span><h1>Kraken Trader</h1>
+        '''<span class="eyebrow">KTKI v103</span><h1>Kraken Trader</h1>
 <p class="lead">Marktdaten → News → Analyse → Lernen → Plan → Order.</p>
 <div class="summary-grid">
 <div class="summary"><span>Public Market</span><b>{{market.effective_state}}</b><small>{{market.symbol_count}} WS-Symbole · {{market.live_price_count_10m}} Livepreise</small></div>
