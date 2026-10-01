@@ -97,14 +97,14 @@ class V102RepairTests(unittest.TestCase):
         finally:
             Path(f.name).unlink(missing_ok=True)
 
-    def test_runtime_and_config_are_v102_and_consolidated(self):
+    def test_runtime_and_config_are_current_and_consolidated(self):
         run=(ROOT/"run.sh").read_text(encoding="utf-8")
-        self.assertIn("v102_main:app",run)
+        self.assertIn("v103_main:app",run)
         version=(ROOT/"app"/"version.py").read_text(encoding="utf-8")
-        self.assertIn("APP_VERSION='0.1.0-dev.102'",version)
-        self.assertIn("USER_AGENT='HA-Kraken-Trader/0.1.0-dev.102'",version)
+        self.assertIn("APP_VERSION='0.1.0-dev.103'",version)
+        self.assertIn("USER_AGENT='HA-Kraken-Trader/0.1.0-dev.103'",version)
         config=(ROOT/"config.yaml").read_text(encoding="utf-8")
-        self.assertIn("version: 0.1.0-dev.102",config)
+        self.assertIn("version: 0.1.0-dev.103",config)
         for forbidden in ("ai_provider:", "ai_endpoint:", "azure_openai", "gpt-4o-mini"):
             self.assertNotIn(forbidden,config)
         self.assertIn("ai_api_key:",config)
