@@ -95,7 +95,7 @@ class V98RealOrderPathTests(unittest.TestCase):
             Path(f.name).unlink(missing_ok=True)
 
     def test_entry_minimum_is_capped_by_small_account_position_limit(self):
-        result=trade_thresholds(Decimal("2.20"),Decimal("0"),Decimal("46.194649"),Decimal("5"),Decimal("2"),Decimal("5"))
+        result=trade_thresholds(Decimal("2.40"),Decimal("0"),Decimal("46.194649"),Decimal("5"),Decimal("2"),Decimal("5"))
         self.assertTrue(result["allowed"])
         self.assertAlmostEqual(float(result["minimum_eur"]),46.194649*0.05,places=8)
 
