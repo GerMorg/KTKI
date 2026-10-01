@@ -38,16 +38,22 @@ def _resolve_universe_symbol(db, symbol):
 def alternatives(db, symbol):
     resolved=_resolve_universe_symbol(db,symbol)
     if not resolved:return []
+    try:
+        cols={x["name"] for x in db.rows("PRAGMA table_info(market_universe)")}
+    except Exception:
+        cols=set()
+    optional=[]
+    for name in ("leverage_buy_json","leverage_sell_json","metadata_json"):
+        optional.append(name if name in cols else "NULL AS "+name)
+    select="symbol,asset_class,category,base_asset,quote_asset,source_key,ordermin,costmin,"+",".join(optional)
     if resolved.get("canonical_id"):
         rows=db.rows(
-            "SELECT symbol,asset_class,category,base_asset,quote_asset,source_key,ordermin,costmin,leverage_buy_json,leverage_sell_json,metadata_json "
-            "FROM market_universe WHERE canonical_id=? AND quote_asset IN ('EUR','USD')",
+            "SELECT "+select+" FROM market_universe WHERE canonical_id=? AND quote_asset IN ('EUR','USD')",
             (resolved["canonical_id"],),
         )
     else:
         rows=db.rows(
-            "SELECT symbol,asset_class,category,base_asset,quote_asset,source_key,ordermin,costmin,leverage_buy_json,leverage_sell_json,metadata_json "
-            "FROM market_universe WHERE UPPER(symbol)=UPPER(?) AND quote_asset IN ('EUR','USD')",
+            "SELECT "+select+" FROM market_universe WHERE UPPER(symbol)=UPPER(?) AND quote_asset IN ('EUR','USD')",
             (resolved["symbol"],),
         )
     return [dict(x) for x in rows]
