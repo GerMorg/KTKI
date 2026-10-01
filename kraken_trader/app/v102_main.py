@@ -266,7 +266,9 @@ app.view_functions["index"]=_dashboard
 
 def _market_page(message=None,level=""):
     status=market_service.status()
-    prices=_safe_rows("SELECT symbol,last,bid,ask,change_pct,received_at FROM live_prices ORDER BY symbol LIMIT 80")
+    all_prices=_safe_rows("SELECT symbol,last,bid,ask,change_pct,received_at FROM live_prices ORDER BY symbol LIMIT 200")
+    wanted=set(status.get("symbols") or [])
+    prices=[row for row in all_prices if row.get("symbol") in wanted] if wanted else all_prices[:30]
     universe=_safe_rows("SELECT symbol,asset_class,category,status FROM market_universe ORDER BY category,symbol LIMIT 60")
     return legacy.page(
         '''<span class="eyebrow">Kraken Market</span><h1>Markt & Daten</h1>
