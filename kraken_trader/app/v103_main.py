@@ -559,7 +559,7 @@ def _tax_page():
 {% if report.warnings %}<div class="card warning"><h2>Prüfhinweise</h2><ul>{% for x in report.warnings %}<li>{{x}}</li>{% endfor %}</ul></div>{% endif %}
 <div class="card"><h2>Exporte</h2><p><a class="button" href="/tax-info.zip?year={{year}}">Komplettpaket ZIP</a> <a class="button secondary" href="/tax-info.csv?year={{year}}">Realisierte Geschäfte CSV</a></p></div>
 {% elif latest %}<div class="card"><h2>Letzter Bericht</h2><p>{{latest.status}} · {{latest.trade_count}} Trades · {{latest.review_count}} Prüffälle</p><a class="button" href="/tax-info.zip?year={{year}}">ZIP exportieren</a> <a class="button secondary" href="/tax-info.csv?year={{year}}">CSV exportieren</a></div>{% endif %}
-<div class="card"><small>Arbeits- und Prüfhilfe; keine Steuer- oder Rechtsberatung. Die endgültige steuerliche Beurteilung muss anhand der vollständigen Unterlagen erfolgen.</small></div>''',
+<div class="card"><small>Arbeits- und Prüfhilfe; Keine Steuer- oder Rechtsberatung. Die endgültige steuerliche Beurteilung muss anhand der vollständigen Unterlagen erfolgen.</small></div>''',
         year=year,report=report,latest=latest,error=error,latest_summary=latest_summary,
         bmf_capital=BMF_CAPITAL_URL,bmf_crypto=BMF_CRYPTO_URL,bmf_reporting=BMF_REPORTING_URL,
     )
