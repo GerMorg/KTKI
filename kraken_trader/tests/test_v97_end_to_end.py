@@ -7,9 +7,9 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))
 
 from db import DB
-from decision_engine_v97 import DecisionEngineV97
-from decision_pipeline_v97 import CanonicalDecisionPlannerV97
-from decision_runtime_v97 import DecisionRuntimeV97
+from decision_engine_v98 import DecisionEngineV98
+from decision_pipeline_v98 import CanonicalDecisionPlannerV98
+from decision_runtime_v98 import DecisionRuntimeV98
 
 
 class V97EndToEndTests(unittest.TestCase):
@@ -18,7 +18,7 @@ class V97EndToEndTests(unittest.TestCase):
         db=DB(f.name);db.init()
         try:
             db.set("decision_min_edge_samples","10")
-            engine=DecisionEngineV97(db)
+            engine=DecisionEngineV98(db)
             row={"symbol":"BTC/EUR","signal":"BUY","score":90,"momentum_pct":2,"trend_pct":1,
                  "volatility_pct":2,"buy_threshold":70}
             health={"risk_state":"OK","directions":{"UP":{
@@ -54,7 +54,7 @@ class V97EndToEndTests(unittest.TestCase):
                 c.execute("INSERT INTO scanner_results VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
                           ("BTC/EUR",stamp,"90","BUY","2","2","1","0.1","1",50,"VALID","[]","0"))
             db.set("decision_max_scanner_age_minutes","120")
-            planner=CanonicalDecisionPlannerV97(db)
+            planner=CanonicalDecisionPlannerV98(db)
             paper=planner.build(1000,{"BTC/EUR":0},"PAPER")
             real=planner.build(1000,{"BTC/EUR":0},"REAL")
             self.assertEqual(paper["plan_hash"],real["plan_hash"])
@@ -74,7 +74,7 @@ class V97EndToEndTests(unittest.TestCase):
             return 4
         try:
             db.set("decision_shared_context_reuse_seconds","10")
-            runtime=DecisionRuntimeV97(db,market,forecasts)
+            runtime=DecisionRuntimeV98(db,market,forecasts)
             first=runtime.prepare(force=True)
             second=runtime.prepare()
             self.assertEqual(calls,{"market":1,"forecast":1})
@@ -87,7 +87,7 @@ class V97EndToEndTests(unittest.TestCase):
 
     def test_runtime_entrypoint_is_v97(self):
         run=Path(__file__).resolve().parents[2] / "run.sh"
-        self.assertIn("v97_main:app",run.read_text(encoding="utf-8"))
+        self.assertIn("v98_main:app",run.read_text(encoding="utf-8"))
 
     def test_active_v97_gui_contains_portfolio_and_learning_routes(self):
         runtime=(Path(__file__).resolve().parents[1] / "app" / "v97_main.py").read_text(encoding="utf-8")
@@ -97,7 +97,7 @@ class V97EndToEndTests(unittest.TestCase):
         self.assertIn('news_learning',runtime)
 
     def test_portfolio_budget_reserves_cash(self):
-        engine=DecisionEngineV97(None)
+        engine=DecisionEngineV98(None)
         rows=[
             {"symbol":"A/EUR","signal":"BUY","score":100,"momentum_pct":2,"trend_pct":1,
              "volatility_pct":2,"buy_threshold":70,"expected_edge_pct":"4","family":"crypto_spot"},

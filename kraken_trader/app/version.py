@@ -1,5 +1,5 @@
-APP_VERSION='0.1.0-dev.97'
-USER_AGENT='HA-Kraken-Trader/0.1.0-dev.97'
+APP_VERSION='0.1.0-dev.98'
+USER_AGENT='HA-Kraken-Trader/0.1.0-dev.98'
 # Historical baseline: APP_VERSION='0.1.0-dev.95'
 # Historical baseline: APP_VERSION='0.1.0-dev.94'
 # Historical baseline: APP_VERSION='0.1.0-dev.93'
