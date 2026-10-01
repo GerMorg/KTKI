@@ -51,9 +51,14 @@ class PaperEngineV98(PaperEngine):
         for decision in plan["decisions"]:
             if submitted>=execution_capacity:break
             delta=D(decision["rebalance_delta_eur"])
-            if delta==0:continue
-            if abs(delta)<D(settings["decision_min_trade_eur"]):continue
+            if delta==0:
+                skips.append({"symbol":decision["symbol"],"reason":"TARGET_ALREADY_REACHED","delta_eur":str(delta)})
+                continue
+            if abs(delta)<D(settings["decision_min_trade_eur"]):
+                skips.append({"symbol":decision["symbol"],"reason":"BELOW_MIN_TRADE","delta_eur":str(delta),"minimum_eur":str(settings["decision_min_trade_eur"])})
+                continue
             if D(decision["current_exposure_eur"])!=0 and abs(delta)/max(D(1),abs(D(decision["current_exposure_eur"])))*100<D(settings["decision_no_trade_band_pct"]):
+                skips.append({"symbol":decision["symbol"],"reason":"REBALANCE_HYSTERESIS","delta_eur":str(delta)})
                 continue
             intent=build_execution_intent(
                 decision,
@@ -130,4 +135,4 @@ class PaperEngineV98(PaperEngine):
             "plan_hash":plan["plan_hash"],"decisions":len(plan["decisions"]),
             "actions":len(actions),"executed":sum(1 for x in actions if x["status"]=="SUBMITTED"),
         },sort_keys=True))
-        return {**plan,"status":"COMPLETED","actions":actions}
+        return {**plan,"status":"COMPLETED","actions":actions,"skips":skips}
