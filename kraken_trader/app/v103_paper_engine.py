@@ -135,8 +135,11 @@ class PaperEngineV103(PaperEngine):
                     reason=type(exc).__name__+":"+str(exc)[:240]
             __import__("decision_engine_v98").DecisionEngineV98(self.db).record("PAPER",decision,intent["execution_symbol"],intent["mode"],intent["leverage"],status,reason)
             actions.append({"decision":decision,"intent":intent,"matrix":risk,"status":status,"reason":reason,"trade_id":trade_id})
-        self.snapshot()
-        self.db.audit("PAPER_V98_CANONICAL_RUN",json.dumps({
+        try:
+            self.snapshot()
+        except Exception as exc:
+            self.db.audit("V103_PAPER_SNAPSHOT_FAILED",type(exc).__name__+":"+str(exc)[:300],"warning","PAPER")
+        self.db.audit("PAPER_V103_CANONICAL_RUN",json.dumps({
             "plan_hash":plan["plan_hash"],"decisions":len(plan["decisions"]),
             "actions":len(actions),"executed":sum(1 for x in actions if x["status"]=="SUBMITTED"),
         },sort_keys=True))
