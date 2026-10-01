@@ -147,5 +147,14 @@ class V100RepairTests(unittest.TestCase):
             self.assertTrue(s["automatic_execution_ready"])
             self.assertEqual(s["status_label"],"REALHANDEL FREIGEGEBEN")
 
+    def test_v100_tax_exports_are_current_and_routable(self):
+        source=(ROOT/"app"/"v100_main.py").read_text(encoding="utf-8")
+        self.assertIn('@app.get("/tax-info.zip")',source)
+        self.assertIn('@app.get("/tax-info.csv")',source)
+        self.assertIn('url_for("tax_csv"',source)
+        self.assertNotIn("/tax-info-v68.zip",source)
+        self.assertNotIn("/tax-info-v68.csv",source)
+        self.assertNotIn("tax_v100_csv",source)
+
 if __name__=="__main__":
     unittest.main()
