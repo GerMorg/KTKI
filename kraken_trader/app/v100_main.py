@@ -187,7 +187,7 @@ def _tax_page():
 <div class="card"><h2>E1kv-Arbeitswerte</h2><div class="tablewrap"><table><tr><th>Kategorie</th><th>EUR</th><th>Status</th></tr>{% for x in report.e1kv_summary %}<tr><td>{{x.category}}</td><td>{{x.amount_eur}}</td><td>{{x.status}}</td></tr>{% endfor %}</table></div></div>
 <div class="card"><h2>Realisierte Geschäfte</h2><div class="tablewrap"><table><tr><th>Datum</th><th>Paar</th><th>Seite</th><th>Erlös</th><th>Anschaffung</th><th>Gewinn/Verlust</th><th>Prüfung</th></tr>{% for x in report.realized %}<tr><td>{{x.date}}</td><td>{{x.pair}}</td><td>{{x.side}}</td><td>{{x.proceeds_eur}}</td><td>{{x.acquisition_basis_eur}}</td><td>{{x.gain_loss_eur}}</td><td>{{x.review_required}}</td></tr>{% endfor %}</table></div></div>
 {% elif latest %}
-<div class="card"><h2>Letzter Bericht</h2><p>{{latest.status}} · {{latest.trade_count}} Trades · {{latest.review_count}} Prüffälle · {{latest.content_sha256}}</p><a class="button" href="/tax-info-v68.zip?year={{year}}">ZIP exportieren</a></div>
+<div class="card"><h2>Letzter Bericht</h2><p>{{latest.status}} · {{latest.trade_count}} Trades · {{latest.review_count}} Prüffälle · {{latest.content_sha256}}</p><a class="button" href="/tax-info.zip?year={{year}}">ZIP exportieren</a></div>
 {% endif %}
 <div class="card"><small>Arbeits- und Prüfhilfe; keine Steuer- oder Rechtsberatung. Bei fehlender Anschaffungsbasis, Fremdwährung, Sonderprodukten oder nicht eindeutig einordenbaren Einkünften bleibt der Report auf REVIEW_REQUIRED.</small></div>''',
         year=year,report=report,latest=latest,error=error
@@ -197,7 +197,7 @@ for endpoint in ("at_tax_v63.tax_info","at_tax_v63.tax_info_generate"):
     if endpoint in app.view_functions:
         app.view_functions[endpoint]=_tax_page
 if "at_tax_v63.tax_csv_export" in app.view_functions:
-    app.view_functions["at_tax_v63.tax_csv_export"]=lambda: redirect(url_for("tax_v100_csv",year=request.args.get("year")))
+    app.view_functions["at_tax_v63.tax_csv_export"]=lambda: redirect(url_for("tax_csv",year=request.args.get("year")))
 
 @app.post("/steuerinfo-at")
 def tax_info_alias():
@@ -206,6 +206,17 @@ def tax_info_alias():
 @app.get("/steuerinfo-at")
 def tax_info_alias_get():
     return _tax_page()
+
+@app.get("/tax-info.zip")
+def tax_zip():
+    year=tax_year(request.args.get("year"))
+    try:
+        data=tax_service.export_zip(year)
+    except Exception as exc:
+        return ("Steuerbericht konnte nicht exportiert werden: "+type(exc).__name__,500)
+    if not data:
+        return ("Kein Steuerbericht vorhanden",404)
+    return Response(data,mimetype="application/zip",headers={"Content-Disposition":f"attachment; filename=steuer-at-{year}.zip"})
 
 @app.get("/tax-info.csv")
 def tax_csv():
