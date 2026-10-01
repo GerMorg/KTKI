@@ -19,6 +19,7 @@ from decision_engine_v98 import DecisionEngineV98
 from v98_paper_engine import PaperEngineV98
 from v98_real_allocator import RealPortfolioAllocatorV98
 from decision_runtime_v98 import DecisionRuntimeV98
+from portfolio_sync import build_rows,normalize_asset
 
 app=base.app
 legacy=base.legacy
@@ -80,7 +81,45 @@ except Exception:
     pass
 
 real_allocator=RealPortfolioAllocatorV98(legacy.db,legacy.real_trade_engine,runtime=runtime)
-legacy.real_allocator=real_allocator
+
+class RealAllocatorV99:
+    """Delegate v98 trading while keeping the persisted real portfolio in sync."""
+    def __init__(self,delegate):
+        self.delegate=delegate
+    def _sync_portfolio(self):
+        try:
+            client=legacy.real_trade_engine.client
+            balances=client.balance()
+            assets=client.assets()
+            pairs=client.pairs()
+            held_names={normalize_asset(code,assets) for code,value in balances.items() if str(value) not in ("0","0.0","0.00")}
+            relevant=[]
+            for pair_id,pair in pairs.items():
+                base_name=normalize_asset(pair.get("base",""),assets)
+                quote_name=normalize_asset(pair.get("quote",""),assets)
+                if base_name in held_names and quote_name=="EUR":
+                    relevant.append(pair.get("altname",pair_id))
+            tickers=client.ticker(relevant) if relevant else {}
+            rows,total,quality=build_rows(balances,set(),assets,pairs,tickers)
+            legacy.db.replace_balances(balances)
+            sid=legacy.db.store_portfolio(rows,total,quality)
+            return {"snapshot_id":sid,"assets":len(rows),"held_assets":sum(1 for row in rows if row["classification"]=="HELD"),"total_eur":total,"quality":quality}
+        except Exception as exc:
+            detail=type(exc).__name__+":"+str(exc)[:300]
+            legacy.db.audit("REAL_PORTFOLIO_AUTO_SYNC_FAILED",detail,"warning")
+            return {"status":"FAILED","error":detail}
+    def run(self,*args,**kwargs):
+        result=self.delegate.run(*args,**kwargs)
+        sync=self._sync_portfolio()
+        if isinstance(result,dict):
+            result=dict(result)
+            result["portfolio_sync"]=sync
+        return result
+    def __getattr__(self,name):
+        return getattr(self.delegate,name)
+
+legacy.real_allocator=RealAllocatorV99(real_allocator)
+real_allocator=legacy.real_allocator
 
 def run_paper_cycle():
     engine=PaperEngineV98(
