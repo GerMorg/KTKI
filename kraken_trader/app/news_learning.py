@@ -36,6 +36,9 @@ class NewsLearning:
               news_id TEXT PRIMARY KEY, evaluated_at TEXT NOT NULL,
               model_version INTEGER NOT NULL, score TEXT NOT NULL,
               details_json TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS external_news_ai_results(
+              news_id TEXT PRIMARY KEY, created_at TEXT NOT NULL,
+              status TEXT NOT NULL, result_json TEXT NOT NULL, error TEXT);
             CREATE TABLE IF NOT EXISTS news_model_candidates(
               id INTEGER PRIMARY KEY AUTOINCREMENT, created_at TEXT NOT NULL,
               status TEXT NOT NULL, base_version INTEGER NOT NULL,
