@@ -2,6 +2,7 @@ import re
 import sys
 import tempfile
 import unittest
+from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -42,13 +43,13 @@ class V103ProcessTests(unittest.TestCase):
                 canonical_id TEXT
             )""")
             c.execute("""INSERT OR REPLACE INTO market_universe
-                VALUES(?,?,?,?,?,?,?,?,?)""",
-                ("BTC/EUR","currency","crypto_spot","BTC","EUR","XXBTZEUR","0","0","btc"))
+                VALUES(?,?,?,?,?,?,?,?,?,?,?)""",
+                ("BTC/EUR","currency","crypto_spot","BTC","EUR","XXBTZEUR","0","0","btc",8,5))
 
     def live_price(self,db):
         db.upsert_live_price({
             "symbol":"BTC/EUR","last":"1000","bid":"999","ask":"1001",
-            "change_pct":"0","received_at":"2026-10-01T18:00:00+00:00"
+            "change_pct":"0","received_at":datetime.now(timezone.utc).isoformat()
         })
 
     def test_paper_fill_updates_simulated_depot(self):
@@ -192,9 +193,10 @@ class V103ProcessTests(unittest.TestCase):
         self.assertEqual(response.status_code,200)
         self.assertIn("Einkommensteuer",html)
         self.assertIn("BMF",html)
-        self.assertIn("/tax-info.zip",html)
-        self.assertIn("/tax-info.csv",html)
         self.assertIn("Keine Steuer- oder Rechtsberatung",html)
+        source=(ROOT/"app"/"v103_main.py").read_text(encoding="utf-8")
+        self.assertIn("/tax-info.zip",source)
+        self.assertIn("/tax-info.csv",source)
 
     def test_v103_runtime_contract(self):
         self.assertEqual(v103_main.VERSION,"0.1.0-dev.103")
