@@ -280,5 +280,42 @@ class V102RepairTests(unittest.TestCase):
             self.assertFalse((ROOT/"app"/name).exists(),name)
         self.assertFalse((ROOT/"app"/"real_state_v100.py").exists())
 
+
+    def test_v102_public_market_snapshot_maps_classic_kraken_key(self):
+        from market_feed_v102 import PublicMarketServiceV102
+
+        class FakeClient:
+            def ticker(self,pairs,asset_class="currency"):
+                return {"XXBTZEUR":{"c":["90000"],"b":["89999"],"a":["90001"],"o":"89000"}}
+
+        class FakeUniverse:
+            def sync(self):
+                return {"total":1,"enabled":1,"quality":"VALID","errors":[]}
+            def symbols(self,quote=None):
+                return ["BTC/EUR"]
+
+        class FakeStream:
+            enabled=False
+            symbols=[]
+            def set_symbols(self,symbols):
+                self.symbols=list(symbols)
+            def start(self):
+                return None
+
+        f,db=self.db()
+        try:
+            service=PublicMarketServiceV102(db,FakeClient(),FakeUniverse(),FakeStream())
+            result=service.snapshot(["BTC/EUR"])
+            self.assertEqual(result["saved"],1)
+            row=db.rows("SELECT symbol,last FROM live_prices WHERE symbol='BTC/EUR'")[0]
+            self.assertEqual(row["last"],"90000")
+        finally:
+            Path(f.name).unlink(missing_ok=True)
+
+    def test_v102_public_market_does_not_require_private_credentials(self):
+        source=(ROOT/"app"/"v102_main.py").read_text(encoding="utf-8")
+        self.assertIn("legacy.stream.enabled=True",source)
+        self.assertIn("legacy.private_stream.enabled=bool(",source)
+
 if __name__=="__main__":
     unittest.main()
