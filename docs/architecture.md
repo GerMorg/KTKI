@@ -1,6 +1,6 @@
-# Architektur · v100
+# Architektur · v101
 
-kraken_trader/app/v100_main.py ist der einzige aktive GUI-/Runtime-Einstiegspunkt. kraken_trader/app/core_runtime.py stellt die gemeinsamen Daten- und Fachobjekte bereit; die kanonische Entscheidungsstrecke baut einen Plan, daraus einen gemeinsamen Execution Intent und trennt erst am letzten Schritt Paper von Real.
+kraken_trader/app/v101_main.py ist der einzige aktive GUI-/Runtime-Einstiegspunkt. kraken_trader/app/core_runtime.py stellt die gemeinsamen Daten- und Fachobjekte bereit; die kanonische Entscheidungsstrecke baut einen Plan, daraus einen gemeinsamen Execution Intent und trennt erst am letzten Schritt Paper von Real.
 
 ## Aktiver Ablauf
 
@@ -13,7 +13,7 @@ kraken_trader/app/v100_main.py ist der einzige aktive GUI-/Runtime-Einstiegspunk
 
 ## Real-State
 
-Alle aktuellen Oberflächen verwenden real_state_v100.build_real_state(). real_execution_disabled, real_dry_run und unabhängige alte Balancing-Schalter sind keine v100-Benutzerkonfiguration.
+Alle aktuellen Oberflächen verwenden real_state_v100.build_real_state(). real_execution_disabled, real_dry_run und unabhängige alte Balancing-Schalter sind keine v101-Benutzerkonfiguration.
 
 ## Grenzen
 
