@@ -1,8 +1,6 @@
 """KTKI v100 runtime.
 
-v98 removes the last split between analysis/target/order construction:
-Paper and Real call the same CanonicalDecisionPlannerV98 and
-build_execution_intent(). Only their final execution adapters differ.
+One active runtime owns the current GUI, canonical decision pipeline, shared execution intent and unified Real-Handel status.
 """
 VERSION = "0.1.0-dev.100"
 
@@ -435,25 +433,88 @@ def _prozess():
         ]
     )
 
-@app.get("/analyse-v98")
-def analyse_v98():return _analysis()
-@app.get("/portfolio-v98")
-def portfolio_v98():return _portfolio()
-@app.get("/handel-v98")
-def handel_v98():return _handel()
-@app.get("/lernen-v98")
-def lernen_v98():return _lernen()
-@app.get("/diagnose-v98")
-def diagnose_v98():return _diagnose()
-@app.get("/prozess-v98")
-def prozess_v98():return _prozess()
+@app.get("/analyse")
+def analyse_v100():return _analysis()
+@app.get("/portfolio")
+def portfolio_v100():return _portfolio()
+@app.get("/handel")
+def handel_v100():return _handel()
+@app.get("/lernen")
+def lernen_v100():return _lernen()
+@app.get("/diagnose")
+def diagnose_v100():return _diagnose()
+@app.get("/prozess")
+def prozess_v100():return _prozess()
+
+
+def _automatik():
+    cfg=controller.settings()
+    real_state=build_real_state(legacy.db,controller)
+    return legacy.page(
+        """<span class="eyebrow">Automatik</span><h1>Automatik</h1>
+<p class="lead">Die Home-Assistant-Konfiguration ist die einzige Benutzerquelle für Betriebs- und Realhandels-Schalter. Diese Seite zeigt ausschließlich den aktuellen Laufzeitstatus.</p>
+<div class="automation-grid">{% for k,n in items %}<div class="automation-card"><b>{{n}}</b><span class="status {{'on' if cfg["automation_"+k+"_enabled"]=="true" else "off"}}">{{"AN" if cfg["automation_"+k+"_enabled"]=="true" else "AUS"}}</span><small>{{cfg["automation_"+k+"_interval_minutes"]}} min</small></div>{% endfor %}</div>
+<div class="card"><h2>Realhandelsstatus</h2><p><b>{{real_state.status_label}}</b></p><p>{{real_state.summary}}</p><p><a href="/real-trading">Realhandel & konkrete Blockierungen →</a></p></div>""",
+        cfg=cfg,items=[("news","Nachrichten"),("analysis","Analyse"),("learning","Lernen"),("paper","Paper"),("real","Real")],real_state=real_state)
+
+@app.get("/automatik")
+def automatik_v100():
+    return _automatik()
+
+def _real_trading():
+    engine=legacy.real_trade_engine
+    real_state=build_real_state(legacy.db,controller)
+    result=error=token=None
+    if request.method=="POST":
+        try:
+            if request.form.get("action")=="arm":
+                token=engine.arm(request.form.get("phrase"))
+            else:
+                result=engine.submit(request.form.get("symbol"),request.form.get("side"),request.form.get("volume"),request.form.get("order_type"),request.form.get("limit_price"),request.form.get("client_order_id") or None,request.form.get("approval_token"),request.form.get("live")!="yes",None,request.form.get("leverage") or None,request.form.get("margin")=="yes",request.form.get("reduce_only")=="yes")
+        except Exception as exc:
+            error=type(exc).__name__+":"+str(exc)
+    rows=legacy.db.rows("SELECT id,created_at,client_order_id,symbol,side,order_type,volume,limit_price,status,validate_only,error FROM real_trade_intents ORDER BY id DESC LIMIT 50")
+    blocked=legacy.db.rows("SELECT created_at,symbol,action,rule_key,reason FROM decision_rule_evaluations ORDER BY id DESC LIMIT 100")
+    return legacy.page(
+        """<span class="eyebrow">Realhandel</span><h1>Realhandel</h1>
+<div class="grid">
+<div class="card"><b>Globaler Realhandelsstatus</b><div class="metric">{{real_state.status_label}}</div><p>{{real_state.summary}}</p></div>
+<div class="card"><b>Automatische Real-Ausführung</b><div class="metric">{{"AKTIV" if real_state.automatic_execution_ready else "BLOCKIERT"}}</div><p>{{real_state.automatic_summary}}</p></div>
+<div class="card"><b>Manuelle Realorder</b><div class="metric">{{"VERFÜGBAR" if real_state.manual_order_available else "BLOCKIERT"}}</div><p>Eine Live-Order benötigt zusätzlich das zeitlich begrenzte Freigabetoken.</p></div></div>
+{% if error %}<div class="card error">{{error}}</div>{% endif %}
+{% if result %}<div class="card"><h2>Ergebnis</h2><pre>{{result|tojson(indent=2)}}</pre></div>{% endif %}
+{% if token %}<div class="card warning"><b>Einmaliges Freigabetoken · 5 Minuten gültig</b><pre>{{token}}</pre></div>{% endif %}
+<div class="card"><h2>Globale Blockierungen</h2>{% if real_state.blockers %}<table><tr><th>Code</th><th>Grund</th></tr>{% for x in real_state.blockers %}<tr><td><code>{{x.code}}</code></td><td>{{x.reason}}</td></tr>{% endfor %}</table>{% else %}<p class="ok">Keine globale Blockierung.</p>{% endif %}</div>
+<div class="card"><h2>Konkrete Regelblockierungen</h2>{% if blocked %}<table><tr><th>Zeit</th><th>Symbol</th><th>Aktion</th><th>Regel</th><th>Grund</th></tr>{% for x in blocked %}<tr><td>{{x.created_at}}</td><td>{{x.symbol}}</td><td>{{x.action}}</td><td>{{x.rule_key}}</td><td>{{x.reason}}</td></tr>{% endfor %}</table>{% else %}<p>Noch keine gespeicherte Blockierung.</p>{% endif %}</div>
+<div class="card"><h2>Manuelle Order</h2><p>Standardmäßig wird nur gegen Kraken validiert. Eine echte Order wird ausschließlich nach expliziter Live-Auswahl und erfolgreicher Freigabe übermittelt.</p>
+<form method="post">
+<input type="hidden" name="action" value="submit">
+<label>Symbol<input name="symbol" value="BTC/EUR"></label>
+<label>Seite<select name="side"><option>buy</option><option>sell</option></select></label>
+<label>Typ<select name="order_type"><option>limit</option><option>market</option></select></label>
+<label>Volumen<input name="volume" required></label>
+<label>Limitpreis<input name="limit_price"></label>
+<label>Margin/Leverage<select name="margin"><option value="no">Spot</option><option value="yes">Margin</option></select></label>
+<label>Hebel<input name="leverage" value="2"></label>
+<label>Reduce-only<select name="reduce_only"><option value="no">Nein</option><option value="yes">Ja</option></select></label>
+<label>Idempotenz-ID<input name="client_order_id"></label>
+<label>Freigabetoken<input name="approval_token"></label>
+<label>Live<select name="live"><option value="no">Nein, nur validieren</option><option value="yes">Ja</option></select></label>
+<button>Absenden</button>
+</form></div>
+<div class="card"><h2>Manuelle Livefreigabe</h2><form method="post"><input type="hidden" name="action" value="arm"><label>Bestätigungsphrase<input name="phrase"></label><button>5 Minuten aktiv bestätigen</button></form></div>
+<div class="card"><h2>Letzte Realorder-Intents</h2><div class="tablewrap"><table><tr><th>Zeit</th><th>ID</th><th>Symbol</th><th>Seite</th><th>Volumen</th><th>Status</th><th>Validierung</th></tr>{% for x in rows %}<tr><td>{{x.created_at}}</td><td>{{x.client_order_id}}</td><td>{{x.symbol}}</td><td>{{x.side}}</td><td>{{x.volume}}</td><td>{{x.status}}</td><td>{{x.validate_only}}</td></tr>{% endfor %}</table></div></div>""",
+        real_state=real_state,error=error,result=result,token=token,rows=rows,blocked=blocked)
+
+app.view_functions["real_trade.view"]=_real_trading
 
 @app.get("/v100-health")
 def v100_health():
     plan=_latest_plan()
+    real_state=build_real_state(legacy.db,controller)
     return jsonify({
-        "version":"0.1.0-dev.99",
-        "runtime":"v99_main",
+        "version":"0.1.0-dev.100",
+        "runtime":"v100_main",
         "architecture":"CANONICAL_PLANNER_PLUS_SHARED_EXECUTION_INTENT",
         "paper_real_same_plan":True,
         "plan_hash":plan.get("plan_hash") if plan else None,
