@@ -174,9 +174,9 @@ class RealTradeEngine:
   cid=client_order_id or secrets.token_hex(16)
   prior=self.db.rows('SELECT * FROM real_trade_intents WHERE client_order_id=?',(cid,))
   if prior:return {'duplicate':True,'status':prior[0]['status'],'client_order_id':cid}
-  allowed=[x.strip().upper() for x in self.db.value('real_allowed_symbols','').split(',') if x.strip()]
-  if symbol=='EUR/USD' and self.db.value('real_allow_fx_conversion','true').lower()=='true':allowed=allowed+['EUR/USD']
-  if allowed and symbol not in allowed:raise PermissionError('Symbol ist nicht für Realhandel freigegeben')
+  allowed=[x.strip().casefold() for x in self.db.value('real_allowed_symbols','').split(',') if x.strip()]
+  if symbol.upper()=='EUR/USD' and self.db.value('real_allow_fx_conversion','true').lower()=='true':allowed=allowed+['eur/usd']
+  if allowed and symbol.casefold() not in allowed:raise PermissionError('Symbol ist nicht für Realhandel freigegeben')
   self._preflight_limits(volume,self._eur_notional(symbol,volume,price,side))
   ordermin=D(row.get('ordermin'));costmin=D(row.get('costmin'))
   if ordermin>0 and volume<ordermin:raise ValueError(f'Mindestmenge {ordermin} unterschritten')
@@ -202,7 +202,7 @@ class RealTradeEngine:
    if live:
     with self.db.con() as c:c.execute('UPDATE real_trade_control SET armed_until=NULL,token_hash=NULL,updated_at=? WHERE id=1',(now(),))
    with self.db.con() as c:c.execute('UPDATE real_trade_intents SET status=?,response_json=? WHERE client_order_id=?',(status,json.dumps(result,sort_keys=True),cid))
-   self.db.audit('REAL_ORDER_'+status,json.dumps({'client_order_id':cid,'symbol':symbol,'side':side,'validate_only':not live,'eur_notional':str(self._eur_notional(symbol,volume,price)),'margin':margin,'leverage':str(leverage),'reduce_only':reduce_only}),'warning' if live else 'info','REAL');return {'duplicate':False,'status':status,'client_order_id':cid,'result':result}
+   self.db.audit('REAL_ORDER_'+status,json.dumps({'client_order_id':cid,'symbol':symbol,'side':side,'validate_only':not live,'eur_notional':str(self._eur_notional(symbol,volume,price,side)),'margin':margin,'leverage':str(leverage),'reduce_only':reduce_only}),'warning' if live else 'info','REAL');return {'duplicate':False,'status':status,'client_order_id':cid,'result':result}
   except Exception as exc:
    with self.db.con() as c:c.execute('UPDATE real_trade_intents SET status=?,error=? WHERE client_order_id=?',('FAILED',type(exc).__name__,cid))
    self.db.audit('REAL_ORDER_FAILED',json.dumps({'client_order_id':cid,'error':type(exc).__name__}),'error','REAL');raise
