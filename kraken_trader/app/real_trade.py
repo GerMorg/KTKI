@@ -171,9 +171,11 @@ class RealTradeEngine:
     wanted=self.db.value('real_balancing_automation_secret_hash','');automation_ok=bool(wanted) and hmac.compare_digest(hashlib.sha256(str(automation_secret).encode()).hexdigest(),wanted)
    if automation_context:
     automation_ok=(
-     self.db.value('automation_master_enabled','false').lower()=='true'
-     and self.db.value('automation_real_enabled','false').lower()=='true'
+     self.db.value('automation_real_enabled','false').lower()=='true'
      and self.db.value('automation_real_execute_enabled','false').lower()=='true'
+     and self.db.value('real_balancing_enabled','false').lower()=='true'
+     and self.db.value('real_balancing_execute_enabled','false').lower()=='true'
+     and self.db.value('real_balancing_dry_run','true').lower()!='true'
      and self.enabled()
     )
    if not self.enabled() or not (self._armed(approval_token) or automation_ok):raise PermissionError('Realhandel ist nicht freigegeben oder nicht aktiv bestätigt')
