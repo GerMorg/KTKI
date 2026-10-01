@@ -1,4 +1,4 @@
-# KTKI v100 — aktueller Feature-Vertrag
+# KTKI v101 — aktueller Feature-Vertrag
 v100:
   runtime:
     entrypoint: v100_main:app
