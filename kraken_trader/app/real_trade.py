@@ -206,7 +206,8 @@ class RealTradeEngine:
     if balance<volume:raise PermissionError(f'Nicht genügend {base}-Saldo; benötigt {volume}, vorhanden {balance}')
    is_fx_conversion=symbol=='EUR/USD';cap=max(1,int(float(self.db.value('real_max_fx_orders_per_day','1'))) if is_fx_conversion else int(float(self.db.value('real_max_orders_per_day','1'))));query="SELECT COUNT(*) AS n FROM real_trade_intents WHERE validate_only=0 AND status='SUBMITTED' AND date(created_at)=date('now')"+(' AND symbol=\'EUR/USD\'' if is_fx_conversion else " AND symbol!=\'EUR/USD\'");used=self.db.rows(query)[0]['n']
    if int(used)>=cap:raise PermissionError('Tageslimit für EUR/USD-Funding erreicht' if is_fx_conversion else 'Tageslimit für Realaufträge erreicht')
-  data={'pair':symbol.replace('/',''),'type':side,'ordertype':order_type,'volume':str(volume),'cl_ord_id':cid,'validate':'false' if live else 'true'}
+  order_pair=str(row.get('source_key') or row.get('altname') or symbol.replace('/',''))
+  data={'pair':order_pair.replace('/',''),'type':side,'ordertype':order_type,'volume':str(volume),'cl_ord_id':cid,'validate':'false' if live else 'true'}
   if margin:data.update({'leverage':str(leverage),'reduce_only':'true' if reduce_only else 'false'})
   if order_type=='limit':data['price']=str(price)
   with self.db.con() as c:c.execute('INSERT INTO real_trade_intents(created_at,client_order_id,symbol,side,order_type,volume,limit_price,status,validate_only,approval_token_hash,leverage,margin,reduce_only) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)',(now(),cid,symbol,side,order_type,str(volume),str(price),'SUBMITTING',0 if live else 1,None,str(leverage),1 if margin else 0,1 if reduce_only else 0))
