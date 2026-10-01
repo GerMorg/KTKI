@@ -94,9 +94,34 @@ class V98RealOrderPathTests(unittest.TestCase):
         finally:
             Path(f.name).unlink(missing_ok=True)
 
+    def test_entry_minimum_is_capped_by_small_account_position_limit(self):
+        result=trade_thresholds(Decimal("2.20"),Decimal("0"),Decimal("46.194649"),Decimal("5"),Decimal("2"),Decimal("5"))
+        self.assertTrue(result["allowed"])
+        self.assertAlmostEqual(float(result["minimum_eur"]),46.194649*0.05,places=8)
+
     def test_entry_is_not_blocked_by_portfolio_percentage_hysteresis(self):
-        self.assertTrue(trade_thresholds(Decimal("10"),Decimal("0"),Decimal("1000"),Decimal("5"),Decimal("2"))["allowed"])
-        self.assertFalse(trade_thresholds(Decimal("0.50"),Decimal("10"),Decimal("1000"),Decimal("0.1"),Decimal("2"))["allowed"])
+        self.assertTrue(trade_thresholds(Decimal("10"),Decimal("0"),Decimal("1000"),Decimal("5"),Decimal("2"),Decimal("5"))["allowed"])
+        self.assertFalse(trade_thresholds(Decimal("0.50"),Decimal("10"),Decimal("1000"),Decimal("0.1"),Decimal("2"),Decimal("5"))["allowed"])
+
+    def test_positive_edge_can_reach_small_account_entry_floor(self):
+        f,db=self.db()
+        try:
+            db.set("decision_min_edge_samples","10")
+            e=DecisionEngineV98(db)
+            row={"symbol":"AAVE/EUR","signal":"BUY","score":"72","momentum_pct":"4",
+                 "trend_pct":"3","volatility_pct":"3","buy_threshold":"65","family":"crypto_spot"}
+            health={"risk_state":"WEAK","directions":{"UP":{"samples":30,"mean_edge_after_costs_pct":2.0,
+                      "historical_roundtrip_cost_pct":1.0,"worst_sample_pct":-10}},
+                    "quality_score_by_direction":{"UP":70}}
+            cfg={"decision_min_edge_samples":10,"decision_max_position_pct":5,
+                 "decision_cash_reserve_pct":20,"decision_volatility_reference_pct":2,
+                 "decision_full_size_edge_pct":2,"decision_max_drawdown_pct":-25,
+                 "decision_min_trade_eur":5}
+            d=e.build(row,health,46.194649,0,1.0,"BULL",cfg)
+            self.assertGreaterEqual(Decimal(d["target_exposure_eur"]),Decimal("2.30973245"))
+            self.assertGreater(Decimal(d["expected_edge_after_costs_pct"]),0)
+        finally:
+            Path(f.name).unlink(missing_ok=True)
 
     def test_planner_hash_is_environment_independent(self):
         f,db=self.db()
