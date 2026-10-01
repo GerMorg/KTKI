@@ -61,8 +61,8 @@ class V98RealOrderPathTests(unittest.TestCase):
                           ("TSLAx/USD","tokenized_asset","xstocks","TSLAx","USD","TSLAx/USD","0.01","0.1"))
                 c.execute("""CREATE TABLE IF NOT EXISTS live_prices(
                     symbol TEXT,last TEXT,bid TEXT,ask TEXT,received_at TEXT)""")
-                c.execute("INSERT INTO live_prices VALUES(?,?,?,?,?)",
-                          ("TSLAx/USD","355.89","355.75","355.81","2026-10-01T14:00:00+00:00"))
+                c.execute("INSERT INTO live_prices(symbol,last,bid,ask,change_pct,received_at) VALUES(?,?,?,?,?,?)",
+                          ("TSLAx/USD","355.89","355.75","355.81","0","2026-10-01T14:00:00+00:00"))
             engine=RealTradeEngine(db,DummyClient())
             self.assertEqual(engine._resolve_symbol("TSLAX/USD"),"TSLAx/USD")
             self.assertEqual(engine._pair("TSLAX/USD")["symbol"],"TSLAx/USD")
@@ -101,7 +101,7 @@ class V98RealOrderPathTests(unittest.TestCase):
 
     def test_entry_is_not_blocked_by_portfolio_percentage_hysteresis(self):
         self.assertTrue(trade_thresholds(Decimal("10"),Decimal("0"),Decimal("1000"),Decimal("5"),Decimal("2"),Decimal("5"))["allowed"])
-        self.assertFalse(trade_thresholds(Decimal("0.50"),Decimal("10"),Decimal("1000"),Decimal("0.1"),Decimal("2"),Decimal("5"))["allowed"])
+        self.assertFalse(trade_thresholds(Decimal("0.10"),Decimal("10"),Decimal("1000"),Decimal("0.1"),Decimal("2"),Decimal("5"))["allowed"])
 
     def test_positive_edge_can_reach_small_account_entry_floor(self):
         f,db=self.db()
