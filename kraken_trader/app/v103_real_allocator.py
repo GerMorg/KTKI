@@ -183,14 +183,14 @@ class RealPortfolioAllocatorV103(RealPortfolioAllocatorV95):
                         self.trade_engine.preflight(
                             intent["execution_symbol"],intent["side"],str(volume),
                             "limit",str(price),leverage=intent["leverage"],
-                            margin=intent["margin"],reduce_only=intent["reduce_only"], automation_context=automatic,
+                            margin=intent["margin"],reduce_only=intent["reduce_only"],
                         )
                         result=self.trade_engine.submit(
                             intent["execution_symbol"],intent["side"],str(volume),
                             "limit",str(price),secrets.token_hex(16),
                             approval_token,False,secret,
                             leverage=intent["leverage"],margin=intent["margin"],
-                            reduce_only=intent["reduce_only"],
+                            reduce_only=intent["reduce_only"],automation_context=automatic,
                         )
                         status=result.get("status","FAILED");intent_id=result.get("client_order_id")
                         reason="REAL_ORDER_SUBMITTED" if status=="SUBMITTED" else status
