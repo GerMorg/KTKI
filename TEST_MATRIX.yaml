@@ -1,3 +1,33 @@
+# Current v100 verification matrix.
+v100_current:
+  runtime:
+    entrypoint: v100_main:app
+    version: 0.1.0-dev.100
+    single_active_runtime: true
+  gui:
+    unified_real_state: required
+    no_real_execution_disabled_label: required
+    no_real_dry_run_label: required
+    no_stale_v98_routes: required
+    no_stale_settings_page: required
+    centralized_shell: required
+  configuration:
+    real_trading_enabled: required
+    real_execute_enabled: required
+    real_kill_switch: required
+    real_allowed_symbols: required
+    automation_enabled: required
+  trading:
+    paper_and_real_share_canonical_plan: required
+    shared_execution_intent: required
+    real_preflight_and_token_gate: required
+  cleanup:
+    obsolete_runtime_wrappers: removed
+    obsolete_runtime_tests: removed_or_migrated
+    duplicate_test_artifacts: removed
+
+# Historical release records retained for traceability below.
+historical_release_matrix:
 version: 0.1.0-dev.57
 tests:
   - {id: T-001, area: Flask routes and tabs, status: passed}

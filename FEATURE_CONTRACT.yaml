@@ -1,3 +1,29 @@
+# Current v100 feature contract. Historical release records below are archival and are not runtime configuration.
+v100_current:
+  runtime_entrypoint: {required: true, status: v100_main}
+  canonical_decision_pipeline: {required: true, status: active}
+  shared_execution_intent: {required: true, status: active_for_paper_and_real}
+  unified_real_state: {required: true, status: active_single_source}
+  real_trading: {required: false, status: configurable_with_safety_gates}
+  manual_orders: {required: false, status: explicit_token_gated}
+  real_order_transport: {required: false, status: active_with_safety_gates}
+  real_execution_adapter: {required: false, status: active_with_safety_gates}
+  home_assistant_real_controls:
+    options:
+      - real_trading_enabled
+      - real_execute_enabled
+      - real_kill_switch
+      - real_allowed_symbols
+      - automation_enabled
+  removed_legacy_runtime_wrappers:
+    status: deleted
+    range: v67-v99
+  removed_legacy_gui_controls:
+    status: deleted
+    entries:
+      - real_execution_disabled
+      - real_dry_run
+
 version: 0.1.0-dev.57
 compatibility_rule: Implementierte Funktionen duerfen nur nach ausdruecklicher Entscheidung mit dokumentierter Migration entfernt werden.
 features:
@@ -18,8 +44,6 @@ features:
   audit_log: {required: true, status: implemented}
   automation_kill_switch: {required: true, status: implemented}
   product_allowlist: {required: true, status: implemented}
-  real_trading: {required: false, status: hard_disabled}
-  manual_orders: {required: false, status: prohibited}
 release_0_1_0_dev_6:
   paper_account: {required: true, status: implemented}
   paper_positions: {required: true, status: implemented}
@@ -30,7 +54,6 @@ release_0_1_0_dev_6:
   paper_position_limit: {required: true, status: implemented}
   deterministic_baseline: {required: true, status: implemented}
   live_data_gate: {required: true, status: implemented}
-  real_order_transport: {required: false, status: absent}
 release_0_1_0_dev_7:
   paper_gui_configuration: {required: true, status: implemented}
   persistent_runtime_configuration: {required: true, status: implemented}
@@ -82,7 +105,6 @@ release_0_1_0_dev_16:
   no_trade_band: {required: true, status: implemented}
   dynamic_paper_leverage: {required: true, status: implemented}
   leverage_from_kraken_metadata_only: {required: true, status: enforced}
-  real_execution_adapter: {required: false, status: prepared_hard_disabled}
 
 release_0_1_0_dev_18:
   xstocks_execution_venue: {required: true, status: implemented_international}
@@ -122,7 +144,6 @@ release_0_1_0_dev_23:
   xstocks_valid_buy_allocation_gate: {required: true, status: enforced}
   xstocks_usd_eur_paper_valuation: {required: true, status: implemented_and_tested}
   xstocks_ordermin_costmin_gate: {required: true, status: enforced_fail_closed}
-  real_order_transport: {required: false, status: hard_disabled}
 release_0_1_0_dev_24:
   xstocks_documented_asset_class_parameter: {required: true, status: enforced}
   xstocks_source_key_ohlc: {required: true, status: implemented}
@@ -145,7 +166,6 @@ release_0_1_0_dev_26:
   forex_v1_profile: {required: true, status: implemented}
   traditional_stock_separation: {required: true, status: fail_closed}
   turnover_stability_gates: {required: true, status: implemented}
-  real_trading: {required: false, status: hard_disabled}
 
 release_0_1_0_dev_27:
   v26_as_only_base: {required: true, status: enforced}
@@ -160,7 +180,6 @@ release_0_1_0_dev_27:
   xstock_traditional_stock_separation: {required: true, status: fail_closed}
   turnover_hysteresis_and_tax_awareness: {required: true, status: implemented}
   utf8_source_and_database_migration_v4: {required: true, status: implemented}
-  real_trading: {required: false, status: hard_disabled}
 
 
 
@@ -171,14 +190,12 @@ release_0_1_0_dev_28:
   ohlcvt_csv_import_basis: {required: true, status: implemented}
   walk_forward_backtest: {required: true, status: implemented}
   no_position_buy_hold_trend_benchmarks: {required: true, status: implemented}
-  real_trading: {required: false, status: hard_disabled}
 
 release_0_1_0_dev_29:
   account_trade_volume_read_only: {required: true, status: implemented}
   maker_taker_fee_provenance: {required: true, status: implemented}
   conservative_fee_fallback: {required: true, status: implemented}
   per_pair_paper_taker_fee: {required: true, status: implemented}
-  real_trading: {required: false, status: hard_disabled}
 
 release_0_1_0_dev_30:
   forex_v2_shadow_only: {required: true, status: implemented}
@@ -195,7 +212,6 @@ release_0_1_0_dev_31:
   position_to_canonical_product_mapping: {required: true, status: implemented}
   seven_rule_rebalance_matrix: {required: true, status: implemented}
   exact_blocking_rule_visible: {required: true, status: implemented}
-  real_trading: {required: false, status: hard_disabled}
 
 release_0_1_0_dev_32:
   separate_parameter_families: {required: true, status: implemented}
@@ -226,7 +242,6 @@ release_0_1_0_dev_34:
   rotating_bounded_batches: {required: true, status: restored}
   legacy_schema_compatibility: {required: true, status: tested}
   separated_active_product_profiles: {required: true, status: preserved}
-  real_trading: {required: false, status: hard_disabled}
 
 release_0_1_0_dev_35:
   paired_feature_snapshot_comparison: {required: true, status: implemented}
@@ -247,7 +262,6 @@ release_0_1_0_dev_36:
   synchronized_release_metadata: {required: true, status: implemented}
   repository_utf8_source_gate: {required: true, status: enforced}
   unchanged_strategy_behavior: {required: true, status: tested}
-  real_trading: {required: false, status: hard_disabled}
 
 release_0_1_0_dev_37:
   required_horizon_gates: {required: true, status: enforced_24h_168h}
@@ -259,7 +273,6 @@ release_0_1_0_dev_37:
   persisted_gate_policy_and_results: {required: true, status: implemented}
   approval_gate_recheck: {required: true, status: atomic_fail_closed}
   automatic_activation: {required: false, status: prohibited}
-  real_trading: {required: false, status: hard_disabled}
 
 release_0_1_0_dev_38:
   historical_target_candle_evaluation: {required: true, status: enforced}
@@ -268,7 +281,6 @@ release_0_1_0_dev_38:
   entry_exit_roundtrip_costs: {required: true, status: implemented}
   fee_source_provenance: {required: true, status: persisted}
   forecast_feature_schema_v3: {required: true, status: implemented_migrated}
-  real_trading: {required: false, status: hard_disabled}
 
 release_0_1_0_dev_39:
   canonical_trade_volume_pair_resolution: {required: true, status: implemented}
@@ -277,7 +289,6 @@ release_0_1_0_dev_39:
   guided_responsive_ingress_gui: {required: true, status: implemented}
   controlled_learning_parameter_diff_gui: {required: true, status: implemented}
   repository_utf8_source_gate: {required: true, status: enforced}
-  real_trading: {required: false, status: hard_disabled}
 
 
 release_0_1_0_dev_40:
@@ -286,14 +297,12 @@ release_0_1_0_dev_40:
   manual_news_model_approval: {required: true, status: enforced}
   approval_recheck: {required: true, status: atomic_fail_closed}
   automatic_activation: {required: false, status: prohibited}
-  real_trading: {required: false, status: hard_disabled}
 release_0_1_0_dev_41:
   chronological_news_training_validation_split: {required: true, status: enforced}
   disjoint_news_validation_window: {required: true, status: enforced}
   persisted_window_provenance: {required: true, status: implemented}
   approval_sample_fingerprint_recheck: {required: true, status: atomic_fail_closed}
   automatic_activation: {required: false, status: prohibited}
-  real_trading: {required: false, status: hard_disabled}
 release_0_1_0_dev_42:
   multi_window_news_walk_forward: {required: true, status: implemented_3_windows}
   minimum_stable_window_gate: {required: true, status: enforced_2_of_3}
@@ -301,12 +310,10 @@ release_0_1_0_dev_42:
   approval_stability_recheck: {required: true, status: atomic_fail_closed}
   insufficient_history: {required: false, status: blocks_candidate}
   automatic_activation: {required: false, status: prohibited}
-  real_trading: {required: false, status: hard_disabled}
 release_0_1_0_dev_43:
   dashboard_data_channel_separation: {required: true, status: implemented}
   gemini_news_ai_provider: {required: true, status: implemented}
   ai_direct_trading: {required: false, status: prohibited}
-  real_trading: {required: false, status: hard_disabled}
 
 
 
@@ -339,7 +346,6 @@ release_0_1_0_dev_48:
   controlled_learning_active_version_label: {required: true, status: implemented}
   public_websocket_usd_quotes: {required: true, status: implemented}
   automatic_activation: {required: false, status: prohibited}
-  real_trading: {required: false, status: hard_disabled}
 
 release_0_1_0_dev_49:
   monitoring_blueprint: {required: true, status: implemented}
@@ -347,12 +353,10 @@ release_0_1_0_dev_49:
   redacted_audit_export: {required: true, status: implemented_json_csv}
   websocket_test_isolation: {required: true, status: implemented}
   automatic_activation: {required: false, status: prohibited}
-  real_trading: {required: false, status: hard_disabled}
 release_0_1_0_dev_50:
   at_tax_information: {required: true, status: implemented}
   paper_real_separation: {required: true, status: enforced}
   tax_csv_export: {required: true, status: implemented}
-  real_trading: {required: false, status: hard_disabled}
 release_0_1_0_dev_51:
   paper_real_storage_separation: {required: true, status: implemented}
   kraken_validate_only_default: {required: true, status: implemented}

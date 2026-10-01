@@ -1,13 +1,17 @@
-# Benutzerhandbuch
+# Benutzerhandbuch · v100
 
-Die Oberfläche ist über Home-Assistant-Ingress erreichbar. Die Navigation führt zu Portfolio, Analyse, Paper-Handel, Realhandel, Lernsystemen, Datenqualität, Einstellungen, Audit und Exporten.
+Die Oberfläche ist über Home-Assistant-Ingress erreichbar. Die aktuelle Navigation führt zu Übersicht, Analyse, Portfolio, Handel, Lernen, Diagnose, Prozess, Automatik, Realhandel und den ergänzenden Fachseiten.
 
-## Sicherheit
+## Realhandel
 
-Realhandel ist im Auslieferungszustand deaktiviert. Dry-Run, Kill-Switch, Grenzwerte und separate Freigaben dürfen nicht umgangen werden. Vor einer Aktivierung müssen Kraken-Berechtigungen, Limits und Audit-Ausgaben geprüft werden.
+Der globale Realhandelsstatus wird überall aus derselben Laufzeitquelle abgeleitet. REALHANDEL FREIGEGEBEN bedeutet, dass Realhandel und automatische Real-Ausführung global aktiviert sind und der Kill-Switch frei ist. Das bedeutet noch nicht, dass jede konkrete Order ausgeführt wird: Datenqualität, Edge, Portfolio-Risiko, Limits, Balance, Kraken-Market-Regeln und weitere Gates werden pro Auftrag erneut geprüft.
+
+Die Home-Assistant-Konfiguration verwendet keine separaten real_execution_disabled- oder real_dry_run-Schalter. Automatische Ausführung wird über real_execute_enabled in Kombination mit automation_enabled und der Realhandelsfreigabe gesteuert.
+
+## Lernen und Nachrichten
+
+Aktive Parameter werden nicht durch die Kandidatensuche automatisch geändert. Kandidaten müssen die bestehenden Validierungs- und Stabilitätsgates bestehen; die Aktivierung bleibt eine explizite Freigabe.
 
 ## Diagnose
 
-- `Datenqualität` zeigt unvollständige Marktdaten.
-- `Ereignisse` und `Audit` zeigen Warnungen und Systemvorgänge.
-- `Export` stellt Ledger- und Portfoliohistorie bereit.
+Die Diagnose trennt Datenstatus, Plan, konkrete Regelblockierungen und den letzten Real-Automatiklauf. Audit und Export liefern den nachvollziehbaren Nachweis.

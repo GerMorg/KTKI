@@ -125,5 +125,27 @@ class V100RepairTests(unittest.TestCase):
         self.assertNotIn("Realhandel bleibt technisch deaktiviert",core)
         self.assertNotIn("@app.route('/settings'",core)
 
+    def test_v100_real_state_behavior(self):
+        from db import DB
+        from real_state_v100 import build_real_state
+        import tempfile
+        with tempfile.NamedTemporaryFile(suffix=".db") as f:
+            db=DB(f.name); db.init()
+            s=build_real_state(db,None)
+            self.assertFalse(s["manual_order_available"])
+            self.assertFalse(s["automatic_execution_ready"])
+            db.set_setting("real_trading_enabled","true")
+            db.set_setting("real_kill_switch","false")
+            s=build_real_state(db,None)
+            self.assertTrue(s["manual_order_available"])
+            self.assertFalse(s["automatic_execution_ready"])
+            db.set_setting("automation_master_enabled","true")
+            db.set_setting("automation_real_enabled","true")
+            db.set_setting("automation_real_execute_enabled","true")
+            s=build_real_state(db,None)
+            self.assertTrue(s["manual_order_available"])
+            self.assertTrue(s["automatic_execution_ready"])
+            self.assertEqual(s["status_label"],"REALHANDEL FREIGEGEBEN")
+
 if __name__=="__main__":
     unittest.main()

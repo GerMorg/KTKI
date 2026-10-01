@@ -1,9 +1,9 @@
-# Dokumentation
+# Dokumentation · v100
 
-- [Benutzerhandbuch](user-guide.md)
-- [Architektur](architecture.md)
-- [Entwicklung und Tests](development.md)
-- [Release v57](release-v57.md)
-- [Historische Reviews](history/)
+Die verbindliche aktuelle Dokumentation beschreibt den v100-Runtimepfad. Historische Releaseunterlagen bleiben als Archiv gekennzeichnet.
 
-Die verbindlichen Projektverträge und append-only-Protokolle bleiben bewusst im Repository-Stamm.
+- Benutzerhandbuch: docs/user-guide.md
+- Architektur: docs/architecture.md
+- Entwicklung und Tests: docs/development.md
+- Release v100: docs/release-v100.md
+- Historische Reviews: docs/history/
