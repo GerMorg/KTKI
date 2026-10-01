@@ -45,6 +45,35 @@ def _sync_settings():
 
 options=_sync_settings()
 
+def _sync_runtime_options(opts):
+    # The HA UI exposes a small stable set of operational switches; the legacy
+    # subsystems keep their internal keys so older database state remains usable.
+    automation=bool(opts.get("automation_enabled",True))
+    interval=max(1,int(opts.get("automation_interval_minutes",15)))
+    real_enabled=bool(opts.get("real_trading_enabled",False))
+    real_execute=bool(opts.get("real_execute_enabled",False))
+    legacy.db.set_setting("automation_master_enabled","true" if automation else "false")
+    for subsystem in ("analysis","news","learning","paper"):
+        legacy.db.set_setting("automation_"+subsystem+"_enabled","true" if automation else "false")
+        legacy.db.set_setting("automation_"+subsystem+"_interval_minutes",str(interval))
+    legacy.db.set_setting("automation_real_enabled","true" if automation and real_enabled else "false")
+    legacy.db.set_setting("automation_real_execute_enabled","true" if automation and real_execute else "false")
+    legacy.db.set_setting("automation_tick_minutes",str(min(60,interval)))
+    legacy.db.set_setting("automation_learning_auto_approve_enabled","false")
+    legacy.db.set_setting("real_trading_enabled","true" if real_enabled else "false")
+    legacy.db.set_setting("real_kill_switch","true" if bool(opts.get("real_kill_switch",True)) else "false")
+    legacy.db.set_setting("real_allowed_symbols",str(opts.get("real_allowed_symbols","") or ""))
+    # Canonical risk settings are shared by Paper and Real.
+    for key in ("decision_max_position_pct","decision_cash_reserve_pct","decision_min_trade_eur","decision_max_trade_eur"):
+        if key in opts:
+            legacy.db.set_setting(key,str(opts[key]))
+    return {
+        "automation_enabled":automation,"automation_interval_minutes":interval,
+        "real_trading_enabled":real_enabled,"real_execute_enabled":real_execute
+    }
+
+runtime_options=_sync_runtime_options(options)
+
 try:
     base.controller.stop()
 except Exception:
