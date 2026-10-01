@@ -297,14 +297,30 @@ def _lernen():
 def _diagnose():
     plan=_latest_plan();public=legacy.stream.status();private=legacy.private_stream.status();health=_health_snapshot();decisions=_decision_rows(30)
     blocked=legacy.db.rows("SELECT created_at,symbol,action,rule_key,reason FROM decision_rule_evaluations WHERE passed=0 ORDER BY id DESC LIMIT 120")
+    real_run=legacy.db.rows("SELECT created_at,status,details_json FROM real_allocation_runs ORDER BY id DESC LIMIT 1")
+    real_summary={"status":"—","evaluated_candidates":0,"skipped_count":0,"execution_capacity":0,"total_eur":"—","skips":[]}
+    if real_run:
+        real_summary["status"]=real_run[0].get("status","—")
+        try:
+            raw=json.loads(real_run[0].get("details_json") or "{}")
+            real_summary.update({
+                "evaluated_candidates":raw.get("evaluated_candidates",len(raw.get("decisions",[]))),
+                "skipped_count":raw.get("skipped_count",len(raw.get("skips",[]))),
+                "execution_capacity":raw.get("execution_capacity",0),
+                "skips":raw.get("skips",[])[:12],
+            })
+            if plan: real_summary["total_eur"]=plan.get("total_eur","—")
+        except Exception:
+            pass
     return legacy.page(
         '''<span class="eyebrow">Diagnose</span><h1>Warum wurde gehandelt?</h1>
 <p class="lead">Datenfrische → Modell-/Richtungsevidenz → Edge nach Kosten → Target → Guard → Order.</p>
 <div class="grid"><div class="card"><b>Public Kraken</b><div class="metric">{{public.effective_state}}</div><small>{{public.last_message_at or "—"}}</small></div><div class="card"><b>Private Kraken</b><div class="metric">{{private.effective_state}}</div><small>{{private.last_message_at or "—"}}</small></div><div class="card"><b>Letzter Plan</b><div class="metric">{{plan.plan_hash[:12] if plan else "—"}}</div><small>{{plan.environment if plan else "—"}}</small></div><div class="card"><b>Blockierungen</b><div class="metric">{{blocked|length}}</div><small>letzte 120</small></div></div>
 <div class="card"><h2>Directional Model Health</h2>{% for f,h in health.items() %}<div class="allocation"><div><b>{{f}}</b><small>UP {{h.quality_score_by_direction.UP if h.quality_score_by_direction else "—"}} · DOWN {{h.quality_score_by_direction.DOWN if h.quality_score_by_direction else "—"}} · H24 {{h.horizons["24"].samples if h.horizons else "—"}}</small></div><strong>{{h.status or "—"}}</strong></div>{% endfor %}</div>
 <div class="card"><h2>Blockierte Regeln</h2><div class="tablewrap"><table><tr><th>Zeit</th><th>Symbol</th><th>Aktion</th><th>Regel</th><th>Grund</th></tr>{% for x in blocked %}<tr><td>{{x.created_at}}</td><td>{{x.symbol}}</td><td>{{x.action}}</td><td>{{x.rule_key}}</td><td>{{x.reason}}</td></tr>{% else %}<tr><td colspan="5">Keine gespeicherte Blockierung.</td></tr>{% endfor %}</table></div></div>
+<div class="card"><h2>Letzter Real-Automatiklauf</h2><div class="grid"><div><b>Status</b><div class="metric">{{real_summary.status}}</div></div><div><b>Bewertete Kandidaten</b><div class="metric">{{real_summary.evaluated_candidates}}</div></div><div><b>Übersprungen</b><div class="metric">{{real_summary.skipped_count}}</div></div><div><b>Kapazität</b><div class="metric">{{real_summary.execution_capacity}}</div></div></div><p>Letzte Ziel-/Depotbasis: {{real_summary.total_eur}} € · Mindestorder: {{planner.settings()["decision_min_trade_eur"]}} € · Entry-No-Trade-Band gilt nicht für Neukäufe.</p>{% for x in real_summary.skips %}<div class="allocation"><div><b>{{x.symbol}}</b><small>{{x.reason}}</small></div><strong>{{x.delta_eur or "—"}} €</strong></div>{% else %}<span class="muted">Keine v98-Skip-Gründe gespeichert.</span>{% endfor %}</div>
 <div class="card"><h2>Prozessstatus</h2><pre>{{{"plan_hash":plan.plan_hash if plan else None,"public":public,"private":private}|tojson(indent=2)}}</pre></div>''',
-        plan=plan,public=public,private=private,health=health,decisions=decisions,blocked=blocked
+        plan=plan,public=public,private=private,health=health,decisions=decisions,blocked=blocked,real_summary=real_summary,planner=planner
     )
 
 def _prozess():
