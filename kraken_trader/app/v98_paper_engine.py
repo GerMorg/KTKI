@@ -12,6 +12,7 @@ from execution_plan_v98 import build_execution_intent
 from order_math_v98 import volume_for_eur, order_constraints
 from trade_guard_v98 import TradeGuardV98
 from decision_matrix import DecisionMatrix
+from trade_thresholds_v98 import trade_thresholds
 
 D=lambda x:Decimal(str(x or 0))
 
@@ -51,14 +52,12 @@ class PaperEngineV98(PaperEngine):
         for decision in plan["decisions"]:
             if submitted>=execution_capacity:break
             delta=D(decision["rebalance_delta_eur"])
-            if delta==0:
-                skips.append({"symbol":decision["symbol"],"reason":"TARGET_ALREADY_REACHED","delta_eur":str(delta)})
-                continue
-            if abs(delta)<D(settings["decision_min_trade_eur"]):
-                skips.append({"symbol":decision["symbol"],"reason":"BELOW_MIN_TRADE","delta_eur":str(delta),"minimum_eur":str(settings["decision_min_trade_eur"])})
-                continue
-            if D(decision["current_exposure_eur"])!=0 and abs(delta)/max(D(1),abs(D(decision["current_exposure_eur"])))*100<D(settings["decision_no_trade_band_pct"]):
-                skips.append({"symbol":decision["symbol"],"reason":"REBALANCE_HYSTERESIS","delta_eur":str(delta)})
+            threshold=trade_thresholds(
+                delta,decision["current_exposure_eur"],total,
+                settings["decision_min_trade_eur"],settings["decision_no_trade_band_pct"]
+            )
+            if not threshold["allowed"]:
+                skips.append({"symbol":decision["symbol"],**threshold})
                 continue
             intent=build_execution_intent(
                 decision,
