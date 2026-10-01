@@ -104,7 +104,7 @@ class RealTradeEngine:
 
  def _pair(self,symbol):
   symbol=self._resolve_symbol(symbol)
-  try:rows=self.db.rows("SELECT * FROM market_universe WHERE symbol=? ORDER BY CASE WHEN asset_class='currency' THEN 0 ELSE 1 END LIMIT 1",(symbol))
+  try:rows=self.db.rows("SELECT * FROM market_universe WHERE symbol=? ORDER BY CASE WHEN asset_class='currency' THEN 0 ELSE 1 END LIMIT 1",(symbol,))
   except Exception:rows=[]
   return rows[0] if rows else {}
  def _fx(self):
