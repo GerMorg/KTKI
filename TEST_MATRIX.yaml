@@ -1,30 +1,29 @@
-# KTKI v101 — aktuelles Prüfmatrix
-v101:
+# KTKI v102 — aktuelle Prüfmatrix
+v102:
   runtime:
-    entrypoint: {expected: v101_main:app, required: true}
-    version: {expected: 0.1.0-dev.101, required: true}
-    wrappers_v67_v99: {expected: absent, required: true}
+    entrypoint: {expected: v102_main:app, required: true}
+    version: {expected: 0.1.0-dev.102, required: true}
+    boot_import_smoke: {required: true}
   gui:
-    unified_real_state: {required: true}
-    no_real_execution_disabled: {required: true}
-    no_real_dry_run: {required: true}
-    no_stale_v98_routes: {required: true}
-    no_legacy_settings_page: {required: true}
-    centralized_shell: {required: true}
-  configuration:
-    only_current_ha_options: {required: true}
-    real_controls_match_runtime: {required: true}
-  decision_pipeline:
-    canonical_plan_shared_by_paper_and_real: {required: true}
-    shared_execution_intent: {required: true}
+    current_pages_exact: {expected: 8, required: true}
+    no_obsolete_pages_in_navigation: {required: true}
+    legacy_gui_urls_redirect: {required: true}
+    current_links_have_endpoints: {required: true}
+    no_versioned_css_dependency: {required: true}
+  market:
+    public_market_independent_of_private_credentials: {required: true}
+    rest_snapshot_available: {required: true}
+    websocket_ticker_enabled: {required: true}
+    classic_kraken_pair_normalization: {required: true}
+  process:
+    market_to_analysis: {required: true}
+    analysis_to_learning: {required: true}
+    learning_to_plan: {required: true}
+    paper_real_share_plan: {required: true}
     real_preflight_and_safety_gates: {required: true}
-  learning:
-    manual_activation: {required: true}
-  news:
-    market_links_persist: {required: true}
-  portfolio:
-    paper_and_real_positions_visible: {required: true}
-  repository:
-    utf8: {required: true}
-    python_compile: {required: true}
+  regression:
+    current_gui_routes_smoke: {required: true}
+    legacy_gui_routes_redirect: {required: true}
+    tax_exports_current: {required: true}
+    real_state_behavior: {required: true}
     full_ci: {required: true}
