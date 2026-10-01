@@ -37,8 +37,7 @@ v100:
       - real_allowed_symbols
       - automation_enabled
       - automation_interval_minutes
-    removed_controls:
-      - real_execution_disabled
+        - real_execution_disabled
       - real_dry_run
       - real_balancing_execute_enabled
       - real_balancing_dry_run
