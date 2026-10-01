@@ -1,3 +1,12 @@
+## v103 – Paper-/Realpfad, GUI-Routen und Österreichische Steuerhilfe
+
+- Paper-Fills werden nicht mehr nachträglich durch Snapshot-/Guard-Nacharbeiten als fehlgeschlagen ausgewiesen.
+- Automatische Realorders verwenden denselben kanonischen Plan und Execution Intent wie Paper und werden im letzten Schritt über explizite HA-Schalter, Kill-Switch und Kraken-Preflight freigegeben.
+- USD-Funding-Orders laufen ebenfalls durch den expliziten automatischen Real-Gatepfad.
+- Aktuelle GUI-Formulare und Links werden über eine Routeninvariante abgesichert; veraltete Steuer-Exportpfade werden zurückgeführt.
+- Österreichische Einkommensteuer-/KESt-Arbeitshilfe mit BMF-Quellen, E1kv-Arbeitswerten, Prüfhilfen und aktuellen ZIP/CSV-Exporten ist wieder in der aktuellen Oberfläche integriert.
+- End-to-End-Regressionen für Paper-Depot, Real-Submission, manuelle Freigabe, GUI-Links und Steuerhilfe ergänzt.
+
 ## v102 – GUI-, Markt- und Prozessbereinigung
 
 - Hauptnavigation auf acht aktuelle Prozessseiten reduziert.
