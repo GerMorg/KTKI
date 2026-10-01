@@ -1,5 +1,5 @@
 name: Kraken Trader
-version: 0.1.0-dev.97
+version: 0.1.0-dev.98
 # Historical baseline version: 0.1.0-dev.90
 slug: kraken_trader
 description: Autonomous Kraken Portfolio, Paper-Trading and strictly gated Realhandel
@@ -44,7 +44,7 @@ options:
   decision_minimum_score: 70
   decision_max_position_pct: 5
   decision_cash_reserve_pct: 20
-  decision_min_trade_eur: 20
+  decision_min_trade_eur: 5
   decision_no_trade_band_pct: 2
   decision_fee_bps: 40
   decision_fx_fee_bps: 10
