@@ -225,7 +225,7 @@ class CanonicalDecisionPlannerV98:
         return out
 
     @staticmethod
-    def _plan_hash(settings,tickers,enriched,current,total,health,regimes):
+    def _plan_hash(settings,tickers,enriched,current,total,health,regimes,available_quotes=None):
         payload={
             "settings":settings,
             "tickers":tickers,
@@ -254,7 +254,7 @@ class CanonicalDecisionPlannerV98:
         decisions=DecisionEngineV98(self.db).target_rows(
             enriched,health,total_eur,current_by_symbol,settings,regimes,route_costs,allow_short=allow_short
         )
-        plan_hash=self._plan_hash(settings,tickers,enriched,current_by_symbol,total_eur,health,regimes)
+        plan_hash=self._plan_hash(settings,tickers,enriched,current_by_symbol,total_eur,health,regimes,available_quotes)
         by_symbol={x["symbol"]:x for x in enriched}
         ranked=[]
         for decision in decisions:
