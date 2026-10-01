@@ -61,9 +61,15 @@ class AutomationControllerV67:
   return out
  def _run_news(self):
   collected=as_mapping(self.news_prefilter.collect(),{'status':'COMPLETED','saved':0})
-  external=getattr(self.news_prefilter,'external_ai',None)
-  ai=as_mapping(external.analyze_pending(),{'status':'NOT_CONFIGURED'}) if external is not None else {'status':'NOT_CONFIGURED'}
-  return {'status':'COMPLETED_WITH_WARNINGS' if ai.get('status') in ('FAILED','COMPLETED_WITH_WARNINGS') else 'COMPLETED','collect':collected,'external_ai':ai}
+  ai=as_mapping(collected.get('ai'),{'status':'NOT_CONFIGURED'})
+  links=0
+  try:
+   # Keep news links fresh even when the heavier research pipeline is not due yet.
+   markets=self.pipeline.prefilter.markets()
+   links=self.news_prefilter.link_markets(markets)
+  except Exception as exc:
+   self.db.audit('NEWS_LINK_REFRESH_FAILED',type(exc).__name__+': '+str(exc)[:300],'warning')
+  return {'status':'COMPLETED_WITH_WARNINGS' if ai.get('status') in ('FAILED','COMPLETED_WITH_WARNINGS') else 'COMPLETED','collect':collected,'external_ai':ai,'market_links':links}
  def run_once(self,force=False):
   with self.lock:
    s=self.settings()
