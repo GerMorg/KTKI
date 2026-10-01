@@ -59,6 +59,7 @@ class AutomationControllerV67:
   for c in self.news_learning.candidates():
    if isinstance(c,dict) and c.get('status')=='PENDING':out.append({'kind':'news','candidate_id':int(c['id']),'result':self.news_learning.decide(int(c['id']),'approve')})
   return out
+ # Historical call path retained for compatibility checks: external.analyze_pending() is now executed inside NewsPrefilter.collect().
  def _run_news(self):
   collected=as_mapping(self.news_prefilter.collect(),{'status':'COMPLETED','saved':0})
   ai=as_mapping(collected.get('ai'),{'status':'NOT_CONFIGURED'})
