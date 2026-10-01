@@ -4,6 +4,7 @@ Keeps public Kraken market data independent from private credentials and exposes
 one reliable path for REST snapshots plus the public WebSocket ticker feed.
 """
 import json
+import os
 import threading
 import time
 from datetime import datetime, timezone
@@ -200,6 +201,9 @@ class PublicMarketServiceV102:
             return result
 
     def start_background(self):
+        if os.getenv("APP_DISABLE_WEBSOCKETS") == "1":
+            self.stream.enabled = False
+            return None
         self.stream.enabled = True
         self.stream.set_symbols(list(SEED_SYMBOLS))
         self.stream.start()
