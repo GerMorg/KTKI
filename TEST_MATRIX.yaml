@@ -1,4 +1,4 @@
-# KTKI v100 — aktuelles Prüfmatrix
+# KTKI v101 — aktuelles Prüfmatrix
 v100:
   runtime:
     entrypoint: {expected: v100_main:app, required: true}
