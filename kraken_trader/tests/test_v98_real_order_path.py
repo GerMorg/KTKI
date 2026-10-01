@@ -59,7 +59,7 @@ class V98RealOrderPathTests(unittest.TestCase):
                     quote_asset TEXT,source_key TEXT,ordermin TEXT,costmin TEXT)""")
                 c.execute("INSERT INTO market_universe VALUES(?,?,?,?,?,?,?,?)",
                           ("TSLAx/USD","tokenized_asset","xstocks","TSLAx","USD","TSLAx/USD","0.01","0.1"))
-                c.execute("""CREATE TABLE live_prices(
+                c.execute("""CREATE TABLE IF NOT EXISTS live_prices(
                     symbol TEXT,last TEXT,bid TEXT,ask TEXT,received_at TEXT)""")
                 c.execute("INSERT INTO live_prices VALUES(?,?,?,?,?)",
                           ("TSLAx/USD","355.89","355.75","355.81","2026-10-01T14:00:00+00:00"))
