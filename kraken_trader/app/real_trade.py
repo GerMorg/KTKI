@@ -90,9 +90,15 @@ class RealTradeEngine:
   r=self.db.rows('SELECT * FROM real_trade_control WHERE id=1')[0];h=hashlib.sha256(str(token or '').encode()).hexdigest();return bool(r['token_hash']) and hmac.compare_digest(h,r['token_hash']) and D(r['armed_until'])>=D(datetime.now(timezone.utc).timestamp())
  def _resolve_symbol(self,symbol):
   text=str(symbol or '').strip()
-  rows=self.db.rows('SELECT symbol FROM market_universe WHERE symbol=? OR UPPER(symbol)=UPPER(?) ORDER BY CASE WHEN asset_class=\'currency\' THEN 0 ELSE 1 END LIMIT 1',(text,text))
+  try:
+   rows=self.db.rows('SELECT symbol FROM market_universe WHERE symbol=? OR UPPER(symbol)=UPPER(?) ORDER BY CASE WHEN asset_class=\'currency\' THEN 0 ELSE 1 END LIMIT 1',(text,text))
+  except Exception:
+   rows=[]
   if rows:return str(rows[0]['symbol'])
-  rows=self.db.rows('SELECT symbol FROM live_prices WHERE symbol=? OR UPPER(symbol)=UPPER(?) LIMIT 1',(text,text))
+  try:
+   rows=self.db.rows('SELECT symbol FROM live_prices WHERE symbol=? OR UPPER(symbol)=UPPER(?) LIMIT 1',(text,text))
+  except Exception:
+   rows=[]
   if rows:return str(rows[0]['symbol'])
   return text
 
