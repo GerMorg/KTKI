@@ -86,7 +86,7 @@ class RealPortfolioAllocatorV98(RealPortfolioAllocatorV95):
                 delta=D(decision["rebalance_delta_eur"])
                 threshold=trade_thresholds(
                     delta,decision["current_exposure_eur"],total,
-                    settings["decision_min_trade_eur"],settings["decision_no_trade_band_pct"]
+                    settings["decision_min_trade_eur"],settings["decision_no_trade_band_pct"],settings["decision_max_position_pct"]
                 )
                 if not threshold["allowed"]:
                     skips.append({"symbol":decision["symbol"],**threshold})
