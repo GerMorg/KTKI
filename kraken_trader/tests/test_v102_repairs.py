@@ -97,7 +97,7 @@ class V102RepairTests(unittest.TestCase):
         finally:
             Path(f.name).unlink(missing_ok=True)
 
-    def test_runtime_and_config_are_v101_and_consolidated(self):
+    def test_runtime_and_config_are_v102_and_consolidated(self):
         run=(ROOT/"run.sh").read_text(encoding="utf-8")
         self.assertIn("v102_main:app",run)
         config=(ROOT/"config.yaml").read_text(encoding="utf-8")
@@ -192,6 +192,93 @@ class V102RepairTests(unittest.TestCase):
         self.assertNotIn("/tax-info-v68.zip",source)
         self.assertNotIn("/tax-info-v68.csv",source)
         self.assertNotIn("tax_v100_csv",source)
+
+
+    def test_v102_public_market_pair_normalization(self):
+        from market_feed_v102 import PublicMarketServiceV102
+        self.assertEqual(PublicMarketServiceV102._norm_pair("XXBTZEUR"),"BTCEUR")
+        self.assertEqual(PublicMarketServiceV102._norm_pair("BTC/EUR"),"BTCEUR")
+        payload={"XXBTZEUR":{"c":["90000"],"b":["89999"],"a":["90001"]}}
+        item=PublicMarketServiceV102._payload_item(payload,"BTC/EUR")
+        self.assertEqual(item["c"][0],"90000")
+
+    def test_v102_gui_navigation_is_exactly_current_process(self):
+        source=(ROOT/"app"/"v102_main.py").read_text(encoding="utf-8")
+        expected=[
+            '("/","Übersicht")','("/markt","Markt & Daten")','("/analyse","Analyse")',
+            '("/portfolio","Portfolio")','("/handel","Handel")','("/lernen","Lernen")',
+            '("/real-trading","Realhandel")','("/system","System")'
+        ]
+        for value in expected:
+            self.assertIn(value,source)
+        forbidden=[
+            '("/products"', '("/news-learning"', '("/fees"', '("/data-quality"',
+            '("/backtests"', '("/audit"', '("/exports"', '("/decision-matrix"',
+        ]
+        for value in forbidden:
+            self.assertNotIn(value,source)
+
+    def test_v102_process_uses_one_public_market_service(self):
+        source=(ROOT/"app"/"v102_main.py").read_text(encoding="utf-8")
+        self.assertIn("PublicMarketServiceV102",source)
+        self.assertIn("runtime.refresh_market=market_service.refresh_for_process",source)
+        self.assertIn("legacy.refresh_allowed_prices=market_service.refresh_for_process",source)
+        self.assertIn("PaperEngineV98",source)
+        self.assertIn("RealPortfolioAllocatorV98",source)
+
+    def test_v102_current_pages_and_machine_interfaces_smoke_without_network(self):
+        with tempfile.TemporaryDirectory() as td:
+            options_path=Path(td)/"options.json"
+            options_path.write_text(json.dumps({
+                "automation_enabled":False,
+                "paper_enabled":True,
+                "real_trading_enabled":False,
+                "real_execute_enabled":False,
+                "real_kill_switch":True,
+                "paper_start_eur":1000,
+            }),encoding="utf-8")
+            env=os.environ.copy()
+            env["APP_DATA_DIR"]=td
+            env["APP_OPTIONS"]=str(options_path)
+            env["APP_DISABLE_WEBSOCKETS"]="1"
+            code=(
+                "import v102_main; "
+                "c=v102_main.app.test_client(); "
+                "paths=['/','/markt','/analyse','/portfolio','/handel','/lernen','/real-trading','/system','/steuerinfo-at','/health','/api/market','/api/process']; "
+                "r=[(p,c.get(p,follow_redirects=False).status_code) for p in paths]; "
+                "print(r); "
+                "assert all(code==200 for _,code in r),r"
+            )
+            result=subprocess.run(
+                [sys.executable,"-c",code],
+                cwd=str(ROOT/"app"),env=env,capture_output=True,text=True,timeout=30
+            )
+            self.assertEqual(result.returncode,0,msg=result.stdout+"\n"+result.stderr)
+
+    def test_v102_legacy_gui_paths_redirect(self):
+        with tempfile.TemporaryDirectory() as td:
+            options_path=Path(td)/"options.json"
+            options_path.write_text(json.dumps({"automation_enabled":False}),encoding="utf-8")
+            env=os.environ.copy()
+            env["APP_DATA_DIR"]=td
+            env["APP_OPTIONS"]=str(options_path)
+            env["APP_DISABLE_WEBSOCKETS"]="1"
+            code=(
+                "import v102_main; c=v102_main.app.test_client(); "
+                "paths=['/api','/products','/news-learning','/fees','/data-quality','/scanner','/paper','/settings','/decision-matrix','/diagnose','/prozess','/automatik']; "
+                "r=[(p,c.get(p,follow_redirects=False).status_code) for p in paths]; "
+                "print(r); assert all(x[1]==302 for x in r),r"
+            )
+            result=subprocess.run(
+                [sys.executable,"-c",code],
+                cwd=str(ROOT/"app"),env=env,capture_output=True,text=True,timeout=30
+            )
+            self.assertEqual(result.returncode,0,msg=result.stdout+"\n"+result.stderr)
+
+    def test_v102_no_old_runtime_entrypoint_files(self):
+        for name in ("v100_main.py","v101_main.py"):
+            self.assertFalse((ROOT/"app"/name).exists(),name)
+        self.assertFalse((ROOT/"app"/"real_state_v100.py").exists())
 
 if __name__=="__main__":
     unittest.main()
