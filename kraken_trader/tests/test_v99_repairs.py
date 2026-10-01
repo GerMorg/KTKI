@@ -88,7 +88,7 @@ class V99RepairTests(unittest.TestCase):
         f,db=self.db()
         try:
             ai=ExternalNewsAI(db,{})
-            self.assertEqual(ai._model(),"gemini-2.5-flash-lite")
+            self.assertEqual(ai._model(),"gemini-3.5-flash-lite")
             content=ai._content({"candidates":[{"content":{"parts":[{"text":"{\"relevance\": 1}"}]}}]})
             self.assertEqual(json.loads(content)["relevance"],1)
         finally:
