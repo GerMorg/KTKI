@@ -49,6 +49,9 @@ class RealPortfolioAllocatorV98(RealPortfolioAllocatorV95):
             except Exception:pass
             current,total=self._current_eur()
             current_by=self._current_by_symbol(current)
+            available_quotes=set()
+            if D(self._quote_balance("EUR"))>0: available_quotes.add("EUR")
+            if D(self._quote_balance("USD"))>0: available_quotes.add("USD")
             planner=CanonicalDecisionPlannerV98(self.db)
             settings=planner.settings()
             plan=planner.build(
@@ -56,6 +59,7 @@ class RealPortfolioAllocatorV98(RealPortfolioAllocatorV95):
                 current_by_symbol=current_by,
                 environment="REAL",
                 allow_short=settings["decision_allow_shorts"],
+                available_quotes=available_quotes,
             )
             guard=TradeGuardV98(self.db,"REAL")
             matrix=DecisionMatrix(self.db)
