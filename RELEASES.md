@@ -1,3 +1,7 @@
+## v103
+
+Repariert den letzten Ausführungsschritt des Paper-/Realpfads, stabilisiert die Simulationsbuchung, beseitigt stale GUI-/Steuerlinks und stellt die österreichische Einkommensteuer-/KESt-Arbeitshilfe mit aktuellen Exportpfaden wieder her.
+
 ## v102
 
 Reduzierte GUI, bereinigte Schnittstellen und ein eigenständiger Public-Kraken-Marketfeed. Der End-to-End-Prozess wird auf einer klaren Oberfläche sichtbar gemacht und alte GUI-URLs werden nicht mehr als eigenständige Seiten betrieben.
