@@ -143,7 +143,7 @@ class V102RepairTests(unittest.TestCase):
         self.assertIn("import core_runtime as base",runtime)
         self.assertIn("legacy=base.legacy",runtime)
         self.assertIn("from flask import Response, jsonify, redirect, request",runtime)
-        self.assertIn("v102_main:app",run)
+        self.assertIn("v103_main:app",run)
 
     def test_v102_runtime_exposes_real_positions_source(self):
         source=(ROOT/"app"/"v102_main.py").read_text(encoding="utf-8")
