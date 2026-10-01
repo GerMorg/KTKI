@@ -106,9 +106,11 @@ class V103ProcessTests(unittest.TestCase):
             for key,value in {
                 "real_trading_enabled":"true",
                 "real_kill_switch":"false",
-                "automation_master_enabled":"true",
                 "automation_real_enabled":"true",
                 "automation_real_execute_enabled":"true",
+                "real_balancing_enabled":"true",
+                "real_balancing_execute_enabled":"true",
+                "real_balancing_dry_run":"false",
                 "real_allowed_symbols":"BTC/EUR",
                 "real_max_orders_per_day":"5",
                 "real_allow_market_orders":"false",
