@@ -17,7 +17,7 @@ class ExternalNewsAI:
  def _prompt(self,row):
   return ('Bewerte die Nachricht ausschließlich als JSON mit den Feldern relevance, sentiment, expected_impact, horizon, confidence, fact_status, priced_in, topics, affected_assets, summary, counterarguments. '
           'Keine Handelsanweisung. Nachricht: '+str(row.get('title') or '')+'\n'+str(row.get('summary') or ''))
- def _model(self):return 'gemini-2.5-flash-lite'
+ def _model(self):return 'gemini-3.5-flash-lite'
  def _http_transport(self,request):
   key=str(self.options.get('ai_api_key') or '').strip();model=self._model()
   timeout=max(5,min(120,int(self.options.get('ai_timeout_seconds',30))));prompt=self._prompt(request['news'])
