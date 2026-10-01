@@ -508,6 +508,21 @@ def _real_trading():
 
 app.view_functions["real_trade.view"]=_real_trading
 
+def _health_current():
+    real_state=build_real_state(legacy.db,controller)
+    return {
+        "status":"ok",
+        "version":"0.1.0-dev.100",
+        "runtime":"v100_main",
+        "real_state":real_state,
+        "real_trading":real_state["manual_order_available"],
+        "automatic_real_execution":real_state["automatic_execution_ready"],
+        "market_stream":legacy.stream.status(),
+        "private_stream":legacy.private_stream.status(),
+    }
+
+app.view_functions["health"]=_health_current
+
 @app.get("/v100-health")
 def v100_health():
     plan=_latest_plan()
