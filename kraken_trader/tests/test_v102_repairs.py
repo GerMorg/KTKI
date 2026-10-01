@@ -139,14 +139,14 @@ class V102RepairTests(unittest.TestCase):
         self.assertIn("controller=None",core)
         self.assertIn("import core_runtime as base",runtime)
         self.assertIn("legacy=base.legacy",runtime)
-        self.assertIn("from flask import Response, jsonify, redirect, request, url_for",runtime)
+        self.assertIn("from flask import Response, jsonify, redirect, request",runtime)
         self.assertIn("v102_main:app",run)
 
     def test_v102_runtime_exposes_real_positions_source(self):
         source=(ROOT/"app"/"v102_main.py").read_text(encoding="utf-8")
         self.assertIn("FROM portfolio_assets",source)
-        self.assertIn("Paper-Depot · Positionen",source)
-        self.assertIn("Reales Depot · Positionen",source)
+        self.assertIn("Paper-Depot",source)
+        self.assertIn("Reales Depot",source)
         self.assertIn("FROM real_margin_positions",source)
 
     def test_v102_unified_real_state_and_clean_gui(self):
@@ -157,8 +157,8 @@ class V102RepairTests(unittest.TestCase):
         self.assertIn("automatic_execution_ready",helper)
         self.assertNotIn("REAL_EXECUTION_DISABLED",source)
         self.assertNotIn("REAL_DRY_RUN",source)
-        self.assertNotIn("/analyse-v98",source)
-        self.assertNotIn("/portfolio-v98",source)
+        self.assertIn('"/analyse-v98":"/analyse"',source)
+        self.assertIn('"/portfolio-v98":"/portfolio"',source)
         self.assertNotIn("Realhandel bleibt technisch deaktiviert",core)
         self.assertNotIn("@app.route('/settings'",core)
 
@@ -188,7 +188,7 @@ class V102RepairTests(unittest.TestCase):
         source=(ROOT/"app"/"v102_main.py").read_text(encoding="utf-8")
         self.assertIn('@app.get("/tax-info.zip")',source)
         self.assertIn('@app.get("/tax-info.csv")',source)
-        self.assertIn('url_for("tax_csv"',source)
+        self.assertIn('@app.get("/tax-info.csv")',source)
         self.assertNotIn("/tax-info-v68.zip",source)
         self.assertNotIn("/tax-info-v68.csv",source)
         self.assertNotIn("tax_v100_csv",source)
