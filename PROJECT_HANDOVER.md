@@ -1,3 +1,9 @@
+## Aktueller Stand · 0.1.0-dev.103
+
+v103 verwendet v103_main:app als aktiven Einstiegspunkt. Paper und Real teilen weiterhin Plan und Execution Intent; nachgelagerte Paper-Nachweise machen einen persistierten Simulationsfill nicht mehr zum Trade-Fehler. Automatische Realorders passieren einen expliziten HA-Gatepfad und den Kraken-Preflight; manuelle Liveorders benötigen weiterhin die separate 5-Minuten-Freigabe.
+
+Die aktuelle GUI prüft gerenderte lokale Links/Formaktionen gegen die vorhandenen Endpoints. Die österreichische Einkommensteuer-/KESt-Arbeitshilfe ist unter /steuerinfo-at wieder mit BMF-Quellen und aktuellen ZIP/CSV-Exports verfügbar; alte v68-Steuerpfade werden nur noch weitergeleitet.
+
 ## Aktueller Stand · 0.1.0-dev.102
 
 v102 besitzt eine reduzierte Hauptnavigation mit acht Prozessseiten. Public Kraken Market ist von privaten API-Zugangsdaten entkoppelt und kombiniert REST-Snapshot mit Public WebSocket. Alte GUI-URLs werden nur noch weitergeleitet; die aktive Oberfläche bietet ausschließlich aktuelle Prozessaktionen.
