@@ -1,6 +1,4 @@
 name: HA Kraken Trader Repository
-version: 0.1.0-dev.99
-# Historical baseline version: 0.1.0-dev.98
-# Historical baseline version: 0.1.0-dev.90
+version: 0.1.0-dev.100
 url: https://github.com/GerMorg/ha-kraken-trader
 maintainer: GerMorg
