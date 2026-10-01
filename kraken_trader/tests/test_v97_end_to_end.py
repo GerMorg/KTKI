@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))
 from db import DB
 from decision_engine_v98 import DecisionEngineV98
 from decision_pipeline_v98 import CanonicalDecisionPlannerV98
-from decision_runtime_v97 import DecisionRuntimeV98
+from decision_runtime_v98 import DecisionRuntimeV98
 
 
 class V97EndToEndTests(unittest.TestCase):
