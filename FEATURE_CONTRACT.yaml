@@ -1,8 +1,8 @@
-# KTKI v102 — aktueller Feature-Vertrag
-v102:
+# KTKI v103 — aktueller Feature-Vertrag
+v103:
   runtime:
-    entrypoint: v102_main:app
-    version: 0.1.0-dev.102
+    entrypoint: v103_main:app
+    version: 0.1.0-dev.103
     single_active_runtime: true
     public_market_service: market_feed_v102
   gui:
@@ -50,5 +50,6 @@ v102:
     explicit_activation: true
     automatic_parameter_activation: false
   quality:
+    austrian_tax_help_current: true
     gui_actions_have_current_endpoints: true
     ci_required: true
