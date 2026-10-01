@@ -15,7 +15,7 @@ from news_learning import NewsLearning
 from news_prefilter import NewsPrefilter
 
 
-class V101RepairTests(unittest.TestCase):
+class V102RepairTests(unittest.TestCase):
     def db(self):
         f=tempfile.NamedTemporaryFile(suffix=".db",delete=False)
         f.close()
@@ -97,18 +97,18 @@ class V101RepairTests(unittest.TestCase):
         finally:
             Path(f.name).unlink(missing_ok=True)
 
-    def test_runtime_and_config_are_v101_and_consolidated(self):
+    def test_runtime_and_config_are_v102_and_consolidated(self):
         run=(ROOT/"run.sh").read_text(encoding="utf-8")
-        self.assertIn("v101_main:app",run)
+        self.assertIn("v102_main:app",run)
         config=(ROOT/"config.yaml").read_text(encoding="utf-8")
-        self.assertIn("version: 0.1.0-dev.101",config)
+        self.assertIn("version: 0.1.0-dev.102",config)
         for forbidden in ("ai_provider:", "ai_endpoint:", "azure_openai", "gpt-4o-mini"):
             self.assertNotIn(forbidden,config)
         self.assertIn("ai_api_key:",config)
         self.assertIn("automation_enabled:",config)
 
 
-    def test_v101_application_import_smoke(self):
+    def test_v102_application_import_smoke(self):
         with tempfile.TemporaryDirectory() as td:
             options_path=Path(td)/"options.json"
             options_path.write_text(json.dumps({
@@ -123,48 +123,48 @@ class V101RepairTests(unittest.TestCase):
             env["APP_OPTIONS"]=str(options_path)
             env["APP_DISABLE_WEBSOCKETS"]="1"
             result=subprocess.run(
-                [sys.executable,"-c","import v101_main; assert v101_main.app is not None; print('v101 import ok')"],
+                [sys.executable,"-c","import v102_main; assert v102_main.app is not None; print('v101 import ok')"],
                 cwd=str(ROOT/"app"),env=env,capture_output=True,text=True,timeout=20
             )
             self.assertEqual(result.returncode,0,msg=result.stdout+"\\n"+result.stderr)
 
-    def test_v101_boot_contract(self):
+    def test_v102_boot_contract(self):
         core=(ROOT/"app"/"core_runtime.py").read_text(encoding="utf-8")
-        runtime=(ROOT/"app"/"v101_main.py").read_text(encoding="utf-8")
+        runtime=(ROOT/"app"/"v102_main.py").read_text(encoding="utf-8")
         run=(ROOT/"run.sh").read_text(encoding="utf-8")
         compile(core,"core_runtime.py","exec")
-        compile(runtime,"v101_main.py","exec")
+        compile(runtime,"v102_main.py","exec")
         self.assertIn("legacy = sys.modules[__name__]",core)
         self.assertIn("options=opts",core)
         self.assertIn("controller=None",core)
         self.assertIn("import core_runtime as base",runtime)
         self.assertIn("legacy=base.legacy",runtime)
-        self.assertIn("from flask import Response, jsonify, redirect, request, url_for",runtime)
-        self.assertIn("v101_main:app",run)
+        self.assertIn("from flask import Response, jsonify, redirect, request",runtime)
+        self.assertIn("v102_main:app",run)
 
-    def test_v101_runtime_exposes_real_positions_source(self):
-        source=(ROOT/"app"/"v100_main.py").read_text(encoding="utf-8")
+    def test_v102_runtime_exposes_real_positions_source(self):
+        source=(ROOT/"app"/"v102_main.py").read_text(encoding="utf-8")
         self.assertIn("FROM portfolio_assets",source)
-        self.assertIn("Paper-Depot · Positionen",source)
-        self.assertIn("Reales Depot · Positionen",source)
+        self.assertIn("Paper-Depot",source)
+        self.assertIn("Reales Depot",source)
         self.assertIn("FROM real_margin_positions",source)
 
-    def test_v101_unified_real_state_and_clean_gui(self):
-        source=(ROOT/"app"/"v100_main.py").read_text(encoding="utf-8")
-        helper=(ROOT/"app"/"real_state_v100.py").read_text(encoding="utf-8")
+    def test_v102_unified_real_state_and_clean_gui(self):
+        source=(ROOT/"app"/"v102_main.py").read_text(encoding="utf-8")
+        helper=(ROOT/"app"/"real_state_v102.py").read_text(encoding="utf-8")
         core=(ROOT/"app"/"core_runtime.py").read_text(encoding="utf-8")
         self.assertIn("build_real_state",source)
         self.assertIn("automatic_execution_ready",helper)
         self.assertNotIn("REAL_EXECUTION_DISABLED",source)
         self.assertNotIn("REAL_DRY_RUN",source)
-        self.assertNotIn("/analyse-v98",source)
-        self.assertNotIn("/portfolio-v98",source)
+        self.assertIn('"/analyse-v98":"/analyse"',source)
+        self.assertIn('"/portfolio-v98":"/portfolio"',source)
         self.assertNotIn("Realhandel bleibt technisch deaktiviert",core)
         self.assertNotIn("@app.route('/settings'",core)
 
-    def test_v101_real_state_behavior(self):
+    def test_v102_real_state_behavior(self):
         from db import DB
-        from real_state_v100 import build_real_state
+        from real_state_v102 import build_real_state
         import tempfile
         with tempfile.NamedTemporaryFile(suffix=".db") as f:
             db=DB(f.name); db.init()
@@ -184,14 +184,142 @@ class V101RepairTests(unittest.TestCase):
             self.assertTrue(s["automatic_execution_ready"])
             self.assertEqual(s["status_label"],"REALHANDEL FREIGEGEBEN")
 
-    def test_v101_tax_exports_are_current_and_routable(self):
-        source=(ROOT/"app"/"v100_main.py").read_text(encoding="utf-8")
+    def test_v102_tax_exports_are_current_and_routable(self):
+        source=(ROOT/"app"/"v102_main.py").read_text(encoding="utf-8")
         self.assertIn('@app.get("/tax-info.zip")',source)
         self.assertIn('@app.get("/tax-info.csv")',source)
-        self.assertIn('url_for("tax_csv"',source)
+        self.assertIn('@app.get("/tax-info.csv")',source)
         self.assertNotIn("/tax-info-v68.zip",source)
         self.assertNotIn("/tax-info-v68.csv",source)
         self.assertNotIn("tax_v100_csv",source)
+
+
+    def test_v102_public_market_pair_normalization(self):
+        from market_feed_v102 import PublicMarketServiceV102
+        self.assertEqual(PublicMarketServiceV102._norm_pair("XXBTZEUR"),"BTCEUR")
+        self.assertEqual(PublicMarketServiceV102._norm_pair("BTC/EUR"),"BTCEUR")
+        payload={"XXBTZEUR":{"c":["90000"],"b":["89999"],"a":["90001"]}}
+        item=PublicMarketServiceV102._payload_item(payload,"BTC/EUR")
+        self.assertEqual(item["c"][0],"90000")
+
+    def test_v102_gui_navigation_is_exactly_current_process(self):
+        source=(ROOT/"app"/"v102_main.py").read_text(encoding="utf-8")
+        expected=[
+            '("/","Übersicht")','("/markt","Markt & Daten")','("/analyse","Analyse")',
+            '("/portfolio","Portfolio")','("/handel","Handel")','("/lernen","Lernen")',
+            '("/real-trading","Realhandel")','("/system","System")'
+        ]
+        for value in expected:
+            self.assertIn(value,source)
+        forbidden=[
+            '("/products"', '("/news-learning"', '("/fees"', '("/data-quality"',
+            '("/backtests"', '("/audit"', '("/exports"', '("/decision-matrix"',
+        ]
+        for value in forbidden:
+            self.assertNotIn(value,source)
+
+    def test_v102_process_uses_one_public_market_service(self):
+        source=(ROOT/"app"/"v102_main.py").read_text(encoding="utf-8")
+        self.assertIn("PublicMarketServiceV102",source)
+        self.assertIn("runtime.refresh_market=market_service.refresh_for_process",source)
+        self.assertIn("legacy.refresh_allowed_prices=market_service.refresh_for_process",source)
+        self.assertIn("PaperEngineV98",source)
+        self.assertIn("RealPortfolioAllocatorV98",source)
+
+    def test_v102_current_pages_and_machine_interfaces_smoke_without_network(self):
+        with tempfile.TemporaryDirectory() as td:
+            options_path=Path(td)/"options.json"
+            options_path.write_text(json.dumps({
+                "automation_enabled":False,
+                "paper_enabled":True,
+                "real_trading_enabled":False,
+                "real_execute_enabled":False,
+                "real_kill_switch":True,
+                "paper_start_eur":1000,
+            }),encoding="utf-8")
+            env=os.environ.copy()
+            env["APP_DATA_DIR"]=td
+            env["APP_OPTIONS"]=str(options_path)
+            env["APP_DISABLE_WEBSOCKETS"]="1"
+            code=(
+                "import v102_main; "
+                "c=v102_main.app.test_client(); "
+                "paths=['/','/markt','/analyse','/portfolio','/handel','/lernen','/real-trading','/system','/steuerinfo-at','/health','/api/market','/api/process']; "
+                "r=[(p,c.get(p,follow_redirects=False).status_code) for p in paths]; "
+                "print(r); "
+                "assert all(code==200 for _,code in r),r"
+            )
+            result=subprocess.run(
+                [sys.executable,"-c",code],
+                cwd=str(ROOT/"app"),env=env,capture_output=True,text=True,timeout=30
+            )
+            self.assertEqual(result.returncode,0,msg=result.stdout+"\n"+result.stderr)
+
+    def test_v102_legacy_gui_paths_redirect(self):
+        with tempfile.TemporaryDirectory() as td:
+            options_path=Path(td)/"options.json"
+            options_path.write_text(json.dumps({"automation_enabled":False}),encoding="utf-8")
+            env=os.environ.copy()
+            env["APP_DATA_DIR"]=td
+            env["APP_OPTIONS"]=str(options_path)
+            env["APP_DISABLE_WEBSOCKETS"]="1"
+            code=(
+                "import v102_main; c=v102_main.app.test_client(); "
+                "paths=['/api','/products','/news-learning','/fees','/data-quality','/scanner','/paper','/settings','/decision-matrix','/diagnose','/prozess','/automatik']; "
+                "r=[(p,c.get(p,follow_redirects=False).status_code) for p in paths]; "
+                "print(r); assert all(x[1]==302 for x in r),r"
+            )
+            result=subprocess.run(
+                [sys.executable,"-c",code],
+                cwd=str(ROOT/"app"),env=env,capture_output=True,text=True,timeout=30
+            )
+            self.assertEqual(result.returncode,0,msg=result.stdout+"\n"+result.stderr)
+
+    def test_v102_no_old_runtime_entrypoint_files(self):
+        for name in ("v100_main.py","v101_main.py"):
+            self.assertFalse((ROOT/"app"/name).exists(),name)
+        self.assertFalse((ROOT/"app"/"real_state_v100.py").exists())
+
+
+    def test_v102_public_market_snapshot_maps_classic_kraken_key(self):
+        from market_feed_v102 import PublicMarketServiceV102
+
+        class FakeClient:
+            def ticker(self,pairs,asset_class="currency"):
+                return {"XXBTZEUR":{"c":["90000"],"b":["89999"],"a":["90001"],"o":"89000"}}
+
+        class FakeDB:
+            def __init__(self):
+                self.saved=[]
+                self.settings={}
+            def rows(self,query,params=()):
+                return []
+            def upsert_live_price(self,row):
+                self.saved.append(dict(row))
+            def set_setting(self,key,value):
+                self.settings[key]=value
+            def audit(self,*args):
+                return None
+
+        class FakeStream:
+            enabled=False
+            symbols=[]
+            def set_symbols(self,symbols):
+                self.symbols=list(symbols)
+            def start(self):
+                return None
+
+        db=FakeDB()
+        service=PublicMarketServiceV102(db,FakeClient(),object(),FakeStream())
+        result=service.snapshot(["BTC/EUR"])
+        self.assertEqual(result["saved"],1)
+        self.assertEqual(db.saved[0]["symbol"],"BTC/EUR")
+        self.assertEqual(db.saved[0]["last"],"90000")
+
+    def test_v102_public_market_does_not_require_private_credentials(self):
+        source=(ROOT/"app"/"v102_main.py").read_text(encoding="utf-8")
+        self.assertIn("legacy.stream.enabled=True",source)
+        self.assertIn("legacy.private_stream.enabled=bool(",source)
 
 if __name__=="__main__":
     unittest.main()

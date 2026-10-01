@@ -1,3 +1,11 @@
+## v102 – GUI-, Markt- und Prozessbereinigung
+
+- Hauptnavigation auf acht aktuelle Prozessseiten reduziert.
+- Alte GUI-Routen werden in den aktuellen Prozess zurückgeführt.
+- Public Kraken Market über einen eigenen REST-/WebSocket-Dienst vereinheitlicht.
+- Klassische Kraken-Paarbezeichnungen werden für den Datenabgleich normalisiert.
+- Aktions-/Routensmoke-Tests für die GUI ergänzt.
+
 ## v101 – Runtime-Boot repariert
 
 - `v101_main:app` ist der einzige aktive Add-on-Entrypoint.

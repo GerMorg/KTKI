@@ -1,66 +1,54 @@
-# KTKI v101 — aktueller Feature-Vertrag
-v101:
+# KTKI v102 — aktueller Feature-Vertrag
+v102:
   runtime:
-    entrypoint: v101_main:app
-    version: 0.1.0-dev.101
+    entrypoint: v102_main:app
+    version: 0.1.0-dev.102
     single_active_runtime: true
-    obsolete_runtime_wrappers: deleted
+    public_market_service: market_feed_v102
   gui:
-    centralized_shell: true
-    unified_real_state: true
-    active_routes:
+    pages:
       - /
+      - /markt
       - /analyse
       - /portfolio
       - /handel
       - /lernen
-      - /diagnose
-      - /prozess
-      - /automatik
       - /real-trading
+      - /system
       - /steuerinfo-at
-  configuration:
-    user_controls:
-      - kraken_api_key
-      - kraken_api_secret
-      - paper_start_eur
-      - paper_enabled
-      - decision_max_position_pct
-      - decision_cash_reserve_pct
-      - decision_min_trade_eur
-      - decision_max_trade_eur
-      - ai_news_enabled
-      - ai_api_key
-      - real_trading_enabled
-      - real_execute_enabled
-      - real_kill_switch
-      - real_allowed_symbols
-      - automation_enabled
-      - automation_interval_minutes
-  decision_pipeline:
-    canonical_plan: true
-    shared_paper_real_plan: true
+    legacy_gui_urls_redirect: true
+    machine_interfaces:
+      - /health
+      - /api/market
+      - /api/process
+      - /tax-info.zip
+      - /tax-info.csv
+  process:
+    stages:
+      - market
+      - news
+      - analysis
+      - learning
+      - canonical_plan
+      - execution
+      - evidence
+    paper_real_same_plan: true
     shared_execution_intent: true
-    risk_reduction_without_new_entry_edge: true
+  market:
+    public_credentials_required: false
+    rest_snapshot: true
+    websocket_ticker: true
+    pair_normalization: true
   real_trading:
     global_enable: configurable
     kill_switch: required
-    explicit_manual_arm: required_for_manual_live_order
-    automation_gate: required_for_automatic_execution
+    explicit_manual_arm: required
+    automatic_execution_gate: required
     kraken_preflight: required
-    order_limits: required
-    balance_checks: required
     audit_trail: required
   learning:
     explicit_activation: true
     automatic_parameter_activation: false
-  news:
-    signed_time_decay_feature: true
-    market_linking: true
-  portfolio:
-    paper_positions: true
-    real_positions: true
-    margin_positions: true
   quality:
-    utf8: required
-    ci: required
+    gui_actions_have_current_endpoints: true
+    ci_required: true

@@ -1,3 +1,7 @@
+## v102
+
+Reduzierte GUI, bereinigte Schnittstellen und ein eigenständiger Public-Kraken-Marketfeed. Der End-to-End-Prozess wird auf einer klaren Oberfläche sichtbar gemacht und alte GUI-URLs werden nicht mehr als eigenständige Seiten betrieben.
+
 ## v101
 
 Runtime-Startfehler nach der v100-Konsolidierung behoben. Der Core stellt `legacy` wieder explizit bereit, der Add-on-Start zeigt auf `v101_main:app`, und der Tax-ZIP-Endpunkt hat seinen fehlenden `Response`-Import erhalten.

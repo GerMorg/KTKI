@@ -1,4 +1,4 @@
-"""Single source of truth for the v100 Real-Handel status used by every GUI surface."""
+"""Single source of truth for the v102 Real-Handel status used by every GUI surface."""
 def _flag(db,key,default=False):
     return str(db.value(key,"true" if default else "false")).strip().lower()=="true"
 

@@ -1,3 +1,7 @@
+# Benutzerhandbuch · v102
+
+Die Hauptnavigation bildet nur noch den tatsächlichen Prozess ab. Legacy-GUI-URLs führen auf die jeweilige aktuelle Seite, damit alte Bookmarks nicht mehr in veralteten Oberflächen landen.
+
 # Benutzerhandbuch · v101
 
 Die Oberfläche ist über Home-Assistant-Ingress erreichbar. Die aktuelle Navigation führt zu Übersicht, Analyse, Portfolio, Handel, Lernen, Diagnose, Prozess, Automatik, Realhandel und den ergänzenden Fachseiten.

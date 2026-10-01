@@ -1,3 +1,7 @@
+## Aktueller Stand · 0.1.0-dev.102
+
+v102 besitzt eine reduzierte Hauptnavigation mit acht Prozessseiten. Public Kraken Market ist von privaten API-Zugangsdaten entkoppelt und kombiniert REST-Snapshot mit Public WebSocket. Alte GUI-URLs werden nur noch weitergeleitet; die aktive Oberfläche bietet ausschließlich aktuelle Prozessaktionen.
+
 # HA Kraken Trader Projektübergabe
 
 ## Aktueller Stand · 0.1.0-dev.101
