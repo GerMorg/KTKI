@@ -75,13 +75,18 @@ class RealPortfolioAllocatorV98(RealPortfolioAllocatorV95):
                 int(settings["decision_max_actions_per_run"]),
                 max(0,int(settings["decision_max_actions_per_day"])-submitted_today),
             )
-            actions=[];submitted=0
+            actions=[];submitted=0;skips=[];evaluated_candidates=len(plan['decisions'])
 
             for decision in plan["decisions"]:
                 delta=D(decision["rebalance_delta_eur"])
-                if delta==0:continue
-                if abs(delta)<D(settings["decision_min_trade_eur"]):continue
+                if delta==0:
+                    skips.append({"symbol":decision["symbol"],"reason":"TARGET_ALREADY_REACHED","delta_eur":str(delta)})
+                    continue
+                if abs(delta)<D(settings["decision_min_trade_eur"]):
+                    skips.append({"symbol":decision["symbol"],"reason":"BELOW_MIN_TRADE","delta_eur":str(delta),"minimum_eur":str(settings["decision_min_trade_eur"])})
+                    continue
                 if D(decision["current_exposure_eur"])!=0 and abs(delta)/max(D(1),abs(D(decision["current_exposure_eur"])))*100<D(settings["decision_no_trade_band_pct"]):
+                    skips.append({"symbol":decision["symbol"],"reason":"REBALANCE_HYSTERESIS","delta_eur":str(delta),"current_eur":decision["current_exposure_eur"]})
                     continue
 
                 route=decision.get("route_context") or {}
@@ -105,6 +110,7 @@ class RealPortfolioAllocatorV98(RealPortfolioAllocatorV95):
                 if intent["status"]!="READY":
                     engine.record("REAL",decision,None,None,0,"BLOCKED",intent["reason"])
                     actions.append({"decision":decision,"intent":intent,"status":"BLOCKED","reason":intent["reason"]})
+                    skips.append({"symbol":decision["symbol"],"reason":intent["reason"]})
                     continue
 
                 volume,price,quote=volume_for_eur(plan["tickers"],intent["execution_symbol"],intent["side"],intent["trade_eur"])
@@ -198,15 +204,15 @@ class RealPortfolioAllocatorV98(RealPortfolioAllocatorV95):
             with self.db.con() as c:
                 c.execute(
                     "UPDATE real_allocation_runs SET finished_at=?,status=?,details_json=? WHERE id=?",
-                    (__import__("db").now(),final,json.dumps({"plan_hash":plan["plan_hash"],"actions":actions},sort_keys=True,default=str),run_id)
+                    (__import__("db").now(),final,json.dumps({"plan_hash":plan["plan_hash"],"evaluated_candidates":evaluated_candidates,"actions":actions,"skips":skips,"skipped_count":len(skips),"execution_capacity":execution_capacity},sort_keys=True,default=str),run_id)
                 )
             self.db.audit("REAL_V98_CANONICAL_RUN",json.dumps({"plan_hash":plan["plan_hash"],"status":final,"actions":len(actions)}), "warning" if automatic else "info","REAL")
-            return {**plan,"status":final,"run_id":run_id,"actions":actions}
+            return {**plan,"status":final,"run_id":run_id,"actions":actions,"skips":skips}
         except Exception as exc:
             if run_id:
                 with self.db.con() as c:c.execute(
                     "UPDATE real_allocation_runs SET finished_at=?,status=?,error=? WHERE id=?",
                     (__import__("db").now(),"FAILED",type(exc).__name__+":"+str(exc)[:500],run_id))
-            self.db.audit("REAL_V96_FAILED",type(exc).__name__+":"+str(exc)[:500],"error","REAL")
+            self.db.audit("REAL_V98_FAILED",type(exc).__name__+":"+str(exc)[:500],"error","REAL")
             return {"status":"FAILED","error":type(exc).__name__+":"+str(exc)[:500]}
         finally:self.lock.release()
