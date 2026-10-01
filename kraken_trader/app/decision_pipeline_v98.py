@@ -112,7 +112,28 @@ class CanonicalDecisionPlannerV98:
         version,params=active_profile(db,family)
         return version,params,params.get("buy_threshold",minimum_score),params.get("avoid_threshold",35)
 
-    def _enrich(self,settings,tickers):
+    def _fundable_route(self,route,settings,tickers,available_quotes):
+        allowed={str(x).upper() for x in (available_quotes or [])}
+        candidates=[]
+        for alt in route.get("alternatives",[]):
+            if str(alt.get("quote_asset") or "").upper() not in allowed:
+                continue
+            from execution_router import route_cost
+            buy=route_cost(alt,tickers,D(100),settings["decision_fee_bps"],settings["decision_fx_fee_bps"],settings["decision_slippage_bps"],"buy")
+            sell=route_cost(alt,tickers,D(100),settings["decision_fee_bps"],settings["decision_fx_fee_bps"],settings["decision_slippage_bps"],"sell")
+            if buy.get("valid") and sell.get("valid"):
+                candidates.append((D(buy["total_cost_pct"])+D(sell["total_cost_pct"]),str(alt.get("symbol")),alt,buy,sell))
+        if not candidates:
+            return route
+        _,_,market,buy,sell=sorted(candidates,key=lambda x:(x[0],x[1]))[0]
+        selected=dict(route)
+        selected["buy"]={"status":"VALID","market":market,"cost":buy}
+        selected["sell"]={"status":"VALID","market":market,"cost":sell}
+        selected["roundtrip_cost_pct"]=D(buy["total_cost_pct"])+D(sell["total_cost_pct"])
+        selected["route_selection"]="MINIMIZE_ENTRY_PLUS_EXIT_COST_AMONG_FINANCIABLE_QUOTES"
+        return selected
+
+    def _enrich(self,settings,tickers,available_quotes=None):
         out=[]
         for row in scanner_candidates(self.db,max_age_minutes=settings["decision_max_scanner_age_minutes"]):
             row=dict(row)
@@ -126,6 +147,7 @@ class CanonicalDecisionPlannerV98:
                 settings["decision_fx_fee_bps"],
                 settings["decision_slippage_bps"],
             )
+            route=self._fundable_route(route,settings,tickers,available_quotes)
             recalculated_score, recalculated_signal = score_features({
                 "momentum_pct": row.get("momentum_pct"),
                 "trend_pct": row.get("trend_pct"),
@@ -212,12 +234,13 @@ class CanonicalDecisionPlannerV98:
             "total":str(total),
             "health":health,
             "regimes":regimes,
+            "available_quotes":sorted(str(x).upper() for x in (available_quotes or [])),
         }
         return hashlib.sha256(
             json.dumps(payload,sort_keys=True,default=str,separators=(",",":")).encode()
         ).hexdigest()
 
-    def build(self,total_eur,current_by_symbol,environment="PAPER",allow_short=None):
+    def build(self,total_eur,current_by_symbol,environment="PAPER",allow_short=None,available_quotes=None):
         from decision_engine_v98 import DecisionEngineV98
         settings=self.settings()
         if allow_short is None:allow_short=settings["decision_allow_shorts"]
@@ -225,7 +248,7 @@ class CanonicalDecisionPlannerV98:
         tickers=self._fresh_tickers(settings)
         health=self._health(settings)
         regimes=self._regimes(settings)
-        enriched=self._enrich(settings,tickers)
+        enriched=self._enrich(settings,tickers,available_quotes=available_quotes)
         enriched.extend(self._held_rows(current_by_symbol,settings,tickers,enriched))
         route_costs={x["symbol"]:D(x["roundtrip_cost_pct"]) for x in enriched}
         decisions=DecisionEngineV98(self.db).target_rows(
