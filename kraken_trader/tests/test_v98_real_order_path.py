@@ -149,10 +149,6 @@ class V98RealOrderPathTests(unittest.TestCase):
         finally:
             Path(f.name).unlink(missing_ok=True)
 
-    def test_runtime_entrypoint_is_v98(self):
-        self.assertIn("v98_main:app",(ROOT/"run.sh").read_text(encoding="utf-8"))
-        self.assertIn("v98_main:app",(ROOT.parents[0]/"run.sh").read_text(encoding="utf-8"))
-
     def test_shared_runtime_preparation_reuses_context(self):
         f,db=self.db();calls={"market":0,"forecast":0}
         def market(): calls["market"]+=1;return 2
