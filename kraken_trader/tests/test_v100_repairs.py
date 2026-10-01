@@ -105,7 +105,7 @@ class V100RepairTests(unittest.TestCase):
         self.assertIn("ai_api_key:",config)
         self.assertIn("automation_enabled:",config)
 
-    def test_v99_runtime_exposes_real_positions_source(self):
+    def test_v100_runtime_exposes_real_positions_source(self):
         source=(ROOT/"app"/"v100_main.py").read_text(encoding="utf-8")
         self.assertIn("FROM portfolio_assets",source)
         self.assertIn("Paper-Depot · Positionen",source)
