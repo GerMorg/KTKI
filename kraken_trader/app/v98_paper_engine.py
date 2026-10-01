@@ -36,6 +36,7 @@ class PaperEngineV98(PaperEngine):
         cash,pv,total,missing=self.equity()
         planner=CanonicalDecisionPlannerV98(self.db)
         settings=planner.settings()
+        available_quotes={"EUR"} if cash>0 else set()
         current={}
         for p in self.positions():
             try:
@@ -43,7 +44,7 @@ class PaperEngineV98(PaperEngine):
                 if px:current[p["symbol"]]=D(p["quantity"])*D(px["last"])
             except Exception:
                 continue
-        plan=planner.build(total,current_by_symbol=current,environment="PAPER")
+        plan=planner.build(total,current_by_symbol=current,environment="PAPER",available_quotes=available_quotes)
         guard=TradeGuardV98(self.db,"PAPER")
         matrix=DecisionMatrix(self.db)
         actions=[]
