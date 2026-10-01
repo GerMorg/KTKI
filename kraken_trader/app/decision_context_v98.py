@@ -46,7 +46,7 @@ def alternatives(db, symbol):
         )
     else:
         rows=db.rows(
-            "SELECT symbol,asset_class,category,base_asset,quote_asset,source_key,ordermin,costmin "
+            "SELECT symbol,asset_class,category,base_asset,quote_asset,source_key,ordermin,costmin,leverage_buy_json,leverage_sell_json,metadata_json "
             "FROM market_universe WHERE UPPER(symbol)=UPPER(?) AND quote_asset IN ('EUR','USD')",
             (resolved["symbol"],),
         )
