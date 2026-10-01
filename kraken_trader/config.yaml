@@ -2,7 +2,21 @@ name: Kraken Trader
 version: 0.1.0-dev.99
 # Historical baseline version: 0.1.0-dev.98
 # Historical baseline version: 0.1.0-dev.90
-# Historical internal defaults retained outside the HA UI:\n# private_websocket_readonly_enabled: true\n# real_margin_enabled: false\n# automation_master_enabled: false\n# automation_analysis_enabled: false\n# automation_news_enabled: false\n# automation_learning_enabled: false\n# automation_paper_enabled: false\n# automation_real_enabled: false\n# automation_real_execute_enabled: false\n# learning_max_evaluations: 600\n# news_learning_max_samples: 600\n# analysis_max_symbols: 20\n# real_balancing_automation_secret: ''
+# Historical internal defaults retained outside the HA UI:
+# private_websocket_readonly_enabled: true
+# real_margin_enabled: false
+# automation_master_enabled: false
+# automation_analysis_enabled: false
+# automation_news_enabled: false
+# automation_learning_enabled: false
+# automation_paper_enabled: false
+# automation_real_enabled: false
+# automation_real_execute_enabled: false
+# learning_max_evaluations: 600
+# news_learning_max_samples: 600
+# analysis_max_symbols: 20
+# real_balancing_automation_secret: ''
+# real_balancing_max_drawdown_pct: -25
 slug: kraken_trader
 description: Autonomous Kraken Portfolio, Paper-Trading und streng freigegebener Realhandel
 arch:
