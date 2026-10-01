@@ -78,7 +78,11 @@ class PaperEngine:
     c.execute('INSERT OR REPLACE INTO paper_positions VALUES(?,?,?,?)',(symbol,str(newqty),str(avg),now()));c.execute('INSERT OR REPLACE INTO paper_position_risk VALUES(?,?,?,?)',(symbol,lev,str(newdebt),now()))
    else:c.execute('DELETE FROM paper_positions WHERE symbol=?',(symbol,));c.execute('DELETE FROM paper_position_risk WHERE symbol=?',(symbol,))
    cur=c.execute('INSERT INTO paper_trades(created_at,symbol,side,quantity,market_price,execution_price,gross_eur,fee_eur,slippage_eur,net_eur,reason,decision_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',(now(),symbol,side,str(qty),str(market),str(execp),str(gross),str(fee),str(slip),str(net),reason,json.dumps(decision,sort_keys=True)));tid=cur.lastrowid
-  self.snapshot();return tid
+  try:
+   self.snapshot()
+  except Exception as exc:
+   self.db.audit('PAPER_SNAPSHOT_FAILED',type(exc).__name__+': '+str(exc)[:300],'warning','PAPER')
+  return tid
  def transaction_cost_rate(self,symbol):
   price=self.price(symbol)
   if not price:return D('999')
