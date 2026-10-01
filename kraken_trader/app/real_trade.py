@@ -219,12 +219,12 @@ class RealTradeEngine:
   except Exception as exc:
    with self.db.con() as c:c.execute('UPDATE real_trade_intents SET status=?,error=? WHERE client_order_id=?',('FAILED',type(exc).__name__,cid))
    self.db.audit('REAL_ORDER_FAILED',json.dumps({'client_order_id':cid,'error':type(exc).__name__}),'error','REAL');raise
- def convert_eur_to_usd(self,eur_amount,automation_secret=None,approval_token=None,validate_only=True):
+ def convert_eur_to_usd(self,eur_amount,automation_secret=None,approval_token=None,validate_only=True,automation_context=False):
   fx=self._fx()
   if not fx:raise ValueError('EUR/USD Livepreis fehlt')
   bid=D(fx.get('bid') or fx.get('last'))
   if bid<=0:raise ValueError('EUR/USD Bid ungültig')
-  return self.submit('EUR/USD','sell',str(D(eur_amount)),'limit',str(bid),secrets.token_hex(16),approval_token,validate_only,automation_secret)
+  return self.submit('EUR/USD','sell',str(D(eur_amount)),'limit',str(bid),secrets.token_hex(16),approval_token,validate_only,automation_secret,automation_context=automation_context)
 
 def create_real_trade_blueprint(db,client,page):
  engine=RealTradeEngine(db,client);bp=Blueprint('real_trade',__name__)
