@@ -66,11 +66,10 @@ class NewsEngine:
                 if not direct and not category:continue
                 impact=float(n.get("impact") or 0)*float(n.get("credibility") or 0.5)
                 with self.db.tx() as con:
-                    con.execute("INSERT INTO news_analysis(news_id,symbol,direction,impact,confidence,model_version,evidence_json,created_at)
-                                 SELECT ?,?,?,?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM news_analysis WHERE news_id=? AND symbol=?)",
-                                (n["id"],symbol,n.get("direction","neutral"),str(impact),str(min(1.0,abs(impact))),"news-rules-v1",
-                                 json.dumps({"direct":bool(direct),"category":bool(category),"source":n.get("source"),"novelty":n.get("novelty"),"horizon":n.get("horizon")},sort_keys=True),time.time(),n["id"],symbol))
-                saved+=1
+                    cur=con.execute("INSERT INTO news_analysis(news_id,symbol,direction,impact,confidence,model_version,evidence_json,created_at) SELECT ?,?,?,?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM news_analysis WHERE news_id=? AND symbol=?)",
+                                     (n["id"],symbol,n.get("direction","neutral"),str(impact),str(min(1.0,abs(impact))),"news-rules-v1",
+                                      json.dumps({"direct":bool(direct),"category":bool(category),"source":n.get("source"),"novelty":n.get("novelty"),"horizon":n.get("horizon")},sort_keys=True),time.time(),n["id"],symbol))
+                saved+=cur.rowcount
         self.db.event("info","NEWS_ANALYSIS","NEWS_ANALYSIS",message=f"market_links={saved}");return saved
     def effect_for_symbol(self,symbol):
         base=str(symbol).split("/")[0].upper();rows=self.recent(500);effect=0.0
