@@ -289,10 +289,10 @@ class TradingAuthority:
                     side="buy" if current_notional<0 else "sell"
                 elif sig.direction=="long":
                     action=DecisionAction.OPEN_LONG if current_notional==0 else (DecisionAction.INCREASE_LONG if target>current_notional else DecisionAction.REDUCE_LONG if target>0 else DecisionAction.CLOSE_LONG)
-                    side="buy"
+                    side="sell" if action in (DecisionAction.REDUCE_LONG,DecisionAction.CLOSE_LONG) else "buy"
                 else:
                     action=DecisionAction.OPEN_SHORT if current_notional==0 else (DecisionAction.INCREASE_SHORT if abs(target)>abs(current_notional) else DecisionAction.REDUCE_SHORT if target>0 else DecisionAction.CLOSE_SHORT)
-                    side="sell"
+                    side="buy" if action in (DecisionAction.REDUCE_SHORT,DecisionAction.CLOSE_SHORT) else "sell"
                 self.set_stage(Stage.LEVERAGE_SELECTION,cycle);self.set_stage(Stage.MARGIN_CHECK,cycle);self.set_stage(Stage.RISK_CHECK,cycle)
                 blocker=None if exit_position else self.risk.check(sig,i,portfolio,target,lev,portfolio.get("positions",[]),self._orders_today())
                 if not exit_position and net_edge*100<self.c.minimum_expected_edge_pct:blocker=Blocker.BLOCKED_EXPECTED_EDGE.value
