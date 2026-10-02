@@ -49,7 +49,7 @@ class SpotClient:
     def get_api_key_info(self):return self._request("/0/private/GetApiKeyInfo",private=True)
     def balance(self):return self._request("/0/private/Balance",private=True)
     def balance_ex(self):return self._request("/0/private/BalanceEx",private=True)
-    def trade_balance(self):return self._request("/0/private/TradeBalance",private=True)
+    def trade_balance(self,asset="ZEUR"):return self._request("/0/private/TradeBalance",{"asset":asset},private=True)
     def open_orders(self):return self._request("/0/private/OpenOrders",{"trades":True},private=True)
     def closed_orders(self):return self._request("/0/private/ClosedOrders",{"trades":True},private=True)
     def query_orders(self,txid):return self._request("/0/private/QueryOrders",{"txid":txid,"trades":True},private=True)
