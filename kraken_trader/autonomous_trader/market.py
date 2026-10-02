@@ -60,7 +60,13 @@ class MarketData:
             if not item: continue
             def d(*keys):
                 for k in keys:
-                    if item.get(k) not in (None,""): return Decimal(str(item[k]))
+                    value=item.get(k)
+                    if value in (None,""): continue
+                    if isinstance(value,(list,tuple)):
+                        value=value[0] if value else None
+                    if value in (None,""): continue
+                    try:return Decimal(str(value))
+                    except Exception:continue
                 return Decimal("0")
             bid,ask,last=d("bid","b"),d("ask","a"),d("last","c","markPrice","lastPrice")
             if last<=0: continue
