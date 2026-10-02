@@ -86,6 +86,14 @@ class FuturesClient:
     def send_order(self,**params):return self._request("/sendorder",params,private=True)
     def cancel_order(self,**params):return self._request("/cancelorder",params,private=True)
     def check_key(self):return self._request("/api-keys/v3/check",private=True,auth_v1=True)
+    def candles(self,symbol,resolution="1m",count=200):
+        query=urllib.parse.urlencode({"count":int(count)})
+        url="https://futures.kraken.com/api/charts/v1/trade/"+urllib.parse.quote(str(symbol),safe="")+"/"+resolution+"?"+query
+        req=urllib.request.Request(url,headers={"User-Agent":self.user_agent,"Accept":"application/json"},method="GET")
+        try:
+            with urllib.request.urlopen(req,timeout=self.timeout) as resp: payload=json.load(resp)
+            return payload.get("candles",[])
+        except (urllib.error.URLError,TimeoutError,OSError) as exc: raise KrakenAPIError(type(exc).__name__,False,"API_ERROR") from exc
 
 class KrakenVenue:
     def __init__(self,key="",secret=""):self.spot=SpotClient(key,secret);self.futures=FuturesClient(key,secret)
