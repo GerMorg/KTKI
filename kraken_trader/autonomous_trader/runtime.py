@@ -112,6 +112,55 @@ class TradingAuthority:
             fx=self.market.get(pair)
             if fx and fx.last>0 and a in ("USD","USDT","USDC"):return amt*fx.last
         return Decimal("0")
+    def _futures_snapshot(self):
+        result={"equity":Decimal("0"),"available_margin":Decimal("0"),"used_margin":Decimal("0"),
+                "gross_exposure":Decimal("0"),"net_exposure":Decimal("0"),"realized_pnl":Decimal("0"),
+                "unrealized_pnl":Decimal("0"),"margin_level":Decimal("999999"),"positions":[],"consistent":True,"details":{}}
+        if not hasattr(self.venue.futures,"accounts"): return result
+        accounts=self.venue.futures.accounts() or {}
+        accounts=accounts.get("accounts",accounts) if isinstance(accounts,dict) else {}
+        flex=accounts.get("flex",{}) if isinstance(accounts,dict) else {}
+        def D(v):
+            try:return Decimal(str(v or 0))
+            except Exception:return Decimal("0")
+        equity_usd=D(flex.get("marginEquity") or flex.get("portfolioValue") or flex.get("balanceValue"))
+        avail_usd=D(flex.get("availableMargin"))
+        used_usd=D(flex.get("initialMarginWithOrders") or flex.get("initialMargin"))
+        maint_usd=D(flex.get("maintenanceMargin"))
+        result["equity"]=self._asset_eur("USD",equity_usd)
+        result["available_margin"]=self._asset_eur("USD",avail_usd)
+        result["used_margin"]=self._asset_eur("USD",used_usd)
+        result["realized_pnl"]=self._asset_eur("USD",D(flex.get("pnl")))
+        result["unrealized_pnl"]=self._asset_eur("USD",D(flex.get("totalUnrealized") or flex.get("totalUnrealizedAsMargin")))
+        if maint_usd>0 and equity_usd>0: result["margin_level"]=equity_usd/maint_usd*100
+        try: raw=self.venue.futures.open_positions() or {}
+        except Exception as exc:
+            result["consistent"]=False;result["details"]["positions_error"]=type(exc).__name__;raw={}
+        pos=raw.get("openPositions") or raw.get("openpositions") or raw.get("positions") or raw
+        if isinstance(pos,dict): pos=list(pos.values())
+        for p in pos if isinstance(pos,list) else []:
+            if not isinstance(p,dict):continue
+            symbol=str(p.get("symbol") or p.get("instrument") or "")
+            instrument=self.registry.by_symbol(symbol)
+            if not instrument:continue
+            size=D(p.get("size") or p.get("quantity") or p.get("qty"))
+            snap=self.market.get(symbol)
+            mark=D(p.get("markPrice") or p.get("mark_price") or p.get("price") or (snap.last if snap else 0))
+            if size==0 or mark<=0:continue
+            csize=instrument.contract_size if instrument.contract_size>0 else Decimal("1")
+            ctype=instrument.contract_type.lower()
+            quote_value=abs(size)*csize if "inverse" in ctype else abs(size)*csize*mark
+            eur=self._asset_eur(instrument.quote or "USD",quote_value)
+            side=str(p.get("side") or "").lower()
+            sign=Decimal("-1") if side in ("short","sell") else Decimal("1")
+            result["gross_exposure"]+=eur;result["net_exposure"]+=sign*eur
+            result["positions"].append({"symbol":symbol,"base":instrument.base,"side":"short" if sign<0 else "long",
+                                        "quantity":str(size),"notional_eur":str(eur),"mark_price":str(mark),
+                                        "leverage":str(p.get("leverage") or 1),"margin":str(p.get("initialMargin") or 0),
+                                        "product_type":"derivative"})
+        result["details"]={"flex":flex,"position_count":len(result["positions"])}
+        return result
+
     def portfolio_snapshot(self):
         if not (self.c.kraken_api_key and self.c.kraken_api_secret):
             p={"consistent":True,"equity":str(self.c.start_capital_eur),"cash":str(self.c.start_capital_eur),"available_margin":str(self.c.start_capital_eur),"used_margin":"0","gross_exposure":"0","net_exposure":"0","realized_pnl":"0","unrealized_pnl":"0","daily_pnl":"0","daily_loss_pct":"0","drawdown_pct":"0","margin_level":"999999","positions":[]}
