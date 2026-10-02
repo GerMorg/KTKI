@@ -46,7 +46,14 @@ class TradingAuthority:
             if not public_ok:self.db.event("warning","KRAKEN_STATUS",self.stage.value,message=str(status.get("status","unknown")))
         except Exception as exc:self.db.error("API_ERROR",self.stage.value,message=type(exc).__name__)
         if self.c.kraken_api_key and self.c.kraken_api_secret:
-            try:self.venue.auth_info();private_ok=True
+            try:
+                info=self.venue.auth_info()
+                private_ok=True
+                if self.c.live_enabled:
+                    permissions=json.dumps(info,sort_keys=True).lower()
+                    if "permission" in permissions and not any(x in permissions for x in ("modify","trade","order")):
+                        private_ok=False
+                        self.db.event("error","KRAKEN_PERMISSION_MISSING",self.stage.value,message="live order permission not detected")
             except KrakenAPIError as exc:self.db.error(getattr(exc,"code","AUTH_ERROR"),self.stage.value,message=type(exc).__name__)
             except Exception as exc:self.db.error("AUTH_ERROR",self.stage.value,message=type(exc).__name__)
         self.health.update(public_ok=public_ok,private_ok=private_ok)
@@ -72,7 +79,7 @@ class TradingAuthority:
             self.breaker.trip(Blocker.BLOCKED_PRIVATE_DATA.value)
         self.set_stage(Stage.MODEL_INITIALIZATION);self.ensure_models()
         self.set_stage(Stage.HEALTH_CHECK)
-        ready=bool(public_ok and bool(instruments) and market_ok and portfolio.get("consistent",False) and (not self.c.trading_enabled or private_ok) and not self.breaker.active)
+        ready=bool(public_ok and bool(instruments) and market_ok and self.health.get("history_ok",False) and portfolio.get("consistent",False) and (not self.c.trading_enabled or private_ok) and not self.breaker.active)
         self.health["system_ready"]=ready;self.stage=Stage.READY if ready else Stage.HEALTH_CHECK;self.publish_sensors(portfolio)
         return ready
     def ensure_models(self):
@@ -153,6 +160,7 @@ class TradingAuthority:
                 sig=self.ensemble.signal(i,f,reg,news_effect,gem_effect);signals.append((i,s,f,reg,sig))
             self.set_stage(Stage.REGIME_DETECTION,cycle);self.set_stage(Stage.SIGNAL_EVALUATION,cycle)
             for i,s,f,reg,sig in signals[:self.c.deep_scan_limit]:
+                for horizon in self.c.news_horizon_hours:self.learning.record_prediction(cycle,sig,horizon,s.last,Decimal("0"))
                 roundtrip=s.spread*2+(self.c.taker_fee_pct/100)*2+(self.c.max_slippage_pct/100)+(abs(Decimal(str(i.funding)))*Decimal("2") if i.product_type=="derivative" else Decimal("0"))
                 net_edge=sig.expected_return-roundtrip;self.set_stage(Stage.COST_ESTIMATION,cycle);self.set_stage(Stage.EXPECTED_EDGE,cycle)
                 self.set_stage(Stage.PORTFOLIO_TARGET,cycle);lev,_=self.risk.select_leverage(sig,i,portfolio);target,_=self.risk.size(sig,portfolio,lev)
@@ -174,7 +182,9 @@ class TradingAuthority:
                 self.set_stage(Stage.ORDER_SUBMITTING,cycle);self.db.update_order(intent.client_order_id,OrderState.SUBMITTING.value)
                 result=self.executor.submit(intent,i,live=self.c.live_enabled);details["orders"]+=1 if result.get("status")=="ACKNOWLEDGED" else 0
                 self.set_stage(Stage.RECONCILIATION,cycle)
-                if result.get("status")=="ACKNOWLEDGED":
+                if result.get("status")=="UNKNOWN_RECONCILING":
+                    self.breaker.trip(Blocker.BLOCKED_RECONCILIATION.value,cycle)
+                elif result.get("status")=="ACKNOWLEDGED":
                     rec=self.executor.reconcile(intent.client_order_id,result.get("kraken_order_id",""),i)
                     if rec.get("status")==OrderState.UNKNOWN_RECONCILING.value:self.breaker.trip(Blocker.BLOCKED_RECONCILIATION.value,cycle)
             self.set_stage(Stage.PORTFOLIO_UPDATED,cycle);portfolio=self.portfolio_snapshot();self.set_stage(Stage.OUTCOME_TRACKING,cycle)
