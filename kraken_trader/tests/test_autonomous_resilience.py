@@ -49,3 +49,14 @@ def test_order_state_is_persistable_as_reconciliation_terminal_or_live_state():
             OrderState.ACKNOWLEDGED.value,OrderState.LIVE.value,OrderState.PARTIALLY_FILLED.value,
             OrderState.FILLED.value,OrderState.CANCELED.value,OrderState.EXPIRED.value,
             OrderState.REJECTED.value,OrderState.UNKNOWN_RECONCILING.value}.issubset({x.value for x in OrderState})
+
+
+def test_order_normalizer_enforces_minimums_and_tick_precision():
+    from autonomous_trader.execution import OrderNormalizer
+    i=Instrument("kraken","spot","BTC/EUR","XXBTZEUR","XXBTZEUR","BTC","EUR","online","spot",True,True,("2","3"),Decimal("3"),Decimal("0.001"),Decimal("5"),4,2,Decimal("0.1"))
+    intent=OrderIntent("c","d","BTC/EUR","buy",Decimal("0.00127"),"limit",Decimal("90000.07"),Decimal("2"),True,False,"s","m","h")
+    snap=MarketSnapshot("BTC/EUR",Decimal("90000"),Decimal("90001"),Decimal("90000"),Decimal("100"),0)
+    normalized,block=OrderNormalizer().normalize(intent,i,snap)
+    assert block is None
+    assert normalized.volume==Decimal("0.0012")
+    assert normalized.price==Decimal("90000.0")
