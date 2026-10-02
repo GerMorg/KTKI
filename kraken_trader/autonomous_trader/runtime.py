@@ -109,7 +109,7 @@ class TradingAuthority:
         return Decimal("0")
     def portfolio_snapshot(self):
         if not (self.c.kraken_api_key and self.c.kraken_api_secret):
-            p={"consistent":True,"equity":str(self.c.start_capital_eur),"cash":str(self.c.start_capital_eur),"available_margin":str(self.c.start_capital_eur),"used_margin":"0","gross_exposure":"0","net_exposure":"0","realized_pnl":"0","unrealized_pnl":"0","daily_pnl":str(-equity*daily_loss_pct/100),"daily_loss_pct":str(daily_loss_pct),"drawdown_pct":str(drawdown_pct),"margin_level":"999999","positions":[]}
+            p={"consistent":True,"equity":str(self.c.start_capital_eur),"cash":str(self.c.start_capital_eur),"available_margin":str(self.c.start_capital_eur),"used_margin":"0","gross_exposure":"0","net_exposure":"0","realized_pnl":"0","unrealized_pnl":"0","daily_pnl":"0","daily_loss_pct":"0","drawdown_pct":"0","margin_level":"999999","positions":[]}
             return p
         try:
             balances=self.venue.spot.balance();self._cache_private_balances(balances)
