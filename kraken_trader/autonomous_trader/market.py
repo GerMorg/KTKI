@@ -63,7 +63,7 @@ class MarketData:
                     value=item.get(k)
                     if value in (None,""): continue
                     if isinstance(value,(list,tuple)):
-                        value=value[0] if value else None
+                        value=value[-1] if k in ("v","volume","vol","volume24h","vol24h") else (value[0] if value else None)
                     if value in (None,""): continue
                     try:return Decimal(str(value))
                     except Exception:continue
