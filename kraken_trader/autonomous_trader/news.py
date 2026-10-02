@@ -41,7 +41,7 @@ class NewsEngine:
                                 v=x.text or x.get("href","")
                                 if v:return clean(v)
                         return ""
-                    title=pick(("title","{http://www.w3.org/2005/Atom}title"));urlv=pick(("link","{http://www.w3.org/2005/Atom}link"));summary=pick(("description","summary","{http://www.w3.org/2005/Atom}summary"))
+                    title=pick(("title","{http://www.w3.org/2005/Atom}title"));urlv=pick(("link","{http://www.w3.org/2005/Atom}link"));summary=pick(("description","summary","{http://www.w3.org/2005/Atom}summary"));pub=pick(("pubDate","published","updated","{http://www.w3.org/2005/Atom}updated"))
                     if not title:continue
                     entity,event,direction,impact=classify(title,summary);nid=hashlib.sha256((source+"|"+title+"|"+urlv).encode()).hexdigest()
                     try: published=parsedate_to_datetime(pub).timestamp() if pub else None
@@ -61,7 +61,7 @@ class NewsEngine:
             symbol=market.symbol;base=market.base.upper()
             for n in rows:
                 title=str(n.get("title","")).lower()
-                direct=base.lower() in str(n.get("entity_json","")).lower() or re.search(r"\\b"+re.escape(base.lower())+r"\\b",title)
+                direct=base.lower() in str(n.get("entity_json","")).lower() or re.search(r"\b"+re.escape(base.lower())+r"\b",title)
                 category=not direct and any(x in title for x in ("bitcoin","crypto","ethereum","solana","market","rates","inflation"))
                 if not direct and not category:continue
                 impact=float(n.get("impact") or 0)*float(n.get("credibility") or 0.5)
