@@ -73,7 +73,7 @@ class MarketData:
             bid=bid or last;ask=ask or last
             depth_bid,depth_ask=d("bidSize","bid_size","bestBidSize"),d("askSize","ask_size","bestAskSize")
             imbalance=(depth_bid-depth_ask)/(depth_bid+depth_ask) if depth_bid+depth_ask>0 else Decimal("0")
-            snap=MarketSnapshot(i.symbol,bid,ask,last,d("volume","volume24h","vol24h"),now,depth_bid,depth_ask,imbalance)
+            snap=MarketSnapshot(i.symbol,bid,ask,last,d("volume","volume24h","vol24h","v","vol"),now,depth_bid,depth_ask,imbalance)
             self.cache[i.symbol]=snap;count+=1
             with self.db.tx() as c:
                 c.execute("INSERT INTO market_snapshots(cycle_id,symbol,ts,bid,ask,last,volume,depth_bid,depth_ask,imbalance,features_json) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
