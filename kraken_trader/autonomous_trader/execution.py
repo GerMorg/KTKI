@@ -1,5 +1,6 @@
 from __future__ import annotations
-from decimal import Decimal
+from decimal import Decimal,ROUND_DOWN
+from dataclasses import replace
 import time
 from .models import OrderIntent,OrderState,Blocker,ErrorCode,Instrument,MarketSnapshot
 class ExecutionPolicy:
@@ -20,6 +21,27 @@ class OrderSpamGuard:
         prior=self.db.rows("SELECT digest FROM decisions WHERE symbol=? ORDER BY created_at DESC LIMIT 5",(intent.symbol,))
         if prior and prior[0].get("digest")==decision_hash:return False,ErrorCode.DUPLICATE_ORDER_RISK.value
         return True,""
+class OrderNormalizer:
+    def normalize(self,intent,instrument,snapshot):
+        volume=Decimal(intent.volume)
+        price=Decimal(intent.price or snapshot.last)
+        if volume<=0:return None,Blocker.BLOCKED_POSITION_SIZE.value
+        step=Decimal(1).scaleb(-int(instrument.lot_precision))
+        if step>0:volume=(volume/step).to_integral_value(rounding=ROUND_DOWN)*step
+        if instrument.order_min>0 and volume<instrument.order_min:return None,Blocker.BLOCKED_POSITION_SIZE.value
+        tick=Decimal(instrument.tick_size or 0)
+        if tick>0 and intent.order_type!="market":price=(price/tick).to_integral_value(rounding=ROUND_DOWN)*tick
+        elif intent.order_type!="market" and instrument.price_precision>=0:
+            unit=Decimal(1).scaleb(-int(instrument.price_precision));price=price.quantize(unit,rounding=ROUND_DOWN)
+        if price<=0:return None,Blocker.BLOCKED_POSITION_SIZE.value
+        if instrument.cost_min>0 and volume*price<instrument.cost_min:return None,Blocker.BLOCKED_POSITION_SIZE.value
+        if intent.margin and not instrument.margin:return None,Blocker.BLOCKED_LEVERAGE.value
+        if intent.leverage>instrument.max_leverage:return None,Blocker.BLOCKED_LEVERAGE.value
+        allowed={str(x).rstrip("0").rstrip(".") for x in instrument.leverage_levels}
+        lev=str(intent.leverage).rstrip("0").rstrip(".")
+        if instrument.leverage_levels and lev not in allowed and intent.leverage!=1:return None,Blocker.BLOCKED_LEVERAGE.value
+        return replace(intent,volume=volume,price=price),None
+
 class KrakenExecutor:
     def __init__(self,db,venue,config):self.db,self.venue,self.c=db,venue,config
     def submit(self,intent,instrument,live=False):
