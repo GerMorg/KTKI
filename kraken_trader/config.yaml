@@ -1,61 +1,106 @@
-name: Kraken Trader
-version: 0.1.0-dev.103
-slug: kraken_trader
-description: Autonomous Kraken Portfolio, Paper-Trading und streng freigegebener Realhandel
+name: Autonomous Kraken Trader
+version: 1.0.0
+slug: autonomous_kraken_trader
+description: Autonomouser Kraken-Trader mit dynamischer Marktentdeckung, Long/Short, Margin, Leverage, verfügbaren Derivaten, News, Gemini, Learning und Reconciliation.
 arch:
   - amd64
+  - aarch64
 startup: application
 boot: auto
 init: false
-ingress: true
-ingress_port: 8099
-panel_icon: mdi:chart-line
-panel_title: Kraken Trader
+ingress: false
 
-# Bewusst kleine HA-Konfiguration. Technische Defaults, Markt-/Order-Gates,
-# Margin und interne Lernparameter bleiben im Code und in der Laufzeitdiagnose.
+# Home Assistant ist die operative Konfigurationsautorität.
+# Der Trading-Core besitzt unveränderliche Sicherheitsobergrenzen im Code.
 options:
   kraken_api_key: ''
   kraken_api_secret: ''
 
-  paper_start_eur: 1000
-  paper_enabled: true
+  gemini_api_key: ''
+  gemini_model: gemini-3.8-flash
 
-  decision_max_position_pct: 15
-  decision_cash_reserve_pct: 20
-  decision_min_trade_eur: 5
-  decision_max_trade_eur: 10
+  news_enabled: true
+  gemini_enabled: true
 
-  ai_news_enabled: true
-  ai_api_key: ''
+  trading_enabled: false
+  live_enabled: false
+  kill_switch: true
 
-  real_trading_enabled: false
-  real_execute_enabled: false
-  real_kill_switch: true
-  real_allowed_symbols: ''
+  discovery_interval_seconds: 300
+  data_freshness_seconds: 120
+  minimum_liquidity_eur: 25
+  max_spread_pct: 1.5
 
-  automation_enabled: true
-  automation_interval_minutes: 5
+  minimum_expected_edge_pct: 0.20
+  minimum_confidence: 0.55
+  recalibration_interval_minutes: 60
+
+  max_position_risk_pct: 2
+  max_gross_exposure_pct: 100
+  max_net_exposure_pct: 75
+  max_margin_pct: 25
+  max_leverage: 5
+  max_positions: 10
+  daily_loss_limit_pct: 5
+  max_drawdown_pct: 15
+  cash_reserve_pct: 20
+
+  max_slippage_pct: 0.75
+  order_timeout_seconds: 10
+  max_reprices: 2
+  max_orders_per_day: 20
+  allow_market_orders: false
+  taker_fee_pct: 0.40
+  maker_fee_pct: 0.25
+
+  learning_enabled: true
+  auto_calibration: true
+  auto_promotion: false
+
+  deep_scan_limit: 50
+  history_lookback: 200
+  start_capital_eur: 50
 
 schema:
   kraken_api_key: password?
   kraken_api_secret: password?
+  gemini_api_key: password?
+  gemini_model: str
+  news_enabled: bool
+  gemini_enabled: bool
+  trading_enabled: bool
+  live_enabled: bool
+  kill_switch: bool
 
-  paper_start_eur: float
-  paper_enabled: bool
+  discovery_interval_seconds: int(30,86400)
+  data_freshness_seconds: int(10,900)
+  minimum_liquidity_eur: float(0,100000000)
+  max_spread_pct: float(0.01,20)
+  minimum_expected_edge_pct: float(0,50)
+  minimum_confidence: float(0,1)
+  recalibration_interval_minutes: int(5,10080)
 
-  decision_max_position_pct: float(0.1,100)
-  decision_cash_reserve_pct: float(0,100)
-  decision_min_trade_eur: float(0,1000000)
-  decision_max_trade_eur: float(0.01,1000000)
+  max_position_risk_pct: float(0.1,10)
+  max_gross_exposure_pct: float(10,200)
+  max_net_exposure_pct: float(5,150)
+  max_margin_pct: float(1,50)
+  max_leverage: float(1,10)
+  max_positions: int(1,20)
+  daily_loss_limit_pct: float(0.1,25)
+  max_drawdown_pct: float(0.5,35)
+  cash_reserve_pct: float(5,95)
 
-  ai_news_enabled: bool
-  ai_api_key: password?
+  max_slippage_pct: float(0,3)
+  order_timeout_seconds: int(2,120)
+  max_reprices: int(0,10)
+  max_orders_per_day: int(1,100)
+  allow_market_orders: bool
+  taker_fee_pct: float(0,2)
+  maker_fee_pct: float(0,2)
 
-  real_trading_enabled: bool
-  real_execute_enabled: bool
-  real_kill_switch: bool
-  real_allowed_symbols: str?
-
-  automation_enabled: bool
-  automation_interval_minutes: int(1,60)
+  learning_enabled: bool
+  auto_calibration: bool
+  auto_promotion: bool
+  deep_scan_limit: int(5,200)
+  history_lookback: int(50,2000)
+  start_capital_eur: float(0,100000000)
