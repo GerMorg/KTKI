@@ -74,11 +74,11 @@ class PreTrade:
     def __init__(self,db,config):self.db,self.c=db,config
     def check(self,intent,instrument,snapshot,portfolio,orders_today):
         checks=[
+            ("portfolio_consistent",bool(portfolio.get("consistent",False)),portfolio.get("consistent"),True),
+            ("market_data",snapshot is not None,"fresh",True),
             ("system",not self.c.kill_switch,self.c.kill_switch,False),
             ("trading_enabled",self.c.trading_enabled,self.c.trading_enabled,True),
             ("live_enabled",self.c.live_enabled,self.c.live_enabled,True),
-            ("market_data",snapshot is not None,"fresh",True),
-            ("portfolio_consistent",bool(portfolio.get("consistent",False)),portfolio.get("consistent"),True),
             ("orders_today",orders_today<self.c.max_orders_per_day,orders_today,self.c.max_orders_per_day),
             ("market_order_policy",intent.order_type!="market" or self.c.allow_market_orders,intent.order_type,self.c.allow_market_orders)]
         for name,ok,actual,required in checks:self.db.save_check(intent.decision_id,name,ok,actual,required)
