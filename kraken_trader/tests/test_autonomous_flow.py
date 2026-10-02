@@ -71,3 +71,11 @@ def test_paper_mode_never_calls_order_sender():
         rt.executor=ExplodingExecutor()
         result=rt.run_cycle()
         assert result["status"]=="COMPLETE"
+
+
+def test_no_credentials_portfolio_uses_safe_zero_risk_metrics():
+    with tempfile.TemporaryDirectory() as d:
+        c=Config(trading_enabled=False,live_enabled=False,kill_switch=True,news_enabled=False,gemini_enabled=False,start_capital_eur=Decimal("50"))
+        rt=TradingAuthority(c,Database(str(Path(d)/"x.sqlite3")),FakeVenue())
+        p=rt.portfolio_snapshot()
+        assert p["equity"]=="50" and p["daily_loss_pct"]=="0" and p["drawdown_pct"]=="0"
