@@ -30,7 +30,7 @@ class TradingAuthority:
         self.registry=InstrumentRegistry(self.db);self.market=MarketData(self.db,self.venue,self.c.data_freshness_seconds)
         self.news=NewsEngine(self.db,enabled=self.c.news_enabled);self.gemini=GeminiAnalyzer(self.db,self.c.gemini_api_key,self.c.gemini_model,self.c.gemini_enabled)
         self.features=FeatureEngine(self.venue,self.c.history_lookback);self.regimes=RegimeEngine();self.ensemble=Ensemble()
-        self.risk=RiskEngine(self.c);self.executor=KrakenExecutor(self.db,self.venue,self.c);self.policy=ExecutionPolicy()
+        self.risk=RiskEngine(self.c);self.executor=KrakenExecutor(self.db,self.venue,self.c);self.policy=ExecutionPolicy(self.c)
         self.guard=OrderSpamGuard(self.db);self.pretrade=PreTrade(self.db,self.c);self.learning=Learner(self.db,self.c);self.sensors=SensorPublisher()
         self.breaker=CircuitBreaker(self.db);self.stage=Stage.BOOT;self.health={};self.last_decision=None;self._cycle_lock=threading.Lock()
     def set_stage(self,s,cycle_id=""):
@@ -148,7 +148,7 @@ class TradingAuthority:
                 sig=self.ensemble.signal(i,f,reg,news_effect,gem_effect);signals.append((i,s,f,reg,sig))
             self.set_stage(Stage.REGIME_DETECTION,cycle);self.set_stage(Stage.SIGNAL_EVALUATION,cycle)
             for i,s,f,reg,sig in signals[:self.c.deep_scan_limit]:
-                roundtrip=s.spread*2+Decimal("0.004")+(abs(Decimal(str(i.funding)))*Decimal("2") if i.product_type=="derivative" else Decimal("0"))
+                roundtrip=s.spread*2+(self.c.taker_fee_pct/100)*2+(self.c.max_slippage_pct/100)+(abs(Decimal(str(i.funding)))*Decimal("2") if i.product_type=="derivative" else Decimal("0"))
                 net_edge=sig.expected_return-roundtrip;self.set_stage(Stage.COST_ESTIMATION,cycle);self.set_stage(Stage.EXPECTED_EDGE,cycle)
                 self.set_stage(Stage.PORTFOLIO_TARGET,cycle);lev,_=self.risk.select_leverage(sig,i,portfolio);target,_=self.risk.size(sig,portfolio,lev)
                 action=DecisionAction.OPEN_LONG if sig.direction=="long" else DecisionAction.OPEN_SHORT;side="buy" if sig.direction=="long" else "sell"
