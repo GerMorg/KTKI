@@ -1,2 +1,2 @@
-from .main import Runtime
-raise SystemExit(Runtime().run())
+from .main import main
+raise SystemExit(main())
