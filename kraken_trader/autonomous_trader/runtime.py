@@ -177,6 +177,20 @@ class TradingAuthority:
                 if value>0 and asset not in ("EUR","ZEUR"):
                     match=next((x for x in self.registry.instruments.values() if x.product_type=="spot" and x.base.upper()==asset),None)
                     spot_positions.append({"symbol":match.symbol if match else f"{asset}/EUR","base":asset,"side":"long","quantity":str(v),"eur_value":str(value),"notional_eur":str(value),"product_type":"spot"})
+            if isinstance(open_margin,dict):
+                margin_items=open_margin.get("open") or open_margin.get("positions") or open_margin
+                if isinstance(margin_items,dict):
+                    for mid,p in margin_items.items():
+                        if not isinstance(p,dict):continue
+                        symbol=str(p.get("pair") or p.get("symbol") or "")
+                        inst=self.registry.by_symbol(symbol)
+                        qty=Decimal(str(p.get("vol") or p.get("volume") or p.get("qty") or 0))
+                        px=Decimal(str(p.get("price") or p.get("mark_price") or 0))
+                        if not inst or qty<=0 or px<=0:continue
+                        value=self._asset_eur(inst.quote,qty*px)
+                        raw_side=str(p.get("type") or p.get("side") or "").lower()
+                        side="short" if raw_side in ("sell","short") else "long"
+                        spot_positions.append({"symbol":inst.symbol,"base":inst.base,"side":side,"quantity":str(qty),"eur_value":str(value),"notional_eur":str(value),"product_type":"spot_margin","position_id":str(mid),"margin":True})
             margin=self.venue.spot.trade_balance()
             open_margin=self.venue.spot.open_positions()
             history=self.db.rows("SELECT ts,equity FROM portfolio_snapshots WHERE equity IS NOT NULL ORDER BY ts ASC")
@@ -285,7 +299,9 @@ class TradingAuthority:
                 status="BLOCKED" if blocker else "NO_ACTION";d=Decision(cycle,i.symbol,action,side,target,current_notional,target-current_notional,net_edge,sig.confidence,sig.uncertainty,lev,lev>1,status,blocker or "",config_hash=self.c.hash(),evidence={"regime":reg,"news_effect":str(self.news.effect_for_symbol(i.symbol)),"gemini_effect":str(self._gemini_effect(i.symbol)),"roundtrip_cost":str(roundtrip),"features":f,"news_status":news_result.get("status")})
                 self.db.save_decision(d);details["decisions"]+=1;self.last_decision=d
                 if blocker:details["blocked"]+=1;self.learning.learn_event(cycle,d.decision_id,{"status":"NO_TRADE","blocker":blocker,"expected_edge":str(net_edge)});continue
-                px=s.ask if side=="buy" else s.bid;volume=target/px if px>0 else Decimal("0")
+                px=s.ask if side=="buy" else s.bid
+                delta_notional=abs(target-current_notional)
+                volume=delta_notional/px if px>0 else Decimal("0")
                 order_type=self.policy.choose(s,net_edge,Decimal("0.5"),Decimal("0.5"));intent=OrderIntent(cycle,d.decision_id,i.symbol,side,volume,order_type,px,lev,lev>1,action in (DecisionAction.REDUCE_LONG,DecisionAction.REDUCE_SHORT,DecisionAction.CLOSE_LONG,DecisionAction.CLOSE_SHORT),d.strategy_version,d.model_version,d.config_hash)
                 intent,normalizer_blocker=self.executor.normalizer.normalize(intent,i,s)
                 if normalizer_blocker:
