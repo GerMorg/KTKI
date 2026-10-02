@@ -49,8 +49,8 @@ class TradingAuthority:
             try:
                 info=self.venue.auth_info()
                 permissions={str(x).lower() for x in (info.get("permissions") or [])}
-                required={"query-funds","query-open-trades","query-closed-trades","create-ws-token"}
-                if self.c.live_enabled: required.update({"modify-trades","close-trades"})
+                required={"query-funds","query-open-trades","query-closed-trades"}
+                if self.c.live_enabled: required.update({"modify-trades","close-trades","create-ws-token"})
                 missing=sorted(required-permissions)
                 private_ok=not missing
                 if missing:
