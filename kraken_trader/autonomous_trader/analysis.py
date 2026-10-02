@@ -30,7 +30,7 @@ class FeatureEngine:
             rets=[float(closes[j]/closes[j-1]-1) for j in range(1,len(closes))];mu=sum(rets)/len(rets);var=sum((x-mu)**2 for x in rets)/max(1,len(rets)-1)
             out["realized_volatility"]=str(Decimal(str(math.sqrt(var)*math.sqrt(24))));down=[x for x in rets if x<0]
             out["downside_volatility"]=str(Decimal(str(math.sqrt(sum(x*x for x in down)/max(1,len(down)))))
-            trs=[abs(float(Decimal(str(val(x,"high",2)))-Decimal(str(val(x,"low",3)))) for x in rows[-20:] if val(x,"high",2) not in (None,"") and val(x,"low",3) not in (None,"")]
+            trs=[abs(float(Decimal(str(val(x,"high",2)))-Decimal(str(val(x,"low",3))))) for x in rows[-20:] if val(x,"high",2) not in (None,"") and val(x,"low",3) not in (None,"")]
             if trs:out["atr"]=str(sum(Decimal(str(x)) for x in trs)/Decimal(len(trs)))
             vols=[Decimal(str(val(x,"volume",6))) for x in rows if val(x,"volume",6) not in (None,"")]
             if len(vols)>=20 and vols[-1]>0:
