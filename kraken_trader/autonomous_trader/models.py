@@ -62,7 +62,7 @@ class Instrument:
     max_leverage: Decimal = Decimal("1"); order_min: Decimal = Decimal("0"); cost_min: Decimal = Decimal("0")
     lot_precision: int = 8; price_precision: int = 8; tick_size: Decimal = Decimal("0")
     position_limit_long: Decimal = Decimal("0"); position_limit_short: Decimal = Decimal("0")
-    margin_class: str = ""; collateral: str = ""; funding: Decimal = Decimal("0")
+    margin_class: str = ""; collateral: str = ""; funding: Decimal = Decimal("0"); contract_size: Decimal = Decimal("1")
     fee_model: str = ""; updated_at: float = 0.0; metadata: dict[str,Any] = field(default_factory=dict)
 
 @dataclass

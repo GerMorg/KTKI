@@ -104,24 +104,105 @@ class TradingAuthority:
         if a in ("EUR","ZEUR"):return amt
         symbol=f"{a}/EUR";snap=self.market.get(symbol)
         if snap:return amt*snap.last
-        symbol=f"{a}/USD";snap=self.market.get(symbol);fx=self.market.get("EUR/USD")
-        if snap and fx and fx.last>0:return amt*snap.last/fx.last
+        symbol=f"{a}/USD";snap=self.market.get(symbol)
+        if snap:
+            fx=self.market.get("EUR/USD")
+            if fx and fx.last>0:return amt*snap.last/fx.last
+        for pair in ("USD/EUR","USDT/EUR","USDC/EUR"):
+            fx=self.market.get(pair)
+            if fx and fx.last>0 and a in ("USD","USDT","USDC"):return amt*fx.last
         return Decimal("0")
+    def _futures_snapshot(self):
+        result={"equity":Decimal("0"),"available_margin":Decimal("0"),"used_margin":Decimal("0"),
+                "gross_exposure":Decimal("0"),"net_exposure":Decimal("0"),"realized_pnl":Decimal("0"),
+                "unrealized_pnl":Decimal("0"),"margin_level":Decimal("999999"),"positions":[],"consistent":True,"details":{}}
+        if not hasattr(self.venue.futures,"accounts"): return result
+        accounts=self.venue.futures.accounts() or {}
+        accounts=accounts.get("accounts",accounts) if isinstance(accounts,dict) else {}
+        flex=accounts.get("flex",{}) if isinstance(accounts,dict) else {}
+        def D(v):
+            try:return Decimal(str(v or 0))
+            except Exception:return Decimal("0")
+        equity_usd=D(flex.get("marginEquity") or flex.get("portfolioValue") or flex.get("balanceValue"))
+        avail_usd=D(flex.get("availableMargin"))
+        used_usd=D(flex.get("initialMarginWithOrders") or flex.get("initialMargin"))
+        maint_usd=D(flex.get("maintenanceMargin"))
+        result["equity"]=self._asset_eur("USD",equity_usd)
+        result["available_margin"]=self._asset_eur("USD",avail_usd)
+        result["used_margin"]=self._asset_eur("USD",used_usd)
+        result["realized_pnl"]=self._asset_eur("USD",D(flex.get("pnl")))
+        result["unrealized_pnl"]=self._asset_eur("USD",D(flex.get("totalUnrealized") or flex.get("totalUnrealizedAsMargin")))
+        if maint_usd>0 and equity_usd>0: result["margin_level"]=equity_usd/maint_usd*100
+        try: raw=self.venue.futures.open_positions() or {}
+        except Exception as exc:
+            result["consistent"]=False;result["details"]["positions_error"]=type(exc).__name__;raw={}
+        pos=raw.get("openPositions") or raw.get("openpositions") or raw.get("positions") or raw
+        if isinstance(pos,dict): pos=list(pos.values())
+        for p in pos if isinstance(pos,list) else []:
+            if not isinstance(p,dict):continue
+            symbol=str(p.get("symbol") or p.get("instrument") or "")
+            instrument=self.registry.by_symbol(symbol)
+            if not instrument:continue
+            size=D(p.get("size") or p.get("quantity") or p.get("qty"))
+            snap=self.market.get(symbol)
+            mark=D(p.get("markPrice") or p.get("mark_price") or p.get("price") or (snap.last if snap else 0))
+            if size==0 or mark<=0:continue
+            csize=instrument.contract_size if instrument.contract_size>0 else Decimal("1")
+            ctype=instrument.contract_type.lower()
+            quote_value=abs(size)*csize if "inverse" in ctype else abs(size)*csize*mark
+            eur=self._asset_eur(instrument.quote or "USD",quote_value)
+            side=str(p.get("side") or "").lower()
+            sign=Decimal("-1") if side in ("short","sell") else Decimal("1")
+            result["gross_exposure"]+=eur;result["net_exposure"]+=sign*eur
+            result["positions"].append({"symbol":symbol,"base":instrument.base,"side":"short" if sign<0 else "long",
+                                        "quantity":str(size),"notional_eur":str(eur),"mark_price":str(mark),
+                                        "leverage":str(p.get("leverage") or 1),"margin":str(p.get("initialMargin") or 0),
+                                        "product_type":"derivative"})
+        result["details"]={"flex":flex,"position_count":len(result["positions"])}
+        return result
+
     def portfolio_snapshot(self):
         if not (self.c.kraken_api_key and self.c.kraken_api_secret):
             p={"consistent":True,"equity":str(self.c.start_capital_eur),"cash":str(self.c.start_capital_eur),"available_margin":str(self.c.start_capital_eur),"used_margin":"0","gross_exposure":"0","net_exposure":"0","realized_pnl":"0","unrealized_pnl":"0","daily_pnl":"0","daily_loss_pct":"0","drawdown_pct":"0","margin_level":"999999","positions":[]}
             return p
         try:
             balances=self.venue.spot.balance();self._cache_private_balances(balances)
-            equity=sum((self._asset_eur(k,v) for k,v in balances.items()),Decimal("0"))
+            spot_equity=sum((self._asset_eur(k,v) for k,v in balances.items()),Decimal("0"))
+            derivatives=self._futures_snapshot()
+            equity=spot_equity+derivatives["equity"]
             eur_cash=sum((Decimal(str(v)) for k,v in balances.items() if str(k).upper() in ("EUR","ZEUR")),Decimal("0"))
+            margin=self.venue.spot.trade_balance("ZEUR")
+            open_margin=self.venue.spot.open_positions()
             spot_positions=[]
             for k,v in balances.items():
-                value=self._asset_eur(k,v)
-                if value>0 and str(k).upper() not in ("EUR","ZEUR"):spot_positions.append({"asset":str(k),"quantity":str(v),"eur_value":str(value)})
-            margin=self.venue.spot.trade_balance()
-            open_margin=self.venue.spot.open_positions()
+                asset=str(k).upper().replace("XBT","BTC");value=self._asset_eur(asset,v)
+                if value>0 and asset not in ("EUR","ZEUR"):
+                    match=next((x for x in self.registry.instruments.values() if x.product_type=="spot" and x.base.upper()==asset),None)
+                    spot_positions.append({"symbol":match.symbol if match else f"{asset}/EUR","base":asset,"side":"long","quantity":str(v),"eur_value":str(value),"notional_eur":str(value),"product_type":"spot"})
+            if isinstance(open_margin,dict):
+                margin_items=open_margin.get("open") or open_margin.get("positions") or open_margin
+                if isinstance(margin_items,dict):
+                    for mid,p in margin_items.items():
+                        if not isinstance(p,dict):continue
+                        symbol=str(p.get("pair") or p.get("symbol") or "")
+                        inst=self.registry.by_symbol(symbol)
+                        qty=Decimal(str(p.get("vol") or p.get("volume") or p.get("qty") or 0))
+                        px=Decimal(str(p.get("price") or p.get("mark_price") or 0))
+                        if not inst or qty<=0 or px<=0:continue
+                        value=self._asset_eur(inst.quote,qty*px)
+                        raw_side=str(p.get("type") or p.get("side") or "").lower()
+                        side="short" if raw_side in ("sell","short") else "long"
+                        spot_positions.append({"symbol":inst.symbol,"base":inst.base,"side":side,"quantity":str(qty),"eur_value":str(value),"notional_eur":str(value),"product_type":"spot_margin","position_id":str(mid),"margin":True})
             history=self.db.rows("SELECT ts,equity FROM portfolio_snapshots WHERE equity IS NOT NULL ORDER BY ts ASC")
+            gross=sum((Decimal(x["notional_eur"]) for x in spot_positions),Decimal("0"))+derivatives["gross_exposure"]
+            net=sum((Decimal(x["notional_eur"]) for x in spot_positions),Decimal("0"))+derivatives["net_exposure"]
+            available_margin=Decimal(str(margin.get("mf") or eur_cash))+derivatives["available_margin"]
+            used_margin=Decimal(str(margin.get("m") or 0))+derivatives["used_margin"]
+            realized=Decimal(str(margin.get("e") or 0))+derivatives["realized_pnl"]
+            unrealized=Decimal(str(margin.get("n") or 0))+derivatives["unrealized_pnl"]
+            margin_levels=[x for x in (Decimal(str(margin.get("ml") or "999999")),derivatives["margin_level"]) if x>0]
+            margin_level=min(margin_levels) if margin_levels else Decimal("999999")
+            positions=spot_positions+derivatives["positions"]
             peak=max((Decimal(str(x["equity"])) for x in history),default=equity)
             today_start=time.time()-86400
             day_rows=[x for x in history if float(x["ts"])>=today_start]
@@ -130,8 +211,7 @@ class TradingAuthority:
             daily_loss_pct=max(Decimal("0"),(day_base-equity)/day_base*100) if day_base>0 else Decimal("0")
             with self.db.tx() as c:
                 c.execute("INSERT INTO portfolio_snapshots(cycle_id,ts,equity,cash,available_margin,used_margin,gross_exposure,net_exposure,realized_pnl,unrealized_pnl,daily_pnl,drawdown,quality,details_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                          ("",time.time(),str(equity),str(eur_cash),str(margin.get("mf") or eur_cash),str(margin.get("m") or 0),str(sum((Decimal(x["eur_value"]) for x in spot_positions),Decimal("0"))),str(sum((Decimal(x["eur_value"]) for x in spot_positions),Decimal("0"))),
-                           str(margin.get("e") or 0),str(margin.get("n") or 0),str(daily_loss_pct),str(drawdown_pct),"VALID",json.dumps({"balances":list(balances.keys()),"margin_positions":list((open_margin or {}).keys())})))
+                          ("",time.time(),str(equity),str(eur_cash),str(available_margin),str(used_margin),str(gross),str(net),str(realized),str(unrealized),str(-equity*daily_loss_pct/100),str(drawdown_pct),"VALID" if derivatives["consistent"] else "INCONSISTENT",json.dumps({"balances":list(balances.keys()),"margin_positions":list((open_margin or {}).keys()) if isinstance(open_margin,dict) else [],"derivatives":derivatives["details"]},default=str)))
             return {"consistent":True,"equity":str(equity),"cash":str(eur_cash),"available_margin":str(margin.get("mf") or eur_cash),"used_margin":str(margin.get("m") or 0),
                     "gross_exposure":str(sum((Decimal(x["eur_value"]) for x in spot_positions),Decimal("0"))),"net_exposure":str(sum((Decimal(x["eur_value"]) for x in spot_positions),Decimal("0"))),
                     "realized_pnl":str(margin.get("e") or 0),"unrealized_pnl":str(margin.get("n") or 0),"daily_pnl":"0","drawdown_pct":"0","margin_level":str(margin.get("ml") or "999999"),"positions":spot_positions,"margin_positions":open_margin}
@@ -145,11 +225,22 @@ class TradingAuthority:
         for i in instruments:
             s=self.market.get(i.symbol)
             if not s or s.last<=0:continue
-            liquidity=s.last*s.volume
+            quote_value=s.last*s.volume
+            liquidity=self._asset_eur(i.quote,quote_value) if i.quote.upper() not in ("EUR","ZEUR") else quote_value
             if liquidity<self.c.minimum_liquidity_eur:continue
             if s.spread*100>self.c.max_spread_pct:continue
             out.append((i,s))
         return out
+    def _current_notional(self,portfolio,instrument):
+        total=Decimal("0")
+        for p in portfolio.get("positions",[]):
+            same_symbol=p.get("symbol")==instrument.symbol
+            same_base=instrument.product_type=="spot" and str(p.get("base","")).upper()==instrument.base.upper()
+            if not (same_symbol or same_base):continue
+            value=Decimal(str(p.get("notional_eur") or p.get("eur_value") or 0))
+            total += -value if str(p.get("side","")).lower()=="short" else value
+        return total
+
     def _gemini_effect(self,symbol):
         rows=self.db.rows("SELECT direction,impact,confidence FROM gemini_analysis WHERE symbol=? ORDER BY created_at DESC LIMIT 10",(symbol,));effect=Decimal("0")
         for r in rows:
@@ -161,8 +252,12 @@ class TradingAuthority:
         if not self._cycle_lock.acquire(blocking=False):return {"status":"SKIPPED","reason":"CYCLE_ALREADY_RUNNING"}
         cycle=new_id("cycle");self.db.start_cycle(cycle);details={"cycle_id":cycle,"decisions":0,"orders":0,"blocked":0}
         try:
-            self.set_stage(Stage.CYCLE_START,cycle);self.set_stage(Stage.MARKET_DISCOVERY,cycle);eligible=self.registry.eligible()
-            self.set_stage(Stage.MARKET_FILTER,cycle);fast=self._fast_filter(eligible);self.set_stage(Stage.MARKET_SNAPSHOT,cycle)
+            self.set_stage(Stage.CYCLE_START,cycle);self.set_stage(Stage.MARKET_DISCOVERY,cycle)
+            self.registry.sync(self.venue.discover())
+            eligible=self.registry.eligible()
+            self.set_stage(Stage.MARKET_FILTER,cycle)
+            self.set_stage(Stage.MARKET_SNAPSHOT,cycle);self.market.snapshot_all(eligible,cycle_id=cycle)
+            fast=self._fast_filter(eligible)
             self.history.backfill([i for i,_ in fast[:self.c.deep_scan_limit]])
             self.set_stage(Stage.NEWS_ANALYSIS,cycle);news_result=self.news.collect();self.news.annotate([i for i,_ in fast[:self.c.deep_scan_limit]])
             self.set_stage(Stage.GEMINI_ANALYSIS,cycle)
@@ -184,15 +279,30 @@ class TradingAuthority:
                 roundtrip=s.spread*2+(self.c.taker_fee_pct/100)*2+(self.c.max_slippage_pct/100)+(abs(Decimal(str(i.funding)))*Decimal("2") if i.product_type=="derivative" else Decimal("0"))
                 net_edge=sig.expected_return-roundtrip;self.set_stage(Stage.COST_ESTIMATION,cycle);self.set_stage(Stage.EXPECTED_EDGE,cycle)
                 self.set_stage(Stage.PORTFOLIO_TARGET,cycle);lev,_=self.risk.select_leverage(sig,i,portfolio);target,_=self.risk.size(sig,portfolio,lev)
-                action=DecisionAction.OPEN_LONG if sig.direction=="long" else DecisionAction.OPEN_SHORT;side="buy" if sig.direction=="long" else "sell"
+                current_notional=self._current_notional(portfolio,i)
+                opposite=current_notional<0 if sig.direction=="long" else current_notional>0
+                exit_position= current_notional!=0 and (opposite or net_edge<=0)
+                if exit_position:
+                    target=Decimal("0")
+                    lev=Decimal("1")
+                    action=DecisionAction.CLOSE_SHORT if current_notional<0 else DecisionAction.CLOSE_LONG
+                    side="buy" if current_notional<0 else "sell"
+                elif sig.direction=="long":
+                    action=DecisionAction.OPEN_LONG if current_notional==0 else (DecisionAction.INCREASE_LONG if target>current_notional else DecisionAction.REDUCE_LONG if target>0 else DecisionAction.CLOSE_LONG)
+                    side="buy"
+                else:
+                    action=DecisionAction.OPEN_SHORT if current_notional==0 else (DecisionAction.INCREASE_SHORT if abs(target)>abs(current_notional) else DecisionAction.REDUCE_SHORT if target>0 else DecisionAction.CLOSE_SHORT)
+                    side="sell"
                 self.set_stage(Stage.LEVERAGE_SELECTION,cycle);self.set_stage(Stage.MARGIN_CHECK,cycle);self.set_stage(Stage.RISK_CHECK,cycle)
-                blocker=self.risk.check(sig,i,portfolio,target,lev,portfolio.get("positions",[]),self._orders_today())
-                if net_edge*100<self.c.minimum_expected_edge_pct:blocker=Blocker.BLOCKED_EXPECTED_EDGE.value
-                status="BLOCKED" if blocker else "NO_ACTION";d=Decision(cycle,i.symbol,action,side,target,Decimal("0"),target,net_edge,sig.confidence,sig.uncertainty,lev,lev>1,status,blocker or "",config_hash=self.c.hash(),evidence={"regime":reg,"news_effect":str(self.news.effect_for_symbol(i.symbol)),"gemini_effect":str(self._gemini_effect(i.symbol)),"roundtrip_cost":str(roundtrip),"features":f,"news_status":news_result.get("status")})
+                blocker=None if exit_position else self.risk.check(sig,i,portfolio,target,lev,portfolio.get("positions",[]),self._orders_today())
+                if not exit_position and net_edge*100<self.c.minimum_expected_edge_pct:blocker=Blocker.BLOCKED_EXPECTED_EDGE.value
+                status="BLOCKED" if blocker else "NO_ACTION";d=Decision(cycle,i.symbol,action,side,target,current_notional,target-current_notional,net_edge,sig.confidence,sig.uncertainty,lev,lev>1,status,blocker or "",config_hash=self.c.hash(),evidence={"regime":reg,"news_effect":str(self.news.effect_for_symbol(i.symbol)),"gemini_effect":str(self._gemini_effect(i.symbol)),"roundtrip_cost":str(roundtrip),"features":f,"news_status":news_result.get("status")})
                 self.db.save_decision(d);details["decisions"]+=1;self.last_decision=d
                 if blocker:details["blocked"]+=1;self.learning.learn_event(cycle,d.decision_id,{"status":"NO_TRADE","blocker":blocker,"expected_edge":str(net_edge)});continue
-                px=s.ask if side=="buy" else s.bid;volume=target/px if px>0 else Decimal("0")
-                order_type=self.policy.choose(s,net_edge,Decimal("0.5"),Decimal("0.5"));intent=OrderIntent(cycle,d.decision_id,i.symbol,side,volume,order_type,px,lev,lev>1,False,d.strategy_version,d.model_version,d.config_hash)
+                px=s.ask if side=="buy" else s.bid
+                delta_notional=abs(target-current_notional)
+                volume=delta_notional/px if px>0 else Decimal("0")
+                order_type=self.policy.choose(s,net_edge,Decimal("0.5"),Decimal("0.5"));intent=OrderIntent(cycle,d.decision_id,i.symbol,side,volume,order_type,px,lev,lev>1,action in (DecisionAction.REDUCE_LONG,DecisionAction.REDUCE_SHORT,DecisionAction.CLOSE_LONG,DecisionAction.CLOSE_SHORT),d.strategy_version,d.model_version,d.config_hash)
                 intent,normalizer_blocker=self.executor.normalizer.normalize(intent,i,s)
                 if normalizer_blocker:
                     d.status="BLOCKED";d.blocker=normalizer_blocker;self.db.save_decision(d);details["blocked"]+=1
