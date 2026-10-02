@@ -13,6 +13,7 @@ from .risk import RiskEngine
 from .execution import KrakenExecutor,ExecutionPolicy,OrderSpamGuard,PreTrade
 from .learning import Learner
 from .sensors import SensorPublisher
+from .history import HistoryEngine
 
 class CircuitBreaker:
     def __init__(self,db):self.db=db;self.active=False;self.reason=""
@@ -29,7 +30,7 @@ class TradingAuthority:
         self.venue=venue or KrakenVenue(self.c.kraken_api_key,self.c.kraken_api_secret)
         self.registry=InstrumentRegistry(self.db);self.market=MarketData(self.db,self.venue,self.c.data_freshness_seconds)
         self.news=NewsEngine(self.db,enabled=self.c.news_enabled);self.gemini=GeminiAnalyzer(self.db,self.c.gemini_api_key,self.c.gemini_model,self.c.gemini_enabled)
-        self.features=FeatureEngine(self.venue,self.c.history_lookback);self.regimes=RegimeEngine();self.ensemble=Ensemble()
+        self.features=FeatureEngine(self.venue,self.c.history_lookback,self.db);self.history=HistoryEngine(self.db,self.venue,self.c.history_lookback);self.regimes=RegimeEngine();self.ensemble=Ensemble()
         self.risk=RiskEngine(self.c);self.executor=KrakenExecutor(self.db,self.venue,self.c);self.policy=ExecutionPolicy(self.c)
         self.guard=OrderSpamGuard(self.db);self.pretrade=PreTrade(self.db,self.c);self.learning=Learner(self.db,self.c);self.sensors=SensorPublisher()
         self.breaker=CircuitBreaker(self.db);self.stage=Stage.BOOT;self.health={};self.last_decision=None;self._cycle_lock=threading.Lock()
@@ -60,13 +61,16 @@ class TradingAuthority:
             try:market_ok=self.market.snapshot_all(eligible,cycle_id="BOOT")>0
             except Exception as exc:self.db.error("API_ERROR",self.stage.value,message=type(exc).__name__)
         self.health["market_ok"]=market_ok
+        self.set_stage(Stage.HISTORY_BACKFILL)
+        backfill=self.history.backfill(eligible[:min(len(eligible),self.c.deep_scan_limit)]) if market_ok else {"saved":0,"errors":1}
+        self.health["history_ok"]=bool(backfill.get("saved") or not backfill.get("errors"))
         self.set_stage(Stage.PRIVATE_DATA_CONNECT);self.health["private_data_ok"]=private_ok
         self.set_stage(Stage.ACCOUNT_SYNC)
         portfolio=self.portfolio_snapshot()
         self.set_stage(Stage.PORTFOLIO_SYNC)
         if self.c.trading_enabled and not private_ok:
             self.breaker.trip(Blocker.BLOCKED_PRIVATE_DATA.value)
-        self.set_stage(Stage.HISTORY_BACKFILL);self.set_stage(Stage.MODEL_INITIALIZATION);self.ensure_models()
+        self.set_stage(Stage.MODEL_INITIALIZATION);self.ensure_models()
         self.set_stage(Stage.HEALTH_CHECK)
         ready=bool(public_ok and bool(instruments) and market_ok and portfolio.get("consistent",False) and (not self.c.trading_enabled or private_ok) and not self.breaker.active)
         self.health["system_ready"]=ready;self.stage=Stage.READY if ready else Stage.HEALTH_CHECK;self.publish_sensors(portfolio)
@@ -132,7 +136,8 @@ class TradingAuthority:
         try:
             self.set_stage(Stage.CYCLE_START,cycle);self.set_stage(Stage.MARKET_DISCOVERY,cycle);eligible=self.registry.eligible()
             self.set_stage(Stage.MARKET_FILTER,cycle);fast=self._fast_filter(eligible);self.set_stage(Stage.MARKET_SNAPSHOT,cycle)
-            self.set_stage(Stage.NEWS_ANALYSIS,cycle);news_result=self.news.collect()
+            self.history.backfill([i for i,_ in fast[:self.c.deep_scan_limit]])
+            self.set_stage(Stage.NEWS_ANALYSIS,cycle);news_result=self.news.collect();self.news.annotate([i for i,_ in fast[:self.c.deep_scan_limit]])
             self.set_stage(Stage.GEMINI_ANALYSIS,cycle)
             for n in self.news.recent(10):
                 value=self.gemini.analyze(n)
