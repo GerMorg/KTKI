@@ -48,12 +48,25 @@ class TradingAuthority:
         if self.c.kraken_api_key and self.c.kraken_api_secret:
             try:
                 info=self.venue.auth_info()
-                private_ok=True
+                permissions={str(x).lower() for x in (info.get("permissions") or [])}
+                required={"query-funds","query-open-trades","query-closed-trades","create-ws-token"}
+                if self.c.live_enabled: required.update({"modify-trades","close-trades"})
+                missing=sorted(required-permissions)
+                private_ok=not missing
+                if missing:
+                    self.db.event("error","KRAKEN_PERMISSION_MISSING",self.stage.value,message="missing spot permissions",details={"missing":missing})
                 if self.c.live_enabled:
-                    permissions=json.dumps(info,sort_keys=True).lower()
-                    if "permission" in permissions and not any(x in permissions for x in ("modify","trade","order")):
-                        private_ok=False
-                        self.db.event("error","KRAKEN_PERMISSION_MISSING",self.stage.value,message="live order permission not detected")
+                    try:
+                        fut=self.venue.futures.check_key()
+                        general=str(((fut.get("permissions") or {}).get("general") or "")).upper()
+                        if general and general!="FULL_ACCESS":
+                            self.db.event("error","KRAKEN_PERMISSION_MISSING",self.stage.value,message="futures key is not FULL_ACCESS")
+                            self.health["derivatives_tradeable"]=False
+                        else:self.health["derivatives_tradeable"]=True
+                    except Exception as exc:
+                        self.health["derivatives_tradeable"]=False
+                        self.db.event("warning","DERIVATIVES_AUTH_UNAVAILABLE",self.stage.value,message=type(exc).__name__)
+                else:self.health["derivatives_tradeable"]=True
             except KrakenAPIError as exc:self.db.error(getattr(exc,"code","AUTH_ERROR"),self.stage.value,message=type(exc).__name__)
             except Exception as exc:self.db.error("AUTH_ERROR",self.stage.value,message=type(exc).__name__)
         self.health.update(public_ok=public_ok,private_ok=private_ok)
