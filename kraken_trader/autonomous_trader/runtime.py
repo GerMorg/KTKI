@@ -231,6 +231,26 @@ class TradingAuthority:
             if s.spread*100>self.c.max_spread_pct:continue
             out.append((i,s))
         return out
+    def _sync_exchange_fills(self):
+        if not (self.c.kraken_api_key and self.c.kraken_api_secret):return 0
+        try:
+            raw=self.venue.spot.trades_history() or {}
+            trades=raw.get("trades") or {}
+            saved=0
+            for trade_id,t in trades.items():
+                if not isinstance(t,dict):continue
+                with self.db.tx() as con:
+                    before=con.total_changes
+                    con.execute("INSERT OR IGNORE INTO fills(client_order_id,kraken_trade_id,ts,price,volume,fee,fee_currency,side,details_json) VALUES(?,?,?,?,?,?,?,?,?)",
+                                (str(t.get("cl_ord_id") or ""),str(trade_id),float(t.get("time") or time.time()),
+                                 str(t.get("price") or "0"),str(t.get("vol") or "0"),str(t.get("fee") or "0"),str(t.get("fee_currency") or ""),
+                                 str(t.get("type") or ""),json.dumps(t,sort_keys=True,default=str)))
+                    saved+=con.total_changes-before
+            if saved:self.db.event("info","FILL_HISTORY_SYNC","OUTCOME_TRACKING",message=f"fills={saved}")
+            return saved
+        except Exception as exc:
+            self.db.error("PRIVATE_DATA_STALE","OUTCOME_TRACKING",message=type(exc).__name__);return 0
+
     def _current_notional(self,portfolio,instrument):
         total=Decimal("0")
         for p in portfolio.get("positions",[]):
