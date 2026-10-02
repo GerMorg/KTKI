@@ -171,6 +171,8 @@ class TradingAuthority:
             derivatives=self._futures_snapshot()
             equity=spot_equity+derivatives["equity"]
             eur_cash=sum((Decimal(str(v)) for k,v in balances.items() if str(k).upper() in ("EUR","ZEUR")),Decimal("0"))
+            margin=self.venue.spot.trade_balance("ZEUR")
+            open_margin=self.venue.spot.open_positions()
             spot_positions=[]
             for k,v in balances.items():
                 asset=str(k).upper().replace("XBT","BTC");value=self._asset_eur(asset,v)
@@ -191,8 +193,6 @@ class TradingAuthority:
                         raw_side=str(p.get("type") or p.get("side") or "").lower()
                         side="short" if raw_side in ("sell","short") else "long"
                         spot_positions.append({"symbol":inst.symbol,"base":inst.base,"side":side,"quantity":str(qty),"eur_value":str(value),"notional_eur":str(value),"product_type":"spot_margin","position_id":str(mid),"margin":True})
-            margin=self.venue.spot.trade_balance()
-            open_margin=self.venue.spot.open_positions()
             history=self.db.rows("SELECT ts,equity FROM portfolio_snapshots WHERE equity IS NOT NULL ORDER BY ts ASC")
             gross=sum((Decimal(x["notional_eur"]) for x in spot_positions),Decimal("0"))+derivatives["gross_exposure"]
             net=sum((Decimal(x["notional_eur"]) for x in spot_positions),Decimal("0"))+derivatives["net_exposure"]
