@@ -89,7 +89,7 @@ class OrderIntent:
     order_type: str; price: Decimal | None; leverage: Decimal; margin: bool; reduce_only: bool
     strategy_version: str; model_version: str; config_hash: str
     intent_id: str = field(default_factory=lambda: new_id("intent"))
-    client_order_id: str = field(default_factory=lambda: new_id("client"))
+    client_order_id: str = field(default_factory=lambda: str(uuid.uuid4()))
 
 @dataclass
 class MarketSnapshot:
