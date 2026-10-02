@@ -16,7 +16,7 @@ class Config:
     max_position_risk_pct:Decimal=Decimal("2"); max_gross_exposure_pct:Decimal=Decimal("100"); max_net_exposure_pct:Decimal=Decimal("75")
     max_margin_pct:Decimal=Decimal("25"); max_leverage:Decimal=Decimal("5"); max_positions:int=10
     daily_loss_limit_pct:Decimal=Decimal("5"); max_drawdown_pct:Decimal=Decimal("15"); cash_reserve_pct:Decimal=Decimal("20")
-    max_slippage_pct:Decimal=Decimal("0.75"); order_timeout_seconds:int=10; max_reprices:int=2; max_orders_per_day:int=20
+    max_slippage_pct:Decimal=Decimal("0.75"); order_timeout_seconds:int=10; max_reprices:int=2; max_orders_per_day:int=20; allow_market_orders:bool=False; taker_fee_pct:Decimal=Decimal("0.40"); maker_fee_pct:Decimal=Decimal("0.25")
     learning_enabled:bool=True; auto_calibration:bool=True; auto_promotion:bool=False
     news_horizon_hours:tuple[int,...]=(1,24,168); deep_scan_limit:int=50; history_lookback:int=200; start_capital_eur:Decimal=Decimal("50")
 
@@ -56,7 +56,7 @@ class Config:
             cash_reserve_pct=D("cash_reserve_pct",20,ABSOLUTE_CAPS["cash_reserve_pct_min"],95),
             max_slippage_pct=D("max_slippage_pct",0.75,0,ABSOLUTE_CAPS["max_slippage_pct"]),
             order_timeout_seconds=i("order_timeout_seconds",10,2,120),max_reprices=i("max_reprices",2,0,10),
-            max_orders_per_day=i("max_orders_per_day",20,1,ABSOLUTE_CAPS["max_orders_per_day"]),
+            max_orders_per_day=i("max_orders_per_day",20,1,ABSOLUTE_CAPS["max_orders_per_day"]),allow_market_orders=b("allow_market_orders",False),taker_fee_pct=D("taker_fee_pct",0.40,0,2),maker_fee_pct=D("maker_fee_pct",0.25,0,2),
             learning_enabled=b("learning_enabled",True),auto_calibration=b("auto_calibration",True),auto_promotion=b("auto_promotion",False),
             deep_scan_limit=i("deep_scan_limit",50,5,200),history_lookback=i("history_lookback",200,50,2000),
             start_capital_eur=D("start_capital_eur",50,0,100000000))
