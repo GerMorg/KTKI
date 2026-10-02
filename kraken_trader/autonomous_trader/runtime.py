@@ -167,15 +167,28 @@ class TradingAuthority:
             return p
         try:
             balances=self.venue.spot.balance();self._cache_private_balances(balances)
-            equity=sum((self._asset_eur(k,v) for k,v in balances.items()),Decimal("0"))
+            spot_equity=sum((self._asset_eur(k,v) for k,v in balances.items()),Decimal("0"))
+            derivatives=self._futures_snapshot()
+            equity=spot_equity+derivatives["equity"]
             eur_cash=sum((Decimal(str(v)) for k,v in balances.items() if str(k).upper() in ("EUR","ZEUR")),Decimal("0"))
             spot_positions=[]
             for k,v in balances.items():
-                value=self._asset_eur(k,v)
-                if value>0 and str(k).upper() not in ("EUR","ZEUR"):spot_positions.append({"asset":str(k),"quantity":str(v),"eur_value":str(value)})
+                asset=str(k).upper().replace("XBT","BTC");value=self._asset_eur(asset,v)
+                if value>0 and asset not in ("EUR","ZEUR"):
+                    match=next((x for x in self.registry.instruments.values() if x.product_type=="spot" and x.base.upper()==asset),None)
+                    spot_positions.append({"symbol":match.symbol if match else f"{asset}/EUR","base":asset,"side":"long","quantity":str(v),"eur_value":str(value),"notional_eur":str(value),"product_type":"spot"})
             margin=self.venue.spot.trade_balance()
             open_margin=self.venue.spot.open_positions()
             history=self.db.rows("SELECT ts,equity FROM portfolio_snapshots WHERE equity IS NOT NULL ORDER BY ts ASC")
+            gross=sum((Decimal(x["notional_eur"]) for x in spot_positions),Decimal("0"))+derivatives["gross_exposure"]
+            net=sum((Decimal(x["notional_eur"]) for x in spot_positions),Decimal("0"))+derivatives["net_exposure"]
+            available_margin=Decimal(str(margin.get("mf") or eur_cash))+derivatives["available_margin"]
+            used_margin=Decimal(str(margin.get("m") or 0))+derivatives["used_margin"]
+            realized=Decimal(str(margin.get("e") or 0))+derivatives["realized_pnl"]
+            unrealized=Decimal(str(margin.get("n") or 0))+derivatives["unrealized_pnl"]
+            margin_levels=[x for x in (Decimal(str(margin.get("ml") or "999999")),derivatives["margin_level"]) if x>0]
+            margin_level=min(margin_levels) if margin_levels else Decimal("999999")
+            positions=spot_positions+derivatives["positions"]
             peak=max((Decimal(str(x["equity"])) for x in history),default=equity)
             today_start=time.time()-86400
             day_rows=[x for x in history if float(x["ts"])>=today_start]
@@ -184,8 +197,7 @@ class TradingAuthority:
             daily_loss_pct=max(Decimal("0"),(day_base-equity)/day_base*100) if day_base>0 else Decimal("0")
             with self.db.tx() as c:
                 c.execute("INSERT INTO portfolio_snapshots(cycle_id,ts,equity,cash,available_margin,used_margin,gross_exposure,net_exposure,realized_pnl,unrealized_pnl,daily_pnl,drawdown,quality,details_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                          ("",time.time(),str(equity),str(eur_cash),str(margin.get("mf") or eur_cash),str(margin.get("m") or 0),str(sum((Decimal(x["eur_value"]) for x in spot_positions),Decimal("0"))),str(sum((Decimal(x["eur_value"]) for x in spot_positions),Decimal("0"))),
-                           str(margin.get("e") or 0),str(margin.get("n") or 0),str(daily_loss_pct),str(drawdown_pct),"VALID",json.dumps({"balances":list(balances.keys()),"margin_positions":list((open_margin or {}).keys())})))
+                          ("",time.time(),str(equity),str(eur_cash),str(available_margin),str(used_margin),str(gross),str(net),str(realized),str(unrealized),str(-equity*daily_loss_pct/100),str(drawdown_pct),"VALID" if derivatives["consistent"] else "INCONSISTENT",json.dumps({"balances":list(balances.keys()),"margin_positions":list((open_margin or {}).keys()) if isinstance(open_margin,dict) else [],"derivatives":derivatives["details"]},default=str)))
             return {"consistent":True,"equity":str(equity),"cash":str(eur_cash),"available_margin":str(margin.get("mf") or eur_cash),"used_margin":str(margin.get("m") or 0),
                     "gross_exposure":str(sum((Decimal(x["eur_value"]) for x in spot_positions),Decimal("0"))),"net_exposure":str(sum((Decimal(x["eur_value"]) for x in spot_positions),Decimal("0"))),
                     "realized_pnl":str(margin.get("e") or 0),"unrealized_pnl":str(margin.get("n") or 0),"daily_pnl":"0","drawdown_pct":"0","margin_level":str(margin.get("ml") or "999999"),"positions":spot_positions,"margin_positions":open_margin}
