@@ -29,7 +29,8 @@ class FeatureEngine:
             out["trend"]=str(trend);out["ema_slope"]=str(trend);out["sma_slope"]=str(trend)
             rets=[float(closes[j]/closes[j-1]-1) for j in range(1,len(closes))];mu=sum(rets)/len(rets);var=sum((x-mu)**2 for x in rets)/max(1,len(rets)-1)
             out["realized_volatility"]=str(Decimal(str(math.sqrt(var)*math.sqrt(24))));down=[x for x in rets if x<0]
-            out["downside_volatility"]=str(Decimal(str(math.sqrt(sum(x*x for x in down)/max(1,len(down)))))
+            down_var=sum(x*x for x in down)/max(1,len(down))
+            out["downside_volatility"]=str(Decimal(str(math.sqrt(down_var))))
             trs=[]
             for x in rows[-20:]:
                 high=val(x,"high",2); low=val(x,"low",3)
