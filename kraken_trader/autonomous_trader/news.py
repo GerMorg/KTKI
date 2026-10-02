@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
-import hashlib,re,time,urllib.request,xml.etree.ElementTree as ET
+import hashlib,re,time,urllib.request,xml.etree.ElementTree as ET,json
+from email.utils import parsedate_to_datetime
 
 SOURCES=(("ECB","https://www.ecb.europa.eu/rss/press.html",1.0),("FED","https://www.federalreserve.gov/feeds/press_all.xml",1.0),("Kraken Blog","https://blog.kraken.com/feed",0.85))
 BULL={"approval","approved","inflow","adoption","growth","partnership","launch","surge","beat","easing","rate cut","positive"}
@@ -43,15 +44,33 @@ class NewsEngine:
                     title=pick(("title","{http://www.w3.org/2005/Atom}title"));urlv=pick(("link","{http://www.w3.org/2005/Atom}link"));summary=pick(("description","summary","{http://www.w3.org/2005/Atom}summary"))
                     if not title:continue
                     entity,event,direction,impact=classify(title,summary);nid=hashlib.sha256((source+"|"+title+"|"+urlv).encode()).hexdigest()
+                    try: published=parsedate_to_datetime(pub).timestamp() if pub else None
+                    except Exception: published=None
                     with self.db.tx() as c:
                         before=c.total_changes
                         c.execute("INSERT OR IGNORE INTO news_events(id,source,title,url,published_at,observed_at,entity_json,direction,impact,novelty,credibility,horizon,market_confirmation,outcome_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                                  (nid,source,title,urlv,None,time.time(),__import__("json").dumps({"entity":entity,"event":event}),direction,str(impact),"1.0",str(cred),"24h","0.0","{}"))
+                                  (nid,source,title,urlv,published,time.time(),json.dumps({"entity":entity,"event":event}),direction,str(impact),"1.0",str(cred),"24h","0.0","{}"))
                         saved+=c.total_changes-before
             except Exception as exc:errors.append({"source":source,"error":type(exc).__name__})
         self.db.event("warning" if errors else "info","NEWS_FETCH","NEWS_ANALYSIS",message=f"saved={saved}",details={"errors":errors})
         return {"status":"READY" if not errors else ("DEGRADED" if saved else "ERROR"),"saved":saved,"errors":errors}
     def recent(self,limit=200): return self.db.rows("SELECT * FROM news_events ORDER BY observed_at DESC LIMIT ?",(int(limit),))
+    def annotate(self,markets):
+        rows=self.recent(500);saved=0
+        for market in markets:
+            symbol=market.symbol;base=market.base.upper()
+            for n in rows:
+                title=str(n.get("title","")).lower()
+                direct=base.lower() in str(n.get("entity_json","")).lower() or re.search(r"\\b"+re.escape(base.lower())+r"\\b",title)
+                category=not direct and any(x in title for x in ("bitcoin","crypto","ethereum","solana","market","rates","inflation"))
+                if not direct and not category:continue
+                impact=float(n.get("impact") or 0)*float(n.get("credibility") or 0.5)
+                with self.db.tx() as con:
+                    con.execute("INSERT INTO news_analysis(news_id,symbol,direction,impact,confidence,model_version,evidence_json,created_at) VALUES(?,?,?,?,?,?,?,?)",
+                                (n["id"],symbol,n.get("direction","neutral"),str(impact),str(min(1.0,abs(impact))),"news-rules-v1",
+                                 json.dumps({"direct":bool(direct),"category":bool(category),"source":n.get("source"),"novelty":n.get("novelty"),"horizon":n.get("horizon")},sort_keys=True),time.time()))
+                saved+=1
+        self.db.event("info","NEWS_ANALYSIS","NEWS_ANALYSIS",message=f"market_links={saved}");return saved
     def effect_for_symbol(self,symbol):
         base=str(symbol).split("/")[0].upper();rows=self.recent(500);effect=0.0
         for r in rows:
