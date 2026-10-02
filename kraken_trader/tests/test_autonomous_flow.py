@@ -26,6 +26,7 @@ class FakeSpot:
     def balance(self): return {"ZEUR":"50"}
     def trade_balance(self,*_): return {"e":"50","mf":"50","m":"0","n":"0","ml":"999999"}
     def open_positions(self): return {}
+    def trades_history(self): return {"trades":{"T1":{"ordertxid":"O1","pair":"XXBTZEUR","time":1700000000,"type":"buy","ordertype":"limit","price":"90000","cost":"9","fee":"0.02","vol":"0.0001"}}}
     def open_orders(self): return {"open":{}}
     def closed_orders(self): return {"closed":{}}
     def query_orders(self,*_): return {}
@@ -104,3 +105,13 @@ def test_position_reduction_order_side_is_opposite():
             return a,side
     assert R.action(10,5,"long")== (DecisionAction.REDUCE_LONG,"sell")
     assert R.action(-10,5,"short")== (DecisionAction.REDUCE_SHORT,"buy")
+
+
+def test_exchange_trade_history_is_materialized_as_unique_fill():
+    with tempfile.TemporaryDirectory() as d:
+        c=Config(kraken_api_key="x",kraken_api_secret="y",trading_enabled=False,live_enabled=False,kill_switch=True,news_enabled=False,gemini_enabled=False,start_capital_eur=Decimal("50"))
+        db=Database(str(Path(d)/"x.sqlite3"))
+        rt=TradingAuthority(c,db,FakeVenue())
+        assert rt._sync_exchange_fills()==1
+        assert rt._sync_exchange_fills()==0
+        assert db.one("SELECT COUNT(*) AS n FROM fills")["n"]==1
