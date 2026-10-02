@@ -33,7 +33,7 @@ class TradingAuthority:
         self.features=FeatureEngine(self.venue,self.c.history_lookback,self.db);self.history=HistoryEngine(self.db,self.venue,self.c.history_lookback);self.regimes=RegimeEngine();self.ensemble=Ensemble()
         self.risk=RiskEngine(self.c);self.executor=KrakenExecutor(self.db,self.venue,self.c);self.policy=ExecutionPolicy(self.c)
         self.guard=OrderSpamGuard(self.db);self.pretrade=PreTrade(self.db,self.c);self.learning=Learner(self.db,self.c);self.sensors=SensorPublisher()
-        self.breaker=CircuitBreaker(self.db);self.stage=Stage.BOOT;self.health={};self.last_decision=None;self._cycle_lock=threading.Lock()
+        self.breaker=CircuitBreaker(self.db);self.stage=Stage.BOOT;self.health={};self.last_decision=None;self.regime_memory={};self._cycle_lock=threading.Lock()
     def set_stage(self,s,cycle_id=""):
         self.stage=s;self.db.event("info",s.value,s.value,cycle_id=cycle_id,message=s.value)
     def startup(self):
@@ -176,7 +176,7 @@ class TradingAuthority:
                                 (n["id"],i.symbol,str(value.get("event","")),value["direction"],str(value["impact"]),str(value["confidence"]),str(value["time_horizon"]),str(value["novelty"]),str(value["market_confirmation"]),json.dumps(value.get("risk_flags",[])),self.c.gemini_model,"VALID",json.dumps(value,sort_keys=True),time.time()))
             portfolio=self.portfolio_snapshot();self.set_stage(Stage.FEATURE_CALCULATION,cycle);signals=[]
             for i,s in fast:
-                f=self.features.features(i,s);reg=self.regimes.detect(f);news_effect=Decimal(str(self.news.effect_for_symbol(i.symbol)));gem_effect=self._gemini_effect(i.symbol)
+                f=self.features.features(i,s);reg=self.regimes.detect(f,self.regime_memory.get(i.symbol,"UNKNOWN"));self.regime_memory[i.symbol]=reg;news_effect=Decimal(str(self.news.effect_for_symbol(i.symbol)));gem_effect=self._gemini_effect(i.symbol)
                 sig=self.ensemble.signal(i,f,reg,news_effect,gem_effect);signals.append((i,s,f,reg,sig))
             self.set_stage(Stage.REGIME_DETECTION,cycle);self.set_stage(Stage.SIGNAL_EVALUATION,cycle)
             for i,s,f,reg,sig in signals[:self.c.deep_scan_limit]:
