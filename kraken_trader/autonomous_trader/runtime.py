@@ -167,8 +167,12 @@ class TradingAuthority:
         if not self._cycle_lock.acquire(blocking=False):return {"status":"SKIPPED","reason":"CYCLE_ALREADY_RUNNING"}
         cycle=new_id("cycle");self.db.start_cycle(cycle);details={"cycle_id":cycle,"decisions":0,"orders":0,"blocked":0}
         try:
-            self.set_stage(Stage.CYCLE_START,cycle);self.set_stage(Stage.MARKET_DISCOVERY,cycle);eligible=self.registry.eligible()
-            self.set_stage(Stage.MARKET_FILTER,cycle);fast=self._fast_filter(eligible);self.set_stage(Stage.MARKET_SNAPSHOT,cycle)
+            self.set_stage(Stage.CYCLE_START,cycle);self.set_stage(Stage.MARKET_DISCOVERY,cycle)
+            self.registry.sync(self.venue.discover())
+            eligible=self.registry.eligible()
+            self.set_stage(Stage.MARKET_FILTER,cycle)
+            self.set_stage(Stage.MARKET_SNAPSHOT,cycle);self.market.snapshot_all(eligible,cycle_id=cycle)
+            fast=self._fast_filter(eligible)
             self.history.backfill([i for i,_ in fast[:self.c.deep_scan_limit]])
             self.set_stage(Stage.NEWS_ANALYSIS,cycle);news_result=self.news.collect();self.news.annotate([i for i,_ in fast[:self.c.deep_scan_limit]])
             self.set_stage(Stage.GEMINI_ANALYSIS,cycle)
