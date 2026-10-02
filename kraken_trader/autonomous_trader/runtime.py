@@ -104,8 +104,13 @@ class TradingAuthority:
         if a in ("EUR","ZEUR"):return amt
         symbol=f"{a}/EUR";snap=self.market.get(symbol)
         if snap:return amt*snap.last
-        symbol=f"{a}/USD";snap=self.market.get(symbol);fx=self.market.get("EUR/USD")
-        if snap and fx and fx.last>0:return amt*snap.last/fx.last
+        symbol=f"{a}/USD";snap=self.market.get(symbol)
+        if snap:
+            fx=self.market.get("EUR/USD")
+            if fx and fx.last>0:return amt*snap.last/fx.last
+        for pair in ("USD/EUR","USDT/EUR","USDC/EUR"):
+            fx=self.market.get(pair)
+            if fx and fx.last>0 and a in ("USD","USDT","USDC"):return amt*fx.last
         return Decimal("0")
     def portfolio_snapshot(self):
         if not (self.c.kraken_api_key and self.c.kraken_api_secret):
@@ -145,7 +150,8 @@ class TradingAuthority:
         for i in instruments:
             s=self.market.get(i.symbol)
             if not s or s.last<=0:continue
-            liquidity=s.last*s.volume
+            quote_value=s.last*s.volume
+            liquidity=self._asset_eur(i.quote,quote_value) if i.quote.upper() not in ("EUR","ZEUR") else quote_value
             if liquidity<self.c.minimum_liquidity_eur:continue
             if s.spread*100>self.c.max_spread_pct:continue
             out.append((i,s))
