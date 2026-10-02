@@ -3,6 +3,7 @@ from decimal import Decimal
 import time
 from .models import OrderIntent,OrderState,Blocker,ErrorCode,Instrument,MarketSnapshot
 class ExecutionPolicy:
+    def __init__(self,config=None): self.config=config
     def choose(self,snapshot,edge,urgency,fill_probability):
         spread=snapshot.spread
         if spread<=Decimal("0.0008") and edge>spread*3:return "post_only"
@@ -78,7 +79,8 @@ class PreTrade:
             ("live_enabled",self.c.live_enabled,self.c.live_enabled,True),
             ("market_data",snapshot is not None,"fresh",True),
             ("portfolio_consistent",bool(portfolio.get("consistent",False)),portfolio.get("consistent"),True),
-            ("orders_today",orders_today<self.c.max_orders_per_day,orders_today,self.c.max_orders_per_day)]
+            ("orders_today",orders_today<self.c.max_orders_per_day,orders_today,self.c.max_orders_per_day),
+            ("market_order_policy",intent.order_type!="market" or self.c.allow_market_orders,intent.order_type,self.c.allow_market_orders)]
         for name,ok,actual,required in checks:self.db.save_check(intent.decision_id,name,ok,actual,required)
         failed=next((name for name,ok,_,_ in checks if not ok),None)
         return (True,"") if not failed else (False,Blocker.BLOCKED_RECONCILIATION.value if failed=="portfolio_consistent" else Blocker.BLOCKED_RISK.value)
