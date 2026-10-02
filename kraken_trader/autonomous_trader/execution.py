@@ -83,4 +83,8 @@ class PreTrade:
             ("market_order_policy",intent.order_type!="market" or self.c.allow_market_orders,intent.order_type,self.c.allow_market_orders)]
         for name,ok,actual,required in checks:self.db.save_check(intent.decision_id,name,ok,actual,required)
         failed=next((name for name,ok,_,_ in checks if not ok),None)
-        return (True,"") if not failed else (False,Blocker.BLOCKED_RECONCILIATION.value if failed=="portfolio_consistent" else Blocker.BLOCKED_RISK.value)
+        if failed=="portfolio_consistent": return False,Blocker.BLOCKED_RECONCILIATION.value
+        if failed=="market_data": return False,Blocker.BLOCKED_MARKET_DATA.value
+        if failed=="orders_today": return False,Blocker.BLOCKED_ORDER_LIMIT.value
+        if failed=="market_order_policy": return False,Blocker.BLOCKED_STRATEGY.value
+        return (True,"") if not failed else (False,Blocker.BLOCKED_RISK.value)
