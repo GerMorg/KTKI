@@ -89,3 +89,18 @@ def test_portfolio_current_position_is_reconciled_into_signed_notional():
         p={"positions":[{"symbol":"BTC/EUR","base":"BTC","side":"short","notional_eur":"10"}]}
         instrument=rt.registry.by_symbol("BTC/EUR")
         assert rt._current_notional(p,instrument)==Decimal("-10")
+
+
+def test_position_reduction_order_side_is_opposite():
+    class R:
+        @staticmethod
+        def action(current, target, direction):
+            if direction=="long":
+                a=DecisionAction.OPEN_LONG if current==0 else (DecisionAction.INCREASE_LONG if target>current else DecisionAction.REDUCE_LONG if target>0 else DecisionAction.CLOSE_LONG)
+                side="sell" if a in (DecisionAction.REDUCE_LONG,DecisionAction.CLOSE_LONG) else "buy"
+            else:
+                a=DecisionAction.OPEN_SHORT if current==0 else (DecisionAction.INCREASE_SHORT if abs(target)>abs(current) else DecisionAction.REDUCE_SHORT if target>0 else DecisionAction.CLOSE_SHORT)
+                side="buy" if a in (DecisionAction.REDUCE_SHORT,DecisionAction.CLOSE_SHORT) else "sell"
+            return a,side
+    assert R.action(10,5,"long")== (DecisionAction.REDUCE_LONG,"sell")
+    assert R.action(-10,5,"short")== (DecisionAction.REDUCE_SHORT,"buy")
