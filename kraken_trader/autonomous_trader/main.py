@@ -1,2 +1,7 @@
 from .runtime import Runtime
-raise SystemExit(Runtime().run())
+
+def main():
+    return Runtime().run()
+
+if __name__=="__main__":
+    raise SystemExit(main())
