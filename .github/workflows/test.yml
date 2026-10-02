@@ -9,6 +9,7 @@ on:
       - 'fix/**'
       - 'v[0-9]*'
       - 'v*-*'
+      - 'completion/**'
   pull_request:
     branches: [main]
 

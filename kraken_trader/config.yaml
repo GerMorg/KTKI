@@ -9,6 +9,7 @@ startup: application
 boot: auto
 init: false
 ingress: false
+homeassistant_api: true
 
 # Home Assistant ist die operative Konfigurationsautorität.
 # Der Trading-Core besitzt unveränderliche Sicherheitsobergrenzen im Code.

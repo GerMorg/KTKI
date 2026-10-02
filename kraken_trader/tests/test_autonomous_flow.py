@@ -26,6 +26,7 @@ class FakeSpot:
     def balance(self): return {"ZEUR":"50"}
     def trade_balance(self,*_): return {"e":"50","mf":"50","m":"0","n":"0","ml":"999999"}
     def open_positions(self): return {}
+    def trades_history(self): return {"trades":{"T1":{"ordertxid":"O1","pair":"XXBTZEUR","time":1700000000,"type":"buy","ordertype":"limit","price":"90000","cost":"9","fee":"0.02","vol":"0.0001"}}}
     def open_orders(self): return {"open":{}}
     def closed_orders(self): return {"closed":{}}
     def query_orders(self,*_): return {}
@@ -89,3 +90,28 @@ def test_portfolio_current_position_is_reconciled_into_signed_notional():
         p={"positions":[{"symbol":"BTC/EUR","base":"BTC","side":"short","notional_eur":"10"}]}
         instrument=rt.registry.by_symbol("BTC/EUR")
         assert rt._current_notional(p,instrument)==Decimal("-10")
+
+
+def test_position_reduction_order_side_is_opposite():
+    class R:
+        @staticmethod
+        def action(current, target, direction):
+            if direction=="long":
+                a=DecisionAction.OPEN_LONG if current==0 else (DecisionAction.INCREASE_LONG if target>current else DecisionAction.REDUCE_LONG if target>0 else DecisionAction.CLOSE_LONG)
+                side="sell" if a in (DecisionAction.REDUCE_LONG,DecisionAction.CLOSE_LONG) else "buy"
+            else:
+                a=DecisionAction.OPEN_SHORT if current==0 else (DecisionAction.INCREASE_SHORT if abs(target)>abs(current) else DecisionAction.REDUCE_SHORT if target>0 else DecisionAction.CLOSE_SHORT)
+                side="buy" if a in (DecisionAction.REDUCE_SHORT,DecisionAction.CLOSE_SHORT) else "sell"
+            return a,side
+    assert R.action(10,5,"long")== (DecisionAction.REDUCE_LONG,"sell")
+    assert R.action(-10,5,"short")== (DecisionAction.REDUCE_SHORT,"buy")
+
+
+def test_exchange_trade_history_is_materialized_as_unique_fill():
+    with tempfile.TemporaryDirectory() as d:
+        c=Config(kraken_api_key="x",kraken_api_secret="y",trading_enabled=False,live_enabled=False,kill_switch=True,news_enabled=False,gemini_enabled=False,start_capital_eur=Decimal("50"))
+        db=Database(str(Path(d)/"x.sqlite3"))
+        rt=TradingAuthority(c,db,FakeVenue())
+        assert rt._sync_exchange_fills()==1
+        assert rt._sync_exchange_fills()==0
+        assert db.one("SELECT COUNT(*) AS n FROM fills")["n"]==1

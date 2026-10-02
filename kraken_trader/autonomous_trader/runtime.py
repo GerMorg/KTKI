@@ -231,6 +231,26 @@ class TradingAuthority:
             if s.spread*100>self.c.max_spread_pct:continue
             out.append((i,s))
         return out
+    def _sync_exchange_fills(self):
+        if not (self.c.kraken_api_key and self.c.kraken_api_secret):return 0
+        try:
+            raw=self.venue.spot.trades_history() or {}
+            trades=raw.get("trades") or {}
+            saved=0
+            for trade_id,t in trades.items():
+                if not isinstance(t,dict):continue
+                with self.db.tx() as con:
+                    before=con.total_changes
+                    con.execute("INSERT OR IGNORE INTO fills(client_order_id,kraken_trade_id,ts,price,volume,fee,fee_currency,side,details_json) VALUES(?,?,?,?,?,?,?,?,?)",
+                                (str(t.get("cl_ord_id") or ""),str(trade_id),float(t.get("time") or time.time()),
+                                 str(t.get("price") or "0"),str(t.get("vol") or "0"),str(t.get("fee") or "0"),str(t.get("fee_currency") or ""),
+                                 str(t.get("type") or ""),json.dumps(t,sort_keys=True,default=str)))
+                    saved+=con.total_changes-before
+            if saved:self.db.event("info","FILL_HISTORY_SYNC","OUTCOME_TRACKING",message=f"fills={saved}")
+            return saved
+        except Exception as exc:
+            self.db.error("PRIVATE_DATA_STALE","OUTCOME_TRACKING",message=type(exc).__name__);return 0
+
     def _current_notional(self,portfolio,instrument):
         total=Decimal("0")
         for p in portfolio.get("positions",[]):
@@ -289,10 +309,10 @@ class TradingAuthority:
                     side="buy" if current_notional<0 else "sell"
                 elif sig.direction=="long":
                     action=DecisionAction.OPEN_LONG if current_notional==0 else (DecisionAction.INCREASE_LONG if target>current_notional else DecisionAction.REDUCE_LONG if target>0 else DecisionAction.CLOSE_LONG)
-                    side="buy"
+                    side="sell" if action in (DecisionAction.REDUCE_LONG,DecisionAction.CLOSE_LONG) else "buy"
                 else:
                     action=DecisionAction.OPEN_SHORT if current_notional==0 else (DecisionAction.INCREASE_SHORT if abs(target)>abs(current_notional) else DecisionAction.REDUCE_SHORT if target>0 else DecisionAction.CLOSE_SHORT)
-                    side="sell"
+                    side="buy" if action in (DecisionAction.REDUCE_SHORT,DecisionAction.CLOSE_SHORT) else "sell"
                 self.set_stage(Stage.LEVERAGE_SELECTION,cycle);self.set_stage(Stage.MARGIN_CHECK,cycle);self.set_stage(Stage.RISK_CHECK,cycle)
                 blocker=None if exit_position else self.risk.check(sig,i,portfolio,target,lev,portfolio.get("positions",[]),self._orders_today())
                 if not exit_position and net_edge*100<self.c.minimum_expected_edge_pct:blocker=Blocker.BLOCKED_EXPECTED_EDGE.value
