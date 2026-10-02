@@ -43,7 +43,7 @@ class Config:
             trading_enabled=b("trading_enabled",False),live_enabled=b("live_enabled",False),kill_switch=b("kill_switch",True),
             discovery_interval_seconds=i("discovery_interval_seconds",300,30,86400),data_freshness_seconds=i("data_freshness_seconds",120,10,900),
             minimum_liquidity_eur=D("minimum_liquidity_eur",25,0,100000000),max_spread_pct=D("max_spread_pct",1.5,Decimal("0.01"),20),
-            minimum_expected_edge_pct=D("minimum_expected_edge_pct",0.20,0,50),minimum_confidence=D("minimum_confidence",0,0,1) if "minimum_confidence" not in data else D("minimum_confidence",0.55,0,1),
+            minimum_expected_edge_pct=D("minimum_expected_edge_pct",0.20,0,50),minimum_confidence=D("minimum_confidence",0.55,0,1),
             recalibration_interval_minutes=i("recalibration_interval_minutes",60,5,10080),
             max_position_risk_pct=D("max_position_risk_pct",2,Decimal("0.1"),ABSOLUTE_CAPS["max_position_risk_pct"]),
             max_gross_exposure_pct=D("max_gross_exposure_pct",100,10,ABSOLUTE_CAPS["max_gross_exposure_pct"]),
