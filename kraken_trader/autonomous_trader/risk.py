@@ -12,7 +12,17 @@ class RiskEngine:
         raw=Decimal("1")+max(Decimal("0"),signal.expected_return*20)*signal.confidence
         if signal.uncertainty>Decimal("0.5"):raw=Decimal("1")
         if dec(portfolio.get("drawdown_pct"))>self.c.max_drawdown_pct/2:raw=min(raw,Decimal("2"))
-        return max(Decimal("1"),min(raw,self.c.max_leverage,instrument.max_leverage)),None
+        allowed=[Decimal("1")]
+        for level in instrument.leverage_levels:
+            try:
+                x=Decimal(str(level))
+                if x>0 and x<=self.c.max_leverage and x<=instrument.max_leverage:allowed.append(x)
+            except Exception:continue
+        if signal.direction=="short" and instrument.product_type=="spot" and instrument.margin:
+            allowed=[x for x in allowed if x>1] or allowed
+            raw=max(raw,Decimal("2"))
+        candidates=[x for x in allowed if x<=raw]
+        return (max(candidates) if candidates else min(allowed)),None
     def size(self,signal:Signal,portfolio,leverage):
         equity=dec(portfolio.get("equity"))
         if equity<=0:return Decimal("0"),Blocker.BLOCKED_POSITION_SIZE.value
@@ -32,5 +42,6 @@ class RiskEngine:
         if dec(portfolio.get("daily_loss_pct"))>=self.c.daily_loss_limit_pct or dec(portfolio.get("drawdown_pct"))>=self.c.max_drawdown_pct:blocked=Blocker.CIRCUIT_BREAKER.value
         if orders_today>=self.c.max_orders_per_day:blocked=Blocker.BLOCKED_ORDER_LIMIT.value
         if len(existing_positions)>=self.c.max_positions and target>0:blocked=Blocker.BLOCKED_PORTFOLIO.value
-        if instrument.product_type=="spot" and signal.direction=="short" and not instrument.margin:blocked=Blocker.BLOCKED_LEVERAGE.value
+        if signal.direction=="short" and not instrument.long_short:blocked=Blocker.BLOCKED_LEVERAGE.value
+        if signal.direction=="short" and instrument.product_type=="spot" and instrument.margin and leverage<Decimal("2"):blocked=Blocker.BLOCKED_LEVERAGE.value
         return blocked
