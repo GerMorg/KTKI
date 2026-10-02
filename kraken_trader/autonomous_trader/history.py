@@ -7,11 +7,11 @@ class HistoryEngine:
         saved=0
         for row in rows:
             if len(row)<7:continue
-            open_time=int(float(row[0]));interval=int(float(row[7])) if len(row)>7 else 60
+            open_time=int(float(row[0]));interval=60
             if open_time+interval>int(time.time()):continue
             with self.db.tx() as c:
                 c.execute("INSERT OR REPLACE INTO ohlc_history(symbol,open_time,interval_seconds,open,high,low,close,volume,trade_count,source) VALUES(?,?,?,?,?,?,?,?,?,?)",
-                          (symbol,open_time,interval,str(row[1]),str(row[2]),str(row[3]),str(row[4]),str(row[6]),int(float(row[7])) if len(row)>7 and str(row[7]).replace('.','',1).isdigit() else None,"kraken_spot_ohlc"))
+                          (symbol,open_time,interval,str(row[1]),str(row[2]),str(row[3]),str(row[4]),str(row[6]),int(float(row[7])) if len(row)>7 else None,"kraken_spot_ohlc"))
                 saved+=1
         return saved
     def backfill(self,instruments):
