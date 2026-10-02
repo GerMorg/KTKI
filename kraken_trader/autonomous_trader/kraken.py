@@ -124,7 +124,7 @@ class KrakenVenue:
                 out.append({"venue":"kraken","product_type":"derivative","symbol":symbol,"instrument_id":symbol,"altname":symbol,
                   "base":p.get("underlying") or symbol,"quote":p.get("quote") or "USD","status":str(p.get("tradeable") or p.get("status") or "unknown"),
                   "contract_type":p.get("contractType","futures_vanilla"),"margin":True,"long_short":True,"leverage_levels":(str(lev),),
-                  "max_leverage":lev,"order_min":p.get("minLotSize") or "0","cost_min":"0","lot_precision":int(p.get("sizePrecision") or 8),
+                  "max_leverage":lev,"order_min":p.get("minLotSize") or "0","contract_size":p.get("contractSize") or 1,"cost_min":"0","lot_precision":int(p.get("sizePrecision") or 8),
                   "price_precision":int(p.get("pricePrecision") or 8),"tick_size":p.get("tickSize") or "0","position_limit_long":"0",
                   "position_limit_short":"0","margin_class":p.get("marginClass",""),"collateral":p.get("quote") or "USD",
                   "funding":p.get("fundingRate") or "0","fee_model":"kraken-derivatives","metadata":p})
