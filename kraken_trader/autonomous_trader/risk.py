@@ -29,7 +29,8 @@ class RiskEngine:
         vol=dec(signal.features.get("realized_volatility"),Decimal("0.03"));down=dec(signal.features.get("downside_volatility"),vol)
         risk_per_eur=max(Decimal("0.005"),vol,down);budget=equity*self.c.max_position_risk_pct/100
         notional=budget/risk_per_eur*max(Decimal("0.25"),signal.confidence)*max(Decimal("1"),leverage)
-        notional=min(notional,equity*self.c.max_gross_exposure_pct/100-dec(portfolio.get("gross_exposure")),
+        margin_cap=equity*self.c.max_margin_pct/100*max(Decimal("1"),leverage)
+        notional=min(notional,equity*self.c.max_gross_exposure_pct/100-dec(portfolio.get("gross_exposure")),margin_cap,
                      equity*self.c.max_net_exposure_pct/100-abs(dec(portfolio.get("net_exposure"))),
                      max(Decimal("0"),equity*(1-self.c.cash_reserve_pct/100)))
         return (notional,None) if notional>0 else (Decimal("0"),Blocker.BLOCKED_PORTFOLIO.value)
