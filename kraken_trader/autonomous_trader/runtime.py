@@ -193,6 +193,10 @@ class TradingAuthority:
                 if blocker:details["blocked"]+=1;self.learning.learn_event(cycle,d.decision_id,{"status":"NO_TRADE","blocker":blocker,"expected_edge":str(net_edge)});continue
                 px=s.ask if side=="buy" else s.bid;volume=target/px if px>0 else Decimal("0")
                 order_type=self.policy.choose(s,net_edge,Decimal("0.5"),Decimal("0.5"));intent=OrderIntent(cycle,d.decision_id,i.symbol,side,volume,order_type,px,lev,lev>1,False,d.strategy_version,d.model_version,d.config_hash)
+                intent,normalizer_blocker=self.executor.normalizer.normalize(intent,i,s)
+                if normalizer_blocker:
+                    d.status="BLOCKED";d.blocker=normalizer_blocker;self.db.save_decision(d);details["blocked"]+=1
+                    self.learning.learn_event(cycle,d.decision_id,{"status":"NO_TRADE","blocker":normalizer_blocker,"stage":"ORDER_NORMALIZATION"});continue
                 d.intent_id=intent.intent_id;self.db.save_decision(d);self.db.save_order(intent,OrderState.INTENT_CREATED.value)
                 allowed,reason=self.guard.allowed(intent,d.digest())
                 if not allowed:self.db.update_order(intent.client_order_id,OrderState.REJECTED.value,error_code=reason);continue
