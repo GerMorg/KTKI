@@ -217,6 +217,16 @@ class TradingAuthority:
             if s.spread*100>self.c.max_spread_pct:continue
             out.append((i,s))
         return out
+    def _current_notional(self,portfolio,instrument):
+        total=Decimal("0")
+        for p in portfolio.get("positions",[]):
+            same_symbol=p.get("symbol")==instrument.symbol
+            same_base=instrument.product_type=="spot" and str(p.get("base","")).upper()==instrument.base.upper()
+            if not (same_symbol or same_base):continue
+            value=Decimal(str(p.get("notional_eur") or p.get("eur_value") or 0))
+            total += -value if str(p.get("side","")).lower()=="short" else value
+        return total
+
     def _gemini_effect(self,symbol):
         rows=self.db.rows("SELECT direction,impact,confidence FROM gemini_analysis WHERE symbol=? ORDER BY created_at DESC LIMIT 10",(symbol,));effect=Decimal("0")
         for r in rows:
@@ -255,15 +265,28 @@ class TradingAuthority:
                 roundtrip=s.spread*2+(self.c.taker_fee_pct/100)*2+(self.c.max_slippage_pct/100)+(abs(Decimal(str(i.funding)))*Decimal("2") if i.product_type=="derivative" else Decimal("0"))
                 net_edge=sig.expected_return-roundtrip;self.set_stage(Stage.COST_ESTIMATION,cycle);self.set_stage(Stage.EXPECTED_EDGE,cycle)
                 self.set_stage(Stage.PORTFOLIO_TARGET,cycle);lev,_=self.risk.select_leverage(sig,i,portfolio);target,_=self.risk.size(sig,portfolio,lev)
-                action=DecisionAction.OPEN_LONG if sig.direction=="long" else DecisionAction.OPEN_SHORT;side="buy" if sig.direction=="long" else "sell"
+                current_notional=self._current_notional(portfolio,i)
+                opposite=current_notional<0 if sig.direction=="long" else current_notional>0
+                exit_position= current_notional!=0 and (opposite or net_edge<=0)
+                if exit_position:
+                    target=Decimal("0")
+                    lev=Decimal("1")
+                    action=DecisionAction.CLOSE_SHORT if current_notional<0 else DecisionAction.CLOSE_LONG
+                    side="buy" if current_notional<0 else "sell"
+                elif sig.direction=="long":
+                    action=DecisionAction.OPEN_LONG if current_notional==0 else (DecisionAction.INCREASE_LONG if target>current_notional else DecisionAction.REDUCE_LONG if target>0 else DecisionAction.CLOSE_LONG)
+                    side="buy"
+                else:
+                    action=DecisionAction.OPEN_SHORT if current_notional==0 else (DecisionAction.INCREASE_SHORT if abs(target)>abs(current_notional) else DecisionAction.REDUCE_SHORT if target>0 else DecisionAction.CLOSE_SHORT)
+                    side="sell"
                 self.set_stage(Stage.LEVERAGE_SELECTION,cycle);self.set_stage(Stage.MARGIN_CHECK,cycle);self.set_stage(Stage.RISK_CHECK,cycle)
-                blocker=self.risk.check(sig,i,portfolio,target,lev,portfolio.get("positions",[]),self._orders_today())
-                if net_edge*100<self.c.minimum_expected_edge_pct:blocker=Blocker.BLOCKED_EXPECTED_EDGE.value
-                status="BLOCKED" if blocker else "NO_ACTION";d=Decision(cycle,i.symbol,action,side,target,Decimal("0"),target,net_edge,sig.confidence,sig.uncertainty,lev,lev>1,status,blocker or "",config_hash=self.c.hash(),evidence={"regime":reg,"news_effect":str(self.news.effect_for_symbol(i.symbol)),"gemini_effect":str(self._gemini_effect(i.symbol)),"roundtrip_cost":str(roundtrip),"features":f,"news_status":news_result.get("status")})
+                blocker=None if exit_position else self.risk.check(sig,i,portfolio,target,lev,portfolio.get("positions",[]),self._orders_today())
+                if not exit_position and net_edge*100<self.c.minimum_expected_edge_pct:blocker=Blocker.BLOCKED_EXPECTED_EDGE.value
+                status="BLOCKED" if blocker else "NO_ACTION";d=Decision(cycle,i.symbol,action,side,target,current_notional,target-current_notional,net_edge,sig.confidence,sig.uncertainty,lev,lev>1,status,blocker or "",config_hash=self.c.hash(),evidence={"regime":reg,"news_effect":str(self.news.effect_for_symbol(i.symbol)),"gemini_effect":str(self._gemini_effect(i.symbol)),"roundtrip_cost":str(roundtrip),"features":f,"news_status":news_result.get("status")})
                 self.db.save_decision(d);details["decisions"]+=1;self.last_decision=d
                 if blocker:details["blocked"]+=1;self.learning.learn_event(cycle,d.decision_id,{"status":"NO_TRADE","blocker":blocker,"expected_edge":str(net_edge)});continue
                 px=s.ask if side=="buy" else s.bid;volume=target/px if px>0 else Decimal("0")
-                order_type=self.policy.choose(s,net_edge,Decimal("0.5"),Decimal("0.5"));intent=OrderIntent(cycle,d.decision_id,i.symbol,side,volume,order_type,px,lev,lev>1,False,d.strategy_version,d.model_version,d.config_hash)
+                order_type=self.policy.choose(s,net_edge,Decimal("0.5"),Decimal("0.5"));intent=OrderIntent(cycle,d.decision_id,i.symbol,side,volume,order_type,px,lev,lev>1,action in (DecisionAction.REDUCE_LONG,DecisionAction.REDUCE_SHORT,DecisionAction.CLOSE_LONG,DecisionAction.CLOSE_SHORT),d.strategy_version,d.model_version,d.config_hash)
                 intent,normalizer_blocker=self.executor.normalizer.normalize(intent,i,s)
                 if normalizer_blocker:
                     d.status="BLOCKED";d.blocker=normalizer_blocker;self.db.save_decision(d);details["blocked"]+=1
