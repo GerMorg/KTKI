@@ -43,11 +43,17 @@ class FeatureEngine:
         except Exception:pass
         return out
 class RegimeEngine:
-    def detect(self,features):
-        trend=Decimal(str(features.get("trend") or 0));vol=Decimal(str(features.get("realized_volatility") or 0));spread=Decimal(str(features.get("spread") or 0))
+    def detect(self,features,previous="UNKNOWN"):
+        trend=Decimal(str(features.get("trend") or 0));mom=Decimal(str(features.get("momentum") or 0))
+        vol=Decimal(str(features.get("realized_volatility") or 0));spread=Decimal(str(features.get("spread") or 0))
+        volume_anomaly=Decimal(str(features.get("volume_anomaly") or 1))
+        if not features.get("trend") and not features.get("momentum"):return "UNKNOWN"
         if spread>Decimal("0.015"):return "LIQUIDITY_STRESS"
         if vol>Decimal("0.08") and trend<Decimal("-0.03"):return "PANIC"
+        if previous=="PANIC" and trend>Decimal("0.01"):return "RECOVERY"
         if vol>Decimal("0.08"):return "HIGH_VOLATILITY"
+        if abs(trend)>Decimal("0.05") and volume_anomaly>Decimal("1.5"):return "BREAKOUT"
+        if abs(trend)<Decimal("0.006") and mom*trend<0:return "MEAN_REVERSION"
         if trend>Decimal("0.02"):return "TREND_UP"
         if trend<Decimal("-0.02"):return "TREND_DOWN"
         if vol<Decimal("0.01"):return "LOW_VOLATILITY"
